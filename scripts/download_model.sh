@@ -1,32 +1,40 @@
 #!/bin/bash
 # download_model.sh
-# Script to download DeepSeek R1 1.5B model
+# Script to download Qwen2-7B-Instruct model
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
-echo "Downloading DeepSeek R1 1.5B model..."
+echo "Downloading Qwen2-7B-Instruct model..."
 
 # Create model directory if it doesn't exist
-mkdir -p /home/ubuntu/deepseek-agent/models
+mkdir -p /home/ubuntu/ai-agent/models
 
 # Activate virtual environment
-source /home/ubuntu/deepseek-agent/venv/bin/activate
+if [ -d "/home/ubuntu/ai-agent/venv" ]; then
+    source /home/ubuntu/ai-agent/venv/bin/activate
+else
+    echo "Virtual environment not found at /home/ubuntu/ai-agent/venv. Please run setup_environment.sh first."
+    exit 1
+fi
 
 # Download the model using Hugging Face transformers
 python3 -c "
 from huggingface_hub import snapshot_download
 import os
 
-model_path = '/home/ubuntu/deepseek-agent/models/deepseek-r1-1.5b'
+model_name = 'Qwen/Qwen2-7B-Instruct'
+model_path = f'/home/ubuntu/ai-agent/models/{model_name.replace("Qwen/", "")}'
 os.makedirs(model_path, exist_ok=True)
 
-print('Downloading DeepSeek R1 1.5B model from Hugging Face...')
+print(f'Downloading {model_name} model from Hugging Face to {model_path}...')
 snapshot_download(
-    repo_id='deepseek-ai/deepseek-coder-1.5b-base',
+    repo_id=model_name,
     local_dir=model_path,
-    local_dir_use_symlinks=False
+    local_dir_use_symlinks=False,
+    # Consider adding allow_patterns for specific file types if needed, e.g., ["*.safetensors", "*.json", "*.py"]
+    # ignore_patterns can be used to exclude large or unnecessary files like .bin pytorch_model.bin if .safetensors is preferred
 )
 print('Model download completed successfully!')
 "
 
-echo "DeepSeek R1 1.5B model download completed!"
+echo "Qwen2-7B-Instruct model download completed!"

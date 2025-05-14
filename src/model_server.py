@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # model_server.py
-# Script to deploy DeepSeek R1 1.5B model with FastAPI
+# Script to deploy Qwen2-7B-Instruct model with FastAPI
 
 import os
 import torch
@@ -13,7 +13,7 @@ import logging
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
         logging.StreamHandler(),
         logging.FileHandler("model_server.log")
@@ -23,15 +23,15 @@ logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="DeepSeek R1 1.5B API",
-    description="API for DeepSeek R1 1.5B language model",
+    title="Qwen2-7B-Instruct API",
+    description="API for Qwen2-7B-Instruct language model",
     version="1.0.0"
 )
 
 # Define request model
 class GenerationRequest(BaseModel):
     prompt: str
-    max_length: int = 256
+    max_length: int = 512  # Increased default max_length for potentially longer Qwen responses
     temperature: float = 0.7
     top_p: float = 0.9
     top_k: int = 50
@@ -40,28 +40,38 @@ class GenerationRequest(BaseModel):
 # Global variables for model and tokenizer
 model = None
 tokenizer = None
+MODEL_NAME = "Qwen2-7B-Instruct" # Define model name for path construction
 
 @app.on_event("startup")
 async def startup_event():
     """Load model and tokenizer on startup"""
     global model, tokenizer
     
-    logger.info("Loading DeepSeek R1 1.5B model and tokenizer...")
+    logger.info(f"Loading {MODEL_NAME} model and tokenizer...")
     
     try:
-        model_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
-                                 "models/deepseek-r1-1.5b")
+        # Construct model path dynamically
+        # Assumes script is in /home/ubuntu/ai-agent/src and models in /home/ubuntu/ai-agent/models/
+        base_project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        model_path = os.path.join(base_project_dir, "models", MODEL_NAME)
         
+        if not os.path.exists(model_path):
+            logger.error(f"Model path {model_path} does not exist. Please download the model first.")
+            raise RuntimeError(f"Model path {model_path} not found.")
+
         # Load tokenizer
-        tokenizer = AutoTokenizer.from_pretrained(model_path)
+        tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
         
         # Load model
         model = AutoModelForCausalLM.from_pretrained(
             model_path,
-            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+            torch_dtype=torch.bfloat16 if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else torch.float16 if torch.cuda.is_available() else torch.float32,
             low_cpu_mem_usage=True,
-            device_map="auto"
+            device_map="auto",
+            trust_remote_code=True
         )
+        # Qwen models might benefit from specific attention implementation if available and specified
+        # For now, using device_map="auto" and standard loading
         
         logger.info(f"Model and tokenizer loaded successfully from {model_path}")
     except Exception as e:
@@ -72,10 +82,10 @@ async def startup_event():
 async def root():
     """Root endpoint with API information"""
     return {
-        "name": "DeepSeek R1 1.5B API",
+        "name": f"{MODEL_NAME} API",
         "version": "1.0.0",
         "status": "active",
-        "model": "deepseek-ai/deepseek-coder-1.5b-base"
+        "model": f"Qwen/{MODEL_NAME}"
     }
 
 @app.get("/health")
@@ -94,7 +104,13 @@ async def generate_text(request: GenerationRequest):
         raise HTTPException(status_code=503, detail="Model or tokenizer not loaded")
     
     try:
-        # Tokenize input
+        # Qwen models often use a specific chat template format for prompts.
+        # For simplicity, this example directly uses the prompt string.
+        # For chat applications, apply the tokenizer's chat template.
+        # messages = [{"role": "user", "content": request.prompt}]
+        # text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        # inputs = tokenizer(text, return_tensors="pt")
+        
         inputs = tokenizer(request.prompt, return_tensors="pt")
         
         # Move inputs to the same device as model
@@ -113,6 +129,9 @@ async def generate_text(request: GenerationRequest):
             )
         
         # Decode generated text
+        # For Qwen, sometimes the prompt is included in the output, so we might need to slice it off.
+        # This depends on the specific model and generation parameters.
+        # For now, decode full output.
         generated_texts = [tokenizer.decode(output, skip_special_tokens=True) for output in outputs]
         
         return {
@@ -133,4 +152,5 @@ async def generate_text(request: GenerationRequest):
 
 if __name__ == "__main__":
     # Run the API server
+    # The port 2025 is kept as per original requirement
     uvicorn.run("model_server:app", host="0.0.0.0", port=2025, reload=False)

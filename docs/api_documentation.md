@@ -1,10 +1,10 @@
-# DeepSeek R1 1.5B Model API Documentation
+# Qwen2-7B-Instruct Model API Documentation
 
-This document provides comprehensive documentation for the DeepSeek R1 1.5B model API.
+This document provides comprehensive documentation for the Qwen2-7B-Instruct model API.
 
 ## API Overview
 
-The DeepSeek R1 1.5B model is deployed as a RESTful API service using FastAPI. The API runs on port 2025 and provides endpoints for text generation using the DeepSeek R1 1.5B language model.
+The Qwen2-7B-Instruct model is deployed as a RESTful API service using FastAPI. The API runs on port 2025 and provides endpoints for text generation using the Qwen2-7B-Instruct language model.
 
 ## API Endpoints
 
@@ -16,10 +16,10 @@ The DeepSeek R1 1.5B model is deployed as a RESTful API service using FastAPI. T
 - **Response Example**:
   ```json
   {
-    "name": "DeepSeek R1 1.5B API",
+    "name": "Qwen2-7B-Instruct API",
     "version": "1.0.0",
     "status": "active",
-    "model": "deepseek-ai/deepseek-coder-1.5b-base"
+    "model": "Qwen/Qwen2-7B-Instruct"
   }
   ```
 
@@ -50,7 +50,7 @@ The DeepSeek R1 1.5B model is deployed as a RESTful API service using FastAPI. T
   ```json
   {
     "prompt": "Write a function to calculate the Fibonacci sequence in Python",
-    "max_length": 256,
+    "max_length": 512,
     "temperature": 0.7,
     "top_p": 0.9,
     "top_k": 50,
@@ -59,7 +59,7 @@ The DeepSeek R1 1.5B model is deployed as a RESTful API service using FastAPI. T
   ```
 - **Parameters**:
   - `prompt` (string, required): The input text prompt for generation
-  - `max_length` (integer, optional): Maximum length of generated text, default: 256
+  - `max_length` (integer, optional): Maximum length of generated text, default: 512
   - `temperature` (float, optional): Controls randomness in generation, default: 0.7
   - `top_p` (float, optional): Nucleus sampling parameter, default: 0.9
   - `top_k` (integer, optional): Top-k sampling parameter, default: 50
@@ -69,11 +69,11 @@ The DeepSeek R1 1.5B model is deployed as a RESTful API service using FastAPI. T
   ```json
   {
     "generated_texts": [
-      "Write a function to calculate the Fibonacci sequence in Python\n\ndef fibonacci(n):\n    \"\"\"Calculate the Fibonacci sequence up to the nth term.\n    \n    Args:\n        n: An integer representing the position in the Fibonacci sequence.\n        \n    Returns:\n        The nth number in the Fibonacci sequence.\n    \"\"\"\n    if n <= 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        return fibonacci(n-1) + fibonacci(n-2)\n\n# Example usage\nfor i in range(10):\n    print(fibonacci(i))"
+      "To calculate the Fibonacci sequence in Python, you can use either a recursive approach or an iterative one. Here's an example of an iterative function:\n\n```python\ndef fibonacci_iterative(n):\n    if n <= 0:\n        return []\n    elif n == 1:\n        return [0]\n    else:\n        list_fib = [0, 1]\n        while len(list_fib) < n:\n            next_fib = list_fib[-1] + list_fib[-2]\n            list_fib.append(next_fib)\n        return list_fib[:n] # Ensure it returns exactly n numbers if n is small\n\n# Example usage:\nnum_terms = 10\nprint(f\"Fibonacci sequence up to {num_terms} terms: {fibonacci_iterative(num_terms)}\")\n```\n\nThis function will return a list containing the first `n` Fibonacci numbers, starting with 0."
     ],
     "parameters": {
       "prompt": "Write a function to calculate the Fibonacci sequence in Python",
-      "max_length": 256,
+      "max_length": 512,
       "temperature": 0.7,
       "top_p": 0.9,
       "top_k": 50,
@@ -91,9 +91,12 @@ The DeepSeek R1 1.5B model is deployed as a RESTful API service using FastAPI. T
 
 ## API Usage Examples
 
-The repository includes a Python script (`src/api_examples.py`) that demonstrates how to interact with the API. Here's how to use it:
+The repository includes a Python script (`src/api_examples.py`) that demonstrates how to interact with the API. Here's how to use it from the `/home/ubuntu/ai-agent` directory:
 
 ```bash
+# Activate virtual environment first
+source venv/bin/activate
+
 # Basic usage with default parameters
 python src/api_examples.py
 
@@ -101,7 +104,7 @@ python src/api_examples.py
 python src/api_examples.py --prompt "Write a recursive function to calculate factorial in Python"
 
 # Custom generation parameters
-python src/api_examples.py --max-length 512 --temperature 0.8 --top-p 0.95 --num-sequences 2
+python src/api_examples.py --max-length 256 --temperature 0.8 --top-p 0.95 --num-sequences 2
 
 # Custom API URL (if not running locally)
 python src/api_examples.py --url "http://your-server-address:2025"
@@ -114,8 +117,8 @@ Here's a simple Python example of how to call the API from your own code:
 ```python
 import requests
 
-def generate_text(prompt, max_length=256, temperature=0.7):
-    """Generate text using the DeepSeek R1 1.5B API"""
+def generate_text_from_qwen(prompt, max_length=512, temperature=0.7):
+    """Generate text using the Qwen2-7B-Instruct API"""
     api_url = "http://localhost:2025/generate"
     
     payload = {
@@ -132,7 +135,7 @@ def generate_text(prompt, max_length=256, temperature=0.7):
         raise Exception(f"API request failed: {response.text}")
 
 # Example usage
-result = generate_text("Write a Python function to sort a list")
+result = generate_text_from_qwen("Write a Python function to sort a list of numbers in ascending order.")
 print(result)
 ```
 
@@ -146,7 +149,7 @@ The API includes proper error handling for various scenarios:
 
 ## Performance Considerations
 
-- The first request may take longer as the model needs to be loaded into memory
-- Generation time depends on the requested `max_length` parameter
-- Using a GPU significantly improves performance compared to CPU-only inference
-- For production use, consider deploying on a machine with at least 8GB RAM and a CUDA-compatible GPU
+- The first request may take longer as the model needs to be loaded into memory (especially onto GPU).
+- Generation time depends on the requested `max_length` parameter and the complexity of the prompt.
+- Using a CUDA-compatible GPU with sufficient VRAM (>=10GB recommended for Qwen2-7B) significantly improves performance compared to CPU-only inference, which will be very slow.
+- For production use, consider deploying on a machine with adequate RAM (>=16GB) and a suitable GPU.
