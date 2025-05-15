@@ -1,0 +1,94 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+venv/
+ENV/
+
+# Model files (large files - consider Git LFS for these if you must commit them)
+models/*
+!models/.gitkeep
+# If you download models into a subdirectory of models, e.g. models/Qwen2-7B-Instruct,
+# and want to keep the directory structure but not the large files:
+# models/Qwen2-7B-Instruct/*
+# !models/Qwen2-7B-Instruct/.gitkeep
+
+# Logs
+logs/
+*.log
+model_server.log
+
+# Local configuration
+.env
+.env*.local
+
+# IDE specific files
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# .NET
+**/[Bb]in/
+**/[Oo]bj/
+*.pdb
+*.exe
+*.dll
+*.aps
+*.ncb
+*.suo
+*.sln
+*.csproj.user
+*.csproj.packages.props
+*.props
+*.lock.json
+
+# Rider
+.idea/
+*.sln.iml
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Node.js / React
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+
+# Yarn
+yarn-error.log
+.pnp/
+.pnp.js
+
+# npm
+package-lock.json
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Optional files
+*.bak
+*.tmp
+
