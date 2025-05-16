@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MCP Qwen Dialogue Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        #chatContainer { max-width: 600px; margin: auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .message { margin-bottom: 10px; padding: 10px; border-radius: 5px; }
+        .user-message { background-color: #e1f5fe; text-align: right; }
+        .ai-message { background-color: #f0f0f0; }
+        input[type="text"] { width: calc(100% - 70px); padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        pre { white-space: pre-wrap; word-wrap: break-word; background-color: #eee; padding: 5px; border-radius: 3px;}
+    </style>
+</head>
+<body>
+    <div id="chatContainer">
+        <h2>MCP Qwen Dialogue Test</h2>
+        <div id="messages"></div>
+        <div>
+            <input type="text" id="promptInput" placeholder="Enter your message..." />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        <h4>Raw SSE Events:</h4>
+        <pre id="sseEvents"></pre>
+    </div>
+
+    <script>
+        const messagesDiv = document.getElementById('messages');
+        const promptInput = document.getElementById('promptInput');
+        const sseEventsDiv = document.getElementById('sseEvents');
+        let eventSource;
+        let conversationId = "conv-" + Date.now(); // Simple conversation ID
+
+        function connectSse() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            // Assuming the Web API is running on the same host/port or configured with CORS
+            // For local dev, if API is on https://localhost:7258 (example), use that full URL.
+            // If served by the app itself, /mcp/sse should work.
+            const sseUrl = '/mcp/sse'; 
+            eventSource = new EventSource(sseUrl);
+
+            sseEventsDiv.innerHTML = `Connecting to ${sseUrl}...\n`;
+
+            eventSource.onopen = function(event) {
+                logSseEvent("SSE Connection Opened.");
+            };
+
+            eventSource.onmessage = function(event) {
+                logSseEvent("Received event: " + event.data);
+                try {
+                    const mcpEvent = JSON.parse(event.data);
+                    handleMcpEvent(mcpEvent);
+                } catch (e) {
+                    logSseEvent("Error parsing event data: " + e);
+                    appendMessage("Error parsing event: " + event.data, 'ai-message');
+                }
+            };
+
+            eventSource.onerror = function(event) {
+                logSseEvent("SSE Error: " + JSON.stringify(event));
+                appendMessage("Error connecting to MCP SSE. Ensure the server is running and accessible.", 'ai-message');
+                eventSource.close();
+            };
+        }
+
+        function logSseEvent(message) {
+            sseEventsDiv.innerHTML += message + "\n";
+            sseEventsDiv.scrollTop = sseEventsDiv.scrollHeight; // Auto-scroll
+        }
+
+        function handleMcpEvent(mcpEvent) {
+            if (mcpEvent.EventType === "ToolResult" && mcpEvent.ToolName === "QwenDialogue") {
+                if (mcpEvent.IsSuccessful && mcpEvent.Results && mcpEvent.Results.response) {
+                    appendMessage("Qwen: " + mcpEvent.Results.response, 'ai-message');
+                } else {
+                    appendMessage("Qwen Error: " + (mcpEvent.ErrorMessage || "Unknown error from tool."), 'ai-message');
+                }
+            }
+            // Can handle other event types like ToolCall, ToolError etc. if needed
+        }
+
+        function sendMessage() {
+            const promptText = promptInput.value;
+            if (!promptText.trim()) return;
+
+            appendMessage("You: " + promptText, 'user-message');
+            promptInput.value = '';
+
+            const mcpRequest = {
+                ConversationId: conversationId,
+                RequestId: "req-" + Date.now(),
+                Timestamp: new Date().toISOString(),
+                Context: {
+                    InteractionType: "UserRequest",
+                    // You can add more context like previous messages if your tool handles history
+                    Messages: [
+                        { Role: "User", Content: promptText }
+                    ]
+                },
+                ToolCalls: [
+                    {
+                        ToolName: "QwenDialogue",
+                        ToolCallId: "tcall-" + Date.now(),
+                        Parameters: {
+                            prompt: promptText
+                        }
+                    }
+                ]
+            };
+
+            // Send this request to an MCP input endpoint (e.g., a POST to /mcp/input or similar)
+            // For this simple SSE demo, we assume the server processes based on some other trigger
+            // or we directly trigger a tool call for demonstration if MCP server supports it.
+            // Since ModelContextProtocol typically involves a POST to trigger, 
+            // this client-side only SSE listener is more for observing results from server-initiated tool calls.
+            // For a full interactive demo, we'd need a POST endpoint in the WebAPI to accept MCP requests.
+            
+            // For now, let's just log that we would send it.
+            // A real implementation would POST this to an MCP endpoint on the server.
+            logSseEvent("MCP Request (would be POSTed): " + JSON.stringify(mcpRequest, null, 2));
+            appendMessage("<i>(Note: This demo listens for SSE events. To send a message, a POST endpoint for MCP requests is needed on the server. For now, you can test by manually triggering the tool if possible, or by modifying the server to send a test message.)</i>", 'ai-message');
+
+            // To make this interactive without a POST endpoint yet, we can try a simple GET request
+            // to a test endpoint on the server that then invokes the tool. This is a workaround.
+            // This is NOT standard MCP practice but for quick demo.
+            fetch(`/dev/test-qwen-dialogue?prompt=${encodeURIComponent(promptText)}`)
+                .then(response => response.json())
+                .then(data => {
+                    logSseEvent("Test endpoint response: " + JSON.stringify(data));
+                    // The actual response will come via SSE if the tool was invoked correctly
+                })
+                .catch(err => {
+                    logSseEvent("Error calling test endpoint: " + err);
+                    appendMessage("Error with test endpoint: " + err, 'ai-message');
+                });
+        }
+
+        function appendMessage(text, className) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message ' + className;
+            msgDiv.textContent = text;
+            messagesDiv.appendChild(msgDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Automatically connect on load
+        connectSse();
+
+        // Initial prompt for testing
+        promptInput.value = "Hello, who are you?";
+
+    </script>
+</body>
+</html>
+
