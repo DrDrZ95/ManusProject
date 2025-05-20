@@ -1,5 +1,7 @@
 # Qwen2-7B-Instruct AI Agent Application with .NET Web API
 
+[中文文档](README.zh_CN.md)
+
 This repository contains an AI agent application. It previously deployed the Qwen2-7B-Instruct model locally with a Python-based FastAPI accessible on port 2025. It is now being structured to include a .NET 8.0 Web API backend and a placeholder for a React frontend.
 
 ## Project Overview
@@ -23,7 +25,8 @@ ai-agent/
 │   ├── appsettings.json
 │   ├── AgentWebApi.csproj
 │   └── Program.cs
-├── AgentUI/                # Placeholder for React Frontend application
+├── AgentUI/                # React Frontend application with chat interface
+│   └── agent-chat/         # React chat application with silver theme
 ├── README.md               # Main project documentation (English)
 ├── README.zh_CN.md         # Main project documentation (Simplified Chinese)
 ├── config/                 # Configuration files (if any, currently empty)
@@ -60,6 +63,8 @@ ai-agent/
     *   Linux-based OS, Python 3.8+, 16GB+ RAM, 20GB+ Disk, GPU recommended.
 *   **For .NET 8.0 Web API (`AgentWebApi/`):**
     *   .NET 8.0 SDK (already installed in this environment).
+*   **For React UI (`AgentUI/agent-chat/`):**
+    *   Node.js and pnpm (already set up in the project)
 
 ### Setup & Running
 
@@ -84,9 +89,14 @@ ai-agent/
    ```
    This API is currently the default template and does not yet interact with the Python model server.
 
-**3. React UI (`AgentUI/`):**
+**3. React UI (`AgentUI/agent-chat/`):**
 
-   This folder is currently a placeholder. To develop a React app here, you would typically use `npx create-react-app .` or a similar command inside the `AgentUI` directory.
+   To run the React chat application:
+   ```bash
+   cd /home/ubuntu/ai-agent/AgentUI/agent-chat
+   pnpm run dev
+   ```
+   This will start the development server and you can access the chat interface in your browser.
 
 ## API Usage (Python/FastAPI Model Server)
 
