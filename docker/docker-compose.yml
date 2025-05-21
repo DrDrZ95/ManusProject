@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # .NET Web API service
+  webapi:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.webapi
+    container_name: ai-agent-webapi
+    ports:
+      - "5000:80"
+      - "5001:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+    networks:
+      - ai-agent-network
+    restart: unless-stopped
+    # Add volume mounts if needed for persistent data
+    # volumes:
+    #   - webapi-data:/app/data
+
+  # React UI service
+  reactui:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.react
+    container_name: ai-agent-reactui
+    ports:
+      - "3000:80"
+    depends_on:
+      - webapi
+    networks:
+      - ai-agent-network
+    restart: unless-stopped
+
+  # Python Qwen2 Model Server (optional, uncomment if needed)
+  # modelserver:
+  #   build:
+  #     context: ..
+  #     dockerfile: docker/Dockerfile.python
+  #   container_name: ai-agent-modelserver
+  #   ports:
+  #     - "2025:2025"
+  #   volumes:
+  #     - ../models:/app/models
+  #   networks:
+  #     - ai-agent-network
+  #   restart: unless-stopped
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 16G
+  #       reservations:
+  #         memory: 8G
+
+networks:
+  ai-agent-network:
+    driver: bridge
+
+# Uncomment if you need persistent volumes
+# volumes:
+#   webapi-data:

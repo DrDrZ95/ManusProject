@@ -1,6 +1,8 @@
 # Qwen2-7B-Instruct AI 代理应用 (集成 .NET Web API)
 
-本代码仓库包含一个 AI 代理应用。它先前在本地部署了 Qwen2-7B-Instruct 模型，并通过 2025 端口提供一个基于 Python 的 FastAPI 服务。现在，项目结构已更新，以包含一个 .NET 8.0 Web API 后端和一个 React 前端占位符。
+[English Documentation](README.md)
+
+本代码仓库包含一个 AI 代理应用。它先前在本地部署了 Qwen2-7B-Instruct 模型，并通过 2025 端口提供一个基于 Python 的 FastAPI 服务。现在，项目结构已更新，以包含一个 .NET 8.0 Web API 后端和一个 React 前端。
 
 ## 项目概述
 
@@ -23,13 +25,22 @@ ai-agent/
 │   ├── appsettings.json
 │   ├── AgentWebApi.csproj
 │   └── Program.cs
-├── AgentUI/                # React 前端应用占位符
+├── AgentUI/                # React 前端应用，带聊天界面
+│   └── agent-chat/         # 带银色主题的 React 聊天应用
 ├── README.md               # 主要项目文档 (英文)
 ├── README.zh_CN.md         # 主要项目文档 (简体中文)
 ├── config/                 # 配置文件 (如果需要，当前为空)
+├── docker/                 # Docker 部署配置
+│   ├── Dockerfile.webapi   # .NET Web API 的 Dockerfile
+│   ├── Dockerfile.react    # React UI 的 Dockerfile
+│   ├── Dockerfile.python   # Python 模型服务器的 Dockerfile
+│   ├── docker-compose.yml  # Docker Compose 配置
+│   └── nginx.conf          # React UI 的 Nginx 配置
 ├── docs/                   # 文档目录
 │   ├── api_documentation.md    # API 文档 (针对 Python/FastAPI 模型服务器)
 │   ├── api_documentation.zh_CN.md # API 文档 (简体中文 - 针对 Python/FastAPI)
+│   ├── docker_quickstart.md    # Docker 部署指南
+│   ├── docker_quickstart.zh_CN.md # Docker 部署指南 (简体中文)
 │   ├── environment_setup.md    # 环境设置指南 (针对 Python 模型服务器)
 │   ├── environment_setup.zh_CN.md # 环境设置指南 (简体中文 - 针对 Python 模型服务器)
 │   ├── github_upload.md        # GitHub 上传指南
@@ -54,14 +65,29 @@ ai-agent/
 
 ## 快速开始
 
-### 系统要求
+### Docker 部署 (推荐)
+
+对于最快速的设置，使用 Docker 一起部署所有组件：
+
+```bash
+cd docker
+docker-compose up -d
+```
+
+这将构建并启动所有服务。有关详细说明，请参阅 [Docker 快速入门指南](docs/docker_quickstart.zh_CN.md)。
+
+### 手动设置
+
+#### 系统要求
 
 *   **针对 Python Qwen2-7B-Instruct 模型服务器：** (请参阅 `docs/environment_setup.zh_CN.md`)
     *   基于 Linux 的操作系统，Python 3.8+，16GB+ RAM，20GB+ 磁盘空间，推荐使用 GPU。
 *   **针对 .NET 8.0 Web API (`AgentWebApi/`)：**
     *   .NET 8.0 SDK (已在此环境中安装)。
+*   **针对 React UI (`AgentUI/agent-chat/`)：**
+    *   Node.js 和 pnpm (已在项目中设置)
 
-### 设置与运行
+#### 设置与运行
 
 **1. Python Qwen2-7B-Instruct 模型服务器 (端口 2025)：**
 
@@ -84,16 +110,33 @@ ai-agent/
    ```
    此 API 当前是默认模板，尚未与 Python 模型服务器交互。
 
-**3. React UI (`AgentUI/`)：**
+**3. React UI (`AgentUI/agent-chat/`)：**
 
-   此文件夹当前是一个占位符。要在此处开发 React 应用，您通常会在 `AgentUI` 目录中使用 `npx create-react-app .` 或类似命令。
+   要运行 React 聊天应用：
+   ```bash
+   cd /home/ubuntu/ai-agent/AgentUI/agent-chat
+   pnpm install
+   pnpm run dev
+   ```
+   这将启动开发服务器，您可以在浏览器中访问聊天界面。
 
 ## API 使用 (Python/FastAPI 模型服务器)
 
 一旦 Python 服务器在 2025 端口上运行，您就可以使用 `src/api_examples.py` 与其交互。请参阅 [API 文档](docs/api_documentation.zh_CN.md)。
 
+## 流式传输支持
+
+React 应用程序内置了对 LLM API 流式响应的支持：
+
+- 使用 `eventsource-parser` 和 `@microsoft/fetch-event-source` 库
+- 支持服务器发送事件 (SSE) 进行实时流式传输
+- 处理重新连接和错误场景
+- 准备与后端 LLM API 集成
+
 ## 详细文档
 
+*   部署：
+    *   [Docker 快速入门指南](docs/docker_quickstart.zh_CN.md)
 *   Python 模型服务器：
     *   [环境设置指南](docs/environment_setup.zh_CN.md)
     *   [API 文档](docs/api_documentation.zh_CN.md)

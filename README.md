@@ -30,9 +30,17 @@ ai-agent/
 ├── README.md               # Main project documentation (English)
 ├── README.zh_CN.md         # Main project documentation (Simplified Chinese)
 ├── config/                 # Configuration files (if any, currently empty)
+├── docker/                 # Docker deployment configuration
+│   ├── Dockerfile.webapi   # Dockerfile for .NET Web API
+│   ├── Dockerfile.react    # Dockerfile for React UI
+│   ├── Dockerfile.python   # Dockerfile for Python model server
+│   ├── docker-compose.yml  # Docker Compose configuration
+│   └── nginx.conf          # Nginx configuration for React UI
 ├── docs/                   # Documentation
 │   ├── api_documentation.md    # API documentation (for Python/FastAPI model server)
 │   ├── api_documentation.zh_CN.md # API documentation (简体中文 - for Python/FastAPI)
+│   ├── docker_quickstart.md    # Docker deployment guide
+│   ├── docker_quickstart.zh_CN.md # Docker deployment guide (简体中文)
 │   ├── environment_setup.md    # Environment setup guide (for Python model server)
 │   ├── environment_setup.zh_CN.md # Environment setup guide (简体中文 - for Python model server)
 │   ├── github_upload.md        # GitHub upload instructions
@@ -57,7 +65,20 @@ ai-agent/
 
 ## Quick Start
 
-### Prerequisites
+### Docker Deployment (Recommended)
+
+For the fastest setup, use Docker to deploy all components together:
+
+```bash
+cd docker
+docker-compose up -d
+```
+
+This will build and start all services. For detailed instructions, see the [Docker Quick Start Guide](docs/docker_quickstart.md).
+
+### Manual Setup
+
+#### Prerequisites
 
 *   **For Python Qwen2-7B-Instruct Model Server:** (Refer to `docs/environment_setup.md`)
     *   Linux-based OS, Python 3.8+, 16GB+ RAM, 20GB+ Disk, GPU recommended.
@@ -66,7 +87,7 @@ ai-agent/
 *   **For React UI (`AgentUI/agent-chat/`):**
     *   Node.js and pnpm (already set up in the project)
 
-### Setup & Running
+#### Setup & Running
 
 **1. Python Qwen2-7B-Instruct Model Server (Port 2025):**
 
@@ -94,6 +115,7 @@ ai-agent/
    To run the React chat application:
    ```bash
    cd /home/ubuntu/ai-agent/AgentUI/agent-chat
+   pnpm install
    pnpm run dev
    ```
    This will start the development server and you can access the chat interface in your browser.
@@ -102,8 +124,19 @@ ai-agent/
 
 Once the Python server is running on port 2025, you can interact with it using `src/api_examples.py`. See [API Documentation](docs/api_documentation.md).
 
+## Streaming Support
+
+The React application includes built-in support for streaming responses from LLM APIs:
+
+- Uses `eventsource-parser` and `@microsoft/fetch-event-source` libraries
+- Supports Server-Sent Events (SSE) for real-time streaming
+- Handles reconnection and error scenarios
+- Ready for integration with the backend LLM API
+
 ## Detailed Documentation
 
+*   Deployment:
+    *   [Docker Quick Start Guide](docs/docker_quickstart.md)
 *   Python Model Server:
     *   [Environment Setup Guide](docs/environment_setup.md)
     *   [API Documentation](docs/api_documentation.md)

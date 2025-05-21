@@ -1,0 +1,28 @@
+# Dockerfile for Python Model Server
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY scripts/install_dependencies.sh scripts/
+COPY scripts/setup_environment.sh scripts/
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy source code
+COPY src/ src/
+COPY models/ models/
+
+# Expose the port
+EXPOSE 2025
+
+# Run the model server
+CMD ["python", "src/model_server.py"]
