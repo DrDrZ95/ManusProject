@@ -11,6 +11,7 @@
 1.  托管 AI 模型推理 (当前通过现有 Python 脚本实现 Qwen2-7B-Instruct 服务)。
 2.  提供一个 .NET 8.0 Web API 后端 (`AgentWebApi/`)，用于代理逻辑和未来的集成。
 3.  为基于 React 的用户界面 (`AgentUI/`) 预留空间。
+4.  支持使用 Unsloth 和 LoRA 进行模型微调以实现定制化。
 
 该实现包含全面的文档、用于 Python 模型服务的设置脚本，以及新搭建的 .NET Web API 项目。
 
@@ -46,7 +47,12 @@ ai-agent/
 │   ├── github_upload.md        # GitHub 上传指南
 │   ├── github_upload.zh_CN.md  # GitHub 上传指南 (简体中文)
 │   ├── ssh_setup.md            # SSH 密钥设置指南
-│   └── ssh_setup.zh_CN.md      # SSH 密钥设置指南 (简体中文)
+│   ├── ssh_setup.zh_CN.md      # SSH 密钥设置指南 (简体中文)
+│   ├── unsloth_lora_finetuning.md    # Unsloth+LoRA 微调指南
+│   └── unsloth_lora_finetuning.zh_CN.md # Unsloth+LoRA 微调指南 (简体中文)
+├── finetune/               # 模型微调工具
+│   ├── install_dependencies.sh  # 安装 Unsloth 和 LoRA 依赖的脚本
+│   └── utils.py                 # 微调工具函数
 ├── models/                 # 模型文件目录 (由 Python 脚本填充)
 │   └── Qwen2-7B-Instruct/  # Qwen2-7B-Instruct 模型文件
 ├── scripts/                # 设置和实用工具脚本 (主要用于 Python 模型服务器)
@@ -86,6 +92,9 @@ docker-compose up -d
     *   .NET 8.0 SDK (已在此环境中安装)。
 *   **针对 React UI (`AgentUI/agent-chat/`)：**
     *   Node.js 和 pnpm (已在项目中设置)
+*   **针对模型微调 (`finetune/`)：**
+    *   推荐使用兼容 CUDA 的 GPU
+    *   参见 [Unsloth+LoRA 微调指南](docs/unsloth_lora_finetuning.zh_CN.md)
 
 #### 设置与运行
 
@@ -120,6 +129,18 @@ docker-compose up -d
    ```
    这将启动开发服务器，您可以在浏览器中访问聊天界面。
 
+**4. 模型微调 (可选)：**
+
+   要设置微调环境：
+   ```bash
+   cd /home/ubuntu/ai-agent
+   chmod +x finetune/install_dependencies.sh
+   ./finetune/install_dependencies.sh
+   source finetune/venv/bin/activate
+   ```
+   
+   有关详细使用说明，请参阅 [Unsloth+LoRA 微调指南](docs/unsloth_lora_finetuning.zh_CN.md)。
+
 ## API 使用 (Python/FastAPI 模型服务器)
 
 一旦 Python 服务器在 2025 端口上运行，您就可以使用 `src/api_examples.py` 与其交互。请参阅 [API 文档](docs/api_documentation.zh_CN.md)。
@@ -133,6 +154,15 @@ React 应用程序内置了对 LLM API 流式响应的支持：
 - 处理重新连接和错误场景
 - 准备与后端 LLM API 集成
 
+## 模型微调
+
+该项目包含使用 Unsloth 和 LoRA 微调语言模型的工具：
+
+- 与标准方法相比，训练速度显著提高
+- 通过参数高效的微调减少内存需求
+- 用于数据集准备、模型加载和训练的综合工具
+- 详情请参阅 [Unsloth+LoRA 微调指南](docs/unsloth_lora_finetuning.zh_CN.md)
+
 ## 详细文档
 
 *   部署：
@@ -140,6 +170,8 @@ React 应用程序内置了对 LLM API 流式响应的支持：
 *   Python 模型服务器：
     *   [环境设置指南](docs/environment_setup.zh_CN.md)
     *   [API 文档](docs/api_documentation.zh_CN.md)
+*   模型微调：
+    *   [Unsloth+LoRA 微调指南](docs/unsloth_lora_finetuning.zh_CN.md)
 *   通用：
     *   [SSH 密钥设置指南](docs/ssh_setup.zh_CN.md)
     *   [GitHub 上传指南](docs/github_upload.zh_CN.md)
@@ -154,4 +186,4 @@ React 应用程序内置了对 LLM API 流式响应的支持：
 
 ## 致谢
 
-- 阿里云通义千问团队、Hugging Face、FastAPI、.NET 团队。
+- 阿里云通义千问团队、Hugging Face、FastAPI、.NET 团队、Unsloth 团队。

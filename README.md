@@ -11,6 +11,7 @@ This project aims to provide a solution for:
 1.  Hosting AI model inference (currently Qwen2-7B-Instruct via existing Python scripts).
 2.  Providing a .NET 8.0 Web API backend (`AgentWebApi/`) for agent logic and future integrations.
 3.  Reserving a space for a React-based user interface (`AgentUI/`).
+4.  Supporting model fine-tuning with Unsloth and LoRA for customization.
 
 The implementation includes comprehensive documentation, setup scripts for the Python-based model serving, and the newly scaffolded .NET Web API project.
 
@@ -46,7 +47,12 @@ ai-agent/
 │   ├── github_upload.md        # GitHub upload instructions
 │   ├── github_upload.zh_CN.md  # GitHub upload instructions (简体中文)
 │   ├── ssh_setup.md            # SSH key setup guide
-│   └── ssh_setup.zh_CN.md      # SSH key setup guide (简体中文)
+│   ├── ssh_setup.zh_CN.md      # SSH key setup guide (简体中文)
+│   ├── unsloth_lora_finetuning.md    # Unsloth+LoRA fine-tuning guide
+│   └── unsloth_lora_finetuning.zh_CN.md # Unsloth+LoRA fine-tuning guide (简体中文)
+├── finetune/               # Model fine-tuning utilities
+│   ├── install_dependencies.sh  # Script to install Unsloth and LoRA dependencies
+│   └── utils.py                 # Utility functions for fine-tuning
 ├── models/                 # Directory for model files (populated by Python script)
 │   └── Qwen2-7B-Instruct/  # Model files for Qwen2-7B-Instruct
 ├── scripts/                # Setup and utility scripts (mostly for Python model server)
@@ -86,6 +92,9 @@ This will build and start all services. For detailed instructions, see the [Dock
     *   .NET 8.0 SDK (already installed in this environment).
 *   **For React UI (`AgentUI/agent-chat/`):**
     *   Node.js and pnpm (already set up in the project)
+*   **For Model Fine-tuning (`finetune/`):**
+    *   CUDA-compatible GPU recommended
+    *   See [Unsloth+LoRA Fine-tuning Guide](docs/unsloth_lora_finetuning.md)
 
 #### Setup & Running
 
@@ -120,6 +129,18 @@ This will build and start all services. For detailed instructions, see the [Dock
    ```
    This will start the development server and you can access the chat interface in your browser.
 
+**4. Model Fine-tuning (Optional):**
+
+   To set up the fine-tuning environment:
+   ```bash
+   cd /home/ubuntu/ai-agent
+   chmod +x finetune/install_dependencies.sh
+   ./finetune/install_dependencies.sh
+   source finetune/venv/bin/activate
+   ```
+   
+   See the [Unsloth+LoRA Fine-tuning Guide](docs/unsloth_lora_finetuning.md) for detailed usage instructions.
+
 ## API Usage (Python/FastAPI Model Server)
 
 Once the Python server is running on port 2025, you can interact with it using `src/api_examples.py`. See [API Documentation](docs/api_documentation.md).
@@ -133,6 +154,15 @@ The React application includes built-in support for streaming responses from LLM
 - Handles reconnection and error scenarios
 - Ready for integration with the backend LLM API
 
+## Model Fine-tuning
+
+The project includes utilities for fine-tuning language models using Unsloth and LoRA:
+
+- Significantly faster training compared to standard methods
+- Reduced memory requirements through parameter-efficient fine-tuning
+- Comprehensive utilities for dataset preparation, model loading, and training
+- See the [Unsloth+LoRA Fine-tuning Guide](docs/unsloth_lora_finetuning.md) for details
+
 ## Detailed Documentation
 
 *   Deployment:
@@ -140,6 +170,8 @@ The React application includes built-in support for streaming responses from LLM
 *   Python Model Server:
     *   [Environment Setup Guide](docs/environment_setup.md)
     *   [API Documentation](docs/api_documentation.md)
+*   Model Fine-tuning:
+    *   [Unsloth+LoRA Fine-tuning Guide](docs/unsloth_lora_finetuning.md)
 *   General:
     *   [SSH Setup Guide](docs/ssh_setup.md)
     *   [GitHub Upload Instructions](docs/github_upload.md)
@@ -154,4 +186,4 @@ Project framework: MIT License. Qwen2-7B-Instruct model is subject to its own li
 
 ## Acknowledgements
 
-- Alibaba Cloud Qwen Team, Hugging Face, FastAPI, .NET Team.
+- Alibaba Cloud Qwen Team, Hugging Face, FastAPI, .NET Team, Unsloth Team.
