@@ -1,10 +1,17 @@
 #!/bin/bash
 # Script to install Unsloth and LoRA fine-tuning dependencies
 
+# Ensure Python 3.10 is available
+if ! command -v python3.10 &> /dev/null; then
+    echo "Python 3.10 is required but not found. Installing..."
+    sudo apt-get update
+    sudo apt-get install -y python3.10 python3.10-venv python3.10-dev
+fi
+
 # Create a virtual environment for fine-tuning if it doesn't exist
 if [ ! -d "finetune/venv" ]; then
-    echo "Creating virtual environment for fine-tuning..."
-    python3 -m venv finetune/venv
+    echo "Creating virtual environment for fine-tuning with Python 3.10..."
+    python3.10 -m venv finetune/venv
 fi
 
 # Activate the virtual environment
@@ -14,9 +21,9 @@ source finetune/venv/bin/activate
 echo "Installing PyTorch with CUDA support..."
 pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cu121
 
-# Install Unsloth
-echo "Installing Unsloth..."
-pip install unsloth
+# Install Unsloth with specific version
+echo "Installing Unsloth version 2025.3.19..."
+pip install unsloth==2025.3.19
 
 # Install other dependencies for fine-tuning
 echo "Installing additional dependencies..."
@@ -29,3 +36,4 @@ pip install pandas numpy matplotlib scikit-learn
 pip freeze > finetune/requirements.txt
 
 echo "Installation complete! Activate the environment with: source finetune/venv/bin/activate"
+echo "Note: Hardware requirements (GPU/CPU) will need to be specified in future planning."

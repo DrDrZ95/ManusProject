@@ -28,8 +28,8 @@ class FineTuningConfig:
         self,
         model_name: str = "Qwen/Qwen2-7B-Instruct",
         output_dir: str = "./results",
-        lora_r: int = 16,
-        lora_alpha: int = 32,
+        lora_r: int = 8,
+        lora_alpha: int = 16,
         lora_dropout: float = 0.05,
         learning_rate: float = 2e-4,
         batch_size: int = 4,
@@ -250,9 +250,8 @@ def load_model_and_tokenizer(config: FineTuningConfig):
         lora_alpha=config.lora_alpha,
         lora_dropout=config.lora_dropout,
         bias="none",
-        task_type="CAUSAL_LM",
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", 
-                        "gate_proj", "up_proj", "down_proj"],
+        task_type="SEQ_2_SEQ_LM",
+        target_modules=["q_proj", "v_proj"],
     )
     
     # Apply LoRA to model
