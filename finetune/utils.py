@@ -1,13 +1,16 @@
 """
-Unsloth LoRA Fine-tuning Utilities
+Cross-Platform Fine-tuning Utilities
 
-This module provides utility functions for fine-tuning language models using Unsloth and LoRA.
+This module provides utility functions for fine-tuning language models using:
+1. Unsloth and LoRA (for Linux/Windows with CUDA support)
+2. MLX-LM (for macOS with Apple Silicon)
+
 It includes functions for dataset preparation, model loading, training configuration, and evaluation.
 """
 
 import os
 import json
-import torch
+import platform
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Optional, Union, Tuple, Any
@@ -18,8 +21,36 @@ from transformers import (
     Trainer,
     DataCollatorForLanguageModeling
 )
-from peft import LoraConfig, get_peft_model
-from unsloth import FastLanguageModel
+
+# Determine the platform
+IS_MACOS = platform.system() == "Darwin" and "arm" in platform.machine()
+IS_WINDOWS = platform.system() == "Windows"
+IS_LINUX = platform.system() == "Linux"
+
+# Import platform-specific modules
+if not IS_MACOS:
+    # For Linux/Windows
+    import torch
+    from peft import LoraConfig, get_peft_model
+    try:
+        from unsloth import FastLanguageModel
+        UNSLOTH_AVAILABLE = True
+    except ImportError:
+        UNSLOTH_AVAILABLE = False
+        print("Warning: Unsloth not available. Using standard Hugging Face transformers instead.")
+else:
+    # For macOS with Apple Silicon
+    UNSLOTH_AVAILABLE = False
+    try:
+        import mlx
+        import mlx.core as mx
+        from mlx_lm import load, generate
+        MLX_AVAILABLE = True
+    except ImportError:
+        MLX_AVAILABLE = False
+        print("Warning: MLX-LM not available on this macOS system. Please install with 'pip install mlx-lm'.")
+        # Fallback to torch for CPU-only operation
+        import torch
 
 class FineTuningConfig:
     """Configuration class for fine-tuning parameters."""
@@ -47,6 +78,10 @@ class FineTuningConfig:
         use_wandb: bool = False,
         wandb_project: str = "unsloth-finetuning",
         wandb_run_name: Optional[str] = None,
+        device_map: str = "auto",
+        cpu_only: bool = True,
+        load_in_4bit: bool = True,
+        load_in_8bit: bool = False,
     ):
         """
         Initialize fine-tuning configuration.
@@ -95,6 +130,10 @@ class FineTuningConfig:
         self.use_wandb = use_wandb
         self.wandb_project = wandb_project
         self.wandb_run_name = wandb_run_name
+        self.device_map = device_map
+        self.cpu_only = cpu_only
+        self.load_in_4bit = load_in_4bit
+        self.load_in_8bit = load_in_8bit
         
     def to_dict(self) -> Dict[str, Any]:
         """Convert configuration to dictionary."""
@@ -228,7 +267,12 @@ You are a helpful AI assistant.<|im_end|>
 
 def load_model_and_tokenizer(config: FineTuningConfig):
     """
-    Load model and tokenizer with Unsloth optimizations and LoRA configuration.
+    Load model and tokenizer with platform-specific optimizations.
+    
+    This function automatically selects the appropriate loading method based on:
+    1. Platform (macOS vs Linux/Windows)
+    2. Available libraries (Unsloth, MLX-LM)
+    3. Configuration settings (cpu_only, device_map)
     
     Args:
         config: Fine-tuning configuration
@@ -236,32 +280,92 @@ def load_model_and_tokenizer(config: FineTuningConfig):
     Returns:
         Tuple of (model, tokenizer)
     """
-    # Load model and tokenizer with Unsloth optimizations
-    model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name=config.model_name,
-        max_seq_length=config.max_seq_length,
-        dtype=torch.bfloat16 if config.bf16 else torch.float16,
-        load_in_4bit=True,
-    )
+    # For macOS with Apple Silicon and MLX-LM available
+    if IS_MACOS and MLX_AVAILABLE:
+        print(f"Loading model {config.model_name} with MLX-LM for macOS...")
+        # MLX-LM has a different loading pattern
+        model, tokenizer = load(
+            model_path=config.model_name,
+            tokenizer_path=config.model_name,
+            # MLX-LM specific parameters
+            max_tokens=config.max_seq_length,
+        )
+        return model, tokenizer
     
-    # Configure LoRA
-    lora_config = LoraConfig(
-        r=config.lora_r,
-        lora_alpha=config.lora_alpha,
-        lora_dropout=config.lora_dropout,
-        bias="none",
-        task_type="SEQ_2_SEQ_LM",
-        target_modules=["q_proj", "v_proj"],
-    )
+    # For Linux/Windows with Unsloth available
+    elif UNSLOTH_AVAILABLE and not config.cpu_only:
+        print(f"Loading model {config.model_name} with Unsloth optimizations...")
+        # Load model and tokenizer with Unsloth optimizations
+        model, tokenizer = FastLanguageModel.from_pretrained(
+            model_name=config.model_name,
+            max_seq_length=config.max_seq_length,
+            dtype=torch.bfloat16 if config.bf16 else torch.float16,
+            load_in_4bit=config.load_in_4bit,
+            load_in_8bit=config.load_in_8bit,
+            device_map=config.device_map,
+        )
+        
+        # Configure LoRA
+        lora_config = LoraConfig(
+            r=config.lora_r,
+            lora_alpha=config.lora_alpha,
+            lora_dropout=config.lora_dropout,
+            bias="none",
+            task_type="SEQ_2_SEQ_LM",
+            target_modules=["q_proj", "v_proj"],
+        )
+        
+        # Apply LoRA to model
+        model = FastLanguageModel.get_peft_model(
+            model,
+            lora_config,
+            use_gradient_checkpointing=True,
+        )
+        
+        return model, tokenizer
     
-    # Apply LoRA to model
-    model = FastLanguageModel.get_peft_model(
-        model,
-        lora_config,
-        use_gradient_checkpointing=True,
-    )
-    
-    return model, tokenizer
+    # Fallback to standard Hugging Face transformers (CPU or GPU)
+    else:
+        print(f"Loading model {config.model_name} with standard transformers...")
+        from transformers import AutoModelForCausalLM
+        
+        # Load tokenizer
+        tokenizer = AutoTokenizer.from_pretrained(config.model_name)
+        
+        # Set device map to CPU if cpu_only is True
+        device_map = "cpu" if config.cpu_only else config.device_map
+        
+        # Load model with appropriate quantization
+        model = AutoModelForCausalLM.from_pretrained(
+            config.model_name,
+            device_map=device_map,
+            load_in_4bit=config.load_in_4bit and not config.cpu_only,
+            load_in_8bit=config.load_in_8bit and not config.cpu_only,
+            torch_dtype=torch.bfloat16 if config.bf16 else torch.float16,
+        )
+        
+        # Apply LoRA if not using CPU
+        if not config.cpu_only:
+            from peft import prepare_model_for_kbit_training
+            
+            # Configure LoRA
+            lora_config = LoraConfig(
+                r=config.lora_r,
+                lora_alpha=config.lora_alpha,
+                lora_dropout=config.lora_dropout,
+                bias="none",
+                task_type="CAUSAL_LM",
+                target_modules=["q_proj", "v_proj"],
+            )
+            
+            # Prepare model for k-bit training if using quantization
+            if config.load_in_4bit or config.load_in_8bit:
+                model = prepare_model_for_kbit_training(model)
+            
+            # Apply LoRA
+            model = get_peft_model(model, lora_config)
+        
+        return model, tokenizer
 
 
 def setup_training_args(config: FineTuningConfig):
@@ -379,6 +483,10 @@ def generate_text(
     """
     Generate text using the fine-tuned model.
     
+    This function automatically selects the appropriate generation method based on:
+    1. Platform (macOS vs Linux/Windows)
+    2. Available libraries (Unsloth, MLX-LM)
+    
     Args:
         model: Fine-tuned model
         tokenizer: Tokenizer for the model
@@ -393,26 +501,53 @@ def generate_text(
     Returns:
         Generated text
     """
-    # Prepare input
-    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-    
-    # Generate text
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=max_new_tokens,
-            temperature=temperature,
+    # For macOS with Apple Silicon and MLX-LM available
+    if IS_MACOS and MLX_AVAILABLE and hasattr(model, "generate") and hasattr(model.generate, "__module__") and "mlx_lm" in model.generate.__module__:
+        print("Generating text with MLX-LM for macOS...")
+        # MLX-LM has a different generation pattern
+        response = generate(
+            model=model,
+            tokenizer=tokenizer,
+            prompt=prompt,
+            max_tokens=max_new_tokens,
+            temp=temperature,
             top_p=top_p,
-            top_k=top_k,
-            repetition_penalty=repetition_penalty,
-            do_sample=do_sample,
-            pad_token_id=tokenizer.eos_token_id,
+            # MLX-LM doesn't support all parameters, so we use what's available
         )
+        return response
     
-    # Decode and return generated text
-    generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    
-    return generated_text
+    # For standard Hugging Face models
+    else:
+        print("Generating text with transformers...")
+        # Check if we're using a torch model
+        if hasattr(model, "device"):
+            # Prepare input
+            inputs = tokenizer(prompt, return_tensors="pt")
+            
+            # Move inputs to the model's device
+            if hasattr(inputs, "to") and hasattr(model, "device"):
+                inputs = inputs.to(model.device)
+            
+            # Generate text
+            with torch.no_grad():
+                outputs = model.generate(
+                    **inputs,
+                    max_new_tokens=max_new_tokens,
+                    temperature=temperature,
+                    top_p=top_p,
+                    top_k=top_k,
+                    repetition_penalty=repetition_penalty,
+                    do_sample=do_sample,
+                    pad_token_id=tokenizer.eos_token_id,
+                )
+            
+            # Decode and return generated text
+            generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+            
+            return generated_text
+        else:
+            # Fallback for non-torch models
+            raise ValueError("Unsupported model type for text generation")
 
 
 def run_fine_tuning(

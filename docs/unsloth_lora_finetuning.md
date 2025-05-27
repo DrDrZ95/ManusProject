@@ -1,16 +1,32 @@
-# Unsloth + LoRA Fine-tuning Guide
+# Cross-Platform Fine-tuning Guide
 
-This guide provides instructions for fine-tuning language models using Unsloth and LoRA (Low-Rank Adaptation) within the AI Agent platform.
+This guide provides instructions for fine-tuning language models across different platforms using:
+1. **Unsloth + LoRA** (for Linux/Windows)
+2. **MLX-LM** (for macOS with Apple Silicon)
 
 ## Overview
 
-Unsloth is a library that accelerates LLM fine-tuning by optimizing the process for speed and memory efficiency. Combined with LoRA, which reduces the number of trainable parameters by using low-rank matrix decompositions, this approach enables efficient fine-tuning of large language models even with limited computational resources.
+Our cross-platform fine-tuning solution offers flexibility to work efficiently on various hardware configurations:
 
-> **Note**: Hardware requirements (GPU/CPU) will need to be specified in future planning. This documentation assumes you will determine the appropriate hardware configuration based on your specific needs.
+- **Unsloth** accelerates LLM fine-tuning by optimizing the process for speed and memory efficiency on Linux/Windows
+- **LoRA** (Low-Rank Adaptation) reduces trainable parameters using low-rank matrix decompositions
+- **MLX-LM** provides native fine-tuning capabilities for macOS with Apple Silicon
+
+This approach enables efficient fine-tuning of large language models across different platforms, prioritizing CPU usage when needed and leveraging GPU acceleration when available.
+
+## Hardware Considerations
+
+The fine-tuning environment now supports multiple hardware configurations:
+
+- **CPU-first approach**: Prioritizes CPU usage with `cpu_only=True` parameter
+- **Automatic device mapping**: Uses `device_map="auto"` to intelligently distribute model across available hardware
+- **Platform-specific optimizations**:
+  - Linux/Windows: CUDA GPU acceleration with Unsloth and LoRA
+  - macOS: Apple Silicon optimization with MLX-LM
 
 ## Installation
 
-The AI Agent platform includes a script to set up the Unsloth + LoRA fine-tuning environment. This script installs all necessary dependencies and creates a Python virtual environment.
+### Linux/Windows Installation
 
 ```bash
 # Navigate to the project root
@@ -31,9 +47,30 @@ The script will:
 5. Install other dependencies for fine-tuning
 6. Generate a `requirements.txt` file for reproducibility
 
+### macOS Installation
+
+For macOS with Apple Silicon, you'll need to install MLX-LM:
+
+```bash
+# Navigate to the project root
+cd /path/to/ai-agent
+
+# Create a virtual environment (if not already created)
+python3 -m venv finetune/venv
+
+# Activate the virtual environment
+source finetune/venv/bin/activate
+
+# Install MLX-LM
+pip install mlx-lm
+
+# Install other dependencies
+pip install transformers datasets pandas numpy
+```
+
 ## Configuration
 
-The fine-tuning process is configured through the `FineTuningConfig` class in `finetune/utils.py`. The default configuration includes:
+The fine-tuning process is configured through the `FineTuningConfig` class in `finetune/utils.py`. The updated configuration includes:
 
 ```python
 FineTuningConfig(
@@ -56,16 +93,21 @@ FineTuningConfig(
     bf16=False,                 # Whether to use bfloat16 precision
     seed=42,                    # Random seed for reproducibility
     use_wandb=False,            # Whether to use Weights & Biases for tracking
+    device_map="auto",          # Device mapping strategy (auto, cpu, balanced, etc.)
+    cpu_only=True,              # Whether to use CPU only (prioritize CPU)
+    load_in_4bit=True,          # Whether to load model in 4-bit precision
+    load_in_8bit=False,         # Whether to load model in 8-bit precision
 )
 ```
 
-The LoRA configuration is set to use:
-- `r=8` (rank)
-- `lora_alpha=16` (scaling factor)
-- `target_modules=["q_proj", "v_proj"]` (which layers to apply LoRA to)
-- `lora_dropout=0.05` (dropout rate)
-- `bias="none"` (bias handling)
-- `task_type="SEQ_2_SEQ_LM"` (task type)
+### Hardware Configuration Parameters
+
+The new parameters provide fine-grained control over hardware usage:
+
+- `device_map="auto"`: Automatically distributes model layers across available devices
+- `cpu_only=True`: Forces the model to run on CPU only (overrides device_map)
+- `load_in_4bit=True`: Enables 4-bit quantization for memory efficiency
+- `load_in_8bit=False`: Enables 8-bit quantization (alternative to 4-bit)
 
 ## Dataset Preparation
 
@@ -81,9 +123,9 @@ The dataset should contain pairs of prompts/instructions and corresponding respo
 
 ## Fine-tuning Process
 
-### Basic Usage
+### Linux/Windows (Unsloth + LoRA)
 
-The simplest way to fine-tune a model is to use the `run_fine_tuning` function:
+The simplest way to fine-tune a model on Linux/Windows is to use the `run_fine_tuning` function:
 
 ```python
 from finetune.utils import FineTuningConfig, run_fine_tuning
@@ -92,7 +134,8 @@ from finetune.utils import FineTuningConfig, run_fine_tuning
 config = FineTuningConfig(
     model_name="Qwen/Qwen2-7B-Instruct",
     output_dir="./my_finetuned_model",
-    # Other parameters as needed
+    cpu_only=False,  # Set to True to force CPU usage
+    device_map="auto",  # Automatically distribute model across devices
 )
 
 # Run fine-tuning
@@ -104,27 +147,47 @@ model_path = run_fine_tuning(
 print(f"Fine-tuned model saved to: {model_path}")
 ```
 
-### Using the Example Script
+### macOS with Apple Silicon (MLX-LM)
 
-The repository includes an example script at `finetune/examples/simple_finetune.py` that demonstrates how to fine-tune a model with command-line arguments:
+For macOS with Apple Silicon, use the provided example script:
 
 ```bash
 # Activate the virtual environment
 source finetune/venv/bin/activate
 
-# Run the example script
-python finetune/examples/simple_finetune.py \
-    --data_path path/to/your/dataset.json \
-    --model_name Qwen/Qwen2-7B-Instruct \
-    --output_dir ./my_finetuned_model \
-    --num_train_epochs 3 \
-    --fp16 \
+# Run the macOS example script
+python finetune/examples/macos_mlx_finetune.py \
+    --model_name "mlx-community/Qwen1.5-0.5B-Chat-mlx" \
+    --output_dir ./my_mlx_model \
     --test_prompt "Write a short story about a robot learning to paint."
 ```
 
+Note: MLX-LM fine-tuning requires additional setup. Please refer to the [MLX-LM documentation](https://github.com/ml-explore/mlx-examples/tree/main/llms/mlx-lm) for detailed fine-tuning instructions.
+
+### Using the Example Scripts
+
+The repository includes example scripts for both platforms:
+
+1. **Linux/Windows**: `finetune/examples/simple_finetune.py`
+   ```bash
+   python finetune/examples/simple_finetune.py \
+       --data_path path/to/your/dataset.json \
+       --model_name Qwen/Qwen2-7B-Instruct \
+       --output_dir ./my_finetuned_model \
+       --num_train_epochs 3 \
+       --fp16
+   ```
+
+2. **macOS**: `finetune/examples/macos_mlx_finetune.py`
+   ```bash
+   python finetune/examples/macos_mlx_finetune.py \
+       --model_name "mlx-community/Qwen1.5-0.5B-Chat-mlx" \
+       --output_dir ./my_mlx_model
+   ```
+
 ## Generating Text with Fine-tuned Models
 
-After fine-tuning, you can generate text using the fine-tuned model:
+After fine-tuning, you can generate text using the fine-tuned model with the same API across platforms:
 
 ```python
 from finetune.utils import load_model_and_tokenizer, generate_text, FineTuningConfig
@@ -132,6 +195,8 @@ from finetune.utils import load_model_and_tokenizer, generate_text, FineTuningCo
 # Load configuration
 config = FineTuningConfig(
     model_name="./my_finetuned_model",  # Path to fine-tuned model
+    cpu_only=True,  # Set to True to force CPU usage
+    device_map="auto",  # Or "cpu" to explicitly use CPU
 )
 
 # Load model and tokenizer
@@ -149,6 +214,8 @@ generated_text = generate_text(
 
 print(generated_text)
 ```
+
+The `generate_text` function automatically detects the platform and model type, using the appropriate generation method.
 
 ## Advanced Usage
 
@@ -205,20 +272,28 @@ run_fine_tuning(
 ### Memory Issues
 
 If you encounter out-of-memory errors:
-1. Reduce `batch_size` in the configuration
-2. Increase `gradient_accumulation_steps` to compensate for smaller batch size
-3. Reduce `max_seq_length` if your data allows it
-4. Use a smaller base model
+1. Enable CPU-only mode with `cpu_only=True`
+2. Use quantization with `load_in_4bit=True` or `load_in_8bit=True`
+3. Reduce `batch_size` in the configuration
+4. Increase `gradient_accumulation_steps` to compensate for smaller batch size
+5. Reduce `max_seq_length` if your data allows it
+6. Use a smaller base model
 
-### Training Speed
+### Platform-Specific Issues
 
-To improve training speed:
-1. Ensure you're using a GPU with CUDA support
-2. Use `fp16=True` or `bf16=True` for mixed precision training
-3. Adjust the number of `target_modules` in the LoRA configuration
+#### Linux/Windows
+- If CUDA is not available, the system will automatically fall back to CPU
+- For better performance on CPU, consider using a smaller model or increasing quantization
+
+#### macOS
+- Ensure you're using a compatible MLX model (e.g., `mlx-community/Qwen1.5-0.5B-Chat-mlx`)
+- If MLX-LM is not available, install it with `pip install mlx-lm`
+- For Apple Silicon optimization, ensure you're using Python 3.10+ with the arm64 architecture
 
 ## References
 
 - [Unsloth Documentation](https://github.com/unslothai/unsloth)
 - [LoRA Paper: "LoRA: Low-Rank Adaptation of Large Language Models"](https://arxiv.org/abs/2106.09685)
 - [PEFT Library Documentation](https://huggingface.co/docs/peft/index)
+- [MLX-LM Documentation](https://github.com/ml-explore/mlx-examples/tree/main/llms/mlx-lm)
+- [Apple MLX Framework](https://github.com/ml-explore/mlx)

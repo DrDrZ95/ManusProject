@@ -1,16 +1,32 @@
-# Unsloth + LoRA 微调指南
+# 跨平台微调指南
 
-本指南提供了在 AI Agent 平台中使用 Unsloth 和 LoRA（低秩适应）进行语言模型微调的说明。
+本指南提供了在不同平台上使用以下技术微调语言模型的说明：
+1. **Unsloth + LoRA**（适用于 Linux/Windows）
+2. **MLX-LM**（适用于搭载 Apple Silicon 的 macOS）
 
 ## 概述
 
-Unsloth 是一个通过优化速度和内存效率来加速 LLM 微调的库。结合 LoRA（使用低秩矩阵分解减少可训练参数数量），这种方法即使在计算资源有限的情况下也能高效地微调大型语言模型。
+我们的跨平台微调解决方案提供了在各种硬件配置上高效工作的灵活性：
 
-> **注意**：硬件要求（GPU/CPU）将需要在未来规划中指定。本文档假设您将根据特定需求确定适当的硬件配置。
+- **Unsloth** 通过优化速度和内存效率，加速 Linux/Windows 上的 LLM 微调
+- **LoRA**（低秩适应）使用低秩矩阵分解减少可训练参数
+- **MLX-LM** 为搭载 Apple Silicon 的 macOS 提供原生微调功能
+
+这种方法使得在不同平台上高效微调大型语言模型成为可能，在需要时优先使用 CPU，在可用时利用 GPU 加速。
+
+## 硬件考虑因素
+
+微调环境现在支持多种硬件配置：
+
+- **CPU 优先方法**：通过 `cpu_only=True` 参数优先使用 CPU
+- **自动设备映射**：使用 `device_map="auto"` 智能地将模型分布在可用硬件上
+- **平台特定优化**：
+  - Linux/Windows：使用 Unsloth 和 LoRA 的 CUDA GPU 加速
+  - macOS：使用 MLX-LM 的 Apple Silicon 优化
 
 ## 安装
 
-AI Agent 平台包含一个用于设置 Unsloth + LoRA 微调环境的脚本。该脚本安装所有必要的依赖项并创建 Python 虚拟环境。
+### Linux/Windows 安装
 
 ```bash
 # 导航到项目根目录
@@ -31,9 +47,30 @@ chmod +x finetune/install_dependencies.sh
 5. 安装用于微调的其他依赖项
 6. 生成 `requirements.txt` 文件以确保可重现性
 
+### macOS 安装
+
+对于搭载 Apple Silicon 的 macOS，您需要安装 MLX-LM：
+
+```bash
+# 导航到项目根目录
+cd /path/to/ai-agent
+
+# 创建虚拟环境（如果尚未创建）
+python3 -m venv finetune/venv
+
+# 激活虚拟环境
+source finetune/venv/bin/activate
+
+# 安装 MLX-LM
+pip install mlx-lm
+
+# 安装其他依赖项
+pip install transformers datasets pandas numpy
+```
+
 ## 配置
 
-微调过程通过 `finetune/utils.py` 中的 `FineTuningConfig` 类进行配置。默认配置包括：
+微调过程通过 `finetune/utils.py` 中的 `FineTuningConfig` 类进行配置。更新后的配置包括：
 
 ```python
 FineTuningConfig(
@@ -56,16 +93,21 @@ FineTuningConfig(
     bf16=False,                 # 是否使用 bfloat16 精度
     seed=42,                    # 可重现性的随机种子
     use_wandb=False,            # 是否使用 Weights & Biases 进行跟踪
+    device_map="auto",          # 设备映射策略（auto, cpu, balanced 等）
+    cpu_only=True,              # 是否仅使用 CPU（优先使用 CPU）
+    load_in_4bit=True,          # 是否以 4 位精度加载模型
+    load_in_8bit=False,         # 是否以 8 位精度加载模型
 )
 ```
 
-LoRA 配置设置为使用：
-- `r=8`（秩）
-- `lora_alpha=16`（缩放因子）
-- `target_modules=["q_proj", "v_proj"]`（应用 LoRA 的层）
-- `lora_dropout=0.05`（丢弃率）
-- `bias="none"`（偏置处理）
-- `task_type="SEQ_2_SEQ_LM"`（任务类型）
+### 硬件配置参数
+
+新参数提供了对硬件使用的精细控制：
+
+- `device_map="auto"`：自动将模型层分布在可用设备上
+- `cpu_only=True`：强制模型仅在 CPU 上运行（覆盖 device_map）
+- `load_in_4bit=True`：启用 4 位量化以提高内存效率
+- `load_in_8bit=False`：启用 8 位量化（4 位的替代方案）
 
 ## 数据集准备
 
@@ -81,9 +123,9 @@ LoRA 配置设置为使用：
 
 ## 微调过程
 
-### 基本用法
+### Linux/Windows（Unsloth + LoRA）
 
-微调模型的最简单方法是使用 `run_fine_tuning` 函数：
+在 Linux/Windows 上微调模型的最简单方法是使用 `run_fine_tuning` 函数：
 
 ```python
 from finetune.utils import FineTuningConfig, run_fine_tuning
@@ -92,7 +134,8 @@ from finetune.utils import FineTuningConfig, run_fine_tuning
 config = FineTuningConfig(
     model_name="Qwen/Qwen2-7B-Instruct",
     output_dir="./my_finetuned_model",
-    # 根据需要设置其他参数
+    cpu_only=False,  # 设置为 True 强制使用 CPU
+    device_map="auto",  # 自动将模型分布在设备上
 )
 
 # 运行微调
@@ -104,27 +147,47 @@ model_path = run_fine_tuning(
 print(f"微调模型已保存至：{model_path}")
 ```
 
-### 使用示例脚本
+### 搭载 Apple Silicon 的 macOS（MLX-LM）
 
-仓库包含一个位于 `finetune/examples/simple_finetune.py` 的示例脚本，演示了如何使用命令行参数微调模型：
+对于搭载 Apple Silicon 的 macOS，使用提供的示例脚本：
 
 ```bash
 # 激活虚拟环境
 source finetune/venv/bin/activate
 
-# 运行示例脚本
-python finetune/examples/simple_finetune.py \
-    --data_path path/to/your/dataset.json \
-    --model_name Qwen/Qwen2-7B-Instruct \
-    --output_dir ./my_finetuned_model \
-    --num_train_epochs 3 \
-    --fp16 \
+# 运行 macOS 示例脚本
+python finetune/examples/macos_mlx_finetune.py \
+    --model_name "mlx-community/Qwen1.5-0.5B-Chat-mlx" \
+    --output_dir ./my_mlx_model \
     --test_prompt "写一个关于机器人学习绘画的短故事。"
 ```
 
+注意：MLX-LM 微调需要额外设置。请参阅 [MLX-LM 文档](https://github.com/ml-explore/mlx-examples/tree/main/llms/mlx-lm) 获取详细的微调说明。
+
+### 使用示例脚本
+
+仓库包含两个平台的示例脚本：
+
+1. **Linux/Windows**：`finetune/examples/simple_finetune.py`
+   ```bash
+   python finetune/examples/simple_finetune.py \
+       --data_path path/to/your/dataset.json \
+       --model_name Qwen/Qwen2-7B-Instruct \
+       --output_dir ./my_finetuned_model \
+       --num_train_epochs 3 \
+       --fp16
+   ```
+
+2. **macOS**：`finetune/examples/macos_mlx_finetune.py`
+   ```bash
+   python finetune/examples/macos_mlx_finetune.py \
+       --model_name "mlx-community/Qwen1.5-0.5B-Chat-mlx" \
+       --output_dir ./my_mlx_model
+   ```
+
 ## 使用微调模型生成文本
 
-微调后，您可以使用微调模型生成文本：
+微调后，您可以使用相同的 API 在各平台上使用微调模型生成文本：
 
 ```python
 from finetune.utils import load_model_and_tokenizer, generate_text, FineTuningConfig
@@ -132,6 +195,8 @@ from finetune.utils import load_model_and_tokenizer, generate_text, FineTuningCo
 # 加载配置
 config = FineTuningConfig(
     model_name="./my_finetuned_model",  # 微调模型的路径
+    cpu_only=True,  # 设置为 True 强制使用 CPU
+    device_map="auto",  # 或 "cpu" 明确使用 CPU
 )
 
 # 加载模型和分词器
@@ -149,6 +214,8 @@ generated_text = generate_text(
 
 print(generated_text)
 ```
+
+`generate_text` 函数自动检测平台和模型类型，使用适当的生成方法。
 
 ## 高级用法
 
@@ -205,20 +272,28 @@ run_fine_tuning(
 ### 内存问题
 
 如果遇到内存不足错误：
-1. 减小配置中的 `batch_size`
-2. 增加 `gradient_accumulation_steps` 以补偿较小的批量大小
-3. 如果您的数据允许，减小 `max_seq_length`
-4. 使用较小的基础模型
+1. 使用 `cpu_only=True` 启用仅 CPU 模式
+2. 使用 `load_in_4bit=True` 或 `load_in_8bit=True` 进行量化
+3. 减小配置中的 `batch_size`
+4. 增加 `gradient_accumulation_steps` 以补偿较小的批量大小
+5. 如果您的数据允许，减小 `max_seq_length`
+6. 使用较小的基础模型
 
-### 训练速度
+### 平台特定问题
 
-要提高训练速度：
-1. 确保您使用的是支持 CUDA 的 GPU
-2. 使用 `fp16=True` 或 `bf16=True` 进行混合精度训练
-3. 调整 LoRA 配置中的 `target_modules` 数量
+#### Linux/Windows
+- 如果 CUDA 不可用，系统将自动回退到 CPU
+- 为了在 CPU 上获得更好的性能，考虑使用较小的模型或增加量化
+
+#### macOS
+- 确保您使用的是兼容的 MLX 模型（例如 `mlx-community/Qwen1.5-0.5B-Chat-mlx`）
+- 如果 MLX-LM 不可用，使用 `pip install mlx-lm` 安装
+- 对于 Apple Silicon 优化，确保您使用的是 arm64 架构的 Python 3.10+
 
 ## 参考资料
 
 - [Unsloth 文档](https://github.com/unslothai/unsloth)
 - [LoRA 论文："LoRA: Low-Rank Adaptation of Large Language Models"](https://arxiv.org/abs/2106.09685)
 - [PEFT 库文档](https://huggingface.co/docs/peft/index)
+- [MLX-LM 文档](https://github.com/ml-explore/mlx-examples/tree/main/llms/mlx-lm)
+- [Apple MLX 框架](https://github.com/ml-explore/mlx)
