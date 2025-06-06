@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument(
         "--model_name", 
         type=str, 
-        default="Qwen/Qwen2-7B-Instruct",
+        default="Qwen/Qwen3-4B-Instruct",
         help="Base model to fine-tune"
     )
     parser.add_argument(

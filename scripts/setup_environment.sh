@@ -1,10 +1,10 @@
 #!/bin/bash
 # setup_environment.sh
-# Script to set up the environment for Qwen2-7B-Instruct model
+# Script to set up the environment for Qwen3-4B-Instruct model
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
-echo "Setting up environment for Qwen2-7B-Instruct model..."
+echo "Setting up environment for Qwen3-4B-Instruct model..."
 
 # Create virtual environment if it doesn't exist
 if [ ! -d "/home/ubuntu/ai-agent/venv" ]; then
@@ -24,7 +24,7 @@ pip install --upgrade pip
 # Install PyTorch with CPU support by default, or CUDA if available (user should manage CUDA setup)
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 # Transformers, accelerate for efficient loading, sentencepiece for tokenizers, protobuf for some model formats
-# einops and tiktoken are often used with Qwen models
+# einops and tiktoken are often used with Qwen3 models
 pip install transformers accelerate bitsandbytes sentencepiece protobuf fastapi uvicorn pydantic einops tiktoken
 
 # Create model directory if it doesn't exist

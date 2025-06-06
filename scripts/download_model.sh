@@ -1,10 +1,10 @@
 #!/bin/bash
 # download_model.sh
-# Script to download Qwen2-7B-Instruct model
+# Script to download Qwen3-4B-Instruct model
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
-echo "Downloading Qwen2-7B-Instruct model..."
+echo "Downloading Qwen3-4B-Instruct model..."
 
 # Create model directory if it doesn't exist
 mkdir -p /home/ubuntu/ai-agent/models
@@ -22,7 +22,7 @@ python3 -c "
 from huggingface_hub import snapshot_download
 import os
 
-model_name = 'Qwen/Qwen2-7B-Instruct'
+model_name = 'Qwen/Qwen3-4B-Instruct'
 model_path = f'/home/ubuntu/ai-agent/models/{model_name.replace("Qwen/", "")}'
 os.makedirs(model_path, exist_ok=True)
 
@@ -37,4 +37,4 @@ snapshot_download(
 print('Model download completed successfully!')
 "
 
-echo "Qwen2-7B-Instruct model download completed!"
+echo "Qwen3-4B-Instruct model download completed!"

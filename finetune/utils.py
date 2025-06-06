@@ -57,7 +57,7 @@ class FineTuningConfig:
     
     def __init__(
         self,
-        model_name: str = "Qwen/Qwen2-7B-Instruct",
+        model_name: str = "Qwen/Qwen3-4B-Instruct",
         output_dir: str = "./results",
         lora_r: int = 8,
         lora_alpha: int = 16,

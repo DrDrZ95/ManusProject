@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # api_examples.py
-# Script to demonstrate API requests to the Qwen2-7B-Instruct model server
+# Script to demonstrate API requests to the Qwen3-4B-Instruct model server
 
 import requests
 import json
@@ -9,7 +9,7 @@ import sys
 
 # Default API endpoint
 DEFAULT_API_URL = "http://localhost:2025"
-MODEL_DISPLAY_NAME = "Qwen2-7B-Instruct" # For display purposes
+MODEL_DISPLAY_NAME = "Qwen3-4B-Instruct" # For display purposes
 
 def check_server_health(api_url):
     """Check if the server is running and healthy"""
@@ -88,7 +88,7 @@ def main():
     """Main function to run API examples"""
     parser = argparse.ArgumentParser(description=f"{MODEL_DISPLAY_NAME} API Example Client")
     parser.add_argument("--url", default=DEFAULT_API_URL, help=f"API server URL (default: {DEFAULT_API_URL})")
-    parser.add_argument("--prompt", default="Hello Qwen, can you write a short story about a robot learning to paint?", 
+    parser.add_argument("--prompt", default="Hello Qwen3, can you write a short story about a robot learning to paint?", 
                         help="Text prompt for generation")
     parser.add_argument("--max-length", type=int, default=512, help="Maximum length of generated text")
     parser.add_argument("--temperature", type=float, default=0.7, help="Temperature for sampling")

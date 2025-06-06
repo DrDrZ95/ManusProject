@@ -34,7 +34,7 @@ services:
       - ai-agent-network
     restart: unless-stopped
 
-  # Python Qwen2 Model Server (optional, uncomment if needed)
+  # Python Qwen3 Model Server (optional, uncomment if needed)
   # modelserver:
   #   build:
   #     context: ..
