@@ -1,17 +1,19 @@
-# Qwen2-7B-Instruct AI 代理应用 (集成 .NET Web API)
+# Qwen3-4B-Instruct AI 代理应用 (集成 .NET Web API)
 
 [English Documentation](README.md)
 
-本代码仓库包含一个 AI 代理应用。它先前在本地部署了 Qwen2-7B-Instruct 模型，并通过 2025 端口提供一个基于 Python 的 FastAPI 服务。现在，项目结构已更新，以包含一个 .NET 8.0 Web API 后端和一个 React 前端。
+本代码仓库包含一个 AI 代理应用。它先前在本地部署了 Qwen3-4B-Instruct 模型，并通过 2025 端口提供一个基于 Python 的 FastAPI 服务。现在，项目结构已更新，以包含一个 .NET 8.0 Web API 后端和一个 React 前端。
 
 ## 项目概述
 
 本项目旨在提供一个解决方案，用于：
 
-1.  托管 AI 模型推理 (当前通过现有 Python 脚本实现 Qwen2-7B-Instruct 服务)。
+1.  托管 AI 模型推理 (当前通过现有 Python 脚本实现 Qwen3-4B-Instruct 服务)。
 2.  提供一个 .NET 8.0 Web API 后端 (`AgentWebApi/`)，用于代理逻辑和未来的集成。
 3.  为基于 React 的用户界面 (`AgentUI/`) 预留空间。
 4.  支持使用 Unsloth 和 LoRA 进行模型微调以实现定制化。
+5.  通过 MCP 集成实现推理过程中的动态外部系统访问。
+6.  通过 ClickHouse 和 Elasticsearch 集成提供数据存储和分析功能。
 
 该实现包含全面的文档、用于 Python 模型服务的设置脚本，以及新搭建的 .NET Web API 项目。
 
@@ -21,7 +23,11 @@
 ai-agent/
 ├── AgentWebApi/            # .NET 8.0 Web API 项目
 │   ├── Controllers/
+│   ├── McpTools/           # 模型上下文协议集成工具
+│   │   ├── DynamicExternalAccessTool.cs  # 动态外部系统访问
+│   │   └── QwenDialogueTool.cs           # 通义千问对话集成
 │   ├── Properties/
+│   ├── Services/           # 服务实现
 │   ├── appsettings.Development.json
 │   ├── appsettings.json
 │   ├── AgentWebApi.csproj
@@ -36,16 +42,20 @@ ai-agent/
 │   ├── Dockerfile.react    # React UI 的 Dockerfile
 │   ├── Dockerfile.python   # Python 模型服务器的 Dockerfile
 │   ├── docker-compose.yml  # Docker Compose 配置
+│   ├── examples/           # Docker Compose 配置示例
+│   │   └── clickhouse-elasticsearch-compose.yml  # ClickHouse 和 Elasticsearch 设置
 │   └── nginx.conf          # React UI 的 Nginx 配置
 ├── docs/                   # 文档目录
 │   ├── api_documentation.md    # API 文档 (针对 Python/FastAPI 模型服务器)
 │   ├── api_documentation.zh_CN.md # API 文档 (简体中文 - 针对 Python/FastAPI)
 │   ├── docker_quickstart.md    # Docker 部署指南
 │   ├── docker_quickstart.zh_CN.md # Docker 部署指南 (简体中文)
+│   ├── dynamic_external_access.md # 动态外部系统访问指南
 │   ├── environment_setup.md    # 环境设置指南 (针对 Python 模型服务器)
 │   ├── environment_setup.zh_CN.md # 环境设置指南 (简体中文 - 针对 Python 模型服务器)
 │   ├── github_upload.md        # GitHub 上传指南
 │   ├── github_upload.zh_CN.md  # GitHub 上传指南 (简体中文)
+│   ├── mcp_integration_guide.zh_CN.md # MCP 集成指南 (简体中文)
 │   ├── ssh_setup.md            # SSH 密钥设置指南
 │   ├── ssh_setup.zh_CN.md      # SSH 密钥设置指南 (简体中文)
 │   ├── unsloth_lora_finetuning.md    # Unsloth+LoRA 微调指南
@@ -54,7 +64,7 @@ ai-agent/
 │   ├── install_dependencies.sh  # 安装 Unsloth 和 LoRA 依赖的脚本
 │   └── utils.py                 # 微调工具函数
 ├── models/                 # 模型文件目录 (由 Python 脚本填充)
-│   └── Qwen2-7B-Instruct/  # Qwen2-7B-Instruct 模型文件
+│   └── Qwen3-4B-Instruct/  # Qwen3-4B-Instruct 模型文件
 ├── scripts/                # 设置和实用工具脚本 (主要用于 Python 模型服务器)
 │   ├── download_model.sh       # 下载 Qwen 模型的脚本
 │   ├── install_dependencies.sh # 安装 Python 系统依赖的脚本
@@ -86,7 +96,7 @@ docker-compose up -d
 
 #### 系统要求
 
-*   **针对 Python Qwen2-7B-Instruct 模型服务器：** (请参阅 `docs/environment_setup.zh_CN.md`)
+*   **针对 Python Qwen3-4B-Instruct 模型服务器：** (请参阅 `docs/environment_setup.zh_CN.md`)
     *   基于 Linux 的操作系统，Python 3.8+，16GB+ RAM，20GB+ 磁盘空间，推荐使用 GPU。
 *   **针对 .NET 8.0 Web API (`AgentWebApi/`)：**
     *   .NET 8.0 SDK (已在此环境中安装)。
@@ -98,7 +108,7 @@ docker-compose up -d
 
 #### 设置与运行
 
-**1. Python Qwen2-7B-Instruct 模型服务器 (端口 2025)：**
+**1. Python Qwen3-4B-Instruct 模型服务器 (端口 2025)：**
 
    请遵循 [环境设置指南](docs/environment_setup.zh_CN.md) 中的说明来设置和运行基于 Python 的 Qwen 模型服务器。这包括：
    ```bash
@@ -172,17 +182,22 @@ React 应用程序内置了对 LLM API 流式响应的支持：
     *   [API 文档](docs/api_documentation.zh_CN.md)
 *   模型微调：
     *   [Unsloth+LoRA 微调指南](docs/unsloth_lora_finetuning.zh_CN.md)
+*   集成：
+    *   [动态外部访问](docs/dynamic_external_access.md)
+    *   [MCP 集成指南](docs/mcp_integration_guide.zh_CN.md)
+*   数据存储：
+    *   Docker 示例 [ClickHouse 和 Elasticsearch](docker/examples/clickhouse-elasticsearch-compose.yml)
 *   通用：
     *   [SSH 密钥设置指南](docs/ssh_setup.zh_CN.md)
     *   [GitHub 上传指南](docs/github_upload.zh_CN.md)
 
 ## 模型信息
 
-本项目将阿里云的 Qwen2-7B-Instruct 模型用于基于 Python 的推理服务器。
+本项目将阿里云的 Qwen3-4B-Instruct 模型用于基于 Python 的推理服务器。
 
 ## 许可证
 
-项目框架：MIT 许可证。Qwen2-7B-Instruct 模型受其自身许可证的约束。
+项目框架：MIT 许可证。Qwen3-4B-Instruct 模型受其自身许可证的约束。
 
 ## 致谢
 
