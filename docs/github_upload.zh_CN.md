@@ -47,10 +47,10 @@ ENV/
 # 模型文件 (大型文件 - 如果必须提交，请考虑使用 Git LFS)
 models/*
 !models/.gitkeep
-# 如果您将模型下载到 models 的子目录中，例如 models/Qwen2-7B-Instruct，
+# 如果您将模型下载到 models 的子目录中，例如 models/Qwen3-4B-Instruct，
 # 并且希望保留目录结构但不包含大文件：
-# models/Qwen2-7B-Instruct/*
-# !models/Qwen2-7B-Instruct/.gitkeep
+# models/Qwen3-4B-Instruct/*
+# !models/Qwen3-4B-Instruct/.gitkeep
 
 # 日志
 logs/
@@ -112,7 +112,7 @@ git remote set-url origin git@github.com:username/repository-name.git
 ```bash
 cd /home/ubuntu/ai-agent
 git add .
-git commit -m "初始提交：AI 代理项目及 Qwen2-7B-Instruct 模型设置"
+git commit -m "初始提交：AI 代理项目及 Qwen3-4B-Instruct 模型设置"
 ```
 
 ### 7. 推送到 GitHub

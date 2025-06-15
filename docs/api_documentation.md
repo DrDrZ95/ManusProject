@@ -1,10 +1,10 @@
-# Qwen2-7B-Instruct Model API Documentation
+# Qwen3-4B Model API Documentation
 
-This document provides comprehensive documentation for the Qwen2-7B-Instruct model API.
+This document provides comprehensive documentation for the Qwen3-4B model API.
 
 ## API Overview
 
-The Qwen2-7B-Instruct model is deployed as a RESTful API service using FastAPI. The API runs on port 2025 and provides endpoints for text generation using the Qwen2-7B-Instruct language model.
+The Qwen3-4B model is deployed as a RESTful API service using FastAPI. The API runs on port 2025 and provides endpoints for text generation using the Qwen3-4B language model, which offers improved performance and capabilities over previous Qwen versions.
 
 ## API Endpoints
 
@@ -16,10 +16,10 @@ The Qwen2-7B-Instruct model is deployed as a RESTful API service using FastAPI. 
 - **Response Example**:
   ```json
   {
-    "name": "Qwen2-7B-Instruct API",
+    "name": "Qwen3-4B API",
     "version": "1.0.0",
     "status": "active",
-    "model": "Qwen/Qwen2-7B-Instruct"
+    "model": "Qwen/Qwen3-4B-Instruct"
   }
   ```
 
@@ -89,6 +89,16 @@ The Qwen2-7B-Instruct model is deployed as a RESTful API service using FastAPI. 
   }
   ```
 
+## Qwen3 Model Improvements
+
+Qwen3-4B offers several improvements over previous Qwen versions:
+
+1. **Enhanced Performance**: Better reasoning capabilities and more accurate responses
+2. **Improved Context Handling**: More effective utilization of context window
+3. **Reduced Hallucinations**: More factual and reliable outputs
+4. **Better Instruction Following**: More precise adherence to user instructions
+5. **Optimized Resource Usage**: More efficient memory utilization and inference speed
+
 ## API Usage Examples
 
 The repository includes a Python script (`src/api_examples.py`) that demonstrates how to interact with the API. Here's how to use it from the `/home/ubuntu/ai-agent` directory:
@@ -117,8 +127,8 @@ Here's a simple Python example of how to call the API from your own code:
 ```python
 import requests
 
-def generate_text_from_qwen(prompt, max_length=512, temperature=0.7):
-    """Generate text using the Qwen2-7B-Instruct API"""
+def generate_text_from_qwen3(prompt, max_length=512, temperature=0.7):
+    """Generate text using the Qwen3-4B API"""
     api_url = "http://localhost:2025/generate"
     
     payload = {
@@ -135,8 +145,59 @@ def generate_text_from_qwen(prompt, max_length=512, temperature=0.7):
         raise Exception(f"API request failed: {response.text}")
 
 # Example usage
-result = generate_text_from_qwen("Write a Python function to sort a list of numbers in ascending order.")
+result = generate_text_from_qwen3("Write a Python function to sort a list of numbers in ascending order.")
 print(result)
+```
+
+## Advanced Usage Patterns
+
+### Chat Completion
+
+Qwen3-4B supports chat completion with a structured format. Here's how to use it:
+
+```python
+import requests
+import json
+
+def chat_with_qwen3(messages, temperature=0.7):
+    """Generate chat completion using Qwen3-4B API"""
+    api_url = "http://localhost:2025/generate"
+    
+    # Format messages into a chat prompt
+    formatted_prompt = ""
+    for msg in messages:
+        role = msg["role"]
+        content = msg["content"]
+        if role == "system":
+            formatted_prompt += f"<|im_start|>system\n{content}<|im_end|>\n"
+        elif role == "user":
+            formatted_prompt += f"<|im_start|>user\n{content}<|im_end|>\n"
+        elif role == "assistant":
+            formatted_prompt += f"<|im_start|>assistant\n{content}<|im_end|>\n"
+    
+    # Add final assistant prompt
+    formatted_prompt += "<|im_start|>assistant\n"
+    
+    payload = {
+        "prompt": formatted_prompt,
+        "temperature": temperature,
+        "max_length": 1024
+    }
+    
+    response = requests.post(api_url, json=payload)
+    
+    if response.status_code == 200:
+        return response.json()["generated_texts"][0]
+    else:
+        raise Exception(f"API request failed: {response.text}")
+
+# Example usage
+messages = [
+    {"role": "system", "content": "You are a helpful AI assistant."},
+    {"role": "user", "content": "What are the key features of Python?"}
+]
+response = chat_with_qwen3(messages)
+print(response)
 ```
 
 ## Error Handling
@@ -151,5 +212,16 @@ The API includes proper error handling for various scenarios:
 
 - The first request may take longer as the model needs to be loaded into memory (especially onto GPU).
 - Generation time depends on the requested `max_length` parameter and the complexity of the prompt.
-- Using a CUDA-compatible GPU with sufficient VRAM (>=10GB recommended for Qwen2-7B) significantly improves performance compared to CPU-only inference, which will be very slow.
+- Using a CUDA-compatible GPU with sufficient VRAM (>=8GB recommended for Qwen3-4B) significantly improves performance compared to CPU-only inference.
 - For production use, consider deploying on a machine with adequate RAM (>=16GB) and a suitable GPU.
+- Qwen3-4B offers a good balance between performance and resource requirements, making it suitable for deployment in environments with limited resources.
+
+## Resource Optimization
+
+To optimize resource usage with Qwen3-4B:
+
+1. **Quantization**: Consider using 4-bit or 8-bit quantization to reduce memory footprint
+2. **Batching**: Process multiple requests in batches when possible
+3. **Context Length**: Limit context length to what's necessary for your use case
+4. **CPU Deployment**: For environments without GPUs, use `device_map="auto"` or `cpu_only=True` parameters
+5. **Caching**: Implement response caching for common queries

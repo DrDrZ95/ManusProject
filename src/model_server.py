@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # model_server.py
-# Script to deploy Qwen2-7B-Instruct model with FastAPI
+# Script to deploy Qwen3-4B model with FastAPI
 
 import os
 import torch
@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Qwen2-7B-Instruct API",
-    description="API for Qwen2-7B-Instruct language model",
+    title="Qwen3-4B API",
+    description="API for Qwen3-4B language model",
     version="1.0.0"
 )
 
@@ -40,7 +40,7 @@ class GenerationRequest(BaseModel):
 # Global variables for model and tokenizer
 model = None
 tokenizer = None
-MODEL_NAME = "Qwen2-7B-Instruct" # Define model name for path construction
+MODEL_NAME = "Qwen/Qwen3-4B-Instruct" # HF model ID for Qwen3-4B
 
 @app.on_event("startup")
 async def startup_event():
@@ -50,30 +50,21 @@ async def startup_event():
     logger.info(f"Loading {MODEL_NAME} model and tokenizer...")
     
     try:
-        # Construct model path dynamically
-        # Assumes script is in /home/ubuntu/ai-agent/src and models in /home/ubuntu/ai-agent/models/
-        base_project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        model_path = os.path.join(base_project_dir, "models", MODEL_NAME)
+        # Load tokenizer directly from Hugging Face
+        logger.info(f"Loading tokenizer from Hugging Face: {MODEL_NAME}")
+        tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=True)
         
-        if not os.path.exists(model_path):
-            logger.error(f"Model path {model_path} does not exist. Please download the model first.")
-            raise RuntimeError(f"Model path {model_path} not found.")
-
-        # Load tokenizer
-        tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-        
-        # Load model
+        # Load model directly from Hugging Face
+        logger.info(f"Loading model from Hugging Face: {MODEL_NAME}")
         model = AutoModelForCausalLM.from_pretrained(
-            model_path,
+            MODEL_NAME,
             torch_dtype=torch.bfloat16 if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else torch.float16 if torch.cuda.is_available() else torch.float32,
             low_cpu_mem_usage=True,
             device_map="auto",
             trust_remote_code=True
         )
-        # Qwen models might benefit from specific attention implementation if available and specified
-        # For now, using device_map="auto" and standard loading
         
-        logger.info(f"Model and tokenizer loaded successfully from {model_path}")
+        logger.info(f"Model and tokenizer loaded successfully from Hugging Face")
     except Exception as e:
         logger.error(f"Error loading model: {str(e)}")
         raise RuntimeError(f"Failed to load model: {str(e)}")
@@ -82,10 +73,10 @@ async def startup_event():
 async def root():
     """Root endpoint with API information"""
     return {
-        "name": f"{MODEL_NAME} API",
+        "name": "Qwen3-4B API",
         "version": "1.0.0",
         "status": "active",
-        "model": f"Qwen/{MODEL_NAME}"
+        "model": MODEL_NAME
     }
 
 @app.get("/health")

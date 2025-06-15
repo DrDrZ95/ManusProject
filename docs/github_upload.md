@@ -47,10 +47,10 @@ ENV/
 # Model files (large files - consider Git LFS for these if you must commit them)
 models/*
 !models/.gitkeep
-# If you download models into a subdirectory of models, e.g. models/Qwen2-7B-Instruct,
+# If you download models into a subdirectory of models, e.g. models/Qwen3-4B-Instruct,
 # and want to keep the directory structure but not the large files:
-# models/Qwen2-7B-Instruct/*
-# !models/Qwen2-7B-Instruct/.gitkeep
+# models/Qwen3-4B-Instruct/*
+# !models/Qwen3-4B-Instruct/.gitkeep
 
 # Logs
 logs/
@@ -112,7 +112,7 @@ Add all relevant project files to the Git repository and create an initial commi
 ```bash
 cd /home/ubuntu/ai-agent
 git add .
-git commit -m "Initial commit: AI Agent project with Qwen2-7B-Instruct model setup"
+git commit -m "Initial commit: AI Agent project with Qwen3-4B-Instruct model setup"
 ```
 
 ### 7. Push to GitHub

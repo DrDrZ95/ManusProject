@@ -9,7 +9,7 @@ public class QwenServiceClient : IQwenServiceClient
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<QwenServiceClient> _logger;
-    private const string QwenApiUrl = "http://localhost:2025/generate"; // Qwen2 Python service URL
+    private const string QwenApiUrl = "http://localhost:2025/generate"; // Qwen3 Python service URL
 
     public QwenServiceClient(HttpClient httpClient, ILogger<QwenServiceClient> logger)
     {
@@ -64,4 +64,3 @@ public class QwenServiceClient : IQwenServiceClient
         }
     }
 }
-

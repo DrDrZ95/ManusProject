@@ -18,7 +18,7 @@ public class QwenDialogueTool : ITool
     }
 
     public string Name => "QwenDialogue";
-    public string Description => "Engages in a dialogue with the Qwen2 AI model.";
+    public string Description => "Engages in a dialogue with the Qwen3 AI model.";
 
     public async Task<ToolOutput> ExecuteAsync(ToolInput toolInput, CancellationToken cancellationToken = default)
     {
@@ -85,7 +85,7 @@ public class QwenDialogueTool : ITool
                 Type = McpSchemaType.Object,
                 Properties = new Dictionary<string, McpSchema>
                 {
-                    { "prompt", new McpSchema(McpSchemaType.String, "The user's message or question to the Qwen AI model.") }
+                    { "prompt", new McpSchema(McpSchemaType.String, "The user's message or question to the Qwen3 AI model.") }
                 },
                 Required = new List<string> { "prompt" }
             ),
@@ -100,4 +100,3 @@ public class QwenDialogueTool : ITool
         };
     }
 }
-
