@@ -10,6 +10,19 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.16" />
     <PackageReference Include="ModelContextProtocol" Version="0.1.0-preview.14" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    
+    <!-- OpenTelemetry SDK -->
+    <PackageReference Include="OpenTelemetry" Version="1.7.0" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.7.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.7.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.7.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.7.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.7.0" />
+    
+    <!-- Dapr SDK -->
+    <PackageReference Include="Dapr.AspNetCore" Version="1.12.0" />
+    <PackageReference Include="Dapr.Client" Version="1.12.0" />
+    <PackageReference Include="Dapr.Extensions.Configuration" Version="1.12.0" />
   </ItemGroup>
 
 </Project>
