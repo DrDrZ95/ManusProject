@@ -80,3 +80,59 @@ namespace AgentWebApi.Extensions
 }
 
 
+
+
+namespace AgentWebApi.Extensions
+{
+    /// <summary>
+    /// Provides extension methods for configuring authentication and authorization services.
+    /// 提供用于配置认证和授权服务的扩展方法。
+    /// </summary>
+    public static class AuthExtensions
+    {
+        /// <summary>
+        /// Adds basic authentication and authorization services to the service collection.
+        /// 将基本的认证和授权服务添加到服务集合中。
+        /// </summary>
+        /// <param name="services">The IServiceCollection instance. IServiceCollection实例。</param>
+        /// <returns>The IServiceCollection instance for chaining. 用于链式调用的IServiceCollection实例。</returns>
+        public static IServiceCollection AddBasicAuth(this IServiceCollection services)
+        {
+            services.AddAuthentication("Bearer")
+                .AddJwtBearer(options =>
+                {
+                    // Configure JWT Bearer options here if needed
+                    // 例如，可以配置Authority, Audience, RequireHttpsMetadata等
+                    // For simplicity, we are not adding full JWT configuration here.
+                    // 简化起见，此处未添加完整的JWT配置。
+                });
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("ApiScope", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    // Add specific claims or roles if needed
+                    // 如果需要，可以添加特定的声明或角色
+                });
+            });
+
+            return services;
+        }
+
+        /// <summary>
+        /// Configures the application to use authentication and authorization middleware.
+        /// 配置应用程序使用认证和授权中间件。
+        /// </summary>
+        /// <param name="app">The WebApplication instance. WebApplication实例。</param>
+        /// <returns>The WebApplication instance for chaining. 用于链式调用的WebApplication实例。</returns>
+        public static WebApplication UseBasicAuth(this WebApplication app)
+        {
+            app.UseAuthentication();
+            app.UseAuthorization();
+            return app;
+        }
+    }
+}
+
+

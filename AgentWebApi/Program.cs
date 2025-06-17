@@ -1,11 +1,3 @@
-using AgentWebApi.Extensions;
-using AgentWebApi.McpTools;
-using AgentWebApi.Services;
-using AgentWebApi.Services.Qwen;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using ModelContextProtocol.Extensions;
-
 /// <summary>
 /// Main entry point for the AgentWebApi application.
 /// 应用程序的主入口点。
@@ -16,37 +8,29 @@ using ModelContextProtocol.Extensions;
 /// 
 /// 该类遵循.NET 6中引入的最小API模式，结合扩展方法模式实现模块化配置。
 /// </remarks>
-public class Program
-{
-    /// <summary>
-    /// Application entry point that configures and runs the web application.
-    /// 配置并运行Web应用程序的入口点。
-    /// </summary>
-    /// <param name="args">Command line arguments. 命令行参数。</param>
-    public static void Main(string[] args)
-    {
-        // Create the WebApplicationBuilder - Builder Pattern
-        // 创建WebApplicationBuilder - 构建器模式
-        var builder = WebApplication.CreateBuilder(args);
-        
-        // Configure services using Extension Methods - Extension Method Pattern
-        // 使用扩展方法配置服务 - 扩展方法模式
-        builder.Services.AddCoreApplicationServices();
-        builder.Services.AddOpenTelemetryServices();
-        builder.Services.AddDaprServices();
-        
-        // Build the application - Builder Pattern
-        // 构建应用程序 - 构建器模式
-        var app = builder.Build();
-        
-        // Configure the HTTP request pipeline using Extension Methods - Extension Method Pattern
-        // 使用扩展方法配置HTTP请求管道 - 扩展方法模式
-        app.ConfigureApplicationPipeline();
-        
-        // Run the application
-        // 运行应用程序
-        app.Run();
-    }
-}
+
+// Create the WebApplicationBuilder - Builder Pattern
+// 创建WebApplicationBuilder - 构建器模式
+var builder = WebApplication.CreateBuilder(args);
+
+// Configure services using Extension Methods - Extension Method Pattern
+// 使用扩展方法配置服务 - 扩展方法模式
+builder.Services.AddCoreApplicationServices();
+builder.Services.AddOpenTelemetryServices();
+builder.Services.AddDaprServices();
+builder.Services.AddBasicAuth(); // Add basic authentication and authorization services
+
+// Build the application - Builder Pattern
+// 构建应用程序 - 构建器模式
+var app = builder.Build();
+
+// Configure the HTTP request pipeline using Extension Methods - Extension Method Pattern
+// 使用扩展方法配置HTTP请求管道 - 扩展方法模式
+app.ConfigureApplicationPipeline();
+app.UseBasicAuth(); // Configure application to use authentication and authorization middleware
+
+// Run the application
+// 运行应用程序
+app.Run();
 
 
