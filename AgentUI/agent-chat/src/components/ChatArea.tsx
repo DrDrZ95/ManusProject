@@ -1,4 +1,4 @@
-import { useContext, useRef, useEffect } from 'react';
+import { useContext, useRef, useEffect, useState } from 'react';
 import { Send } from 'lucide-react';
 import { ChatContext, Message } from '../contexts/ChatContext';
 import { useChatActions } from '../hooks/useChatActions';

@@ -1,11 +1,15 @@
 import { useState } from 'react';
+import { Terminal } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
+import { TerminalComponent } from './components/TerminalComponent';
+import { OSInfoDisplay } from './components/OSInfoDisplay';
 import { ChatProvider } from './contexts/ChatContext';
 import './App.css';
 
 function App() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isTerminalVisible, setIsTerminalVisible] = useState(false);
 
   return (
     <ChatProvider>
@@ -16,6 +20,15 @@ function App() {
           onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         >
           {isMobileSidebarOpen ? '✕' : '☰'}
+        </button>
+
+        {/* Terminal toggle button */}
+        <button
+          className="fixed top-4 right-4 z-20 p-2 bg-gray-800 text-green-400 rounded-md hover:bg-gray-700 transition-colors"
+          onClick={() => setIsTerminalVisible(!isTerminalVisible)}
+          title="Toggle Terminal"
+        >
+          <Terminal size={20} />
         </button>
 
         {/* Sidebar - hidden on mobile unless toggled */}
@@ -29,13 +42,28 @@ function App() {
           <Sidebar />
         </div>
 
-        {/* Main chat area */}
+        {/* Main content area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <ChatArea />
+          {/* OS Info Display */}
+          <div className="p-4 border-b border-gray-200 bg-white">
+            <OSInfoDisplay />
+          </div>
+          
+          {/* Chat Area */}
+          <div className="flex-1">
+            <ChatArea />
+          </div>
         </div>
+
+        {/* Terminal Component */}
+        <TerminalComponent 
+          isVisible={isTerminalVisible} 
+          onToggle={() => setIsTerminalVisible(!isTerminalVisible)} 
+        />
       </div>
     </ChatProvider>
   );
 }
 
 export default App;
+
