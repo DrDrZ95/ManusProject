@@ -1,5 +1,5 @@
 import { createParser } from 'eventsource-parser';
-import { fetchEventSource } from '@microsoft/fetch-event-source';
+import { fetchEventSource, EventSourceMessage } from '@microsoft/fetch-event-source';
 
 /**
  * Utility for handling SSE (Server-Sent Events) streams from LLM APIs
@@ -18,8 +18,8 @@ export class StreamingService {
     onComplete: () => void,
     onError: (error: Error) => void
   ) {
-    const parser = createParser((event) => {
-      if (event.type === 'event') {
+    const parser = createParser({
+      onEvent: (event) => {
         onMessage(event.data);
       }
     });
@@ -64,13 +64,29 @@ export class StreamingService {
   ) {
     const controller = new AbortController();
     
+    const headers: Record<string, string> = {};
+    if (options.headers) {
+      if (options.headers instanceof Headers) {
+        options.headers.forEach((value, key) => {
+          headers[key] = value;
+        });
+      } else if (Array.isArray(options.headers)) {
+        options.headers.forEach(([key, value]) => {
+          headers[key] = value;
+        });
+      } else {
+        Object.assign(headers, options.headers);
+      }
+    }
+    
     fetchEventSource(url, {
       ...options,
+      headers,
       signal: controller.signal,
-      onmessage: (event) => {
+      onmessage: (event: EventSourceMessage) => {
         onMessage(event.data);
       },
-      onerror: (err) => {
+      onerror: (err: any) => {
         onError(err);
         return err instanceof Error && err.message.includes('abort') 
           ? 1 // Don't retry on abort
@@ -128,3 +144,4 @@ export class StreamingService {
     }
   }
 }
+
