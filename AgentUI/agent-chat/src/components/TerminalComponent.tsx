@@ -26,7 +26,7 @@ export const TerminalComponent: React.FC<TerminalProps> = ({ isVisible, onToggle
       const userAgent = navigator.userAgent;
       const platform = navigator.platform;
       
-      let os = 'Unknown OS';
+      let os = '未知系统';
       
       if (userAgent.indexOf('Win') !== -1) {
         os = 'Windows';
@@ -48,7 +48,7 @@ export const TerminalComponent: React.FC<TerminalProps> = ({ isVisible, onToggle
     // Add welcome message
     setCommandHistory([{
       command: 'welcome',
-      output: `Terminal initialized. Detected OS: ${osInfo}\nType 'help' for available commands.`,
+      output: `终端已初始化。检测到操作系统：${osInfo}\n输入 'help' 查看可用命令。`,
       timestamp: new Date()
     }]);
   }, []);
@@ -72,34 +72,34 @@ export const TerminalComponent: React.FC<TerminalProps> = ({ isVisible, onToggle
     
     switch (cmd) {
       case 'help':
-        return `Available commands:
-  help     - Show this help message
-  clear    - Clear terminal history
-  date     - Show current date and time
-  os       - Show operating system information
-  whoami   - Show current user
-  pwd      - Show current directory (simulated)
-  ls       - List directory contents (simulated)
-  echo     - Echo back the input (usage: echo <message>)`;
+        return `可用命令：
+  help     - 显示此帮助信息
+  clear    - 清除终端历史记录
+  date     - 显示当前日期和时间
+  os       - 显示操作系统信息
+  whoami   - 显示当前用户
+  pwd      - 显示当前目录（模拟）
+  ls       - 列出目录内容（模拟）
+  echo     - 回显输入内容（用法：echo <消息>）`;
       
       case 'clear':
         setCommandHistory([]);
         return '';
       
       case 'date':
-        return new Date().toString();
+        return new Date().toLocaleString('zh-CN');
       
       case 'os':
-        return `Operating System: ${osInfo}
-User Agent: ${navigator.userAgent}
-Platform: ${navigator.platform}
-Language: ${navigator.language}`;
+        return `操作系统：${osInfo}
+用户代理：${navigator.userAgent}
+平台：${navigator.platform}
+语言：${navigator.language}`;
       
       case 'whoami':
-        return 'react-user';
+        return 'react-用户';
       
       case 'pwd':
-        return '/home/react-user/agent-chat';
+        return '/home/react-用户/agent-chat';
       
       case 'ls':
         return `src/
@@ -113,7 +113,7 @@ vite.config.ts`;
         if (cmd.startsWith('echo ')) {
           return command.substring(5);
         }
-        return `Command not found: ${command}. Type 'help' for available commands.`;
+        return `命令未找到：${command}。输入 'help' 查看可用命令。`;
     }
   };
 
@@ -151,14 +151,14 @@ vite.config.ts`;
   if (!isVisible) return null;
 
   return (
-    <div className={`fixed right-4 bottom-4 bg-gray-900 text-green-400 rounded-lg shadow-2xl border border-gray-700 z-50 ${
-      isMinimized ? 'w-80 h-12' : 'w-96 h-96'
+    <div className={`fixed right-4 top-16 bottom-4 bg-gray-900 text-green-400 rounded-lg shadow-2xl border border-gray-700 z-50 ${
+      isMinimized ? 'w-80 h-12' : 'w-96'
     } transition-all duration-300`}>
       {/* Terminal Header */}
       <div className="flex items-center justify-between bg-gray-800 px-3 py-2 rounded-t-lg border-b border-gray-700">
         <div className="flex items-center space-x-2">
           <Terminal size={16} />
-          <span className="text-sm font-medium text-gray-300">Terminal</span>
+          <span className="text-sm font-medium text-gray-300">终端</span>
           <span className="text-xs text-gray-500">({osInfo})</span>
         </div>
         <div className="flex items-center space-x-1">
@@ -179,11 +179,12 @@ vite.config.ts`;
 
       {/* Terminal Content */}
       {!isMinimized && (
-        <div className="flex flex-col h-80">
+        <div className="flex flex-col h-full">
           {/* Command History */}
           <div 
             ref={terminalRef}
             className="flex-1 p-3 overflow-y-auto text-sm font-mono"
+            style={{ height: 'calc(100vh - 200px)' }}
           >
             {commandHistory.map((entry, index) => (
               <div key={index} className="mb-2">
@@ -212,7 +213,7 @@ vite.config.ts`;
                 onChange={(e) => setCurrentCommand(e.target.value)}
                 onKeyDown={handleKeyDown}
                 className="flex-1 bg-transparent text-green-400 outline-none font-mono"
-                placeholder="Type a command..."
+                placeholder="输入命令..."
                 autoComplete="off"
               />
             </div>
