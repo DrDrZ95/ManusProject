@@ -13,10 +13,10 @@ function App() {
 
   return (
     <ChatProvider>
-      <div className="flex h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="flex h-screen bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
         {/* Mobile sidebar toggle */}
         <button
-          className="md:hidden fixed top-4 left-4 z-20 p-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-md shadow-lg"
+          className="md:hidden fixed top-4 left-4 z-20 p-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-md shadow-lg"
           onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         >
           {isMobileSidebarOpen ? '✕' : '☰'}
@@ -24,9 +24,9 @@ function App() {
 
         {/* Terminal toggle button */}
         <button
-          className="fixed top-4 right-4 z-20 p-2 bg-gray-800 text-green-400 rounded-md hover:bg-gray-700 transition-colors shadow-lg"
+          className="fixed top-4 right-4 z-20 p-2 bg-white text-gray-600 rounded-md hover:bg-gray-50 transition-colors shadow-lg border border-gray-300"
           onClick={() => setIsTerminalVisible(!isTerminalVisible)}
-          title="切换终端"
+          title="Toggle Terminal"
         >
           <Terminal size={20} />
         </button>
@@ -42,15 +42,15 @@ function App() {
           <Sidebar />
         </div>
 
-        {/* Main content area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* OS Info Display */}
-          <div className="p-4 border-b border-indigo-200 bg-white bg-opacity-80 backdrop-blur-sm">
+        {/* Main content area - Full height */}
+        <div className="flex-1 flex flex-col h-screen overflow-hidden">
+          {/* OS Info Display - Compact */}
+          <div className="p-3 border-b border-gray-300 bg-white bg-opacity-80 backdrop-blur-sm flex-shrink-0">
             <OSInfoDisplay />
           </div>
           
-          {/* Chat Area */}
-          <div className="flex-1">
+          {/* Chat Area - Takes remaining space */}
+          <div className="flex-1 overflow-hidden">
             <ChatArea />
           </div>
         </div>

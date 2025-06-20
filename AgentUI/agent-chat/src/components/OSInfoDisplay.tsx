@@ -16,7 +16,7 @@ export const OSInfoDisplay: React.FC = () => {
       const userAgent = navigator.userAgent;
       const platform = navigator.platform;
       
-      let osName = '未知系统';
+      let osName = 'Unknown System';
       
       if (userAgent.indexOf('Win') !== -1) {
         osName = 'Windows';
@@ -61,45 +61,43 @@ export const OSInfoDisplay: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
-      <div className="flex items-center space-x-2 mb-3">
-        <Monitor size={20} className="text-blue-600" />
-        <h3 className="text-lg font-semibold text-gray-800">系统信息</h3>
+    <div className="bg-white rounded-lg shadow-sm p-3 border border-gray-300">
+      <div className="flex items-center space-x-2 mb-2">
+        <Monitor size={16} className="text-gray-600" />
+        <h3 className="text-sm font-semibold text-gray-800">System Information</h3>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* Operating System */}
-        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-          <span className="text-2xl">{getOSIcon()}</span>
+        <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded">
+          <span className="text-lg">{getOSIcon()}</span>
           <div>
-            <p className="text-sm font-medium text-gray-600">操作系统</p>
-            <p className="text-lg font-semibold text-gray-800">{osInfo.name}</p>
-            <p className="text-xs text-gray-500">{osInfo.platform}</p>
+            <p className="text-xs font-medium text-gray-600">Operating System</p>
+            <p className="text-sm font-semibold text-gray-800">{osInfo.name}</p>
           </div>
         </div>
 
         {/* Language & Timezone */}
-        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-          <span className="text-2xl">🌍</span>
+        <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded">
+          <span className="text-lg">🌍</span>
           <div>
-            <p className="text-sm font-medium text-gray-600">区域设置</p>
-            <p className="text-lg font-semibold text-gray-800">{osInfo.language}</p>
-            <p className="text-xs text-gray-500">{osInfo.timezone}</p>
+            <p className="text-xs font-medium text-gray-600">Locale</p>
+            <p className="text-sm font-semibold text-gray-800">{osInfo.language}</p>
           </div>
         </div>
       </div>
 
-      {/* Deployment Info */}
-      <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-        <div className="flex items-center space-x-2 mb-2">
-          <span className="text-blue-600">🚀</span>
-          <p className="text-sm font-medium text-blue-800">部署环境</p>
+      {/* Deployment Info - Compact */}
+      <div className="mt-2 p-2 bg-gray-50 rounded border border-gray-200">
+        <div className="flex items-center space-x-1 mb-1">
+          <span className="text-gray-600 text-sm">🚀</span>
+          <p className="text-xs font-medium text-gray-700">Deployment Environment</p>
         </div>
-        <p className="text-sm text-blue-700">
-          React 应用运行在 {osInfo.name} ({osInfo.platform})
+        <p className="text-xs text-gray-600">
+          React App running on {osInfo.name} ({osInfo.platform})
         </p>
-        <p className="text-xs text-blue-600 mt-1">
-          使用 Vite 构建 • Tailwind CSS 样式
+        <p className="text-xs text-gray-500 mt-1">
+          Built with Vite • Styled with Tailwind CSS
         </p>
       </div>
     </div>

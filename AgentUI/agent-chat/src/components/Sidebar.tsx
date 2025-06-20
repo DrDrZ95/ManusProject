@@ -12,25 +12,25 @@ export const Sidebar = () => {
   } = useContext(ChatContext);
 
   return (
-    <aside className="h-screen w-64 bg-gradient-to-b from-blue-50 to-indigo-100 border-r border-indigo-200 flex flex-col shadow-lg">
-      <div className="p-4 border-b border-indigo-200">
+    <aside className="h-screen w-64 bg-gradient-to-b from-gray-100 to-gray-200 border-r border-gray-300 flex flex-col shadow-lg">
+      <div className="p-4 border-b border-gray-300">
         <button 
           onClick={createNewConversation}
-          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white py-3 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
         >
           <Plus size={18} />
-          <span className="font-medium">新建对话</span>
+          <span className="font-medium">New Chat</span>
         </button>
       </div>
       
       <div className="flex-1 overflow-y-auto p-2">
-        <h2 className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-2 px-2">
-          对话列表
+        <h2 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 px-2">
+          Conversations
         </h2>
         
         {conversations.length === 0 ? (
-          <div className="text-center py-6 text-indigo-500 text-sm">
-            暂无对话记录
+          <div className="text-center py-6 text-gray-500 text-sm">
+            No conversations yet
           </div>
         ) : (
           <ul className="space-y-1">
@@ -40,8 +40,8 @@ export const Sidebar = () => {
                   onClick={() => setCurrentConversationId(conversation.id)}
                   className={`w-full flex items-center gap-2 py-3 px-3 rounded-lg text-left text-sm transition-all duration-200 group ${
                     currentConversationId === conversation.id
-                      ? 'bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-md'
-                      : 'hover:bg-white hover:shadow-md text-indigo-700'
+                      ? 'bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-md'
+                      : 'hover:bg-white hover:shadow-md text-gray-700'
                   }`}
                 >
                   <MessageSquare size={16} className="flex-shrink-0" />
@@ -53,7 +53,7 @@ export const Sidebar = () => {
                         deleteConversation(conversation.id);
                       }}
                       className="opacity-0 group-hover:opacity-100 hover:text-red-300 transition-all duration-200"
-                      aria-label="删除对话"
+                      aria-label="Delete conversation"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -65,9 +65,9 @@ export const Sidebar = () => {
         )}
       </div>
       
-      <div className="p-4 border-t border-indigo-200 bg-white bg-opacity-50">
-        <div className="text-xs text-indigo-600 text-center font-medium">
-          AI 智能对话助手
+      <div className="p-4 border-t border-gray-300 bg-white bg-opacity-50">
+        <div className="text-xs text-gray-600 text-center font-medium">
+          AI Chat Assistant
         </div>
       </div>
     </aside>
