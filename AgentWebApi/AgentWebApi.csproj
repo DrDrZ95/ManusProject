@@ -11,6 +11,9 @@
     <PackageReference Include="ModelContextProtocol" Version="0.1.0-preview.14" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     
+    <!-- ChromaDB SDK -->
+    <PackageReference Include="ChromaDB.Client" Version="1.0.0" />
+    
     <!-- OpenTelemetry SDK -->
     <PackageReference Include="OpenTelemetry" Version="1.7.0" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.7.0" />

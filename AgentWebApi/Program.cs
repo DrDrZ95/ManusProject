@@ -18,6 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCoreApplicationServices();
 builder.Services.AddOpenTelemetryServices();
 builder.Services.AddDaprServices();
+builder.Services.AddChromaDb(builder.Configuration); // Add ChromaDB services
 builder.Services.AddBasicAuth(); // Add basic authentication and authorization services
 
 // Build the application - Builder Pattern

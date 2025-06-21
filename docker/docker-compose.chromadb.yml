@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # ChromaDB Vector Database
+  chromadb:
+    build:
+      context: ./chromadb
+      dockerfile: Dockerfile
+    container_name: chromadb
+    ports:
+      - "8000:8000"
+    environment:
+      - CHROMA_HOST=0.0.0.0
+      - CHROMA_PORT=8000
+      - CHROMA_LOG_LEVEL=INFO
+      - CHROMA_CORS_ALLOW_ORIGINS=["*"]
+      - CHROMA_SERVER_AUTHN_CREDENTIALS_FILE=/chroma/server.htpasswd
+      - CHROMA_SERVER_AUTHN_PROVIDER=chromadb.auth.basic_authn.BasicAuthenticationServerProvider
+    volumes:
+      - chromadb_data:/chroma/chroma
+      - ./chromadb/server.htpasswd:/chroma/server.htpasswd:ro
+    networks:
+      - agent-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # AgentWebApi Application
+  agent-webapi:
+    build:
+      context: ../AgentWebApi
+      dockerfile: Dockerfile
+    container_name: agent-webapi
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__ChromaDb=http://chromadb:8000
+      - Logging__LogLevel__Default=Information
+      - Logging__LogLevel__Microsoft.AspNetCore=Warning
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    networks:
+      - agent-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx Reverse Proxy (Optional)
+  nginx:
+    image: nginx:alpine
+    container_name: agent-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - agent-webapi
+      - chromadb
+    networks:
+      - agent-network
+    restart: unless-stopped
+
+volumes:
+  chromadb_data:
+    driver: local
+
+networks:
+  agent-network:
+    driver: bridge
+
