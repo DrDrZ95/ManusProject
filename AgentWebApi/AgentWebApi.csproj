@@ -14,6 +14,11 @@
     <!-- ChromaDB SDK -->
     <PackageReference Include="ChromaDB.Client" Version="1.0.0" />
     
+    <!-- Microsoft Semantic Kernel -->
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.57.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.57.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Plugins.Memory" Version="1.57.0-alpha" />
+    
     <!-- OpenTelemetry SDK -->
     <PackageReference Include="OpenTelemetry" Version="1.7.0" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.7.0" />
