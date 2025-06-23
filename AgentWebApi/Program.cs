@@ -21,6 +21,7 @@ builder.Services.AddDaprServices();
 builder.Services.AddChromaDb(builder.Configuration); // Add ChromaDB services
 builder.Services.AddVectorDatabase(builder.Configuration); // Add Vector Database services
 builder.Services.AddSemanticKernel(builder.Configuration); // Add Semantic Kernel services
+builder.Services.AddRagServices(builder.Configuration); // Add RAG services - 添加RAG服务
 builder.Services.AddBasicAuth(); // Add basic authentication and authorization services
 
 // Build the application - Builder Pattern
