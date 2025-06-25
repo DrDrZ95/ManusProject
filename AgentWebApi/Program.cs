@@ -23,6 +23,7 @@ builder.Services.AddVectorDatabase(builder.Configuration); // Add Vector Databas
 builder.Services.AddSemanticKernel(builder.Configuration); // Add Semantic Kernel services
 builder.Services.AddRagServices(builder.Configuration); // Add RAG services - 添加RAG服务
 builder.Services.AddSandboxTerminal(builder.Configuration); // Add Sandbox Terminal services - 添加沙盒终端服务
+builder.Services.AddWorkflowServices(builder.Configuration); // Add Workflow services - 添加工作流服务
 builder.Services.AddBasicAuth(); // Add basic authentication and authorization services
 
 // Build the application - Builder Pattern
