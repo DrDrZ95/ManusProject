@@ -10,8 +10,8 @@ namespace AgentWebApi.Controllers;
 /// 提供本地沙盒环境的终端操作API
 /// Provides terminal operation APIs for local sandbox environment
 /// 
-/// 基于OpenManus项目的sandbox.py和terminal.py功能转换
-/// Converted from OpenManus project's sandbox.py and terminal.py functionality
+/// 基于AI-Agent项目的sandbox.py和terminal.py功能转换
+/// Converted from AI-Agent project's sandbox.py and terminal.py functionality
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -82,8 +82,8 @@ public class SandboxTerminalController : ControllerBase
     /// Execute a command with streaming output
     /// 执行命令并流式输出结果
     /// 
-    /// 模拟OpenManus的异步终端输出功能
-    /// Simulates OpenManus async terminal output functionality
+    /// 模拟AI-Agent的异步终端输出功能
+    /// Simulates AI-Agent async terminal output functionality
     /// </summary>
     /// <param name="request">Streaming command request - 流式命令请求</param>
     /// <returns>Streaming command output - 流式命令输出</returns>

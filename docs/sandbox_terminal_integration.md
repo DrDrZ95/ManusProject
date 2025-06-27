@@ -3,9 +3,9 @@
 
 ## Overview - 概述
 
-This document describes the integration of sandbox terminal functionality from the OpenManus project into the AgentWebApi. The implementation provides a secure, local sandbox environment for command execution.
+This document describes the integration of sandbox terminal functionality from the AI-Agent project into the AgentWebApi. The implementation provides a secure, local sandbox environment for command execution.
 
-本文档描述了将OpenManus项目的沙盒终端功能集成到AgentWebApi中的实现。该实现提供了一个安全的本地沙盒环境用于命令执行。
+本文档描述了将AI-Agent项目的沙盒终端功能集成到AgentWebApi中的实现。该实现提供了一个安全的本地沙盒环境用于命令执行。
 
 ## Architecture - 架构
 
@@ -16,9 +16,9 @@ This document describes the integration of sandbox terminal functionality from t
 3. **SandboxTerminalController** - REST API controller - REST API控制器
 4. **SandboxTerminalExtensions** - Dependency injection extensions - 依赖注入扩展
 
-### Key Differences from OpenManus - 与OpenManus的主要差异
+### Key Differences from AI-Agent - 与AI-Agent的主要差异
 
-| Feature | OpenManus | AgentWebApi Implementation |
+| Feature | AI-Agent | AgentWebApi Implementation |
 |---------|-----------|---------------------------|
 | Environment | Docker containers | Local processes - 本地进程 |
 | Language | Python | C# .NET |
@@ -315,7 +315,7 @@ public async Task StreamLogs()
 - Timeout events - 超时事件
 - Error conditions - 错误条件
 
-## Migration from OpenManus - 从OpenManus迁移
+## Migration from AI-Agent - 从AI-Agent迁移
 
 ### What Was Adapted - 已适配的内容
 
@@ -399,7 +399,7 @@ Enable debug logging for detailed execution information:
 
 ## Conclusion - 结论
 
-The Sandbox Terminal integration provides a secure and efficient way to execute commands in a controlled environment. While simplified compared to the original OpenManus Docker-based approach, it maintains the core functionality while being more suitable for local development and testing scenarios.
+The Sandbox Terminal integration provides a secure and efficient way to execute commands in a controlled environment. While simplified compared to the original AI-Agent Docker-based approach, it maintains the core functionality while being more suitable for local development and testing scenarios.
 
-沙盒终端集成提供了在受控环境中执行命令的安全高效方式。虽然相比原始的OpenManus基于Docker的方法有所简化，但它保持了核心功能，同时更适合本地开发和测试场景。
+沙盒终端集成提供了在受控环境中执行命令的安全高效方式。虽然相比原始的AI-Agent基于Docker的方法有所简化，但它保持了核心功能，同时更适合本地开发和测试场景。
 

@@ -3,9 +3,9 @@
 
 ## Overview - 概述
 
-This document describes the integration of workflow management functionality from the OpenManus project into the AgentWebApi. The implementation provides comprehensive workflow planning, task tracking, and todo list file interaction capabilities.
+This document describes the integration of workflow management functionality from the AI-Agent project into the AgentWebApi. The implementation provides comprehensive workflow planning, task tracking, and todo list file interaction capabilities.
 
-本文档描述了将OpenManus项目的工作流管理功能集成到AgentWebApi中的实现。该实现提供了全面的工作流规划、任务跟踪和待办事项列表文件交互功能。
+本文档描述了将AI-Agent项目的工作流管理功能集成到AgentWebApi中的实现。该实现提供了全面的工作流规划、任务跟踪和待办事项列表文件交互功能。
 
 ## Architecture - 架构
 
@@ -16,9 +16,9 @@ This document describes the integration of workflow management functionality fro
 3. **WorkflowController** - REST API controller - REST API控制器
 4. **WorkflowExtensions** - Dependency injection extensions - 依赖注入扩展
 
-### Key Features from OpenManus - 来自OpenManus的关键功能
+### Key Features from AI-Agent - 来自AI-Agent的关键功能
 
-| Feature | OpenManus | AgentWebApi Implementation |
+| Feature | AI-Agent | AgentWebApi Implementation |
 |---------|-----------|---------------------------|
 | Plan Creation | Python planning tool | C# workflow service - C#工作流服务 |
 | Step Status Tracking | Enum-based status | Enhanced status with timestamps - 带时间戳的增强状态 |
@@ -490,7 +490,7 @@ public async Task<IActionResult> SyncFromFile([FromBody] SyncRequest request)
 }
 ```
 
-## Migration from OpenManus - 从OpenManus迁移
+## Migration from AI-Agent - 从AI-Agent迁移
 
 ### What Was Adapted - 已适配的内容
 
@@ -626,7 +626,7 @@ Enable debug logging for detailed workflow information:
 
 ## Conclusion - 结论
 
-The Workflow Management integration provides a comprehensive solution for managing business processes and task tracking. Based on the OpenManus planning.py functionality, it offers enhanced features while maintaining the core workflow concepts. The todo list file interaction capability enables seamless integration with external tools and manual workflow management.
+The Workflow Management integration provides a comprehensive solution for managing business processes and task tracking. Based on the AI-Agent planning.py functionality, it offers enhanced features while maintaining the core workflow concepts. The todo list file interaction capability enables seamless integration with external tools and manual workflow management.
 
-工作流管理集成为管理业务流程和任务跟踪提供了全面的解决方案。基于OpenManus planning.py功能，它提供了增强功能，同时保持了核心工作流概念。待办事项列表文件交互功能使与外部工具和手动工作流管理的无缝集成成为可能。
+工作流管理集成为管理业务流程和任务跟踪提供了全面的解决方案。基于AI-Agent planning.py功能，它提供了增强功能，同时保持了核心工作流概念。待办事项列表文件交互功能使与外部工具和手动工作流管理的无缝集成成为可能。
 

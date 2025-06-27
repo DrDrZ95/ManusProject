@@ -12,8 +12,8 @@ This guide provides instructions for deploying the AI Agent application using Do
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/DrDrZ95/ManusProject.git
-cd ManusProject
+git clone https://github.com/DrDrZ95/AI-AgentProject.git
+cd AI-AgentProject
 ```
 
 ### 2. Build and Run with Docker Compose

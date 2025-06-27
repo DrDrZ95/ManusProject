@@ -12,8 +12,8 @@
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/DrDrZ95/ManusProject.git
-cd ManusProject
+git clone https://github.com/DrDrZ95/AI-AgentProject.git
+cd AI-AgentProject
 ```
 
 ### 2. 使用 Docker Compose 构建和运行

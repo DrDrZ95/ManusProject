@@ -6,8 +6,8 @@ namespace AgentWebApi.Extensions;
 /// Workflow service extensions for dependency injection
 /// 工作流服务的依赖注入扩展
 /// 
-/// 基于OpenManus项目的planning.py功能转换而来
-/// Converted from OpenManus project's planning.py functionality
+/// 基于AI-Agent项目的planning.py功能转换而来
+/// Converted from AI-Agent project's planning.py functionality
 /// </summary>
 public static class WorkflowExtensions
 {

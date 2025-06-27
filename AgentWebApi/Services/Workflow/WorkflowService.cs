@@ -9,8 +9,8 @@ namespace AgentWebApi.Services.Workflow;
 /// Workflow service implementation
 /// 工作流服务实现
 /// 
-/// 基于OpenManus项目的planning.py转换而来，实现了核心的工作流管理和todo文件交互功能
-/// Converted from OpenManus project's planning.py, implementing core workflow management and todo file interaction
+/// 基于AI-Agent项目的planning.py转换而来，实现了核心的工作流管理和todo文件交互功能
+/// Converted from AI-Agent project's planning.py, implementing core workflow management and todo file interaction
 /// </summary>
 public class WorkflowService : IWorkflowService
 {
@@ -34,8 +34,8 @@ public class WorkflowService : IWorkflowService
     /// Create a new workflow plan
     /// 创建新的工作流计划
     /// 
-    /// 对应OpenManus中的_create_initial_plan方法
-    /// Corresponds to _create_initial_plan method in OpenManus
+    /// 对应AI-Agent中的_create_initial_plan方法
+    /// Corresponds to _create_initial_plan method in AI-Agent
     /// </summary>
     public async Task<WorkflowPlan> CreatePlanAsync(CreatePlanRequest request, CancellationToken cancellationToken = default)
     {
@@ -120,8 +120,8 @@ public class WorkflowService : IWorkflowService
     /// Update step status in a plan
     /// 更新计划中的步骤状态
     /// 
-    /// 对应OpenManus中的mark_step功能
-    /// Corresponds to mark_step functionality in OpenManus
+    /// 对应AI-Agent中的mark_step功能
+    /// Corresponds to mark_step functionality in AI-Agent
     /// </summary>
     public async Task<bool> UpdateStepStatusAsync(string planId, int stepIndex, PlanStepStatus status, CancellationToken cancellationToken = default)
     {
@@ -175,8 +175,8 @@ public class WorkflowService : IWorkflowService
     /// Get current active step in a plan
     /// 获取计划中当前活动步骤
     /// 
-    /// 对应OpenManus中的_get_current_step_info方法
-    /// Corresponds to _get_current_step_info method in OpenManus
+    /// 对应AI-Agent中的_get_current_step_info方法
+    /// Corresponds to _get_current_step_info method in AI-Agent
     /// </summary>
     public async Task<WorkflowStep?> GetCurrentStepAsync(string planId, CancellationToken cancellationToken = default)
     {
@@ -254,8 +254,8 @@ public class WorkflowService : IWorkflowService
     /// Generate todo list file content for a plan
     /// 为计划生成待办事项列表文件内容
     /// 
-    /// 这是OpenManus中的核心功能，生成markdown格式的任务列表
-    /// This is a core feature from OpenManus, generating markdown format task lists
+    /// 这是AI-Agent中的核心功能，生成markdown格式的任务列表
+    /// This is a core feature from AI-Agent, generating markdown format task lists
     /// </summary>
     public async Task<string> GenerateToDoListAsync(string planId, CancellationToken cancellationToken = default)
     {
@@ -532,8 +532,8 @@ public class WorkflowService : IWorkflowService
     /// Extract step type from step text
     /// 从步骤文本中提取步骤类型
     /// 
-    /// 对应OpenManus中的类型提取逻辑
-    /// Corresponds to type extraction logic in OpenManus
+    /// 对应AI-Agent中的类型提取逻辑
+    /// Corresponds to type extraction logic in AI-Agent
     /// </summary>
     private static string? ExtractStepType(string stepText)
     {

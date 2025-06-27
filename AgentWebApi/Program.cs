@@ -24,6 +24,8 @@ builder.Services.AddSemanticKernel(builder.Configuration); // Add Semantic Kerne
 builder.Services.AddRagServices(builder.Configuration); // Add RAG services - 添加RAG服务
 builder.Services.AddSandboxTerminal(builder.Configuration); // Add Sandbox Terminal services - 添加沙盒终端服务
 builder.Services.AddWorkflowServices(builder.Configuration); // Add Workflow services - 添加工作流服务
+builder.Services.AddPromptsServices(); // Add Prompts services - 添加提示词服务
+// builder.Services.AddPostgreSqlDatabase(builder.Configuration); // Optional PostgreSQL database - 可选的PostgreSQL数据库
 builder.Services.AddBasicAuth(); // Add basic authentication and authorization services
 
 // Build the application - Builder Pattern

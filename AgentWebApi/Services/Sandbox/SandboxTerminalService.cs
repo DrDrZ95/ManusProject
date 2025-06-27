@@ -10,8 +10,8 @@ namespace AgentWebApi.Services.Sandbox;
 /// Local sandbox terminal service implementation
 /// 本地沙盒终端服务实现
 /// 
-/// 注意：此实现基于OpenManus项目的terminal.py转换而来
-/// Note: This implementation is converted from OpenManus project's terminal.py
+/// 注意：此实现基于AI-Agent项目的terminal.py转换而来
+/// Note: This implementation is converted from AI-Agent project's terminal.py
 /// 
 /// 主要差异：
 /// Main differences:
@@ -171,8 +171,8 @@ public class SandboxTerminalService : ISandboxTerminalService
     /// Execute a command with streaming output
     /// 执行命令并流式输出结果
     /// 
-    /// 注意：这是对OpenManus异步输出功能的简化实现
-    /// Note: This is a simplified implementation of OpenManus async output functionality
+    /// 注意：这是对AI-Agent异步输出功能的简化实现
+    /// Note: This is a simplified implementation of AI-Agent async output functionality
     /// </summary>
     public async IAsyncEnumerable<string> ExecuteCommandStreamAsync(
         string command,
@@ -303,8 +303,8 @@ public class SandboxTerminalService : ISandboxTerminalService
     /// Check if a command is safe to execute
     /// 检查命令是否安全可执行
     /// 
-    /// 基于OpenManus的_sanitize_command方法实现
-    /// Based on OpenManus _sanitize_command method
+    /// 基于AI-Agent的_sanitize_command方法实现
+    /// Based on AI-Agent _sanitize_command method
     /// </summary>
     public bool IsCommandSafe(string command)
     {

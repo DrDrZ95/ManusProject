@@ -7,8 +7,8 @@ namespace AgentWebApi.Controllers;
 /// Workflow management controller
 /// 工作流管理控制器
 /// 
-/// 提供基于OpenManus planning.py的工作流管理API
-/// Provides workflow management API based on OpenManus planning.py
+/// 提供基于AI-Agent planning.py的工作流管理API
+/// Provides workflow management API based on AI-Agent planning.py
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -235,8 +235,8 @@ public class WorkflowController : ControllerBase
     /// Generate todo list for a plan
     /// 为计划生成待办事项列表
     /// 
-    /// 这是OpenManus的核心功能，生成markdown格式的任务列表
-    /// This is a core feature from OpenManus, generating markdown format task lists
+    /// 这是AI-Agent的核心功能，生成markdown格式的任务列表
+    /// This is a core feature from AI-Agent, generating markdown format task lists
     /// </summary>
     /// <param name="planId">Plan ID - 计划ID</param>
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>

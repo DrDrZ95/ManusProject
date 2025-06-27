@@ -1,10 +1,10 @@
-# OpenManus Integration Guide
+# AI-Agent Integration Guide
 
-This document provides a comprehensive guide for integrating the OpenManus framework with the ai-agent solution, focusing on the Model Context Protocol (MCP) compatibility, agent orchestration, and extensibility points.
+This document provides a comprehensive guide for integrating the AI-Agent framework with the ai-agent solution, focusing on the Model Context Protocol (MCP) compatibility, agent orchestration, and extensibility points.
 
-## Introduction to OpenManus
+## Introduction to AI-Agent
 
-OpenManus is an open-source framework for building general AI agents, designed to provide similar functionality to proprietary agent systems. It offers a flexible architecture for creating, configuring, and deploying AI agents with various capabilities, including:
+AI-Agent is an open-source framework for building general AI agents, designed to provide similar functionality to proprietary agent systems. It offers a flexible architecture for creating, configuring, and deploying AI agents with various capabilities, including:
 
 - Tool-based agent interactions
 - Model Context Protocol (MCP) integration
@@ -14,7 +14,7 @@ OpenManus is an open-source framework for building general AI agents, designed t
 
 ## Integration Architecture
 
-The integration between our ai-agent solution and OpenManus can be structured in several ways, depending on your specific requirements:
+The integration between our ai-agent solution and AI-Agent can be structured in several ways, depending on your specific requirements:
 
 ### 1. MCP Protocol Integration
 
@@ -22,12 +22,12 @@ The most direct integration path leverages the Model Context Protocol (MCP) comp
 
 ```
 ┌─────────────┐     ┌───────────────┐     ┌────────────┐
-│ ai-agent    │     │ MCP Protocol  │     │ OpenManus  │
+│ ai-agent    │     │ MCP Protocol  │     │ AI-Agent  │
 │ (.NET API)  ├────►│ Communication ├────►│ Agents     │
 └─────────────┘     └───────────────┘     └────────────┘
 ```
 
-Our ai-agent solution includes `DynamicExternalAccessTool.cs` and `QwenDialogueTool.cs` in the `AgentWebApi/McpTools/` directory, which can be extended to communicate with OpenManus agents through the MCP protocol.
+Our ai-agent solution includes `DynamicExternalAccessTool.cs` and `QwenDialogueTool.cs` in the `AgentWebApi/McpTools/` directory, which can be extended to communicate with AI-Agent agents through the MCP protocol.
 
 ### 2. Shared Tool Ecosystem
 
@@ -42,7 +42,7 @@ Both frameworks can share and extend the same tool ecosystem:
        ┌───────────┴───────────┐
        │                       │
 ┌──────▼──────┐         ┌──────▼──────┐
-│ ai-agent    │         │ OpenManus   │
+│ ai-agent    │         │ AI-Agent   │
 │ Framework   │         │ Framework   │
 └─────────────┘         └─────────────┘
 ```
@@ -57,7 +57,7 @@ For more complex scenarios, a hybrid deployment can be implemented:
 ┌─────────────────────────────────────────────┐
 │                                             │
 │  ┌─────────────┐           ┌────────────┐   │
-│  │ ai-agent    │           │ OpenManus  │   │
+│  │ ai-agent    │           │ AI-Agent  │   │
 │  │ Components  │◄────────►│ Components │   │
 │  └─────────────┘           └────────────┘   │
 │                                             │
@@ -67,12 +67,12 @@ For more complex scenarios, a hybrid deployment can be implemented:
 
 ## Implementation Guide
 
-### Setting Up OpenManus
+### Setting Up AI-Agent
 
 1. **Installation**:
    ```bash
-   git clone https://github.com/mannaandpoem/OpenManus.git
-   cd OpenManus
+   git clone https://github.com/mannaandpoem/AI-Agent.git
+   cd AI-Agent
    pip install -r requirements.txt
    ```
 
@@ -90,26 +90,26 @@ For more complex scenarios, a hybrid deployment can be implemented:
 
 ### MCP Integration
 
-#### 1. Running OpenManus as an MCP Server
+#### 1. Running AI-Agent as an MCP Server
 
-OpenManus can be run as an MCP server that our ai-agent solution can connect to:
+AI-Agent can be run as an MCP server that our ai-agent solution can connect to:
 
 ```bash
 python run_mcp_server.py
 ```
 
-This starts an MCP server on the default port (8000) that exposes OpenManus tools through the MCP protocol.
+This starts an MCP server on the default port (8000) that exposes AI-Agent tools through the MCP protocol.
 
 #### 2. Connecting from ai-agent
 
-To connect our ai-agent solution to the OpenManus MCP server:
+To connect our ai-agent solution to the AI-Agent MCP server:
 
 1. **Update the MCP Client Configuration**:
 
-   Modify the `QwenServiceClient.cs` to connect to the OpenManus MCP server:
+   Modify the `QwenServiceClient.cs` to connect to the AI-Agent MCP server:
 
    ```csharp
-   // Example configuration for connecting to OpenManus MCP server
+   // Example configuration for connecting to AI-Agent MCP server
    var mpcConfig = new McpConfiguration
    {
        ServerUrl = "http://localhost:8000/sse",
@@ -119,13 +119,13 @@ To connect our ai-agent solution to the OpenManus MCP server:
 
 2. **Extend the DynamicExternalAccessTool**:
 
-   The existing `DynamicExternalAccessTool.cs` can be extended to handle OpenManus-specific tools:
+   The existing `DynamicExternalAccessTool.cs` can be extended to handle AI-Agent-specific tools:
 
    ```csharp
-   // Example extension for OpenManus tools
-   public async Task<ToolResponse> HandleOpenManusToolAsync(string toolName, JObject parameters)
+   // Example extension for AI-Agent tools
+   public async Task<ToolResponse> HandleAI-AgentToolAsync(string toolName, JObject parameters)
    {
-       // Implementation for handling OpenManus-specific tools
+       // Implementation for handling AI-Agent-specific tools
        // ...
    }
    ```
@@ -162,7 +162,7 @@ To create a shared tool ecosystem:
    ```
 
    ```python
-   # In OpenManus
+   # In AI-Agent
    tools.register(SharedSearchTool())
    ```
 
@@ -174,7 +174,7 @@ For complex workflows requiring bidirectional communication between agents:
 
 ```
 ┌─────────────┐     ┌───────────────┐     ┌────────────┐
-│ ai-agent    │◄───►│ Message Queue │◄───►│ OpenManus  │
+│ ai-agent    │◄───►│ Message Queue │◄───►│ AI-Agent  │
 │ Agents      │     │ (e.g., Redis) │     │ Agents     │
 └─────────────┘     └───────────────┘     └────────────┘
 ```
@@ -190,7 +190,7 @@ For maintaining consistent state across frameworks:
 
 ```
 ┌─────────────┐     ┌───────────────┐     ┌────────────┐
-│ ai-agent    │◄───►│ Shared State  │◄───►│ OpenManus  │
+│ ai-agent    │◄───►│ Shared State  │◄───►│ AI-Agent  │
 │ Framework   │     │ Database      │     │ Framework  │
 └─────────────┘     └───────────────┘     └────────────┘
 ```
@@ -219,12 +219,12 @@ Implementation steps:
    - Consider Kubernetes for production deployments
    - Implement health checks for all components
 
-## Example: Integrating OpenManus Browser Automation
+## Example: Integrating AI-Agent Browser Automation
 
-OpenManus includes browser automation capabilities that can be integrated with our ai-agent solution:
+AI-Agent includes browser automation capabilities that can be integrated with our ai-agent solution:
 
 ```csharp
-// Example: Invoking OpenManus browser automation from ai-agent
+// Example: Invoking AI-Agent browser automation from ai-agent
 public async Task<string> PerformBrowserAutomation(string url, string action)
 {
     var parameters = new JObject
@@ -240,9 +240,9 @@ public async Task<string> PerformBrowserAutomation(string url, string action)
 
 ## Conclusion
 
-Integrating OpenManus with our ai-agent solution provides several benefits:
+Integrating AI-Agent with our ai-agent solution provides several benefits:
 
-1. **Extended Tool Ecosystem**: Access to OpenManus's growing tool collection
+1. **Extended Tool Ecosystem**: Access to AI-Agent's growing tool collection
 2. **Flexible Agent Architectures**: Combine different agent approaches for optimal solutions
 3. **Open-Source Foundation**: Build on a transparent, community-driven framework
 4. **MCP Compatibility**: Leverage the standardized Model Context Protocol for seamless integration
@@ -251,6 +251,6 @@ By following this integration guide, you can create powerful hybrid agent system
 
 ## References
 
-- [OpenManus GitHub Repository](https://github.com/mannaandpoem/OpenManus)
+- [AI-Agent GitHub Repository](https://github.com/mannaandpoem/AI-Agent)
 - [Model Context Protocol Specification](https://github.com/microsoft/mcp)
 - [ai-agent Dynamic External Access Documentation](dynamic_external_access.md)

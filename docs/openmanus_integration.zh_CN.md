@@ -1,10 +1,10 @@
-# OpenManus 集成指南
+# AI-Agent 集成指南
 
-本文档提供了将 OpenManus 框架与 ai-agent 解决方案集成的综合指南，重点关注模型上下文协议（MCP）兼容性、代理编排和扩展点。
+本文档提供了将 AI-Agent 框架与 ai-agent 解决方案集成的综合指南，重点关注模型上下文协议（MCP）兼容性、代理编排和扩展点。
 
-## OpenManus 简介
+## AI-Agent 简介
 
-OpenManus 是一个用于构建通用 AI 代理的开源框架，旨在提供类似于专有代理系统的功能。它为创建、配置和部署具有各种功能的 AI 代理提供了灵活的架构，包括：
+AI-Agent 是一个用于构建通用 AI 代理的开源框架，旨在提供类似于专有代理系统的功能。它为创建、配置和部署具有各种功能的 AI 代理提供了灵活的架构，包括：
 
 - 基于工具的代理交互
 - 模型上下文协议（MCP）集成
@@ -14,7 +14,7 @@ OpenManus 是一个用于构建通用 AI 代理的开源框架，旨在提供类
 
 ## 集成架构
 
-根据您的具体需求，我们的 ai-agent 解决方案与 OpenManus 的集成可以通过几种方式构建：
+根据您的具体需求，我们的 ai-agent 解决方案与 AI-Agent 的集成可以通过几种方式构建：
 
 ### 1. MCP 协议集成
 
@@ -22,12 +22,12 @@ OpenManus 是一个用于构建通用 AI 代理的开源框架，旨在提供类
 
 ```
 ┌─────────────┐     ┌───────────────┐     ┌────────────┐
-│ ai-agent    │     │ MCP 协议      │     │ OpenManus  │
+│ ai-agent    │     │ MCP 协议      │     │ AI-Agent  │
 │ (.NET API)  ├────►│ 通信          ├────►│ 代理       │
 └─────────────┘     └───────────────┘     └────────────┘
 ```
 
-我们的 ai-agent 解决方案在 `AgentWebApi/McpTools/` 目录中包含 `DynamicExternalAccessTool.cs` 和 `QwenDialogueTool.cs`，可以扩展这些工具通过 MCP 协议与 OpenManus 代理进行通信。
+我们的 ai-agent 解决方案在 `AgentWebApi/McpTools/` 目录中包含 `DynamicExternalAccessTool.cs` 和 `QwenDialogueTool.cs`，可以扩展这些工具通过 MCP 协议与 AI-Agent 代理进行通信。
 
 ### 2. 共享工具生态系统
 
@@ -42,7 +42,7 @@ OpenManus 是一个用于构建通用 AI 代理的开源框架，旨在提供类
        ┌───────────┴───────────┐
        │                       │
 ┌──────▼──────┐         ┌──────▼──────┐
-│ ai-agent    │         │ OpenManus   │
+│ ai-agent    │         │ AI-Agent   │
 │ 框架        │         │ 框架        │
 └─────────────┘         └─────────────┘
 ```
@@ -57,7 +57,7 @@ OpenManus 是一个用于构建通用 AI 代理的开源框架，旨在提供类
 ┌─────────────────────────────────────────────┐
 │                                             │
 │  ┌─────────────┐           ┌────────────┐   │
-│  │ ai-agent    │           │ OpenManus  │   │
+│  │ ai-agent    │           │ AI-Agent  │   │
 │  │ 组件        │◄────────►│ 组件       │   │
 │  └─────────────┘           └────────────┘   │
 │                                             │
@@ -67,12 +67,12 @@ OpenManus 是一个用于构建通用 AI 代理的开源框架，旨在提供类
 
 ## 实施指南
 
-### 设置 OpenManus
+### 设置 AI-Agent
 
 1. **安装**：
    ```bash
-   git clone https://github.com/mannaandpoem/OpenManus.git
-   cd OpenManus
+   git clone https://github.com/mannaandpoem/AI-Agent.git
+   cd AI-Agent
    pip install -r requirements.txt
    ```
 
@@ -90,26 +90,26 @@ OpenManus 是一个用于构建通用 AI 代理的开源框架，旨在提供类
 
 ### MCP 集成
 
-#### 1. 将 OpenManus 作为 MCP 服务器运行
+#### 1. 将 AI-Agent 作为 MCP 服务器运行
 
-OpenManus 可以作为 MCP 服务器运行，我们的 ai-agent 解决方案可以连接到该服务器：
+AI-Agent 可以作为 MCP 服务器运行，我们的 ai-agent 解决方案可以连接到该服务器：
 
 ```bash
 python run_mcp_server.py
 ```
 
-这将在默认端口（8000）上启动一个 MCP 服务器，通过 MCP 协议公开 OpenManus 工具。
+这将在默认端口（8000）上启动一个 MCP 服务器，通过 MCP 协议公开 AI-Agent 工具。
 
 #### 2. 从 ai-agent 连接
 
-要将我们的 ai-agent 解决方案连接到 OpenManus MCP 服务器：
+要将我们的 ai-agent 解决方案连接到 AI-Agent MCP 服务器：
 
 1. **更新 MCP 客户端配置**：
 
-   修改 `QwenServiceClient.cs` 以连接到 OpenManus MCP 服务器：
+   修改 `QwenServiceClient.cs` 以连接到 AI-Agent MCP 服务器：
 
    ```csharp
-   // 连接到 OpenManus MCP 服务器的示例配置
+   // 连接到 AI-Agent MCP 服务器的示例配置
    var mpcConfig = new McpConfiguration
    {
        ServerUrl = "http://localhost:8000/sse",
@@ -119,13 +119,13 @@ python run_mcp_server.py
 
 2. **扩展 DynamicExternalAccessTool**：
 
-   可以扩展现有的 `DynamicExternalAccessTool.cs` 以处理 OpenManus 特定的工具：
+   可以扩展现有的 `DynamicExternalAccessTool.cs` 以处理 AI-Agent 特定的工具：
 
    ```csharp
-   // OpenManus 工具的示例扩展
-   public async Task<ToolResponse> HandleOpenManusToolAsync(string toolName, JObject parameters)
+   // AI-Agent 工具的示例扩展
+   public async Task<ToolResponse> HandleAI-AgentToolAsync(string toolName, JObject parameters)
    {
-       // 处理 OpenManus 特定工具的实现
+       // 处理 AI-Agent 特定工具的实现
        // ...
    }
    ```
@@ -162,7 +162,7 @@ python run_mcp_server.py
    ```
 
    ```python
-   # 在 OpenManus 中
+   # 在 AI-Agent 中
    tools.register(SharedSearchTool())
    ```
 
@@ -174,7 +174,7 @@ python run_mcp_server.py
 
 ```
 ┌─────────────┐     ┌───────────────┐     ┌────────────┐
-│ ai-agent    │◄───►│ 消息队列      │◄───►│ OpenManus  │
+│ ai-agent    │◄───►│ 消息队列      │◄───►│ AI-Agent  │
 │ 代理        │     │ (如 Redis)    │     │ 代理       │
 └─────────────┘     └───────────────┘     └────────────┘
 ```
@@ -190,7 +190,7 @@ python run_mcp_server.py
 
 ```
 ┌─────────────┐     ┌───────────────┐     ┌────────────┐
-│ ai-agent    │◄───►│ 共享状态      │◄───►│ OpenManus  │
+│ ai-agent    │◄───►│ 共享状态      │◄───►│ AI-Agent  │
 │ 框架        │     │ 数据库        │     │ 框架       │
 └─────────────┘     └───────────────┘     └────────────┘
 ```
@@ -219,12 +219,12 @@ python run_mcp_server.py
    - 考虑使用 Kubernetes 进行生产部署
    - 为所有组件实现健康检查
 
-## 示例：集成 OpenManus 浏览器自动化
+## 示例：集成 AI-Agent 浏览器自动化
 
-OpenManus 包含可以与我们的 ai-agent 解决方案集成的浏览器自动化功能：
+AI-Agent 包含可以与我们的 ai-agent 解决方案集成的浏览器自动化功能：
 
 ```csharp
-// 示例：从 ai-agent 调用 OpenManus 浏览器自动化
+// 示例：从 ai-agent 调用 AI-Agent 浏览器自动化
 public async Task<string> PerformBrowserAutomation(string url, string action)
 {
     var parameters = new JObject
@@ -240,9 +240,9 @@ public async Task<string> PerformBrowserAutomation(string url, string action)
 
 ## 结论
 
-将 OpenManus 与我们的 ai-agent 解决方案集成提供了几个好处：
+将 AI-Agent 与我们的 ai-agent 解决方案集成提供了几个好处：
 
-1. **扩展工具生态系统**：访问 OpenManus 不断增长的工具集合
+1. **扩展工具生态系统**：访问 AI-Agent 不断增长的工具集合
 2. **灵活的代理架构**：结合不同的代理方法以获得最佳解决方案
 3. **开源基础**：建立在透明、社区驱动的框架上
 4. **MCP 兼容性**：利用标准化的模型上下文协议实现无缝集成
@@ -251,6 +251,6 @@ public async Task<string> PerformBrowserAutomation(string url, string action)
 
 ## 参考资料
 
-- [OpenManus GitHub 仓库](https://github.com/mannaandpoem/OpenManus)
+- [AI-Agent GitHub 仓库](https://github.com/mannaandpoem/AI-Agent)
 - [模型上下文协议规范](https://github.com/microsoft/mcp)
 - [ai-agent 动态外部访问文档](dynamic_external_access.md)

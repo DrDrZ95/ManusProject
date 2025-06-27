@@ -6,8 +6,8 @@ namespace AgentWebApi.Services.Workflow;
 /// Interface for workflow management operations
 /// 工作流管理操作接口
 /// 
-/// 基于OpenManus项目的planning.py转换而来
-/// Converted from OpenManus project's planning.py
+/// 基于AI-Agent项目的planning.py转换而来
+/// Converted from AI-Agent project's planning.py
 /// </summary>
 public interface IWorkflowService
 {
@@ -72,8 +72,8 @@ public interface IWorkflowService
     /// Generate todo list file content for a plan
     /// 为计划生成待办事项列表文件内容
     /// 
-    /// 这是OpenManus中的核心功能，用于生成可视化的任务列表
-    /// This is a core feature from OpenManus for generating visual task lists
+    /// 这是AI-Agent中的核心功能，用于生成可视化的任务列表
+    /// This is a core feature from AI-Agent for generating visual task lists
     /// </summary>
     /// <param name="planId">Plan ID - 计划ID</param>
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
@@ -122,8 +122,8 @@ public interface IWorkflowService
 /// Plan step status enumeration
 /// 计划步骤状态枚举
 /// 
-/// 对应OpenManus中的PlanStepStatus
-/// Corresponds to PlanStepStatus in OpenManus
+/// 对应AI-Agent中的PlanStepStatus
+/// Corresponds to PlanStepStatus in AI-Agent
 /// </summary>
 public enum PlanStepStatus
 {
@@ -158,8 +158,8 @@ public static class PlanStepStatusExtensions
     /// Get status marker symbol
     /// 获取状态标记符号
     /// 
-    /// 对应OpenManus中的get_status_marks方法
-    /// Corresponds to get_status_marks method in OpenManus
+    /// 对应AI-Agent中的get_status_marks方法
+    /// Corresponds to get_status_marks method in AI-Agent
     /// </summary>
     /// <param name="status">Status - 状态</param>
     /// <returns>Marker symbol - 标记符号</returns>
