@@ -47,6 +47,11 @@ public class AgentDbContext : DbContext
     /// </summary>
     public DbSet<AuditLogEntity> AuditLogs { get; set; }
 
+    /// <summary>
+    /// Finetune records table - 微调记录表
+    /// </summary>
+    public DbSet<FinetuneRecordEntity> FinetuneRecords { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -138,6 +143,34 @@ public class AgentDbContext : DbContext
             entity.HasIndex(e => e.EntityType);
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.Timestamp);
+        });
+
+        // 配置微调记录实体 - Configure finetune record entity
+        modelBuilder.Entity<FinetuneRecordEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasMaxLength(50);
+            entity.Property(e => e.JobName).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.BaseModel).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.DatasetPath).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.ConfigJson).HasColumnType("jsonb");
+            entity.Property(e => e.MetricsJson).HasColumnType("jsonb");
+            entity.Property(e => e.MetadataJson).HasColumnType("jsonb");
+            entity.Property(e => e.Logs).HasColumnType("text");
+            entity.Property(e => e.ErrorMessage).HasColumnType("text");
+            entity.Property(e => e.OutputPath).HasMaxLength(500);
+            entity.Property(e => e.GpuDevices).HasMaxLength(100);
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.Tags).HasMaxLength(500);
+            
+            // 索引配置 - Index configuration
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.BaseModel);
+            entity.HasIndex(e => e.CreatedBy);
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => e.StartedAt);
+            entity.HasIndex(e => e.CompletedAt);
+            entity.HasIndex(e => e.Priority);
         });
     }
 }

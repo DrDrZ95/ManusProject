@@ -26,6 +26,7 @@ builder.Services.AddSandboxTerminal(builder.Configuration); // Add Sandbox Termi
 builder.Services.AddWorkflowServices(builder.Configuration); // Add Workflow services - 添加工作流服务
 builder.Services.AddPromptsServices(); // Add Prompts services - 添加提示词服务
 // builder.Services.AddPostgreSqlDatabase(builder.Configuration); // Optional PostgreSQL database - 可选的PostgreSQL数据库
+// builder.Services.AddPythonFinetune(builder.Configuration); // Optional Python.NET fine-tuning - 可选的Python.NET微调
 builder.Services.AddBasicAuth(); // Add basic authentication and authorization services
 
 // Build the application - Builder Pattern
