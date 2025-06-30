@@ -12,7 +12,7 @@ public interface ISemanticKernelService
 {
     // Chat Completion - 聊天完成
     Task<string> GetChatCompletionAsync(string prompt, string? systemMessage = null);
-    Task<IAsyncEnumerable<string>> GetStreamingChatCompletionAsync(string prompt, string? systemMessage = null);
+    IAsyncEnumerable<string> GetStreamingChatCompletionAsync(string prompt, string? systemMessage = null);
     Task<string> GetChatCompletionWithHistoryAsync(IEnumerable<ChatMessage> chatHistory);
 
     // Text Embeddings - 文本嵌入

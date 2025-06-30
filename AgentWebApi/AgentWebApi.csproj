@@ -11,6 +11,17 @@
     <PackageReference Include="ModelContextProtocol" Version="0.1.0-preview.14" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     
+    <!-- IdentityServer4 and Authentication SDKs -->
+    <PackageReference Include="IdentityServer4" Version="4.1.2" />
+    <PackageReference Include="IdentityServer4.AspNetIdentity" Version="4.1.2" />
+    <PackageReference Include="IdentityServer4.EntityFramework" Version="4.1.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+    
+    <!-- SignalR SDK for Real-time Communication -->
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.0" />
+    
     <!-- Python.NET SDK for Python integration -->
     <!-- Python.NET SDK用于Python集成 -->
     <PackageReference Include="Python.Runtime" Version="3.0.3" />

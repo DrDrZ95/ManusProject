@@ -27,6 +27,8 @@ builder.Services.AddWorkflowServices(builder.Configuration); // Add Workflow ser
 builder.Services.AddPromptsServices(); // Add Prompts services - 添加提示词服务
 // builder.Services.AddPostgreSqlDatabase(builder.Configuration); // Optional PostgreSQL database - 可选的PostgreSQL数据库
 // builder.Services.AddPythonFinetune(builder.Configuration); // Optional Python.NET fine-tuning - 可选的Python.NET微调
+// builder.Services.AddIdentityServerServices(builder.Configuration); // Optional IdentityServer4 authentication - 可选的IdentityServer4身份验证
+// builder.Services.AddSignalRServices(builder.Configuration); // Optional SignalR real-time communication - 可选的SignalR实时通信
 builder.Services.AddBasicAuth(); // Add basic authentication and authorization services
 
 // Build the application - Builder Pattern
@@ -36,6 +38,8 @@ var app = builder.Build();
 // Configure the HTTP request pipeline using Extension Methods - Extension Method Pattern
 // 使用扩展方法配置HTTP请求管道 - 扩展方法模式
 app.ConfigureApplicationPipeline();
+// app.UseIdentityServerServices(app.Environment); // Optional IdentityServer4 middleware - 可选的IdentityServer4中间件
+// app.UseSignalRServices(builder.Configuration); // Optional SignalR middleware - 可选的SignalR中间件
 app.UseBasicAuth(); // Configure application to use authentication and authorization middleware
 
 // Run the application
