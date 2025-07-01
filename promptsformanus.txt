@@ -1,0 +1,5 @@
+stop current task, I have reconfigured the project configuration that you previously set up, please follow the steps below to do it:
+1.All project interactions take place in `/home/ubuntu/ai-agent`, you can try to study the previous construction history.
+2.Due to the previous sandbox reset, all SDK environments were lost.
+3.Later, I will inform you of the list of SDKs that need to be installed.
+4.try to push directly.
