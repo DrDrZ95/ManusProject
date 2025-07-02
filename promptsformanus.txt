@@ -3,3 +3,6 @@ stop current task, I have reconfigured the project configuration that you previo
 2.Due to the previous sandbox reset, all SDK environments were lost.
 3.Later, I will inform you of the list of SDKs that need to be installed.
 4.try to push directly.
+
+fix git push
+git remote set-url origin git@github.com:drdrz95/ManusProject.git
