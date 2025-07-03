@@ -1,0 +1,41 @@
+
+#!/usr/local/bin/bpftrace
+
+/*
+ * memory_usage.bt
+ * 监控系统内存使用率的bpftrace脚本
+ * This bpftrace script monitors system memory usage.
+ */
+
+BEGIN
+{
+    printf("Tracing memory usage... Hit Ctrl-C to end.\n");
+}
+
+// 每秒采样一次内存统计信息
+// Sample memory statistics every second
+interval:s:1
+{
+    // 从/proc/meminfo读取内存信息
+    // Read memory information from /proc/meminfo
+    $mem_total = ksym("MemTotal");
+    $mem_free = ksym("MemFree");
+    $buffers = ksym("Buffers");
+    $cached = ksym("Cached");
+
+    // 计算已使用内存 (近似值)
+    // Calculate used memory (approximate)
+    $mem_used = $mem_total - $mem_free - $buffers - $cached;
+
+    if ($mem_total > 0) {
+        $memory_usage_percent = ($mem_used * 100.0) / $mem_total;
+        printf("%.2f\n", $memory_usage_percent);
+    }
+}
+
+END
+{
+    printf("Memory usage tracing ended.\n");
+}
+
+

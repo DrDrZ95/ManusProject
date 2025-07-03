@@ -25,6 +25,7 @@ builder.Services.AddRagServices(builder.Configuration); // Add RAG services - �
 builder.Services.AddSandboxTerminal(builder.Configuration); // Add Sandbox Terminal services - 添加沙盒终端服务
 builder.Services.AddWorkflowServices(builder.Configuration); // Add Workflow services - 添加工作流服务
 builder.Services.AddPromptsServices(); // Add Prompts services - 添加提示词服务
+builder.Services.AddeBPFDetectiveServices(); // Add eBPF Detective services - 添加eBPF侦探服务
 // builder.Services.AddPostgreSqlDatabase(builder.Configuration); // Optional PostgreSQL database - 可选的PostgreSQL数据库
 // builder.Services.AddPythonFinetune(builder.Configuration); // Optional Python.NET fine-tuning - 可选的Python.NET微调
 // builder.Services.AddIdentityServerServices(builder.Configuration); // Optional IdentityServer4 authentication - 可选的IdentityServer4身份验证
@@ -43,6 +44,7 @@ app.ConfigureApplicationPipeline();
 // app.UseSignalRServices(builder.Configuration); // Optional SignalR middleware - 可选的SignalR中间件
 app.UseAiAgentYarp(); // Optional AI-Agent gateway middleware - 可选的AI-Agent网关中间件
 app.UseBasicAuth(); // Configure application to use authentication and authorization middleware
+app.MapControllers(); // Map eBPF controllers
 
 // Run the application
 // 运行应用程序

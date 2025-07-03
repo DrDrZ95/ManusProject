@@ -1,0 +1,45 @@
+#!/usr/local/bin/bpftrace
+
+/*
+ * cpu_usage.bt
+ * 计算系统CPU使用率的bpftrace脚本
+ * This bpftrace script calculates system CPU usage.
+ */
+
+BEGIN
+{
+    printf("Tracing CPU usage... Hit Ctrl-C to end.\n");
+    @start_time = nsecs;
+    @prev_idle = 0;
+    @prev_total = 0;
+}
+
+// 每秒采样一次CPU统计信息
+// Sample CPU statistics every second
+interval:s:1
+{
+    $cpu_stats = ksym("kstat_cpu");
+    $idle = $cpu_stats->cpus[0]->cp_idle;
+    $total = $cpu_stats->cpus[0]->cp_user + $cpu_stats->cpus[0]->cp_nice + \
+             $cpu_stats->cpus[0]->cp_system + $cpu_stats->cpus[0]->cp_idle + \
+             $cpu_stats->cpus[0]->cp_iowait + $cpu_stats->cpus[0]->cp_irq + \
+             $cpu_stats->cpus[0]->cp_softirq + $cpu_stats->cpus[0]->cp_steal;
+
+    $idle_delta = $idle - @prev_idle;
+    $total_delta = $total - @prev_total;
+
+    if ($total_delta > 0) {
+        $cpu_usage = (100.0 - ($idle_delta * 100.0 / $total_delta));
+        printf("%.2f\n", $cpu_usage);
+    }
+
+    @prev_idle = $idle;
+    @prev_total = $total;
+}
+
+END
+{
+    printf("CPU usage tracing ended.\n");
+}
+
+
