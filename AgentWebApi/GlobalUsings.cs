@@ -22,3 +22,6 @@ global using Microsoft.SemanticKernel;
 global using ModelContextProtocol.Extensions;
 
 
+
+global using System.Diagnostics;
+
