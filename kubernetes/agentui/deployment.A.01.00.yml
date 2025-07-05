@@ -1,0 +1,43 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agentui-deployment-A.01.00
+  labels:
+    app: agentui
+    version: A.01.00
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: agentui
+      version: A.01.00
+  template:
+    metadata:
+      labels:
+        app: agentui
+        version: A.01.00
+    spec:
+      containers:
+      - name: agentui
+        image: your-registry/agentui:A.01.00 # Replace with your image
+        ports:
+        - containerPort: 80
+        # Add other environment variables or configurations as needed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agentui-service
+  labels:
+    app: agentui
+spec:
+  selector:
+    app: agentui
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+
+

@@ -25,3 +25,6 @@ global using ModelContextProtocol.Extensions;
 
 global using System.Diagnostics;
 
+
+global using AgentWebApi.Services.Hdfs;
+

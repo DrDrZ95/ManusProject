@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agentwebapi-deployment-A.01.00
+  labels:
+    app: agentwebapi
+    version: A.01.00
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: agentwebapi
+      version: A.01.00
+  template:
+    metadata:
+      labels:
+        app: agentwebapi
+        version: A.01.00
+    spec:
+      containers:
+      - name: agentwebapi
+        image: your-registry/agentwebapi:A.01.00 # Replace with your image
+        ports:
+        - containerPort: 80
+        env:
+        - name: ASPNETCORE_URLS
+          value: http://+:80
+        # Add other environment variables or configurations as needed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agentwebapi-service
+  labels:
+    app: agentwebapi
+spec:
+  selector:
+    app: agentwebapi
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+
+
