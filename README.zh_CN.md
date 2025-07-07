@@ -1,6 +1,6 @@
 # AI-Agent 应用 (集成 .NET Web API)
 
-[![GitHub stars](https://img.shields.io/github/stars/DrDrZ95/ManusProject?style=social)](https://github.com/reworkd/AgentGPT/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/DrDrZ95/ManusProject?style=social)](https://github.com/DrDrZ95/ManusProject/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 [English Documentation](README.md)
