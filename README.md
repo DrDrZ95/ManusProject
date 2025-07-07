@@ -1,5 +1,8 @@
 # AI-Agent Application with .NET Web API
 
+[![GitHub stars](https://img.shields.io/github/stars/reworkd/AgentGPT?style=social)](https://github.com/reworkd/AgentGPT/stargazers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 [中文文档](README.zh_CN.md)
 
 This repository contains a comprehensive AI Agent application built with a .NET 8.0 Web API backend and a React frontend. It integrates various advanced AI and system monitoring capabilities.
@@ -16,29 +19,34 @@ This project aims to provide a robust and extensible solution for:
 6.  **API Gateway**: YARP (Yet Another Reverse Proxy) for intelligent routing, load balancing, and circuit breaking.
 7.  **Authentication & Authorization**: IdentityServer4 for secure access control and role-based distribution.
 8.  **Model Fine-tuning**: Python.NET integration for managing and tracking fine-tuning jobs.
-9.  **Frontend**: A React-based user interface (`AgentUI/`) for intuitive interaction.
+9.  **Frontend**: A React-based user interface (`platform/frontend/agent-chat/`) for intuitive interaction.
 
 ## Repository Structure
 
 ```
 ai-agent/
-├── AgentWebApi/            # .NET 8.0 Web API Project (Backend)
-│   ├── Controllers/        # API Endpoints
-│   ├── Data/               # EF Core DbContext and Repositories (PostgreSQL)
-│   ├── eBPF/               # eBPF Detective Module (Services, Controllers, Scripts)
-│   ├── Extensions/         # Extension Methods for modular configuration
-│   ├── Gateway/            # YARP Gateway and Circuit Breaker
-│   ├── Hubs/               # SignalR Hubs
-│   ├── Identity/           # IdentityServer4 Configuration
-│   ├── McpTools/           # Model Context Protocol integration tools
-│   ├── Plugins/            # Semantic Kernel Plugins
-│   ├── Services/           # Core Service Implementations (Semantic Kernel, RAG, Sandbox, Workflow, Prompts, Finetune)
-│   ├── appsettings.Development.json
-│   ├── appsettings.json
-│   ├── AgentWebApi.csproj
-│   └── Program.cs
-├── AgentUI/                # React Frontend application
-│   └── agent-chat/         # React chat application with silver theme
+├── platform/               # Core## Repository Structure
+
+```
+ai-agent/
+├── platform/               # Core application components
+│   ├── backend/            # .NET 8.0 Web API Project
+│   │   ├── Controllers/        # API Endpoints
+│   │   ├── Data/               # EF Core DbContext and Repositories (PostgreSQL)
+│   │   ├── eBPF/               # eBPF Detective Module (Services, Controllers, Scripts)
+│   │   ├── Extensions/         # Extension Methods for modular configuration
+│   │   ├── Gateway/            # YARP Gateway and Circuit Breaker
+│   │   ├── Hubs/               # SignalR Hubs
+│   │   ├── Identity/           # IdentityServer4 Configuration
+│   │   ├── McpTools/           # Model Context Protocol integration tools
+│   │   ├── Plugins/            # Semantic Kernel Plugins
+│   │   ├── Services/           # Core Service Implementations (Semantic Kernel, RAG, Sandbox, Workflow, Prompts, Finetune, HDFS)
+│   │   ├── appsettings.Development.json
+│   │   ├── appsettings.json
+│   │   ├── AgentWebApi.csproj
+│   │   └── Program.cs
+│   └── frontend/           # React Frontend application
+│       └── agent-chat/         # React chat application with silver theme
 ├── README.md               # Main project documentation (English)
 ├── README.zh_CN.md         # Main project documentation (Simplified Chinese)
 ├── config/                 # Configuration files (if any)
@@ -52,11 +60,13 @@ ai-agent/
 │   ├── chromadb_integration.md
 │   ├── ebpf_integration.md
 │   ├── identity_signalr_integration.md
+│   ├── kubernetes_istio_grayscale_release.zh_CN.md
 │   ├── rag_prompt_engineering.md
 │   ├── sandbox_terminal_integration.md
 │   ├── semantic_kernel_examples.md
 │   ├── workflow_integration.md
-│   └── yarp_gateway_integration.md
+│   ├── yarp_gateway_integration.md
+│   └── kubernetes_istio_grayscale_release.zh_CN.md
 ├── finetune/               # Model fine-tuning utilities (Python.NET interaction)
 ├── models/                 # Directory for model files
 ├── scripts/                # Setup and utility scripts
@@ -82,8 +92,8 @@ This will build and start all services. For detailed instructions, refer to the 
 
 #### Prerequisites
 
-*   **.NET 8.0 SDK**: For `AgentWebApi/`.
-*   **Node.js and pnpm**: For `AgentUI/agent-chat/`.
+*   **.NET 8.0 SDK**: For `platform/backend/`.
+*   **Node.js and pnpm**: For `platform/frontend/agent-chat/`.
 *   **Python 3.x**: For Python.NET integration and `finetune/` utilities.
 *   **Linux Environment**: For eBPF module (`bpftrace` required).
 
@@ -91,13 +101,13 @@ This will build and start all services. For detailed instructions, refer to the 
 
 Refer to the specific `docs/` for detailed setup and running instructions for each module:
 
-*   **`AgentWebApi/`**: See `docs/semantic_kernel_examples.md`, `docs/rag_prompt_engineering.md`, etc.
-*   **`AgentUI/agent-chat/`**: See `AgentUI/agent-chat/README.md` (if exists, otherwise standard React setup).
+*   **`platform/backend/`**: See `docs/semantic_kernel_examples.md`, `docs/rag_prompt_engineering.md`, etc.
+*   **`platform/frontend/agent-chat/`**: See `platform/frontend/agent-chat/README.md` (if exists, otherwise standard React setup).
 *   **`finetune/`**: See `docs/python_finetune_integration.md` (if exists, otherwise refer to `finetune/README.md`).
 
 ## OpenTelemetry Tracing
 
-The `AgentWebApi` project integrates OpenTelemetry for distributed tracing, providing insights into the application's execution flow. A typical Agent application execution sequence is instrumented as follows:
+The `platform/backend/` project integrates OpenTelemetry for distributed tracing, providing insights into the application's execution flow. A typical Agent application execution sequence is instrumented as follows:
 
 ```csharp
 // 1. Define ActivitySource for tracing
@@ -175,6 +185,7 @@ For Kubernetes deployments, consider using OpenTelemetry Collectors to gather tr
     *   [Identity & SignalR Integration](docs/identity_signalr_integration.md)
     *   [YARP Gateway Integration](docs/yarp_gateway_integration.md)
     *   [eBPF Integration](docs/ebpf_integration.md)
+    *   [Kubernetes, Istio, and Gray-scale Release Guide](docs/kubernetes_istio_grayscale_release.zh_CN.md)
 *   **Deployment**:
     *   [Docker Quick Start Guide](docs/docker_quickstart.md)
 

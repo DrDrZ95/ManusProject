@@ -1,5 +1,8 @@
 # AI-Agent 应用 (集成 .NET Web API)
 
+[![GitHub stars](https://img.shields.io/github/stars/reworkd/AgentGPT?style=social)](https://github.com/reworkd/AgentGPT/stargazers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 [English Documentation](README.md)
 
 本代码仓库包含一个全面的 AI Agent 应用程序，它使用 .NET 8.0 Web API 后端和 React 前端构建。它集成了各种先进的 AI 和系统监控功能。
@@ -16,29 +19,36 @@
 6.  **API 网关**：YARP（Yet Another Reverse Proxy）用于智能路由、负载均衡和熔断。
 7.  **认证与授权**：IdentityServer4 用于安全访问控制和基于角色的分发。
 8.  **模型微调**：Python.NET 集成，用于管理和跟踪微调作业。
-9.  **前端**：基于 React 的用户界面 (`AgentUI/`)，用于直观交互。
+9.  **前端**：基于 React 的用户界面 (`platform/frontend/agent-chat/`)，用于直观交互。
 
 ## 代码仓库结构
 
 ```
 ai-agent/
-├── AgentWebApi/            # .NET 8.0 Web API 项目 (后端)
-│   ├── Controllers/        # API 端点
-│   ├── Data/               # EF Core DbContext 和存储库 (PostgreSQL)
-│   ├── eBPF/               # eBPF 侦探模块 (服务、控制器、脚本)
-│   ├── Extensions/         # 模块化配置的扩展方法
-│   ├── Gateway/            # YARP 网关和熔断器
-│   ├── Hubs/               # SignalR Hubs
-│   ├── Identity/           # IdentityServer4 配置
-│   ├── McpTools/           # 模型上下文协议集成工具
-│   ├── Plugins/            # Semantic Kernel 插件
-│   ├── Services/           # 核心服务实现 (Semantic Kernel, RAG, Sandbox, Workflow, Prompts, Finetune)
-│   ├── appsettings.Development.json
-│   ├── appsettings.json
-│   ├── AgentWebApi.csproj
-│   └── Program.cs
-├── AgentUI/                # React 前端应用程序
-│   └── agent-chat/         # 带银色主题的 React 聊天应用程序
+├── platform/               # 核心应用程序组件
+│   ├── backend/            # .NET 8.0 Web API 项目 (后端)
+│   │   ├── Controllers/        # A## 代码仓库结构
+
+```
+ai-agent/
+├── platform/               # 核心应用程序组件
+│   ├── backend/            # .NET 8.0 Web API 项目 (后端)
+│   │   ├── Controllers/        # API 端点
+│   │   ├── Data/               # EF Core DbContext 和存储库 (PostgreSQL)
+│   │   ├── eBPF/               # eBPF 侦探模块 (服务、控制器、脚本)
+│   │   ├── Extensions/         # 模块化配置的扩展方法
+│   │   ├── Gateway/            # YARP 网关和熔断器
+│   │   ├── Hubs/               # SignalR Hubs
+│   │   ├── Identity/           # IdentityServer4 配置
+│   │   ├── McpTools/           # 模型上下文协议集成工具
+│   │   ├── Plugins/            # Semantic Kernel 插件
+│   │   ├── Services/           # 核心服务实现 (Semantic Kernel, RAG, Sandbox, Workflow, Prompts, Finetune, HDFS)
+│   │   ├── appsettings.Development.json
+│   │   ├── appsettings.json
+│   │   ├── AgentWebApi.csproj
+│   │   └── Program.cs
+│   └── frontend/           # React 前端应用程序
+│       └── agent-chat/         # 带银色主题的 React 聊天应用程序
 ├── README.md               # 主要项目文档 (英文)
 ├── README.zh_CN.md         # 主要项目文档 (简体中文)
 ├── config/                 # 配置文件 (如果需要)
@@ -52,18 +62,20 @@ ai-agent/
 │   ├── chromadb_integration.md
 │   ├── ebpf_integration.md
 │   ├── identity_signalr_integration.md
+│   ├── kubernetes_istio_grayscale_release.zh_CN.md
 │   ├── rag_prompt_engineering.md
 │   ├── sandbox_terminal_integration.md
 │   ├── semantic_kernel_examples.md
 │   ├── workflow_integration.md
-│   └── yarp_gateway_integration.md
+│   ├── yarp_gateway_integration.md
+│   └── kubernetes_istio_grayscale_release.zh_CN.md
 ├── finetune/               # 模型微调工具 (Python.NET 交互)
 ├── models/                 # 模型文件目录
 ├── scripts/                # 设置和实用工具脚本
 ├── src/                    # 源代码 (旧版 Python/FastAPI 模型服务器，如果适用)
 ├── .gitignore              # 指定 Git 应忽略的有意未跟踪的文件
 └── venv/                   # Python 虚拟环境
-```
+``````
 
 ## 快速开始
 
@@ -82,8 +94,8 @@ docker-compose up -d
 
 #### 系统要求
 
-*   **.NET 8.0 SDK**：适用于 `AgentWebApi/`。
-*   **Node.js 和 pnpm**：适用于 `AgentUI/agent-chat/`。
+*   **.NET 8.0 SDK**：适用于 `platform/backend/`。
+*   **Node.js 和 pnpm**：适用于 `platform/frontend/agent-chat/`。
 *   **Python 3.x**：适用于 Python.NET 集成和 `finetune/` 工具。
 *   **Linux 环境**：适用于 eBPF 模块（需要 `bpftrace`）。
 
@@ -91,13 +103,13 @@ docker-compose up -d
 
 请参阅具体的 `docs/` 以获取每个模块的详细设置和运行说明：
 
-*   **`AgentWebApi/`**：请参阅 `docs/semantic_kernel_examples.md`、`docs/rag_prompt_engineering.md` 等。
-*   **`AgentUI/agent-chat/`**：请参阅 `AgentUI/agent-chat/README.md`（如果存在，否则为标准 React 设置）。
+*   **`platform/backend/`**：请参阅 `docs/semantic_kernel_examples.md`、`docs/rag_prompt_engineering.md` 等。
+*   **`platform/frontend/agent-chat/`**：请参阅 `platform/frontend/agent-chat/README.md`（如果存在，否则为标准 React 设置）。
 *   **`finetune/`**：请参阅 `docs/python_finetune_integration.md`（如果存在，否则请参阅 `finetune/README.md`）。
 
 ## OpenTelemetry 跟踪
 
-`AgentWebApi` 项目集成了 OpenTelemetry，用于分布式跟踪，提供对应用程序执行流程的洞察。典型的 Agent 应用程序执行序列的检测如下：
+`platform/backend/` 项目集成了 OpenTelemetry，用于分布式跟踪，提供对应用程序执行流程的洞察。典型的 Agent 应用程序执行序列的检测如下：
 
 ```csharp
 // 1. 定义用于跟踪的 ActivitySource
@@ -175,6 +187,7 @@ app.Run();
     *   [Identity & SignalR 集成](docs/identity_signalr_integration.md)
     *   [YARP 网关集成](docs/yarp_gateway_integration.md)
     *   [eBPF 集成](docs/ebpf_integration.md)
+    *   [Kubernetes、Istio 与灰度发布指南](docs/kubernetes_istio_grayscale_release.zh_CN.md)
 *   **部署**：
     *   [Docker 快速入门指南](docs/docker_quickstart.md)
 
