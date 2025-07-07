@@ -1,6 +1,6 @@
 # AI-Agent Application with .NET Web API
 
-[![GitHub stars](https://img.shields.io/github/stars/reworkd/AgentGPT?style=social)](https://github.com/reworkd/AgentGPT/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/DrDrZ95/ManusProject?style=social)](https://github.com/DrDrZ95/ManusProject/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 [中文文档](README.zh_CN.md)
@@ -22,10 +22,6 @@ This project aims to provide a robust and extensible solution for:
 9.  **Frontend**: A React-based user interface (`platform/frontend/agent-chat/`) for intuitive interaction.
 
 ## Repository Structure
-
-```
-ai-agent/
-├── platform/               # Core## Repository Structure
 
 ```
 ai-agent/

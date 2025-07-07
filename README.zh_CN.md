@@ -1,6 +1,6 @@
 # AI-Agent 应用 (集成 .NET Web API)
 
-[![GitHub stars](https://img.shields.io/github/stars/reworkd/AgentGPT?style=social)](https://github.com/reworkd/AgentGPT/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/DrDrZ95/ManusProject?style=social)](https://github.com/reworkd/AgentGPT/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 [English Documentation](README.md)
@@ -22,12 +22,6 @@
 9.  **前端**：基于 React 的用户界面 (`platform/frontend/agent-chat/`)，用于直观交互。
 
 ## 代码仓库结构
-
-```
-ai-agent/
-├── platform/               # 核心应用程序组件
-│   ├── backend/            # .NET 8.0 Web API 项目 (后端)
-│   │   ├── Controllers/        # A## 代码仓库结构
 
 ```
 ai-agent/
