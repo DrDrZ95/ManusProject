@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using AgentWebApi.Services.Finetune;
 using AgentWebApi.Data.Entities;
+using AgentWebApi.Services.Telemetry;
 
 namespace AgentWebApi.Controllers;
 
@@ -18,11 +19,13 @@ public class FinetuneController : ControllerBase
 {
     private readonly IPythonFinetuneService _finetuneService;
     private readonly ILogger<FinetuneController> _logger;
+    private readonly IAgentTelemetryProvider _telemetryProvider;
 
-    public FinetuneController(IPythonFinetuneService finetuneService, ILogger<FinetuneController> logger)
+    public FinetuneController(IPythonFinetuneService finetuneService, ILogger<FinetuneController> logger, IAgentTelemetryProvider telemetryProvider)
     {
         _finetuneService = finetuneService ?? throw new ArgumentNullException(nameof(finetuneService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _telemetryProvider = telemetryProvider ?? throw new ArgumentNullException(nameof(telemetryProvider));
     }
 
     /// <summary>
@@ -34,47 +37,58 @@ public class FinetuneController : ControllerBase
     [HttpPost("start")]
     public async Task<ActionResult<StartFinetuneResponse>> StartFinetune([FromBody] FinetuneRequest request)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("FinetuneController.StartFinetune"))
         {
+            span.SetAttribute("finetune.job_name", request.JobName);
             _logger.LogInformation("Starting fine-tuning job: {JobName} - 启动微调任务: {JobName}", request.JobName);
             
             // 验证请求参数 - Validate request parameters
             if (string.IsNullOrWhiteSpace(request.JobName))
             {
+                span.SetStatus(ActivityStatusCode.Error, "Job name is required");
                 return BadRequest(new { error = "Job name is required", message = "任务名称不能为空" });
             }
 
             if (string.IsNullOrWhiteSpace(request.DatasetPath))
             {
+                span.SetStatus(ActivityStatusCode.Error, "Dataset path is required");
                 return BadRequest(new { error = "Dataset path is required", message = "数据集路径不能为空" });
             }
 
             if (string.IsNullOrWhiteSpace(request.OutputDir))
             {
+                span.SetStatus(ActivityStatusCode.Error, "Output directory is required");
                 return BadRequest(new { error = "Output directory is required", message = "输出目录不能为空" });
             }
 
-            // 启动微调任务 - Start fine-tuning job
-            var jobId = await _finetuneService.StartFinetuningAsync(request);
-            
-            var response = new StartFinetuneResponse
+            try
             {
-                JobId = jobId,
-                Message = "Fine-tuning job started successfully",
-                ChineseMessage = "微调任务启动成功",
-                Status = "queued"
-            };
+                // 启动微调任务 - Start fine-tuning job
+                var jobId = await _finetuneService.StartFinetuningAsync(request);
+                span.SetAttribute("finetune.job_id", jobId);
+                span.SetAttribute("finetune.status", "queued");
+                
+                var response = new StartFinetuneResponse
+                {
+                    JobId = jobId,
+                    Message = "Fine-tuning job started successfully",
+                    ChineseMessage = "微调任务启动成功",
+                    Status = "queued"
+                };
 
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to start fine-tuning job: {JobName} - 启动微调任务失败: {JobName}", request.JobName);
-            return StatusCode(500, new { 
-                error = "Internal server error", 
-                message = ex.Message,
-                chineseMessage = "服务器内部错误"
-            });
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to start fine-tuning job: {JobName} - 启动微调任务失败: {JobName}", request.JobName);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { 
+                    error = "Internal server error", 
+                    message = ex.Message,
+                    chineseMessage = "服务器内部错误"
+                });
+            }
         }
     }
 
@@ -87,51 +101,61 @@ public class FinetuneController : ControllerBase
     [HttpGet("{jobId}/status")]
     public async Task<ActionResult<FinetuneJobStatusResponse>> GetJobStatus(string jobId)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("FinetuneController.GetJobStatus"))
         {
+            span.SetAttribute("finetune.job_id", jobId);
             _logger.LogInformation("Getting job status: {JobId} - 获取任务状态: {JobId}", jobId);
             
             if (string.IsNullOrWhiteSpace(jobId))
             {
+                span.SetStatus(ActivityStatusCode.Error, "Job ID is required");
                 return BadRequest(new { error = "Job ID is required", message = "任务ID不能为空" });
             }
 
-            var record = await _finetuneService.GetJobStatusAsync(jobId);
-            if (record == null)
+            try
             {
-                return NotFound(new { error = "Job not found", message = "任务未找到", jobId });
+                var record = await _finetuneService.GetJobStatusAsync(jobId);
+                if (record == null)
+                {
+                    span.SetStatus(ActivityStatusCode.Error, "Job not found");
+                    return NotFound(new { error = "Job not found", message = "任务未找到", jobId });
+                }
+                span.SetAttribute("finetune.status", record.Status.ToString());
+                span.SetAttribute("finetune.progress", record.Progress);
+
+                var response = new FinetuneJobStatusResponse
+                {
+                    JobId = record.Id,
+                    JobName = record.JobName,
+                    Status = record.Status.ToString(),
+                    StatusDisplay = record.Status.GetDisplayName(),
+                    ChineseStatusDisplay = record.Status.GetChineseDisplayName(),
+                    Progress = record.Progress,
+                    CurrentEpoch = record.CurrentEpoch,
+                    TotalEpochs = record.TotalEpochs,
+                    CurrentLoss = record.CurrentLoss,
+                    BestLoss = record.BestLoss,
+                    EstimatedTimeRemaining = record.EstimatedTimeRemaining,
+                    CreatedAt = record.CreatedAt,
+                    StartedAt = record.StartedAt,
+                    CompletedAt = record.CompletedAt,
+                    ErrorMessage = record.ErrorMessage,
+                    OutputPath = record.OutputPath
+                };
+
+                return Ok(response);
             }
-
-            var response = new FinetuneJobStatusResponse
+            catch (Exception ex)
             {
-                JobId = record.Id,
-                JobName = record.JobName,
-                Status = record.Status.ToString(),
-                StatusDisplay = record.Status.GetDisplayName(),
-                ChineseStatusDisplay = record.Status.GetChineseDisplayName(),
-                Progress = record.Progress,
-                CurrentEpoch = record.CurrentEpoch,
-                TotalEpochs = record.TotalEpochs,
-                CurrentLoss = record.CurrentLoss,
-                BestLoss = record.BestLoss,
-                EstimatedTimeRemaining = record.EstimatedTimeRemaining,
-                CreatedAt = record.CreatedAt,
-                StartedAt = record.StartedAt,
-                CompletedAt = record.CompletedAt,
-                ErrorMessage = record.ErrorMessage,
-                OutputPath = record.OutputPath
-            };
-
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get job status: {JobId} - 获取任务状态失败: {JobId}", jobId);
-            return StatusCode(500, new { 
-                error = "Internal server error", 
-                message = ex.Message,
-                chineseMessage = "服务器内部错误"
-            });
+                _logger.LogError(ex, "Failed to get job status: {JobId} - 获取任务状态失败: {JobId}", jobId);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { 
+                    error = "Internal server error", 
+                    message = ex.Message,
+                    chineseMessage = "服务器内部错误"
+                });
+            }
         }
     }
 
@@ -144,42 +168,51 @@ public class FinetuneController : ControllerBase
     [HttpPost("{jobId}/cancel")]
     public async Task<ActionResult> CancelJob(string jobId)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("FinetuneController.CancelJob"))
         {
+            span.SetAttribute("finetune.job_id", jobId);
             _logger.LogInformation("Cancelling job: {JobId} - 取消任务: {JobId}", jobId);
             
             if (string.IsNullOrWhiteSpace(jobId))
             {
+                span.SetStatus(ActivityStatusCode.Error, "Job ID is required");
                 return BadRequest(new { error = "Job ID is required", message = "任务ID不能为空" });
             }
 
-            var success = await _finetuneService.CancelJobAsync(jobId);
-            if (success)
+            try
             {
-                return Ok(new { 
-                    message = "Job cancelled successfully", 
-                    chineseMessage = "任务取消成功",
-                    jobId 
+                var success = await _finetuneService.CancelJobAsync(jobId);
+                span.SetAttribute("finetune.cancel_success", success);
+                if (success)
+                {
+                    return Ok(new { 
+                        message = "Job cancelled successfully", 
+                        chineseMessage = "任务取消成功",
+                        jobId 
+                    });
+                }
+                else
+                {
+                    span.SetStatus(ActivityStatusCode.Error, "Failed to cancel job");
+                    return BadRequest(new { 
+                        error = "Failed to cancel job", 
+                        message = "Job may not be running or already completed",
+                        chineseMessage = "任务可能未在运行或已完成",
+                        jobId 
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to cancel job: {JobId} - 取消任务失败: {JobId}", jobId);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { 
+                    error = "Internal server error", 
+                    message = ex.Message,
+                    chineseMessage = "服务器内部错误"
                 });
             }
-            else
-            {
-                return BadRequest(new { 
-                    error = "Failed to cancel job", 
-                    message = "Job may not be running or already completed",
-                    chineseMessage = "任务可能未在运行或已完成",
-                    jobId 
-                });
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to cancel job: {JobId} - 取消任务失败: {JobId}", jobId);
-            return StatusCode(500, new { 
-                error = "Internal server error", 
-                message = ex.Message,
-                chineseMessage = "服务器内部错误"
-            });
         }
     }
 
@@ -195,44 +228,53 @@ public class FinetuneController : ControllerBase
         [FromQuery] FinetuneStatus? status = null, 
         [FromQuery] int limit = 100)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("FinetuneController.GetJobs"))
         {
+            span.SetAttribute("finetune.filter_status", status?.ToString());
+            span.SetAttribute("finetune.limit", limit);
             _logger.LogInformation("Getting jobs with status: {Status}, limit: {Limit} - 获取任务列表，状态: {Status}, 限制: {Limit}", 
                 status, limit);
             
             if (limit <= 0 || limit > 1000)
             {
+                span.SetStatus(ActivityStatusCode.Error, "Limit must be between 1 and 1000");
                 return BadRequest(new { error = "Limit must be between 1 and 1000", message = "限制必须在1到1000之间" });
             }
 
-            var records = await _finetuneService.GetJobsAsync(status, limit);
-            
-            var jobs = records.Select(r => new FinetuneJobSummary
+            try
             {
-                JobId = r.Id,
-                JobName = r.JobName,
-                BaseModel = r.BaseModel,
-                Status = r.Status.ToString(),
-                StatusDisplay = r.Status.GetDisplayName(),
-                ChineseStatusDisplay = r.Status.GetChineseDisplayName(),
-                Progress = r.Progress,
-                CreatedAt = r.CreatedAt,
-                StartedAt = r.StartedAt,
-                CompletedAt = r.CompletedAt,
-                CreatedBy = r.CreatedBy,
-                Priority = r.Priority
-            }).ToList();
+                var records = await _finetuneService.GetJobsAsync(status, limit);
+                span.SetAttribute("finetune.job_count", records.Count);
+                
+                var jobs = records.Select(r => new FinetuneJobSummary
+                {
+                    JobId = r.Id,
+                    JobName = r.JobName,
+                    BaseModel = r.BaseModel,
+                    Status = r.Status.ToString(),
+                    StatusDisplay = r.Status.GetDisplayName(),
+                    ChineseStatusDisplay = r.Status.GetChineseDisplayName(),
+                    Progress = r.Progress,
+                    CreatedAt = r.CreatedAt,
+                    StartedAt = r.StartedAt,
+                    CompletedAt = r.CompletedAt,
+                    CreatedBy = r.CreatedBy,
+                    Priority = r.Priority
+                }).ToList();
 
-            return Ok(jobs);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get jobs - 获取任务列表失败");
-            return StatusCode(500, new { 
-                error = "Internal server error", 
-                message = ex.Message,
-                chineseMessage = "服务器内部错误"
-            });
+                return Ok(jobs);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get jobs - 获取任务列表失败");
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { 
+                    error = "Internal server error", 
+                    message = ex.Message,
+                    chineseMessage = "服务器内部错误"
+                });
+            }
         }
     }
 
@@ -245,38 +287,47 @@ public class FinetuneController : ControllerBase
     [HttpGet("{jobId}/logs")]
     public async Task<ActionResult<JobLogsResponse>> GetJobLogs(string jobId)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("FinetuneController.GetJobLogs"))
         {
+            span.SetAttribute("finetune.job_id", jobId);
             _logger.LogInformation("Getting job logs: {JobId} - 获取任务日志: {JobId}", jobId);
             
             if (string.IsNullOrWhiteSpace(jobId))
             {
+                span.SetStatus(ActivityStatusCode.Error, "Job ID is required");
                 return BadRequest(new { error = "Job ID is required", message = "任务ID不能为空" });
             }
 
-            var logs = await _finetuneService.GetJobLogsAsync(jobId);
-            if (logs == null)
+            try
             {
-                return NotFound(new { error = "Job not found", message = "任务未找到", jobId });
+                var logs = await _finetuneService.GetJobLogsAsync(jobId);
+                if (logs == null)
+                {
+                    span.SetStatus(ActivityStatusCode.Error, "Job not found");
+                    return NotFound(new { error = "Job not found", message = "任务未找到", jobId });
+                }
+                span.SetAttribute("finetune.log_length", logs.Length);
+
+                var response = new JobLogsResponse
+                {
+                    JobId = jobId,
+                    Logs = logs,
+                    LogLines = logs.Split(\'\n\', StringSplitOptions.RemoveEmptyEntries).ToList()
+                };
+
+                return Ok(response);
             }
-
-            var response = new JobLogsResponse
+            catch (Exception ex)
             {
-                JobId = jobId,
-                Logs = logs,
-                LogLines = logs.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList()
-            };
-
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get job logs: {JobId} - 获取任务日志失败: {JobId}", jobId);
-            return StatusCode(500, new { 
-                error = "Internal server error", 
-                message = ex.Message,
-                chineseMessage = "服务器内部错误"
-            });
+                _logger.LogError(ex, "Failed to get job logs: {JobId} - 获取任务日志失败: {JobId}", jobId);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { 
+                    error = "Internal server error", 
+                    message = ex.Message,
+                    chineseMessage = "服务器内部错误"
+                });
+            }
         }
     }
 
@@ -288,21 +339,28 @@ public class FinetuneController : ControllerBase
     [HttpGet("environment/validate")]
     public async Task<ActionResult<PythonEnvironmentInfo>> ValidateEnvironment()
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("FinetuneController.ValidateEnvironment"))
         {
             _logger.LogInformation("Validating Python environment - 验证Python环境");
             
-            var envInfo = await _finetuneService.ValidatePythonEnvironmentAsync();
-            return Ok(envInfo);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to validate Python environment - Python环境验证失败");
-            return StatusCode(500, new { 
-                error = "Internal server error", 
-                message = ex.Message,
-                chineseMessage = "服务器内部错误"
-            });
+            try
+            {
+                var envInfo = await _finetuneService.ValidatePythonEnvironmentAsync();
+                span.SetAttribute("python.version", envInfo.PythonVersion);
+                span.SetAttribute("python.is_installed", envInfo.IsPythonInstalled);
+                return Ok(envInfo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to validate Python environment - Python环境验证失败");
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { 
+                    error = "Internal server error", 
+                    message = ex.Message,
+                    chineseMessage = "服务器内部错误"
+                });
+            }
         }
     }
 
@@ -314,21 +372,27 @@ public class FinetuneController : ControllerBase
     [HttpGet("models")]
     public async Task<ActionResult<List<string>>> GetAvailableModels()
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("FinetuneController.GetAvailableModels"))
         {
             _logger.LogInformation("Getting available models - 获取可用模型");
             
-            var models = await _finetuneService.GetAvailableModelsAsync();
-            return Ok(models);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get available models - 获取可用模型失败");
-            return StatusCode(500, new { 
-                error = "Internal server error", 
-                message = ex.Message,
-                chineseMessage = "服务器内部错误"
-            });
+            try
+            {
+                var models = await _finetuneService.GetAvailableModelsAsync();
+                span.SetAttribute("finetune.model_count", models.Count);
+                return Ok(models);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get available models - 获取可用模型失败");
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { 
+                    error = "Internal server error", 
+                    message = ex.Message,
+                    chineseMessage = "服务器内部错误"
+                });
+            }
         }
     }
 
@@ -341,26 +405,35 @@ public class FinetuneController : ControllerBase
     [HttpPost("estimate")]
     public async Task<ActionResult<ResourceEstimation>> EstimateResources([FromBody] FinetuneRequest request)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("FinetuneController.EstimateResources"))
         {
+            span.SetAttribute("finetune.job_name", request.JobName);
             _logger.LogInformation("Estimating resources for job: {JobName} - 估算任务资源: {JobName}", request.JobName);
             
             if (string.IsNullOrWhiteSpace(request.DatasetPath))
             {
+                span.SetStatus(ActivityStatusCode.Error, "Dataset path is required");
                 return BadRequest(new { error = "Dataset path is required", message = "数据集路径不能为空" });
             }
 
-            var estimation = await _finetuneService.EstimateResourcesAsync(request);
-            return Ok(estimation);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to estimate resources - 资源估算失败");
-            return StatusCode(500, new { 
-                error = "Internal server error", 
-                message = ex.Message,
-                chineseMessage = "服务器内部错误"
-            });
+            try
+            {
+                var estimation = await _finetuneService.EstimateResourcesAsync(request);
+                span.SetAttribute("finetune.estimated_gpu_memory", estimation.EstimatedGpuMemoryMb);
+                span.SetAttribute("finetune.estimated_training_time", estimation.EstimatedTrainingTimeMinutes);
+                return Ok(estimation);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to estimate resources - 资源估算失败");
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { 
+                    error = "Internal server error", 
+                    message = ex.Message,
+                    chineseMessage = "服务器内部错误"
+                });
+            }
         }
     }
 
@@ -374,37 +447,47 @@ public class FinetuneController : ControllerBase
     [HttpPost("{jobId}/progress")]
     public async Task<ActionResult> UpdateJobProgress(string jobId, [FromBody] FinetuneProgress progress)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("FinetuneController.UpdateJobProgress"))
         {
+            span.SetAttribute("finetune.job_id", jobId);
+            span.SetAttribute("finetune.progress_percentage", progress.ProgressPercentage);
             _logger.LogInformation("Updating job progress: {JobId} - 更新任务进度: {JobId}", jobId);
             
             if (string.IsNullOrWhiteSpace(jobId))
             {
+                span.SetStatus(ActivityStatusCode.Error, "Job ID is required");
                 return BadRequest(new { error = "Job ID is required", message = "任务ID不能为空" });
             }
 
-            var success = await _finetuneService.UpdateJobProgressAsync(jobId, progress);
-            if (success)
+            try
             {
-                return Ok(new { 
-                    message = "Progress updated successfully", 
-                    chineseMessage = "进度更新成功",
-                    jobId 
+                var success = await _finetuneService.UpdateJobProgressAsync(jobId, progress);
+                span.SetAttribute("finetune.update_success", success);
+                if (success)
+                {
+                    return Ok(new { 
+                        message = "Progress updated successfully", 
+                        chineseMessage = "进度更新成功",
+                        jobId 
+                    });
+                }
+                else
+                {
+                    span.SetStatus(ActivityStatusCode.Error, "Job not found");
+                    return NotFound(new { error = "Job not found", message = "任务未找到", jobId });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update job progress: {JobId} - 更新任务进度失败: {JobId}", jobId);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { 
+                    error = "Internal server error", 
+                    message = ex.Message,
+                    chineseMessage = "服务器内部错误"
                 });
             }
-            else
-            {
-                return NotFound(new { error = "Job not found", message = "任务未找到", jobId });
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to update job progress: {JobId} - 更新任务进度失败: {JobId}", jobId);
-            return StatusCode(500, new { 
-                error = "Internal server error", 
-                message = ex.Message,
-                chineseMessage = "服务器内部错误"
-            });
         }
     }
 
@@ -416,56 +499,62 @@ public class FinetuneController : ControllerBase
     [HttpGet("system-info")]
     public async Task<ActionResult<FinetuneSystemInfo>> GetSystemInfo()
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("FinetuneController.GetSystemInfo"))
         {
             _logger.LogInformation("Getting system information - 获取系统信息");
             
-            var envInfo = await _finetuneService.ValidatePythonEnvironmentAsync();
-            var models = await _finetuneService.GetAvailableModelsAsync();
-            
-            var systemInfo = new FinetuneSystemInfo
+            try
             {
-                SystemName = "AI-Agent Python Fine-tuning System",
-                Version = "1.0.0",
-                PythonEnvironment = envInfo,
-                AvailableModels = models,
-                SupportedFeatures = new List<string>
+                var envInfo = await _finetuneService.ValidatePythonEnvironmentAsync();
+                var models = await _finetuneService.GetAvailableModelsAsync();
+                
+                var systemInfo = new FinetuneSystemInfo
                 {
-                    "Qwen3 model fine-tuning",
-                    "Custom dataset support", 
-                    "GPU acceleration",
-                    "Progress tracking",
-                    "Checkpoint saving",
-                    "Resource estimation",
-                    "Job cancellation"
-                },
-                DefaultConfiguration = new FinetuneRequest
-                {
-                    BaseModel = "Qwen/Qwen3-4B-Instruct",
-                    Epochs = 3,
-                    LearningRate = 2e-5,
-                    BatchSize = 4,
-                    MaxLength = 512,
-                    SaveCheckpoints = true,
-                    SaveSteps = 500,
-                    EvalSteps = 500,
-                    LoggingSteps = 100,
-                    WarmupSteps = 100,
-                    WeightDecay = 0.01,
-                    Priority = 5
-                }
-            };
-
-            return Ok(systemInfo);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get system information - 获取系统信息失败");
-            return StatusCode(500, new { 
-                error = "Internal server error", 
-                message = ex.Message,
-                chineseMessage = "服务器内部错误"
-            });
+                    SystemName = "AI-Agent Python Fine-tuning System",
+                    Version = "1.0.0",
+                    PythonEnvironment = envInfo,
+                    AvailableModels = models,
+                    SupportedFeatures = new List<string>
+                    {
+                        "Qwen3 model fine-tuning",
+                        "Custom dataset support", 
+                        "GPU acceleration",
+                        "Progress tracking",
+                        "Checkpoint saving",
+                        "Resource estimation",
+                        "Job cancellation"
+                    },
+                    DefaultConfiguration = new FinetuneRequest
+                    {
+                        BaseModel = "Qwen/Qwen3-4B-Instruct",
+                        Epochs = 3,
+                        LearningRate = 2e-5,
+                        BatchSize = 4,
+                        MaxLength = 512,
+                        SaveCheckpoints = true,
+                        SaveSteps = 500,
+                        EvalSteps = 500,
+                        LoggingSteps = 100,
+                        WarmupSteps = 100,
+                        WeightDecay = 0.01,
+                        Priority = 5
+                    }
+                };
+                span.SetAttribute("system.python_installed", envInfo.IsPythonInstalled);
+                span.SetAttribute("system.available_models_count", models.Count);
+                return Ok(systemInfo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get system information - 获取系统信息失败");
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { 
+                    error = "Internal server error", 
+                    message = ex.Message,
+                    chineseMessage = "服务器内部错误"
+                });
+            }
         }
     }
 }
@@ -713,4 +802,5 @@ public class FinetuneSystemInfo
 }
 
 #endregion
+
 

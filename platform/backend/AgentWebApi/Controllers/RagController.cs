@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using AgentWebApi.Services.RAG;
+using AgentWebApi.Services.Telemetry;
+using System.Diagnostics;
 
 namespace AgentWebApi.Controllers;
 
@@ -13,11 +15,13 @@ public class RagController : ControllerBase
 {
     private readonly IRagService _ragService;
     private readonly ILogger<RagController> _logger;
+    private readonly IAgentTelemetryProvider _telemetryProvider;
 
-    public RagController(IRagService ragService, ILogger<RagController> logger)
+    public RagController(IRagService ragService, ILogger<RagController> logger, IAgentTelemetryProvider telemetryProvider)
     {
         _ragService = ragService ?? throw new ArgumentNullException(nameof(ragService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _telemetryProvider = telemetryProvider ?? throw new ArgumentNullException(nameof(telemetryProvider));
     }
 
     #region Document Management - 文档管理
@@ -29,23 +33,31 @@ public class RagController : ControllerBase
     [HttpPost("collections/{collectionName}/documents")]
     public async Task<IActionResult> AddDocument(string collectionName, [FromBody] RagDocument document)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.AddDocument"))
         {
-            _logger.LogInformation("Adding document {DocumentId} to collection {CollectionName}", 
-                document.Id, collectionName);
+            span.SetAttribute("rag.collection_name", collectionName);
+            span.SetAttribute("rag.document_id", document.Id);
+            try
+            {
+                _logger.LogInformation("Adding document {DocumentId} to collection {CollectionName}", 
+                    document.Id, collectionName);
 
-            var documentId = await _ragService.AddDocumentAsync(collectionName, document);
-            
-            return Ok(new { 
-                success = true, 
-                documentId = documentId,
-                message = $"Document {documentId} added successfully to {collectionName}"
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to add document to collection {CollectionName}", collectionName);
-            return StatusCode(500, new { success = false, error = ex.Message });
+                var documentId = await _ragService.AddDocumentAsync(collectionName, document);
+                span.SetAttribute("rag.document_added_id", documentId);
+                
+                return Ok(new { 
+                    success = true, 
+                    documentId = documentId,
+                    message = $"Document {documentId} added successfully to {collectionName}"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to add document to collection {CollectionName}", collectionName);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -56,22 +68,30 @@ public class RagController : ControllerBase
     [HttpGet("collections/{collectionName}/documents")]
     public async Task<IActionResult> GetDocuments(string collectionName, [FromQuery] string[]? ids = null)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.GetDocuments"))
         {
-            _logger.LogInformation("Getting documents from collection {CollectionName}", collectionName);
+            span.SetAttribute("rag.collection_name", collectionName);
+            span.SetAttribute("rag.requested_ids_count", ids?.Length ?? 0);
+            try
+            {
+                _logger.LogInformation("Getting documents from collection {CollectionName}", collectionName);
 
-            var documents = await _ragService.GetDocumentsAsync(collectionName, ids);
-            
-            return Ok(new { 
-                success = true, 
-                documents = documents,
-                count = documents.Count()
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get documents from collection {CollectionName}", collectionName);
-            return StatusCode(500, new { success = false, error = ex.Message });
+                var documents = await _ragService.GetDocumentsAsync(collectionName, ids);
+                span.SetAttribute("rag.returned_documents_count", documents.Count());
+                
+                return Ok(new { 
+                    success = true, 
+                    documents = documents,
+                    count = documents.Count()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get documents from collection {CollectionName}", collectionName);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -82,24 +102,32 @@ public class RagController : ControllerBase
     [HttpPut("collections/{collectionName}/documents/{documentId}")]
     public async Task<IActionResult> UpdateDocument(string collectionName, string documentId, [FromBody] RagDocument document)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.UpdateDocument"))
         {
-            document.Id = documentId; // Ensure ID matches URL parameter
-            
-            _logger.LogInformation("Updating document {DocumentId} in collection {CollectionName}", 
-                documentId, collectionName);
+            span.SetAttribute("rag.collection_name", collectionName);
+            span.SetAttribute("rag.document_id", documentId);
+            try
+            {
+                document.Id = documentId; // Ensure ID matches URL parameter
+                
+                _logger.LogInformation("Updating document {DocumentId} in collection {CollectionName}", 
+                    documentId, collectionName);
 
-            await _ragService.UpdateDocumentAsync(collectionName, document);
-            
-            return Ok(new { 
-                success = true, 
-                message = $"Document {documentId} updated successfully"
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to update document {DocumentId}", documentId);
-            return StatusCode(500, new { success = false, error = ex.Message });
+                await _ragService.UpdateDocumentAsync(collectionName, document);
+                span.SetAttribute("rag.update_success", true);
+                
+                return Ok(new { 
+                    success = true, 
+                    message = $"Document {documentId} updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update document {DocumentId}", documentId);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -110,22 +138,30 @@ public class RagController : ControllerBase
     [HttpDelete("collections/{collectionName}/documents/{documentId}")]
     public async Task<IActionResult> DeleteDocument(string collectionName, string documentId)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.DeleteDocument"))
         {
-            _logger.LogInformation("Deleting document {DocumentId} from collection {CollectionName}", 
-                documentId, collectionName);
+            span.SetAttribute("rag.collection_name", collectionName);
+            span.SetAttribute("rag.document_id", documentId);
+            try
+            {
+                _logger.LogInformation("Deleting document {DocumentId} from collection {CollectionName}", 
+                    documentId, collectionName);
 
-            await _ragService.DeleteDocumentAsync(collectionName, documentId);
-            
-            return Ok(new { 
-                success = true, 
-                message = $"Document {documentId} deleted successfully"
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to delete document {DocumentId}", documentId);
-            return StatusCode(500, new { success = false, error = ex.Message });
+                await _ragService.DeleteDocumentAsync(collectionName, documentId);
+                span.SetAttribute("rag.delete_success", true);
+                
+                return Ok(new { 
+                    success = true, 
+                    message = $"Document {documentId} deleted successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete document {DocumentId}", documentId);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -136,20 +172,27 @@ public class RagController : ControllerBase
     [HttpGet("collections/{collectionName}/count")]
     public async Task<IActionResult> GetDocumentCount(string collectionName)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.GetDocumentCount"))
         {
-            var count = await _ragService.GetDocumentCountAsync(collectionName);
-            
-            return Ok(new { 
-                success = true, 
-                collectionName = collectionName,
-                documentCount = count
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get document count for collection {CollectionName}", collectionName);
-            return StatusCode(500, new { success = false, error = ex.Message });
+            span.SetAttribute("rag.collection_name", collectionName);
+            try
+            {
+                var count = await _ragService.GetDocumentCountAsync(collectionName);
+                span.SetAttribute("rag.document_count", count);
+                
+                return Ok(new { 
+                    success = true, 
+                    collectionName = collectionName,
+                    documentCount = count
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get document count for collection {CollectionName}", collectionName);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -164,21 +207,29 @@ public class RagController : ControllerBase
     [HttpPost("collections/{collectionName}/retrieve/hybrid")]
     public async Task<IActionResult> HybridRetrieval(string collectionName, [FromBody] RagQuery query)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.HybridRetrieval"))
         {
-            _logger.LogInformation("Performing hybrid retrieval in collection {CollectionName}", collectionName);
+            span.SetAttribute("rag.collection_name", collectionName);
+            span.SetAttribute("rag.query_text", query.QueryText);
+            try
+            {
+                _logger.LogInformation("Performing hybrid retrieval in collection {CollectionName}", collectionName);
 
-            var result = await _ragService.HybridRetrievalAsync(collectionName, query);
-            
-            return Ok(new { 
-                success = true, 
-                result = result
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to perform hybrid retrieval");
-            return StatusCode(500, new { success = false, error = ex.Message });
+                var result = await _ragService.HybridRetrievalAsync(collectionName, query);
+                span.SetAttribute("rag.retrieval_result_count", result.RetrievedDocuments?.Count() ?? 0);
+                
+                return Ok(new { 
+                    success = true, 
+                    result = result
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to perform hybrid retrieval");
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -189,21 +240,30 @@ public class RagController : ControllerBase
     [HttpPost("collections/{collectionName}/retrieve/vector")]
     public async Task<IActionResult> VectorRetrieval(string collectionName, [FromBody] VectorRetrievalRequest request)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.VectorRetrieval"))
         {
-            _logger.LogInformation("Performing vector retrieval in collection {CollectionName}", collectionName);
+            span.SetAttribute("rag.collection_name", collectionName);
+            span.SetAttribute("rag.query_text", request.Query);
+            span.SetAttribute("rag.top_k", request.TopK);
+            try
+            {
+                _logger.LogInformation("Performing vector retrieval in collection {CollectionName}", collectionName);
 
-            var result = await _ragService.VectorRetrievalAsync(collectionName, request.Query, request.TopK);
-            
-            return Ok(new { 
-                success = true, 
-                result = result
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to perform vector retrieval");
-            return StatusCode(500, new { success = false, error = ex.Message });
+                var result = await _ragService.VectorRetrievalAsync(collectionName, request.Query, request.TopK);
+                span.SetAttribute("rag.retrieval_result_count", result.RetrievedDocuments?.Count() ?? 0);
+                
+                return Ok(new { 
+                    success = true, 
+                    result = result
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to perform vector retrieval");
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -214,21 +274,30 @@ public class RagController : ControllerBase
     [HttpPost("collections/{collectionName}/retrieve/keyword")]
     public async Task<IActionResult> KeywordRetrieval(string collectionName, [FromBody] KeywordRetrievalRequest request)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.KeywordRetrieval"))
         {
-            _logger.LogInformation("Performing keyword retrieval in collection {CollectionName}", collectionName);
+            span.SetAttribute("rag.collection_name", collectionName);
+            span.SetAttribute("rag.query_text", request.Query);
+            span.SetAttribute("rag.top_k", request.TopK);
+            try
+            {
+                _logger.LogInformation("Performing keyword retrieval in collection {CollectionName}", collectionName);
 
-            var result = await _ragService.KeywordRetrievalAsync(collectionName, request.Query, request.TopK);
-            
-            return Ok(new { 
-                success = true, 
-                result = result
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to perform keyword retrieval");
-            return StatusCode(500, new { success = false, error = ex.Message });
+                var result = await _ragService.KeywordRetrievalAsync(collectionName, request.Query, request.TopK);
+                span.SetAttribute("rag.retrieval_result_count", result.RetrievedDocuments?.Count() ?? 0);
+                
+                return Ok(new { 
+                    success = true, 
+                    result = result
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to perform keyword retrieval");
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -239,21 +308,30 @@ public class RagController : ControllerBase
     [HttpPost("collections/{collectionName}/retrieve/semantic")]
     public async Task<IActionResult> SemanticRetrieval(string collectionName, [FromBody] SemanticRetrievalRequest request)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.SemanticRetrieval"))
         {
-            _logger.LogInformation("Performing semantic retrieval in collection {CollectionName}", collectionName);
+            span.SetAttribute("rag.collection_name", collectionName);
+            span.SetAttribute("rag.query_text", request.Query);
+            span.SetAttribute("rag.top_k", request.TopK);
+            try
+            {
+                _logger.LogInformation("Performing semantic retrieval in collection {CollectionName}", collectionName);
 
-            var result = await _ragService.SemanticRetrievalAsync(collectionName, request.Query, request.TopK);
-            
-            return Ok(new { 
-                success = true, 
-                result = result
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to perform semantic retrieval");
-            return StatusCode(500, new { success = false, error = ex.Message });
+                var result = await _ragService.SemanticRetrievalAsync(collectionName, request.Query, request.TopK);
+                span.SetAttribute("rag.retrieval_result_count", result.RetrievedDocuments?.Count() ?? 0);
+                
+                return Ok(new { 
+                    success = true, 
+                    result = result
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to perform semantic retrieval");
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -268,21 +346,29 @@ public class RagController : ControllerBase
     [HttpPost("collections/{collectionName}/generate")]
     public async Task<IActionResult> GenerateResponse(string collectionName, [FromBody] RagGenerationRequest request)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.GenerateResponse"))
         {
-            _logger.LogInformation("Generating RAG response for collection {CollectionName}", collectionName);
+            span.SetAttribute("rag.collection_name", collectionName);
+            span.SetAttribute("rag.prompt_length", request.Prompt?.Length);
+            try
+            {
+                _logger.LogInformation("Generating RAG response for collection {CollectionName}", collectionName);
 
-            var response = await _ragService.GenerateResponseAsync(collectionName, request);
-            
-            return Ok(new { 
-                success = true, 
-                response = response
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to generate RAG response");
-            return StatusCode(500, new { success = false, error = ex.Message });
+                var response = await _ragService.GenerateResponseAsync(collectionName, request);
+                span.SetAttribute("rag.generated_response_length", response.Response?.Length);
+                
+                return Ok(new { 
+                    success = true, 
+                    response = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to generate RAG response");
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -293,28 +379,36 @@ public class RagController : ControllerBase
     [HttpPost("collections/{collectionName}/generate/stream")]
     public async Task<IActionResult> GenerateStreamingResponse(string collectionName, [FromBody] RagGenerationRequest request)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.GenerateStreamingResponse"))
         {
-            _logger.LogInformation("Generating streaming RAG response for collection {CollectionName}", collectionName);
-
-            var responseStream = await _ragService.GenerateStreamingResponseAsync(collectionName, request);
-            
-            Response.Headers.Add("Content-Type", "text/event-stream");
-            Response.Headers.Add("Cache-Control", "no-cache");
-            Response.Headers.Add("Connection", "keep-alive");
-
-            await foreach (var chunk in responseStream)
+            span.SetAttribute("rag.collection_name", collectionName);
+            span.SetAttribute("rag.prompt_length", request.Prompt?.Length);
+            try
             {
-                await Response.WriteAsync($"data: {chunk}\n\n");
-                await Response.Body.FlushAsync();
-            }
+                _logger.LogInformation("Generating streaming RAG response for collection {CollectionName}", collectionName);
 
-            return new EmptyResult();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to generate streaming RAG response");
-            return StatusCode(500, new { success = false, error = ex.Message });
+                var responseStream = await _ragService.GenerateStreamingResponseAsync(collectionName, request);
+                
+                Response.Headers.Add("Content-Type", "text/event-stream");
+                Response.Headers.Add("Cache-Control", "no-cache");
+                Response.Headers.Add("Connection", "keep-alive");
+
+                await foreach (var chunk in responseStream)
+                {
+                    await Response.WriteAsync($"data: {chunk}\n\n");
+                    await Response.Body.FlushAsync();
+                }
+                span.SetAttribute("rag.streaming_completed", true);
+
+                return new EmptyResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to generate streaming RAG response");
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -329,26 +423,34 @@ public class RagController : ControllerBase
     [HttpPost("enterprise/qa")]
     public async Task<IActionResult> EnterpriseQA([FromBody] EnterpriseQARequest request)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.EnterpriseQA"))
         {
-            _logger.LogInformation("Processing enterprise Q&A for knowledge base {KnowledgeBase}", 
-                request.KnowledgeBase);
+            span.SetAttribute("rag.knowledge_base", request.KnowledgeBase);
+            span.SetAttribute("rag.question_length", request.Question?.Length);
+            try
+            {
+                _logger.LogInformation("Processing enterprise Q&A for knowledge base {KnowledgeBase}", 
+                    request.KnowledgeBase);
 
-            var response = await _ragService.EnterpriseQAAsync(
-                request.KnowledgeBase, 
-                request.Question, 
-                request.Options);
-            
-            return Ok(new { 
-                success = true, 
-                response = response,
-                knowledgeBase = request.KnowledgeBase
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to process enterprise Q&A");
-            return StatusCode(500, new { success = false, error = ex.Message });
+                var response = await _ragService.EnterpriseQAAsync(
+                    request.KnowledgeBase, 
+                    request.Question, 
+                    request.Options);
+                span.SetAttribute("rag.qa_response_length", response.Response?.Length);
+                
+                return Ok(new { 
+                    success = true, 
+                    response = response,
+                    knowledgeBase = request.KnowledgeBase
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to process enterprise Q&A");
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -359,23 +461,31 @@ public class RagController : ControllerBase
     [HttpPost("collections/{collectionName}/documents/{documentId}/summarize")]
     public async Task<IActionResult> SummarizeDocument(string collectionName, string documentId, [FromBody] RagSummaryOptions? options = null)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.SummarizeDocument"))
         {
-            _logger.LogInformation("Summarizing document {DocumentId} in collection {CollectionName}", 
-                documentId, collectionName);
+            span.SetAttribute("rag.collection_name", collectionName);
+            span.SetAttribute("rag.document_id", documentId);
+            try
+            {
+                _logger.LogInformation("Summarizing document {DocumentId} in collection {CollectionName}", 
+                    documentId, collectionName);
 
-            var response = await _ragService.DocumentSummarizationAsync(collectionName, documentId, options);
-            
-            return Ok(new { 
-                success = true, 
-                summary = response,
-                documentId = documentId
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to summarize document {DocumentId}", documentId);
-            return StatusCode(500, new { success = false, error = ex.Message });
+                var response = await _ragService.DocumentSummarizationAsync(collectionName, documentId, options);
+                span.SetAttribute("rag.summary_length", response.Summary?.Length);
+                
+                return Ok(new { 
+                    success = true, 
+                    summary = response,
+                    documentId = documentId
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to summarize document {DocumentId}", documentId);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -386,26 +496,35 @@ public class RagController : ControllerBase
     [HttpPost("collections/{collectionName}/analyze")]
     public async Task<IActionResult> AnalyzeDocuments(string collectionName, [FromBody] MultiDocumentAnalysisRequest request)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.AnalyzeDocuments"))
         {
-            _logger.LogInformation("Analyzing {DocumentCount} documents in collection {CollectionName}", 
-                request.DocumentIds.Count(), collectionName);
+            span.SetAttribute("rag.collection_name", collectionName);
+            span.SetAttribute("rag.document_ids_count", request.DocumentIds?.Count() ?? 0);
+            span.SetAttribute("rag.analysis_query_length", request.AnalysisQuery?.Length);
+            try
+            {
+                _logger.LogInformation("Analyzing {DocumentCount} documents in collection {CollectionName}", 
+                    request.DocumentIds.Count(), collectionName);
 
-            var response = await _ragService.MultiDocumentAnalysisAsync(
-                collectionName, 
-                request.DocumentIds, 
-                request.AnalysisQuery);
-            
-            return Ok(new { 
-                success = true, 
-                analysis = response,
-                documentCount = request.DocumentIds.Count()
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to analyze documents");
-            return StatusCode(500, new { success = false, error = ex.Message });
+                var response = await _ragService.MultiDocumentAnalysisAsync(
+                    collectionName, 
+                    request.DocumentIds, 
+                    request.AnalysisQuery);
+                span.SetAttribute("rag.analysis_result_length", response.AnalysisResult?.Length);
+                
+                return Ok(new { 
+                    success = true, 
+                    analysis = response,
+                    documentCount = request.DocumentIds.Count()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to analyze documents");
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -420,23 +539,30 @@ public class RagController : ControllerBase
     [HttpPost("knowledge-bases")]
     public async Task<IActionResult> CreateKnowledgeBase([FromBody] CreateKnowledgeBaseRequest request)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.CreateKnowledgeBase"))
         {
-            _logger.LogInformation("Creating knowledge base {Name}", request.Name);
+            span.SetAttribute("rag.knowledge_base_name", request.Name);
+            try
+            {
+                _logger.LogInformation("Creating knowledge base {Name}", request.Name);
 
-            var collectionId = await _ragService.CreateKnowledgeBaseAsync(request.Name, request.Config);
-            
-            return Ok(new { 
-                success = true, 
-                collectionId = collectionId,
-                name = request.Name,
-                message = $"Knowledge base '{request.Name}' created successfully"
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to create knowledge base {Name}", request.Name);
-            return StatusCode(500, new { success = false, error = ex.Message });
+                var collectionId = await _ragService.CreateKnowledgeBaseAsync(request.Name, request.Config);
+                span.SetAttribute("rag.created_collection_id", collectionId);
+                
+                return Ok(new { 
+                    success = true, 
+                    collectionId = collectionId,
+                    name = request.Name,
+                    message = $"Knowledge base \'{request.Name}\' created successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create knowledge base {Name}", request.Name);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -447,21 +573,28 @@ public class RagController : ControllerBase
     [HttpDelete("knowledge-bases/{name}")]
     public async Task<IActionResult> DeleteKnowledgeBase(string name)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.DeleteKnowledgeBase"))
         {
-            _logger.LogInformation("Deleting knowledge base {Name}", name);
+            span.SetAttribute("rag.knowledge_base_name", name);
+            try
+            {
+                _logger.LogInformation("Deleting knowledge base {Name}", name);
 
-            await _ragService.DeleteKnowledgeBaseAsync(name);
-            
-            return Ok(new { 
-                success = true, 
-                message = $"Knowledge base '{name}' deleted successfully"
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to delete knowledge base {Name}", name);
-            return StatusCode(500, new { success = false, error = ex.Message });
+                await _ragService.DeleteKnowledgeBaseAsync(name);
+                span.SetAttribute("rag.delete_success", true);
+                
+                return Ok(new { 
+                    success = true, 
+                    message = $"Knowledge base \'{name}\' deleted successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete knowledge base {Name}", name);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -472,22 +605,28 @@ public class RagController : ControllerBase
     [HttpGet("knowledge-bases")]
     public async Task<IActionResult> ListKnowledgeBases()
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.ListKnowledgeBases"))
         {
-            _logger.LogInformation("Listing all knowledge bases");
+            try
+            {
+                _logger.LogInformation("Listing all knowledge bases");
 
-            var knowledgeBases = await _ragService.ListKnowledgeBasesAsync();
-            
-            return Ok(new { 
-                success = true, 
-                knowledgeBases = knowledgeBases,
-                count = knowledgeBases.Count()
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to list knowledge bases");
-            return StatusCode(500, new { success = false, error = ex.Message });
+                var knowledgeBases = await _ragService.ListKnowledgeBasesAsync();
+                span.SetAttribute("rag.knowledge_base_count", knowledgeBases.Count());
+                
+                return Ok(new { 
+                    success = true, 
+                    knowledgeBases = knowledgeBases,
+                    count = knowledgeBases.Count()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to list knowledge bases");
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
     }
 
@@ -502,30 +641,36 @@ public class RagController : ControllerBase
     [HttpGet("health")]
     public async Task<IActionResult> HealthCheck()
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("RagController.HealthCheck"))
         {
-            // Check if we can list knowledge bases - 检查是否可以列出知识库
-            var knowledgeBases = await _ragService.ListKnowledgeBasesAsync();
-            
-            return Ok(new
+            try
             {
-                status = "healthy",
-                service = "RAG",
-                knowledgeBaseCount = knowledgeBases.Count(),
-                timestamp = DateTime.UtcNow,
-                version = "1.0.0"
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "RAG service health check failed");
-            return StatusCode(503, new
+                // Check if we can list knowledge bases - 检查是否可以列出知识库
+                var knowledgeBases = await _ragService.ListKnowledgeBasesAsync();
+                span.SetAttribute("rag.health_check_knowledge_base_count", knowledgeBases.Count());
+                
+                return Ok(new
+                {
+                    status = "healthy",
+                    service = "RAG",
+                    knowledgeBaseCount = knowledgeBases.Count(),
+                    timestamp = DateTime.UtcNow,
+                    version = "1.0.0"
+                });
+            }
+            catch (Exception ex)
             {
-                status = "unhealthy",
-                service = "RAG",
-                error = ex.Message,
-                timestamp = DateTime.UtcNow
-            });
+                _logger.LogError(ex, "RAG service health check failed");
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(503, new
+                {
+                    status = "unhealthy",
+                    service = "RAG",
+                    error = ex.Message,
+                    timestamp = DateTime.UtcNow
+                });
+            }
         }
     }
 
@@ -659,4 +804,5 @@ public class ChatMessage
 }
 
 #endregion
+
 

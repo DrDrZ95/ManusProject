@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using AgentWebApi.Services;
 using ChromaDB.Client.Models;
+using AgentWebApi.Services.Telemetry;
 
 namespace AgentWebApi.Controllers;
 
@@ -15,11 +16,13 @@ public class ChromaDbController : ControllerBase
 {
     private readonly IChromaDbService _chromaDbService;
     private readonly ILogger<ChromaDbController> _logger;
+    private readonly IAgentTelemetryProvider _telemetryProvider;
 
-    public ChromaDbController(IChromaDbService chromaDbService, ILogger<ChromaDbController> logger)
+    public ChromaDbController(IChromaDbService chromaDbService, ILogger<ChromaDbController> logger, IAgentTelemetryProvider telemetryProvider)
     {
         _chromaDbService = chromaDbService ?? throw new ArgumentNullException(nameof(chromaDbService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _telemetryProvider = telemetryProvider ?? throw new ArgumentNullException(nameof(telemetryProvider));
     }
 
     /// <summary>
@@ -32,15 +35,21 @@ public class ChromaDbController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<Collection>>> GetCollections()
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("ChromaDbController.GetCollections"))
         {
-            var collections = await _chromaDbService.ListCollectionsAsync();
-            return Ok(collections);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get collections");
-            return StatusCode(500, new { error = "Failed to retrieve collections", details = ex.Message });
+            try
+            {
+                var collections = await _chromaDbService.ListCollectionsAsync();
+                span.SetAttribute("chromadb.collection_count", collections.Count());
+                return Ok(collections);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get collections");
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { error = "Failed to retrieve collections", details = ex.Message });
+            }
         }
     }
 
@@ -56,20 +65,28 @@ public class ChromaDbController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<Collection>> CreateCollection([FromBody] CreateCollectionRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Name))
+        using (var span = _telemetryProvider.StartSpan("ChromaDbController.CreateCollection"))
         {
-            return BadRequest(new { error = "Collection name is required" });
-        }
+            span.SetAttribute("chromadb.collection_name", request.Name);
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                span.SetStatus(ActivityStatusCode.Error, "Collection name is required");
+                return BadRequest(new { error = "Collection name is required" });
+            }
 
-        try
-        {
-            var collection = await _chromaDbService.CreateCollectionAsync(request.Name, request.Metadata);
-            return CreatedAtAction(nameof(GetCollection), new { name = request.Name }, collection);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to create collection: {CollectionName}", request.Name);
-            return StatusCode(500, new { error = "Failed to create collection", details = ex.Message });
+            try
+            {
+                var collection = await _chromaDbService.CreateCollectionAsync(request.Name, request.Metadata);
+                span.SetAttribute("chromadb.collection_id", collection.Id);
+                return CreatedAtAction(nameof(GetCollection), new { name = request.Name }, collection);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create collection: {CollectionName}", request.Name);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { error = "Failed to create collection", details = ex.Message });
+            }
         }
     }
 
@@ -85,15 +102,22 @@ public class ChromaDbController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<Collection>> GetCollection(string name)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("ChromaDbController.GetCollection"))
         {
-            var collection = await _chromaDbService.GetCollectionAsync(name);
-            return Ok(collection);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get collection: {CollectionName}", name);
-            return StatusCode(500, new { error = "Failed to retrieve collection", details = ex.Message });
+            span.SetAttribute("chromadb.collection_name", name);
+            try
+            {
+                var collection = await _chromaDbService.GetCollectionAsync(name);
+                span.SetAttribute("chromadb.collection_id", collection.Id);
+                return Ok(collection);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get collection: {CollectionName}", name);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { error = "Failed to retrieve collection", details = ex.Message });
+            }
         }
     }
 
@@ -109,19 +133,27 @@ public class ChromaDbController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteCollection(string name)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("ChromaDbController.DeleteCollection"))
         {
-            var success = await _chromaDbService.DeleteCollectionAsync(name);
-            if (success)
+            span.SetAttribute("chromadb.collection_name", name);
+            try
             {
-                return NoContent();
+                var success = await _chromaDbService.DeleteCollectionAsync(name);
+                span.SetAttribute("chromadb.delete_success", success);
+                if (success)
+                {
+                    return NoContent();
+                }
+                span.SetStatus(ActivityStatusCode.Error, "Collection not found");
+                return NotFound(new { error = "Collection not found" });
             }
-            return NotFound(new { error = "Collection not found" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to delete collection: {CollectionName}", name);
-            return StatusCode(500, new { error = "Failed to delete collection", details = ex.Message });
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete collection: {CollectionName}", name);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { error = "Failed to delete collection", details = ex.Message });
+            }
         }
     }
 
@@ -138,20 +170,28 @@ public class ChromaDbController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> AddDocuments(string collectionName, [FromBody] AddDocumentsRequest request)
     {
-        if (request.Documents == null || !request.Documents.Any())
+        using (var span = _telemetryProvider.StartSpan("ChromaDbController.AddDocuments"))
         {
-            return BadRequest(new { error = "Documents are required" });
-        }
+            span.SetAttribute("chromadb.collection_name", collectionName);
+            span.SetAttribute("chromadb.document_count", request.Documents?.Count() ?? 0);
+            if (request.Documents == null || !request.Documents.Any())
+            {
+                span.SetStatus(ActivityStatusCode.Error, "Documents are required");
+                return BadRequest(new { error = "Documents are required" });
+            }
 
-        try
-        {
-            await _chromaDbService.AddDocumentsAsync(collectionName, request.Documents, request.Ids, request.Metadatas);
-            return Created($"api/chromadb/collections/{collectionName}/documents", new { message = "Documents added successfully" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to add documents to collection: {CollectionName}", collectionName);
-            return StatusCode(500, new { error = "Failed to add documents", details = ex.Message });
+            try
+            {
+                await _chromaDbService.AddDocumentsAsync(collectionName, request.Documents, request.Ids, request.Metadatas);
+                return Created($"api/chromadb/collections/{collectionName}/documents", new { message = "Documents added successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to add documents to collection: {CollectionName}", collectionName);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { error = "Failed to add documents", details = ex.Message });
+            }
         }
     }
 
@@ -168,20 +208,29 @@ public class ChromaDbController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<QueryResponse>> QueryDocuments(string collectionName, [FromBody] QueryRequest request)
     {
-        if (request.QueryTexts == null || !request.QueryTexts.Any())
+        using (var span = _telemetryProvider.StartSpan("ChromaDbController.QueryDocuments"))
         {
-            return BadRequest(new { error = "Query texts are required" });
-        }
+            span.SetAttribute("chromadb.collection_name", collectionName);
+            span.SetAttribute("chromadb.query_text_count", request.QueryTexts?.Count() ?? 0);
+            if (request.QueryTexts == null || !request.QueryTexts.Any())
+            {
+                span.SetStatus(ActivityStatusCode.Error, "Query texts are required");
+                return BadRequest(new { error = "Query texts are required" });
+            }
 
-        try
-        {
-            var result = await _chromaDbService.QueryAsync(collectionName, request.QueryTexts, request.NResults, request.Where);
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to query collection: {CollectionName}", collectionName);
-            return StatusCode(500, new { error = "Failed to query documents", details = ex.Message });
+            try
+            {
+                var result = await _chromaDbService.QueryAsync(collectionName, request.QueryTexts, request.NResults, request.Where);
+                span.SetAttribute("chromadb.result_count", result.Documents?.Count() ?? 0);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to query collection: {CollectionName}", collectionName);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { error = "Failed to query documents", details = ex.Message });
+            }
         }
     }
 
@@ -197,15 +246,23 @@ public class ChromaDbController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<GetResponse>> GetDocuments(string collectionName, [FromQuery] string[]? ids = null)
     {
-        try
+        using (var span = _telemetryProvider.StartSpan("ChromaDbController.GetDocuments"))
         {
-            var result = await _chromaDbService.GetDocumentsAsync(collectionName, ids);
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get documents from collection: {CollectionName}", collectionName);
-            return StatusCode(500, new { error = "Failed to get documents", details = ex.Message });
+            span.SetAttribute("chromadb.collection_name", collectionName);
+            span.SetAttribute("chromadb.id_count", ids?.Count() ?? 0);
+            try
+            {
+                var result = await _chromaDbService.GetDocumentsAsync(collectionName, ids);
+                span.SetAttribute("chromadb.document_count", result.Documents?.Count() ?? 0);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get documents from collection: {CollectionName}", collectionName);
+                span.RecordException(ex);
+                span.SetStatus(ActivityStatusCode.Error, ex.Message);
+                return StatusCode(500, new { error = "Failed to get documents", details = ex.Message });
+            }
         }
     }
 }
@@ -230,4 +287,5 @@ public class QueryRequest
     public int NResults { get; set; } = 10;
     public Dictionary<string, object>? Where { get; set; }
 }
+
 

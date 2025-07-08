@@ -28,3 +28,6 @@ global using System.Diagnostics;
 
 global using AgentWebApi.Services.Hdfs;
 
+
+global using AgentWebApi.Services.Telemetry;
+
