@@ -4,6 +4,7 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Embeddings;
 using AgentWebApi.Services.VectorDatabase;
 using System.Runtime.CompilerServices;
+using AgentWebApi.Services.SemanticKernel.Planner;
 
 namespace AgentWebApi.Services.SemanticKernel;
 
@@ -19,6 +20,10 @@ public class SemanticKernelService : ISemanticKernelService
     private readonly IVectorDatabaseService _vectorDatabase;
     private readonly SemanticKernelOptions _options;
     private readonly ILogger<SemanticKernelService> _logger;
+    private readonly IKubernetesPlanner _kubernetesPlanner;
+    private readonly IIstioPlanner _istioPlanner;
+    private readonly IPostgreSQLPlanner _postgreSqlPlanner;
+    private readonly IClickHousePlanner _clickHousePlanner;
 
     public SemanticKernelService(
         Kernel kernel,
@@ -26,7 +31,11 @@ public class SemanticKernelService : ISemanticKernelService
         ITextEmbeddingGenerationService embeddingService,
         IVectorDatabaseService vectorDatabase,
         SemanticKernelOptions options,
-        ILogger<SemanticKernelService> logger)
+        ILogger<SemanticKernelService> logger,
+        IKubernetesPlanner kubernetesPlanner,
+        IIstioPlanner istioPlanner,
+        IPostgreSQLPlanner postgreSqlPlanner,
+        IClickHousePlanner clickHousePlanner)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         _chatService = chatService ?? throw new ArgumentNullException(nameof(chatService));
@@ -34,6 +43,16 @@ public class SemanticKernelService : ISemanticKernelService
         _vectorDatabase = vectorDatabase ?? throw new ArgumentNullException(nameof(vectorDatabase));
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _kubernetesPlanner = kubernetesPlanner ?? throw new ArgumentNullException(nameof(kubernetesPlanner));
+        _istioPlanner = istioPlanner ?? throw new ArgumentNullException(nameof(istioPlanner));
+        _postgreSqlPlanner = postgreSqlPlanner ?? throw new ArgumentNullException(nameof(postgreSqlPlanner));
+        _clickHousePlanner = clickHousePlanner ?? throw new ArgumentNullException(nameof(clickHousePlanner));
+
+        // Register planners as plugins
+        _kernel.Plugins.AddFromObject(_kubernetesPlanner, "KubernetesPlanner");
+        _kernel.Plugins.AddFromObject(_istioPlanner, "IstioPlanner");
+        _kernel.Plugins.AddFromObject(_postgreSqlPlanner, "PostgreSQLPlanner");
+        _kernel.Plugins.AddFromObject(_clickHousePlanner, "ClickHousePlanner");
     }
 
     #region Chat Completion - 聊天完成
@@ -226,6 +245,30 @@ public class SemanticKernelService : ISemanticKernelService
         {
             _logger.LogInformation("Invoking function: {FunctionName}", functionName);
 
+            // Implement role-based access control here
+            // For demonstration, let's assume a simple check based on function name
+            // In a real application, you would get the user's role from the current context
+            // and check against a predefined set of permissions.
+            if (functionName.StartsWith("KubernetesPlanner.") || functionName.StartsWith("IstioPlanner."))
+            {
+                // Example: Only 'highest permission' role can access Kubernetes/Istio functions
+                // This is a placeholder. You would replace 'CheckUserRole' with actual auth logic.
+                // if (!CheckUserRole("highest permission"))
+                // {
+                //     throw new UnauthorizedAccessException($"User does not have 'highest permission' to invoke {functionName}");
+                // }
+                _logger.LogWarning("Access control check for {FunctionName}: Requires 'highest permission'. (Simulated)", functionName);
+            }
+            else if (functionName.StartsWith("PostgreSQLPlanner.") || functionName.StartsWith("ClickHousePlanner."))
+            {
+                // Example: Only 'DBA' role can access database functions
+                // if (!CheckUserRole("DBA"))
+                // {
+                //     throw new UnauthorizedAccessException($"User does not have 'DBA' permission to invoke {functionName}");
+                // }
+                _logger.LogWarning("Access control check for {FunctionName}: Requires 'DBA' permission. (Simulated)", functionName);
+            }
+
             var kernelArguments = new KernelArguments();
             if (arguments != null)
             {
@@ -257,6 +300,16 @@ public class SemanticKernelService : ISemanticKernelService
         {
             _logger.LogInformation("Invoking function: {FunctionName} with return type: {ReturnType}", 
                 functionName, typeof(T).Name);
+
+            // Implement role-based access control here (similar to the non-generic InvokeFunctionAsync)
+            if (functionName.StartsWith("KubernetesPlanner.") || functionName.StartsWith("IstioPlanner."))
+            {
+                _logger.LogWarning("Access control check for {FunctionName}: Requires 'highest permission'. (Simulated)", functionName);
+            }
+            else if (functionName.StartsWith("PostgreSQLPlanner.") || functionName.StartsWith("ClickHousePlanner."))
+            {
+                _logger.LogWarning("Access control check for {FunctionName}: Requires 'DBA' permission. (Simulated)", functionName);
+            }
 
             var kernelArguments = new KernelArguments();
             if (arguments != null)
@@ -513,4 +566,5 @@ public class SemanticKernelService : ISemanticKernelService
 
     #endregion
 }
+
 

@@ -4,6 +4,7 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Embeddings;
 using AgentWebApi.Services.SemanticKernel;
 using AgentWebApi.Services.VectorDatabase;
+using AgentWebApi.Services.SemanticKernel.Planner;
 
 namespace AgentWebApi.Extensions;
 
@@ -29,6 +30,12 @@ public static class SemanticKernelExtensions
         // Register options - 注册选项
         services.AddSingleton(options);
         
+        // Register planners
+        services.AddTransient<IKubernetesPlanner, KubernetesPlanner>();
+        services.AddTransient<IIstioPlanner, IstioPlanner>();
+        services.AddTransient<IPostgreSQLPlanner, PostgreSQLPlanner>();
+        services.AddTransient<IClickHousePlanner, ClickHousePlanner>();
+
         // Register Kernel - 注册内核
         services.AddSingleton<Kernel>(provider =>
         {
@@ -111,6 +118,12 @@ public static class SemanticKernelExtensions
         
         // Register options - 注册选项
         services.AddSingleton(options);
+
+        // Register planners
+        services.AddTransient<IKubernetesPlanner, KubernetesPlanner>();
+        services.AddTransient<IIstioPlanner, IstioPlanner>();
+        services.AddTransient<IPostgreSQLPlanner, PostgreSQLPlanner>();
+        services.AddTransient<IClickHousePlanner, ClickHousePlanner>();
         
         // Register Kernel - 注册内核
         services.AddSingleton<Kernel>(provider =>
@@ -192,4 +205,5 @@ public static class SemanticKernelExtensions
         return services;
     }
 }
+
 

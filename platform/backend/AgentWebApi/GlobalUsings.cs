@@ -31,3 +31,6 @@ global using AgentWebApi.Services.Hdfs;
 
 global using AgentWebApi.Services.Telemetry;
 
+
+global using AgentWebApi.Services.SemanticKernel.Planner;
+
