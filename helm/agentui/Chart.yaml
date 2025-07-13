@@ -1,0 +1,11 @@
+apiVersion: v2
+name: agentui
+description: A Helm chart for AgentUI
+
+type: application
+
+version: 0.1.0
+
+appVersion: "A.01.00"
+
+

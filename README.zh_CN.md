@@ -178,7 +178,7 @@ app.Run();
     *   [RAG Prompt 工程](docs/rag_prompt_engineering.md)
     *   [沙盒终端集成](docs/sandbox_terminal_integration.md)
     *   [工作流集成](docs/workflow_integration.md)
-    *   [Identity & SignalR 集成](docs/identity_signalr_integration.md)
+    *   [Identity & SignalR 集成](docs/identity_signalR_integration.md)
     *   [YARP 网关集成](docs/yarp_gateway_integration.md)
     *   [eBPF 集成](docs/ebpf_integration.md)
     *   [Kubernetes、Istio 与灰度发布指南](docs/kubernetes_istio_grayscale_release.zh_CN.md)
@@ -192,5 +192,7 @@ app.Run();
 ## 致谢
 
 Microsoft .NET 团队、OpenTelemetry 社区、YARP 项目、Polly 项目、IdentityServer 团队、SignalR 团队、ChromaDB、Microsoft Semantic Kernel、bpftrace 以及所有贡献的开源项目。
+
+
 
 
