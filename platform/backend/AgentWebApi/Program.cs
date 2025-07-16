@@ -12,6 +12,7 @@
 // Create the WebApplicationBuilder - Builder Pattern
 // 创建WebApplicationBuilder - 构建器模式
 builder.Services.AddAgentTelemetry("AI-Agent.WebApi"); // Centralized telemetry provider
+builder.Services.AddUserInputServices(); // Add UserInput services - 添加用户输入服务
 
 // Build the application - Builder Pattern
 // 构建应用程序 - 构建器模式

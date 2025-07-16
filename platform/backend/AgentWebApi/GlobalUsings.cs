@@ -34,3 +34,6 @@ global using AgentWebApi.Services.Telemetry;
 
 global using AgentWebApi.Services.SemanticKernel.Planner;
 
+
+global using AgentWebApi.Services.UserInput;
+
