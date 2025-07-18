@@ -37,3 +37,6 @@ global using AgentWebApi.Services.SemanticKernel.Planner;
 
 global using AgentWebApi.Services.UserInput;
 
+
+global using AgentWebApi.Services.Prometheus;
+

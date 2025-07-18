@@ -13,6 +13,7 @@
 // 创建WebApplicationBuilder - 构建器模式
 builder.Services.AddAgentTelemetry("AI-Agent.WebApi"); // Centralized telemetry provider
 builder.Services.AddUserInputServices(); // Add UserInput services - 添加用户输入服务
+builder.Services.AddPrometheusMetrics(); // Add Prometheus metrics services - 添加Prometheus指标服务
 
 // Build the application - Builder Pattern
 // 构建应用程序 - 构建器模式
@@ -33,6 +34,7 @@ using (var activity = telemetryProvider.StartSpan("AI-Agent.ApplicationStartup")
     // app.UseIdentityServerServices(app.Environment); // Optional IdentityServer4 middleware - 可选的IdentityServer4中间件
     // app.UseSignalRServices(builder.Configuration); // Optional SignalR middleware - 可选的SignalR中间件
     app.UseAiAgentYarp(); // Optional AI-Agent gateway middleware - 可选的AI-Agent网关中间件
+    app.UsePrometheusMetrics(); // Use Prometheus metrics middleware - 使用Prometheus指标中间件
     app.UseBasicAuth(); // Configure application to use authentication and authorization middleware
     app.MapControllers(); // Map eBPF controllers
 
