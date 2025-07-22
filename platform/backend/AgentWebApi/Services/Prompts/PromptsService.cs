@@ -421,10 +421,171 @@ public class PromptsService : IPromptsService
             }
         };
 
+        // 系统管理相关提示词 - System administration related prompts
+        var systemPrompts = new Dictionary<string, PromptTemplate>
+        {
+            ["kubernetes_deployment"] = new PromptTemplate
+            {
+                Id = "system_kubernetes_deployment",
+                Category = "system",
+                Name = "kubernetes_deployment",
+                Title = "Kubernetes Deployment Configuration",
+                Description = "Generate Kubernetes deployment YAML configurations",
+                Template = """
+                Application: {app_name}
+                Image: {image_name}
+                Replicas: {replicas}
+                Port: {port}
+                Environment: {environment}
+
+                Please generate a comprehensive Kubernetes deployment configuration including:
+
+                1. Deployment manifest with proper resource limits
+                2. Service configuration for load balancing
+                3. ConfigMap for environment variables
+                4. Ingress configuration if needed
+                5. Health checks and readiness probes
+                6. Security context and best practices
+
+                Ensure the configuration follows Kubernetes best practices for production deployment.
+                """,
+                Variables = new List<PromptVariable>
+                {
+                    new() { Name = "app_name", Description = "Application name", Type = "string", Required = true },
+                    new() { Name = "image_name", Description = "Docker image name", Type = "string", Required = true },
+                    new() { Name = "replicas", Description = "Number of replicas", Type = "number", DefaultValue = 3 },
+                    new() { Name = "port", Description = "Application port", Type = "number", DefaultValue = 8080 },
+                    new() { Name = "environment", Description = "Deployment environment", Type = "string", DefaultValue = "production" }
+                },
+                Tags = new List<string> { "kubernetes", "deployment", "devops", "infrastructure" },
+                Author = "AI-Agent"
+            },
+
+            ["monitoring_setup"] = new PromptTemplate
+            {
+                Id = "system_monitoring_setup",
+                Category = "system",
+                Name = "monitoring_setup",
+                Title = "System Monitoring Configuration",
+                Description = "Configure comprehensive system monitoring with Prometheus and Grafana",
+                Template = """
+                System: {system_type}
+                Components: {components}
+                Metrics: {metrics_required}
+                Alerting: {alerting_rules}
+
+                Please provide a complete monitoring setup including:
+
+                1. Prometheus configuration for metrics collection
+                2. Grafana dashboard definitions
+                3. Alert manager rules and notifications
+                4. Service discovery configuration
+                5. Custom metrics and exporters
+                6. Performance optimization recommendations
+
+                Include both infrastructure and application-level monitoring.
+                """,
+                Variables = new List<PromptVariable>
+                {
+                    new() { Name = "system_type", Description = "Type of system to monitor", Type = "string", Required = true },
+                    new() { Name = "components", Description = "System components", Type = "string", Required = true },
+                    new() { Name = "metrics_required", Description = "Required metrics", Type = "string", DefaultValue = "standard" },
+                    new() { Name = "alerting_rules", Description = "Alerting requirements", Type = "string", DefaultValue = "basic" }
+                },
+                Tags = new List<string> { "monitoring", "prometheus", "grafana", "alerting" },
+                Author = "AI-Agent"
+            }
+        };
+
+        // 安全相关提示词 - Security related prompts
+        var securityPrompts = new Dictionary<string, PromptTemplate>
+        {
+            ["security_audit"] = new PromptTemplate
+            {
+                Id = "security_audit_checklist",
+                Category = "security",
+                Name = "security_audit",
+                Title = "Comprehensive Security Audit Checklist",
+                Description = "Generate security audit checklist for applications and infrastructure",
+                Template = """
+                Target System: {target_system}
+                System Type: {system_type}
+                Compliance Requirements: {compliance}
+                Risk Level: {risk_level}
+
+                Please create a comprehensive security audit checklist covering:
+
+                1. Authentication and authorization mechanisms
+                2. Data encryption (at rest and in transit)
+                3. Network security and firewall configurations
+                4. Input validation and injection prevention
+                5. Access control and privilege management
+                6. Logging and monitoring for security events
+                7. Vulnerability assessment procedures
+                8. Incident response planning
+
+                Include specific tools and techniques for each audit area.
+                """,
+                Variables = new List<PromptVariable>
+                {
+                    new() { Name = "target_system", Description = "System to audit", Type = "string", Required = true },
+                    new() { Name = "system_type", Description = "Type of system", Type = "string", Required = true },
+                    new() { Name = "compliance", Description = "Compliance requirements", Type = "string", DefaultValue = "general" },
+                    new() { Name = "risk_level", Description = "Risk assessment level", Type = "string", DefaultValue = "medium" }
+                },
+                Tags = new List<string> { "security", "audit", "compliance", "vulnerability" },
+                Author = "AI-Agent"
+            }
+        };
+
+        // 数据科学相关提示词 - Data science related prompts
+        var dataSciencePrompts = new Dictionary<string, PromptTemplate>
+        {
+            ["ml_model_evaluation"] = new PromptTemplate
+            {
+                Id = "ds_ml_model_evaluation",
+                Category = "data_science",
+                Name = "ml_model_evaluation",
+                Title = "Machine Learning Model Evaluation Framework",
+                Description = "Comprehensive ML model evaluation and validation framework",
+                Template = """
+                Model Type: {model_type}
+                Dataset: {dataset_info}
+                Problem Type: {problem_type}
+                Evaluation Metrics: {metrics}
+
+                Please provide a comprehensive model evaluation framework including:
+
+                1. Data preprocessing and feature engineering steps
+                2. Model training and hyperparameter tuning
+                3. Cross-validation strategy
+                4. Performance metrics calculation and interpretation
+                5. Model comparison and selection criteria
+                6. Bias and fairness assessment
+                7. Model interpretability analysis
+                8. Production deployment considerations
+
+                Include code examples and best practices for each step.
+                """,
+                Variables = new List<PromptVariable>
+                {
+                    new() { Name = "model_type", Description = "Type of ML model", Type = "string", Required = true },
+                    new() { Name = "dataset_info", Description = "Dataset description", Type = "string", Required = true },
+                    new() { Name = "problem_type", Description = "ML problem type", Type = "string", Required = true },
+                    new() { Name = "metrics", Description = "Evaluation metrics", Type = "string", DefaultValue = "standard" }
+                },
+                Tags = new List<string> { "machine_learning", "evaluation", "validation", "metrics" },
+                Author = "AI-Agent"
+            }
+        };
+
         // 添加到主字典 - Add to main dictionary
         _prompts["rag"] = ragPrompts;
         _prompts["workflow"] = workflowPrompts;
         _prompts["code"] = codePrompts;
+        _prompts["system"] = systemPrompts;
+        _prompts["security"] = securityPrompts;
+        _prompts["data_science"] = dataSciencePrompts;
 
         _logger.LogInformation("Initialized {Count} prompt categories with {Total} total prompts", 
             _prompts.Count, _prompts.Values.Sum(p => p.Count));

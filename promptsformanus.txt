@@ -8,4 +8,7 @@ stop current task, I have reconfigured the project configuration that you previo
 fix git push
 git remote set-url origin git@github.com:drdrz95/ManusProject.git
 
+`system enviroments`
+
 * `new chat` try start agent to re-connection with manus'computer
+* 2025-7-20 https://8329-iccdxo0d61hh12lnw3w7r-c793d2b8.manusvm.computer/?folder=/home/ubuntu
