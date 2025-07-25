@@ -1,7 +1,108 @@
 import { useContext, useRef, useEffect, useState } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Plus, Upload, X } from 'lucide-react';
 import { ChatContext, Message } from '../contexts/ChatContext';
 import { useChatActions } from '../hooks/useChatActions';
+
+// File upload component
+const FileUploadArea = ({ onFileUpload }: { onFileUpload: (files: File[]) => void }) => {
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      onFileUpload(files);
+      setIsUploadDialogOpen(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      onFileUpload(files);
+      setIsUploadDialogOpen(false);
+    }
+  };
+
+  return (
+    <>
+      {/* Upload button */}
+      <button
+        type="button"
+        onClick={() => setIsUploadDialogOpen(true)}
+        className="p-3 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200"
+        title="Upload files"
+      >
+        <Plus size={20} />
+      </button>
+
+      {/* Upload dialog */}
+      {isUploadDialogOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Upload Files</h3>
+              <button
+                onClick={() => setIsUploadDialogOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            {/* Drag and drop area */}
+            <div
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 ${
+                isDragOver
+                  ? 'border-gray-500 bg-gray-50'
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <Upload size={48} className="mx-auto mb-4 text-gray-400" />
+              <p className="text-gray-600 mb-2">
+                Drag and drop files here, or{' '}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-gray-500 underline hover:text-gray-700"
+                >
+                  browse
+                </button>
+              </p>
+              <p className="text-sm text-gray-500">
+                Supports images, documents, and text files
+              </p>
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={handleFileSelect}
+              accept="image/*,.pdf,.doc,.docx,.txt,.md"
+            />
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
 
 // Message bubble component
 const MessageBubble = ({ message }: { message: Message }) => {
@@ -45,23 +146,29 @@ export const ChatArea = () => {
       setInputValue('');
     }
   };
+
+  const handleFileUpload = (files: File[]) => {
+    // Simulate file upload success
+    const fileNames = files.map(file => file.name).join(', ');
+    sendMessage(`📎 Files uploaded: ${fileNames}\n\nSimulated upload successful! Files are ready for processing.`);
+  };
   
   if (!currentConversationId) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 text-gray-600 h-full">
+      <div className="flex-1 flex flex-col items-center justify-center bg-white text-gray-600 h-full">
         <div className="text-center max-w-md p-6">
           <div className="mb-6">
-            <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-gray-500 to-gray-600 rounded-full flex items-center justify-center">
-              <span className="text-3xl text-white">🤖</span>
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-900 rounded-xl flex items-center justify-center">
+              <span className="text-2xl text-white">🤖</span>
             </div>
           </div>
-          <h2 className="text-2xl font-semibold mb-3 text-gray-700">Welcome to AI Chat Assistant</h2>
-          <p className="mb-6 text-gray-600">Start a new conversation or select an existing one from the sidebar.</p>
+          <h2 className="text-xl font-medium mb-3 text-gray-800">How can I help you today?</h2>
+          <p className="mb-6 text-gray-500 text-sm">I'm AgentUI, your AI assistant. I can help with a wide range of tasks.</p>
           <button
             onClick={() => sendMessage("Hello, I'm a new user. What can you help me with?")}
-            className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 font-medium"
+            className="bg-gray-900 hover:bg-gray-800 text-white py-2 px-4 rounded-lg transition-all duration-200 text-sm font-medium"
           >
-            Start New Conversation
+            Start conversation
           </button>
         </div>
       </div>
@@ -69,16 +176,9 @@ export const ChatArea = () => {
   }
   
   return (
-    <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Chat header */}
-      <div className="py-4 px-6 border-b border-gray-300 bg-white bg-opacity-80 backdrop-blur-sm">
-        <h2 className="font-semibold text-gray-800 truncate text-lg">
-          {currentConversation?.title || 'New Conversation'}
-        </h2>
-      </div>
-      
-      {/* Messages area - Fixed height to ensure input stays at bottom */}
-      <div className="flex-1 overflow-y-auto p-6" style={{ height: 'calc(100vh - 200px)' }}>
+    <div className="flex-1 flex flex-col h-full bg-white">
+      {/* Messages area - Full height with proper scrolling */}
+      <div className="flex-1 overflow-y-auto px-6 py-4">
         {currentConversation?.messages.length === 0 ? (
           <div className="h-full flex items-center justify-center text-gray-500">
             <p className="text-center">
@@ -96,31 +196,34 @@ export const ChatArea = () => {
         <div ref={messagesEndRef} />
       </div>
       
-      {/* Input area - Fixed at bottom */}
-      <div className="p-6 border-t border-gray-300 bg-white bg-opacity-90 backdrop-blur-sm">
-        <form onSubmit={handleSubmit} className="flex items-center gap-3">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 py-3 px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white shadow-sm"
-            disabled={isLoading}
-          />
+      {/* Input area - Fixed at bottom with clean design */}
+      <div className="px-6 py-4 border-t border-gray-200 bg-white">
+        <form onSubmit={handleSubmit} className="flex items-end gap-3 max-w-4xl mx-auto">
+          <FileUploadArea onFileUpload={handleFileUpload} />
+          <div className="flex-1">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Message AgentUI..."
+              className="w-full py-3 px-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white shadow-sm resize-none"
+              disabled={isLoading}
+            />
+          </div>
           <button
             type="submit"
             disabled={!inputValue.trim() || isLoading}
-            className={`p-3 rounded-lg transition-all duration-200 ${
+            className={`p-3 rounded-xl transition-all duration-200 ${
               !inputValue.trim() || isLoading
                 ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-gray-500 to-gray-600 text-white hover:from-gray-600 hover:to-gray-700 shadow-md hover:shadow-lg transform hover:scale-105'
+                : 'bg-gray-900 text-white hover:bg-gray-800 shadow-sm'
             }`}
           >
             <Send size={20} />
           </button>
         </form>
         {isLoading && (
-          <div className="text-xs text-gray-600 mt-2 flex items-center">
+          <div className="text-xs text-gray-600 mt-2 flex items-center justify-center">
             <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600 mr-2"></div>
             AI is thinking...
           </div>

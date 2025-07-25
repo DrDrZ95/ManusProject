@@ -1,5 +1,4 @@
 import React from 'react';
-import { Monitor } from 'lucide-react';
 
 interface OSInfo {
   name: string;
@@ -61,44 +60,23 @@ export const OSInfoDisplay: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-3 border border-gray-300">
-      <div className="flex items-center space-x-2 mb-2">
-        <Monitor size={16} className="text-gray-600" />
-        <h3 className="text-sm font-semibold text-gray-800">System Information</h3>
+    <div className="flex items-center justify-between text-sm text-gray-600">
+      {/* Minimal system info */}
+      <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-1">
+          <span className="text-base">{getOSIcon()}</span>
+          <span className="font-medium">{osInfo.name}</span>
+        </div>
+        <div className="flex items-center space-x-1">
+          <span>🌍</span>
+          <span>{osInfo.language}</span>
+        </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {/* Operating System */}
-        <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded">
-          <span className="text-lg">{getOSIcon()}</span>
-          <div>
-            <p className="text-xs font-medium text-gray-600">Operating System</p>
-            <p className="text-sm font-semibold text-gray-800">{osInfo.name}</p>
-          </div>
-        </div>
-
-        {/* Language & Timezone */}
-        <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded">
-          <span className="text-lg">🌍</span>
-          <div>
-            <p className="text-xs font-medium text-gray-600">Locale</p>
-            <p className="text-sm font-semibold text-gray-800">{osInfo.language}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Deployment Info - Compact */}
-      <div className="mt-2 p-2 bg-gray-50 rounded border border-gray-200">
-        <div className="flex items-center space-x-1 mb-1">
-          <span className="text-gray-600 text-sm">🚀</span>
-          <p className="text-xs font-medium text-gray-700">Deployment Environment</p>
-        </div>
-        <p className="text-xs text-gray-600">
-          React App running on {osInfo.name} ({osInfo.platform})
-        </p>
-        <p className="text-xs text-gray-500 mt-1">
-          Built with Vite • Styled with Tailwind CSS
-        </p>
+      {/* Deployment status */}
+      <div className="flex items-center space-x-1 text-xs text-gray-500">
+        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+        <span>AgentUI Active</span>
       </div>
     </div>
   );
