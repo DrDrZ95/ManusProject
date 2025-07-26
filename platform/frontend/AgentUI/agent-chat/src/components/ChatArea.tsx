@@ -1,7 +1,8 @@
 import { useContext, useRef, useEffect, useState } from 'react';
-import { Send, Plus, Upload, X } from 'lucide-react';
+import { Send, Plus, Upload, X, Wifi, WifiOff } from 'lucide-react';
 import { ChatContext, Message } from '../contexts/ChatContext';
 import { useChatActions } from '../hooks/useChatActions';
+import { useSignalR } from '../hooks/useSignalR';
 
 // File upload component
 const FileUploadArea = ({ onFileUpload }: { onFileUpload: (files: File[]) => void }) => {
@@ -104,6 +105,25 @@ const FileUploadArea = ({ onFileUpload }: { onFileUpload: (files: File[]) => voi
   );
 };
 
+// SignalR Connection Status Component
+const SignalRStatus = ({ isConnected, connectionState }: { isConnected: boolean; connectionState: string }) => {
+  return (
+    <div className="flex items-center space-x-2 text-xs text-gray-500">
+      {isConnected ? (
+        <>
+          <Wifi size={14} className="text-green-500" />
+          <span className="text-green-600">SignalR Connected</span>
+        </>
+      ) : (
+        <>
+          <WifiOff size={14} className="text-red-500" />
+          <span className="text-red-600">SignalR {connectionState}</span>
+        </>
+      )}
+    </div>
+  );
+};
+
 // Message bubble component
 const MessageBubble = ({ message }: { message: Message }) => {
   const isUser = message.role === 'user';
@@ -132,17 +152,43 @@ export const ChatArea = () => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  // SignalR integration
+  const {
+    isConnected: signalRConnected,
+    connectionStatus,
+    messages: signalRMessages,
+    sendMessage: sendSignalRMessage,
+    connect: connectSignalR,
+    disconnect: disconnectSignalR,
+    clearMessages: clearSignalRMessages
+  } = useSignalR({
+    autoConnect: true,
+    simulateConnection: true, // Using simulation for development
+    hubUrl: 'http://localhost:5000/chathub' // Temporary simulation address
+  });
+  
   const currentConversation = getCurrentConversation();
   
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [currentConversation?.messages]);
+  }, [currentConversation?.messages, signalRMessages]);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim() && !isLoading) {
+      // Send through regular chat system
       sendMessage(inputValue);
+      
+      // Also send through SignalR if connected
+      if (signalRConnected) {
+        try {
+          await sendSignalRMessage('User', inputValue);
+        } catch (error) {
+          console.error('Failed to send SignalR message:', error);
+        }
+      }
+      
       setInputValue('');
     }
   };
@@ -150,7 +196,23 @@ export const ChatArea = () => {
   const handleFileUpload = (files: File[]) => {
     // Simulate file upload success
     const fileNames = files.map(file => file.name).join(', ');
-    sendMessage(`📎 Files uploaded: ${fileNames}\n\nSimulated upload successful! Files are ready for processing.`);
+    const uploadMessage = `📎 Files uploaded: ${fileNames}\n\nSimulated upload successful! Files are ready for processing.`;
+    
+    // Send through regular chat system
+    sendMessage(uploadMessage);
+    
+    // Also send through SignalR if connected
+    if (signalRConnected) {
+      sendSignalRMessage('User', uploadMessage).catch(console.error);
+    }
+  };
+
+  const handleSignalRReconnect = async () => {
+    try {
+      await connectSignalR();
+    } catch (error) {
+      console.error('Failed to reconnect SignalR:', error);
+    }
   };
   
   if (!currentConversationId) {
@@ -164,6 +226,12 @@ export const ChatArea = () => {
           </div>
           <h2 className="text-xl font-medium mb-3 text-gray-800">How can I help you today?</h2>
           <p className="mb-6 text-gray-500 text-sm">I'm AgentUI, your AI assistant. I can help with a wide range of tasks.</p>
+          
+          {/* SignalR Status in welcome screen */}
+          <div className="mb-4">
+            <SignalRStatus isConnected={signalRConnected} connectionState={connectionStatus.connectionState} />
+          </div>
+          
           <button
             onClick={() => sendMessage("Hello, I'm a new user. What can you help me with?")}
             className="bg-gray-900 hover:bg-gray-800 text-white py-2 px-4 rounded-lg transition-all duration-200 text-sm font-medium"
@@ -179,7 +247,7 @@ export const ChatArea = () => {
     <div className="flex-1 flex flex-col h-full bg-white">
       {/* Messages area - Full height with proper scrolling */}
       <div className="flex-1 overflow-y-auto px-6 py-4">
-        {currentConversation?.messages.length === 0 ? (
+        {currentConversation?.messages.length === 0 && signalRMessages.length === 0 ? (
           <div className="h-full flex items-center justify-center text-gray-500">
             <p className="text-center">
               <span className="block text-4xl mb-2">💬</span>
@@ -188,8 +256,24 @@ export const ChatArea = () => {
           </div>
         ) : (
           <>
+            {/* Regular chat messages */}
             {currentConversation?.messages.map((message) => (
               <MessageBubble key={message.id} message={message} />
+            ))}
+            
+            {/* SignalR messages */}
+            {signalRMessages.map((signalRMessage) => (
+              <div key={signalRMessage.messageId} className="flex justify-start mb-4">
+                <div className="max-w-[80%] rounded-lg px-4 py-3 bg-blue-50 text-blue-800 rounded-tl-none border border-blue-200 shadow-sm">
+                  <div className="text-xs font-medium text-blue-600 mb-1">
+                    📡 {signalRMessage.user} (SignalR)
+                  </div>
+                  <div className="whitespace-pre-wrap">{signalRMessage.message}</div>
+                  <div className="text-xs mt-2 text-blue-500">
+                    {new Date(signalRMessage.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+              </div>
             ))}
           </>
         )}
@@ -198,6 +282,19 @@ export const ChatArea = () => {
       
       {/* Input area - Fixed at bottom with clean design */}
       <div className="px-6 py-4 border-t border-gray-200 bg-white">
+        {/* SignalR Status Bar */}
+        <div className="flex justify-between items-center mb-3">
+          <SignalRStatus isConnected={signalRConnected} connectionState={connectionStatus.connectionState} />
+          {!signalRConnected && (
+            <button
+              onClick={handleSignalRReconnect}
+              className="text-xs text-blue-600 hover:text-blue-800 underline"
+            >
+              Reconnect SignalR
+            </button>
+          )}
+        </div>
+        
         <form onSubmit={handleSubmit} className="flex items-end gap-3 max-w-4xl mx-auto">
           <FileUploadArea onFileUpload={handleFileUpload} />
           <div className="flex-1">
