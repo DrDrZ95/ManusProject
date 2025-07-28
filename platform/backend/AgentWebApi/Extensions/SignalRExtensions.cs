@@ -1,419 +1,253 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using AgentWebApi.Hubs;
+using AgentWebApi.Identity;
 
 namespace AgentWebApi.Extensions;
 
 /// <summary>
-/// SignalR extensions for dependency injection
-/// SignalR依赖注入扩展
-/// 
-/// 为AI-Agent系统提供实时通信服务的注册
-/// Provides service registration for real-time communication in AI-Agent system
+/// SignalR configuration extensions with automatic reconnection and JWT authentication
+/// SignalR配置扩展，包含自动重连和JWT认证
 /// </summary>
 public static class SignalRExtensions
 {
     /// <summary>
-    /// Add SignalR services for AI-Agent system
-    /// 为AI-Agent系统添加SignalR服务
+    /// Add SignalR services with automatic reconnection and JWT authentication
+    /// 添加SignalR服务，包含自动重连和JWT认证
     /// </summary>
     /// <param name="services">Service collection - 服务集合</param>
     /// <param name="configuration">Configuration - 配置</param>
     /// <returns>Service collection - 服务集合</returns>
     public static IServiceCollection AddSignalRServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // 添加SignalR服务 - Add SignalR services
-        var signalRBuilder = services.AddSignalR(options =>
-        {
-            // 配置SignalR选项 - Configure SignalR options
-            options.EnableDetailedErrors = configuration.GetValue<bool>("SignalR:EnableDetailedErrors", false);
-            options.KeepAliveInterval = TimeSpan.FromSeconds(configuration.GetValue<int>("SignalR:KeepAliveIntervalSeconds", 15));
-            options.ClientTimeoutInterval = TimeSpan.FromSeconds(configuration.GetValue<int>("SignalR:ClientTimeoutIntervalSeconds", 30));
-            options.HandshakeTimeout = TimeSpan.FromSeconds(configuration.GetValue<int>("SignalR:HandshakeTimeoutSeconds", 15));
-            
-            // 配置最大消息大小 - Configure maximum message size
-            options.MaximumReceiveMessageSize = configuration.GetValue<long>("SignalR:MaximumReceiveMessageSize", 1024 * 1024); // 1MB
-            
-            // 启用详细错误（仅开发环境） - Enable detailed errors (development only)
-            var environment = configuration.GetValue<string>("ASPNETCORE_ENVIRONMENT");
-            if (environment == "Development")
+        // Add JWT authentication for SignalR
+        // 为SignalR添加JWT认证
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
             {
-                options.EnableDetailedErrors = true;
-            }
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = configuration["Jwt:Issuer"],
+                    ValidAudience = configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured")))
+                };
+
+                // Configure JWT for SignalR
+                // 为SignalR配置JWT
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        // If the request is for our hub...
+                        // 如果请求是针对我们的hub...
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && 
+                            (path.StartsWithSegments("/aiagentHub") || path.StartsWithSegments("/chathub")))
+                        {
+                            // Read the token out of the query string
+                            // 从查询字符串中读取token
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
+            });
+
+        // Add authorization policies for SignalR
+        // 为SignalR添加授权策略
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(AuthorizationPolicies.SignalRAccess, policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.RequireClaim("scope", "signalr.access");
+            });
+
+            options.AddPolicy(AuthorizationPolicies.RagAccess, policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.RequireClaim("scope", "rag.access");
+            });
+
+            options.AddPolicy(AuthorizationPolicies.FinetuneAccess, policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.RequireClaim("scope", "finetune.access");
+            });
         });
 
-        // 配置JSON序列化选项 - Configure JSON serialization options
-        signalRBuilder.AddJsonProtocol(options =>
+        // Add SignalR with automatic reconnection configuration
+        // 添加SignalR并配置自动重连
+        services.AddSignalR(options =>
         {
+            // Configure automatic reconnection settings
+            // 配置自动重连设置
+            options.EnableDetailedErrors = true;
+            options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+            options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+            options.HandshakeTimeout = TimeSpan.FromSeconds(15);
+            
+            // Maximum message size (1MB)
+            // 最大消息大小 (1MB)
+            options.MaximumReceiveMessageSize = 1024 * 1024;
+            
+            // Stream buffer capacity
+            // 流缓冲区容量
+            options.StreamBufferCapacity = 10;
+        })
+        .AddJsonProtocol(options =>
+        {
+            // Configure JSON serialization for SignalR
+            // 为SignalR配置JSON序列化
             options.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
             options.PayloadSerializerOptions.WriteIndented = false;
-            options.PayloadSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
         });
-
-        // 在生产环境中可以添加Redis背板 - Can add Redis backplane in production
-        var redisConnectionString = configuration.GetConnectionString("Redis");
-        if (!string.IsNullOrEmpty(redisConnectionString))
-        {
-            signalRBuilder.AddStackExchangeRedis(redisConnectionString, options =>
-            {
-                options.Configuration.ChannelPrefix = "ai-agent-signalr";
-            });
-        }
-
-        // 添加SignalR相关服务 - Add SignalR related services
-        services.AddScoped<ISignalRNotificationService, SignalRNotificationService>();
-        services.AddScoped<ISignalRConnectionManager, SignalRConnectionManager>();
 
         return services;
     }
 
     /// <summary>
-    /// Configure SignalR middleware and hubs
-    /// 配置SignalR中间件和集线器
+    /// Configure SignalR middleware with automatic reconnection
+    /// 配置SignalR中间件并启用自动重连
     /// </summary>
-    /// <param name="app">Application builder - 应用程序构建器</param>
+    /// <param name="app">Web application - Web应用程序</param>
     /// <param name="configuration">Configuration - 配置</param>
-    /// <returns>Application builder - 应用程序构建器</returns>
-    public static IApplicationBuilder UseSignalRServices(this IApplicationBuilder app, IConfiguration configuration)
+    /// <returns>Web application - Web应用程序</returns>
+    public static WebApplication UseSignalRServices(this WebApplication app, IConfiguration configuration)
     {
-        // 配置CORS以支持SignalR - Configure CORS to support SignalR
+        // Use authentication and authorization
+        // 使用认证和授权
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        // Configure CORS for SignalR
+        // 为SignalR配置CORS
         app.UseCors(policy =>
         {
-            var allowedOrigins = configuration.GetSection("SignalR:AllowedOrigins").Get<string[]>() ?? 
-                new[] { "https://localhost:5173", "https://localhost:3000", "http://localhost:5173", "http://localhost:3000" };
-
-            policy.WithOrigins(allowedOrigins)
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials(); // SignalR需要凭据 - SignalR requires credentials
+            policy.WithOrigins(
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "https://localhost:3000",
+                "https://localhost:5173"
+            )
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
         });
 
-        // 映射SignalR集线器 - Map SignalR hubs
-        app.UseRouting();
-        app.UseEndpoints(endpoints =>
+        // Map SignalR hubs with automatic reconnection
+        // 映射SignalR hubs并启用自动重连
+        app.MapHub<AIAgentHub>("/aiagentHub", options =>
         {
-            // AI-Agent主集线器 - AI-Agent main hub
-            endpoints.MapHub<AIAgentHub>("/hubs/ai-agent", options =>
-            {
-                // 配置集线器选项 - Configure hub options
-                options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets | 
-                                    Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
-                
-                // 配置WebSocket选项 - Configure WebSocket options
-                options.WebSockets.CloseTimeout = TimeSpan.FromSeconds(30);
-                options.LongPolling.PollTimeout = TimeSpan.FromSeconds(90);
-            });
+            // Configure transport options for automatic reconnection
+            // 为自动重连配置传输选项
+            options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets |
+                                Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
+            
+            // Configure automatic reconnection intervals
+            // 配置自动重连间隔
+            options.LongPolling.PollTimeout = TimeSpan.FromSeconds(90);
+            options.WebSockets.CloseTimeout = TimeSpan.FromSeconds(30);
+        });
 
-            // 可以添加更多专用集线器 - Can add more specialized hubs
-            // endpoints.MapHub<FinetuneHub>("/hubs/finetune");
-            // endpoints.MapHub<RAGHub>("/hubs/rag");
+        // Alternative hub mapping for compatibility
+        // 兼容性的替代hub映射
+        app.MapHub<AIAgentHub>("/chathub", options =>
+        {
+            options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets |
+                                Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
+            options.LongPolling.PollTimeout = TimeSpan.FromSeconds(90);
+            options.WebSockets.CloseTimeout = TimeSpan.FromSeconds(30);
         });
 
         return app;
     }
 
     /// <summary>
-    /// Add health checks for SignalR
-    /// 为SignalR添加健康检查
+    /// Configure SignalR client with automatic reconnection
+    /// 配置SignalR客户端并启用自动重连
     /// </summary>
-    /// <param name="services">Service collection - 服务集合</param>
-    /// <param name="configuration">Configuration - 配置</param>
-    /// <returns>Service collection - 服务集合</returns>
-    public static IServiceCollection AddSignalRHealthChecks(this IServiceCollection services, IConfiguration configuration)
+    /// <param name="hubUrl">Hub URL - Hub地址</param>
+    /// <param name="accessToken">JWT access token - JWT访问令牌</param>
+    /// <returns>Hub connection - Hub连接</returns>
+    public static HubConnection CreateSignalRConnection(string hubUrl, string? accessToken = null)
     {
-        var healthChecksBuilder = services.AddHealthChecks();
-
-        // 添加SignalR健康检查 - Add SignalR health check
-        healthChecksBuilder.AddCheck<SignalRHealthCheck>("signalr", tags: new[] { "signalr", "realtime" });
-
-        // 如果使用Redis背板，添加Redis健康检查 - If using Redis backplane, add Redis health check
-        var redisConnectionString = configuration.GetConnectionString("Redis");
-        if (!string.IsNullOrEmpty(redisConnectionString))
-        {
-            healthChecksBuilder.AddRedis(redisConnectionString, name: "signalr_redis", tags: new[] { "redis", "signalr" });
-        }
-
-        return services;
-    }
-}
-
-/// <summary>
-/// SignalR notification service interface
-/// SignalR通知服务接口
-/// </summary>
-public interface ISignalRNotificationService
-{
-    /// <summary>
-    /// Send notification to specific user
-    /// 向特定用户发送通知
-    /// </summary>
-    /// <param name="userId">User ID - 用户ID</param>
-    /// <param name="message">Notification message - 通知消息</param>
-    /// <param name="data">Additional data - 附加数据</param>
-    /// <returns>Task</returns>
-    Task SendNotificationToUserAsync(string userId, string message, object? data = null);
-
-    /// <summary>
-    /// Send notification to users with specific role
-    /// 向具有特定角色的用户发送通知
-    /// </summary>
-    /// <param name="role">User role - 用户角色</param>
-    /// <param name="message">Notification message - 通知消息</param>
-    /// <param name="data">Additional data - 附加数据</param>
-    /// <returns>Task</returns>
-    Task SendNotificationToRoleAsync(string role, string message, object? data = null);
-
-    /// <summary>
-    /// Send fine-tuning job update
-    /// 发送微调任务更新
-    /// </summary>
-    /// <param name="jobId">Job ID - 任务ID</param>
-    /// <param name="status">Job status - 任务状态</param>
-    /// <param name="progress">Progress percentage - 进度百分比</param>
-    /// <returns>Task</returns>
-    Task SendFinetuneJobUpdateAsync(string jobId, string status, int progress);
-
-    /// <summary>
-    /// Send RAG query result
-    /// 发送RAG查询结果
-    /// </summary>
-    /// <param name="userId">User ID - 用户ID</param>
-    /// <param name="queryId">Query ID - 查询ID</param>
-    /// <param name="result">Query result - 查询结果</param>
-    /// <returns>Task</returns>
-    Task SendRAGQueryResultAsync(string userId, string queryId, object result);
-}
-
-/// <summary>
-/// SignalR notification service implementation
-/// SignalR通知服务实现
-/// </summary>
-public class SignalRNotificationService : ISignalRNotificationService
-{
-    private readonly IHubContext<AIAgentHub> _hubContext;
-    private readonly ILogger<SignalRNotificationService> _logger;
-
-    public SignalRNotificationService(IHubContext<AIAgentHub> hubContext, ILogger<SignalRNotificationService> logger)
-    {
-        _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
-    /// <summary>
-    /// Send notification to specific user
-    /// 向特定用户发送通知
-    /// </summary>
-    public async Task SendNotificationToUserAsync(string userId, string message, object? data = null)
-    {
-        try
-        {
-            await _hubContext.Clients.User(userId).SendAsync("Notification", new
+        var connectionBuilder = new HubConnectionBuilder()
+            .WithUrl(hubUrl, options =>
             {
-                Message = message,
-                Data = data,
-                Timestamp = DateTime.UtcNow
+                // Configure JWT authentication
+                // 配置JWT认证
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    options.AccessTokenProvider = () => Task.FromResult(accessToken);
+                }
+
+                // Configure transport options
+                // 配置传输选项
+                options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets |
+                                   Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
+            })
+            .WithAutomaticReconnect(new[] {
+                TimeSpan.Zero,          // First retry immediately - 第一次立即重试
+                TimeSpan.FromSeconds(2), // Second retry after 2 seconds - 第二次2秒后重试
+                TimeSpan.FromSeconds(10), // Third retry after 10 seconds - 第三次10秒后重试
+                TimeSpan.FromSeconds(30), // Fourth retry after 30 seconds - 第四次30秒后重试
+                TimeSpan.FromSeconds(60)  // Subsequent retries after 60 seconds - 后续每60秒重试
+            })
+            .ConfigureLogging(logging =>
+            {
+                logging.AddConsole();
+                logging.SetMinimumLevel(LogLevel.Information);
             });
 
-            _logger.LogInformation("Notification sent to user - 通知已发送给用户: {UserId}", userId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to send notification to user - 向用户发送通知失败: {UserId}", userId);
-        }
-    }
-
-    /// <summary>
-    /// Send notification to users with specific role
-    /// 向具有特定角色的用户发送通知
-    /// </summary>
-    public async Task SendNotificationToRoleAsync(string role, string message, object? data = null)
-    {
-        try
-        {
-            await _hubContext.Clients.Group($"Role_{role}").SendAsync("Notification", new
-            {
-                Message = message,
-                Data = data,
-                Timestamp = DateTime.UtcNow
-            });
-
-            _logger.LogInformation("Notification sent to role - 通知已发送给角色: {Role}", role);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to send notification to role - 向角色发送通知失败: {Role}", role);
-        }
-    }
-
-    /// <summary>
-    /// Send fine-tuning job update
-    /// 发送微调任务更新
-    /// </summary>
-    public async Task SendFinetuneJobUpdateAsync(string jobId, string status, int progress)
-    {
-        try
-        {
-            await _hubContext.Clients.Group($"FinetuneJob_{jobId}").SendAsync("FinetuneJobUpdate", new
-            {
-                JobId = jobId,
-                Status = status,
-                Progress = progress,
-                Timestamp = DateTime.UtcNow
-            });
-
-            _logger.LogInformation("Fine-tuning job update sent - 微调任务更新已发送: {JobId} - {Status} ({Progress}%)", jobId, status, progress);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to send fine-tuning job update - 发送微调任务更新失败: {JobId}", jobId);
-        }
-    }
-
-    /// <summary>
-    /// Send RAG query result
-    /// 发送RAG查询结果
-    /// </summary>
-    public async Task SendRAGQueryResultAsync(string userId, string queryId, object result)
-    {
-        try
-        {
-            await _hubContext.Clients.User(userId).SendAsync("RAGQueryResult", new
-            {
-                QueryId = queryId,
-                Result = result,
-                Timestamp = DateTime.UtcNow
-            });
-
-            _logger.LogInformation("RAG query result sent to user - RAG查询结果已发送给用户: {UserId} - {QueryId}", userId, queryId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to send RAG query result - 发送RAG查询结果失败: {UserId} - {QueryId}", userId, queryId);
-        }
+        return connectionBuilder.Build();
     }
 }
 
 /// <summary>
-/// SignalR connection manager interface
-/// SignalR连接管理器接口
+/// SignalR automatic reconnection policy
+/// SignalR自动重连策略
 /// </summary>
-public interface ISignalRConnectionManager
+public class CustomRetryPolicy : IRetryPolicy
 {
-    /// <summary>
-    /// Get active connections count
-    /// 获取活跃连接数
-    /// </summary>
-    /// <returns>Active connections count - 活跃连接数</returns>
-    Task<int> GetActiveConnectionsCountAsync();
-
-    /// <summary>
-    /// Get connections for specific user
-    /// 获取特定用户的连接
-    /// </summary>
-    /// <param name="userId">User ID - 用户ID</param>
-    /// <returns>Connection IDs - 连接ID列表</returns>
-    Task<IEnumerable<string>> GetUserConnectionsAsync(string userId);
-
-    /// <summary>
-    /// Check if user is online
-    /// 检查用户是否在线
-    /// </summary>
-    /// <param name="userId">User ID - 用户ID</param>
-    /// <returns>True if online - 如果在线则返回true</returns>
-    Task<bool> IsUserOnlineAsync(string userId);
-}
-
-/// <summary>
-/// SignalR connection manager implementation
-/// SignalR连接管理器实现
-/// </summary>
-public class SignalRConnectionManager : ISignalRConnectionManager
-{
-    private readonly IHubContext<AIAgentHub> _hubContext;
-    private readonly ILogger<SignalRConnectionManager> _logger;
-    private static readonly ConcurrentDictionary<string, HashSet<string>> _userConnections = new();
-
-    public SignalRConnectionManager(IHubContext<AIAgentHub> hubContext, ILogger<SignalRConnectionManager> logger)
+    private readonly TimeSpan[] _retryDelays = new[]
     {
-        _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+        TimeSpan.Zero,
+        TimeSpan.FromSeconds(2),
+        TimeSpan.FromSeconds(10),
+        TimeSpan.FromSeconds(30),
+        TimeSpan.FromSeconds(60),
+        TimeSpan.FromSeconds(120)
+    };
 
     /// <summary>
-    /// Get active connections count
-    /// 获取活跃连接数
+    /// Get next retry delay
+    /// 获取下次重试延迟
     /// </summary>
-    public async Task<int> GetActiveConnectionsCountAsync()
+    /// <param name="retryContext">Retry context - 重试上下文</param>
+    /// <returns>Next retry delay or null to stop retrying - 下次重试延迟或null停止重试</returns>
+    public TimeSpan? NextRetryDelay(RetryContext retryContext)
     {
-        await Task.CompletedTask; // 占位符，实际实现可能需要更复杂的逻辑 - Placeholder, actual implementation may need more complex logic
-        return _userConnections.Values.Sum(connections => connections.Count);
-    }
-
-    /// <summary>
-    /// Get connections for specific user
-    /// 获取特定用户的连接
-    /// </summary>
-    public async Task<IEnumerable<string>> GetUserConnectionsAsync(string userId)
-    {
-        await Task.CompletedTask; // 占位符 - Placeholder
-        return _userConnections.TryGetValue(userId, out var connections) ? connections.ToList() : Enumerable.Empty<string>();
-    }
-
-    /// <summary>
-    /// Check if user is online
-    /// 检查用户是否在线
-    /// </summary>
-    public async Task<bool> IsUserOnlineAsync(string userId)
-    {
-        await Task.CompletedTask; // 占位符 - Placeholder
-        return _userConnections.ContainsKey(userId) && _userConnections[userId].Any();
-    }
-}
-
-/// <summary>
-/// SignalR health check
-/// SignalR健康检查
-/// </summary>
-public class SignalRHealthCheck : IHealthCheck
-{
-    private readonly ISignalRConnectionManager _connectionManager;
-    private readonly ILogger<SignalRHealthCheck> _logger;
-
-    public SignalRHealthCheck(ISignalRConnectionManager connectionManager, ILogger<SignalRHealthCheck> logger)
-    {
-        _connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
-    /// <summary>
-    /// Check health status
-    /// 检查健康状态
-    /// </summary>
-    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
-    {
-        try
+        // Stop retrying after 10 attempts
+        // 10次尝试后停止重试
+        if (retryContext.PreviousRetryCount >= 10)
         {
-            _logger.LogInformation("Performing SignalR health check - 执行SignalR健康检查");
-
-            var activeConnections = await _connectionManager.GetActiveConnectionsCountAsync();
-
-            var data = new Dictionary<string, object>
-            {
-                ["active_connections"] = activeConnections,
-                ["check_time"] = DateTime.UtcNow
-            };
-
-            _logger.LogInformation("SignalR health check passed - SignalR健康检查通过. Active connections: {ActiveConnections}", activeConnections);
-            return HealthCheckResult.Healthy("SignalR is healthy", data);
+            return null;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "SignalR health check error - SignalR健康检查错误");
-            
-            return HealthCheckResult.Unhealthy(
-                "SignalR health check failed with exception", 
-                ex, 
-                new Dictionary<string, object> { ["exception"] = ex.Message });
-        }
+
+        // Use predefined delays, then use the last delay for subsequent retries
+        // 使用预定义延迟，然后对后续重试使用最后一个延迟
+        var delayIndex = Math.Min(retryContext.PreviousRetryCount, _retryDelays.Length - 1);
+        return _retryDelays[delayIndex];
     }
 }
 

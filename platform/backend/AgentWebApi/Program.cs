@@ -14,6 +14,7 @@
 builder.Services.AddAgentTelemetry("AI-Agent.WebApi"); // Centralized telemetry provider
 builder.Services.AddUserInputServices(); // Add UserInput services - 添加用户输入服务
 builder.Services.AddPrometheusMetrics(); // Add Prometheus metrics services - 添加Prometheus指标服务
+builder.Services.AddSignalRServices(builder.Configuration); // Add SignalR services with JWT authentication - 添加SignalR服务和JWT认证
 
 // Build the application - Builder Pattern
 // 构建应用程序 - 构建器模式
@@ -32,7 +33,7 @@ using (var activity = telemetryProvider.StartSpan("AI-Agent.ApplicationStartup")
     // 使用扩展方法配置HTTP请求管道 - 扩展方法模式
     app.ConfigureApplicationPipeline();
     // app.UseIdentityServerServices(app.Environment); // Optional IdentityServer4 middleware - 可选的IdentityServer4中间件
-    // app.UseSignalRServices(builder.Configuration); // Optional SignalR middleware - 可选的SignalR中间件
+    app.UseSignalRServices(builder.Configuration); // SignalR middleware with automatic reconnection - SignalR中间件和自动重连
     app.UseAiAgentYarp(); // Optional AI-Agent gateway middleware - 可选的AI-Agent网关中间件
     app.UsePrometheusMetrics(); // Use Prometheus metrics middleware - 使用Prometheus指标中间件
     app.UseBasicAuth(); // Configure application to use authentication and authorization middleware
