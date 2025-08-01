@@ -1,4 +1,5 @@
 using AgentWebApi.Services.Hdfs;
+using AgentWebApi.Services.FileUpload;
 using Microsoft.AspNetCore.Mvc;
 using AgentWebApi.Services.Telemetry;
 using System.Text;
@@ -7,25 +8,32 @@ namespace AgentWebApi.Controllers;
 
 /// <summary>
 /// HDFS 文件处理控制器 - HDFS File Processing Controller
-/// 提供文件上传、分类和存储到 HDFS 的示例 - Provides examples for file upload, classification, and storage to HDFS
+/// 提供文件上传、分类和存储到 HDFS 的示例，包含OWASP安全措施 - Provides examples for file upload, classification, and storage to HDFS with OWASP security measures
 /// </summary>
 [ApiController]
 [Route("api/hdfs")]
 public class HdfsController : ControllerBase
 {
     private readonly IHdfsService _hdfsService;
+    private readonly IFileUploadService _fileUploadService;
     private readonly ILogger<HdfsController> _logger;
     private readonly IAgentTelemetryProvider _telemetryProvider;
 
-    public HdfsController(IHdfsService hdfsService, ILogger<HdfsController> logger, IAgentTelemetryProvider telemetryProvider)
+    public HdfsController(
+        IHdfsService hdfsService, 
+        IFileUploadService fileUploadService,
+        ILogger<HdfsController> logger, 
+        IAgentTelemetryProvider telemetryProvider)
     {
         _hdfsService = hdfsService;
+        _fileUploadService = fileUploadService;
         _logger = logger;
         _telemetryProvider = telemetryProvider;
     }
 
     /// <summary>
     /// 上传并分类存储文件到 HDFS - Upload and classify files to HDFS
+    /// 包含OWASP安全验证 - Includes OWASP security validation
     /// </summary>
     /// <param name="file">要上传的文件 - The file to upload</param>
     /// <returns>上传结果 - Upload result</returns>
@@ -42,70 +50,82 @@ public class HdfsController : ControllerBase
             if (file == null || file.Length == 0)
             {
                 span.SetStatus(ActivityStatusCode.Error, "No file uploaded.");
-                return BadRequest("No file uploaded.");
+                return BadRequest(new { Error = "No file uploaded - 未上传文件" });
             }
 
             try
             {
-                string fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-                string contentType = file.ContentType;
-                string remoteDirectory = "/user/ai-agent/uploads/";
-                string remotePath;
+                // OWASP Security Validation - OWASP安全验证
+                _logger.LogInformation("Starting OWASP security validation for file: {FileName}", file.FileName);
+                var validationResult = await _fileUploadService.ValidateFileAsync(file);
+                
+                if (!validationResult.IsValid)
+                {
+                    _logger.LogWarning("File validation failed for {FileName}: {Errors}", 
+                        file.FileName, string.Join(", ", validationResult.ErrorMessages));
+                    span.SetStatus(ActivityStatusCode.Error, "File validation failed");
+                    return BadRequest(new 
+                    { 
+                        Error = "File validation failed - 文件验证失败", 
+                        Details = validationResult.ErrorMessages 
+                    });
+                }
 
-                // 1. 根据文件类型分类存储 - Classify and store based on file type
-                if (contentType.Contains("json") || fileExtension == ".json")
-                {
-                    remoteDirectory += "json/";
-                }
-                else if (contentType.Contains("image") || fileExtension == ".jpg" || fileExtension == ".png" || fileExtension == ".gif")
-                {
-                    remoteDirectory += "images/";
-                }
-                else if (contentType.Contains("video") || fileExtension == ".mp4" || fileExtension == ".avi")
-                {
-                    remoteDirectory += "videos/";
-                }
-                else if (contentType.Contains("text") || fileExtension == ".txt" || fileExtension == ".log")
-                {
-                    remoteDirectory += "texts/";
-                }
-                else
-                {
-                    remoteDirectory += "others/";
-                }
+                span.SetAttribute("hdfs.file_category", validationResult.Category);
+                span.SetAttribute("hdfs.sanitized_file_name", validationResult.SanitizedFileName);
+
+                // Generate secure file path using OWASP-compliant service
+                // 使用符合OWASP的服务生成安全文件路径
+                var secureFilePath = _fileUploadService.GenerateSecureFilePath(
+                    validationResult.SanitizedFileName, 
+                    validationResult.Category);
+
+                string remoteDirectory = Path.GetDirectoryName(secureFilePath).Replace('\\', '/') + "/";
+                string remotePath = secureFilePath.Replace('\\', '/');
 
                 span.SetAttribute("hdfs.remote_directory", remoteDirectory);
-
-                // 确保远程目录存在 - Ensure the remote directory exists
-                await _hdfsService.CreateDirectoryAsync(remoteDirectory);
-
-                remotePath = Path.Combine(remoteDirectory, file.FileName);
                 span.SetAttribute("hdfs.remote_path", remotePath);
 
-                // 2. 上传文件流 - Upload file stream
+                // Ensure the remote directory exists
+                // 确保远程目录存在
+                await _hdfsService.CreateDirectoryAsync(remoteDirectory);
+
+                // Upload file stream with validated content
+                // 使用验证过的内容上传文件流
                 using (var stream = file.OpenReadStream())
                 {
-                    bool success = await _hdfsService.UploadFileAsync(remotePath, stream, contentType);
+                    bool success = await _hdfsService.UploadFileAsync(remotePath, stream, validationResult.DetectedMimeType);
                     if (success)
                     {
-                        _logger.LogInformation("File {FileName} uploaded to HDFS at {RemotePath}", file.FileName, remotePath);
+                        _logger.LogInformation("File {FileName} (sanitized: {SanitizedFileName}) uploaded to HDFS at {RemotePath}", 
+                            file.FileName, validationResult.SanitizedFileName, remotePath);
                         span.SetAttribute("hdfs.upload_success", true);
-                        return Ok(new { Message = "File uploaded successfully.", Path = remotePath });
+                        
+                        return Ok(new 
+                        { 
+                            Message = "File uploaded successfully - 文件上传成功", 
+                            Path = remotePath,
+                            Category = validationResult.Category,
+                            OriginalFileName = file.FileName,
+                            SanitizedFileName = validationResult.SanitizedFileName,
+                            FileSize = file.Length,
+                            MimeType = validationResult.DetectedMimeType
+                        });
                     }
                     else
                     {
-                        _logger.LogError("Failed to upload file {FileName} to HDFS.", file.FileName);
+                        _logger.LogError("Failed to upload file {FileName} to HDFS.", validationResult.SanitizedFileName);
                         span.SetStatus(ActivityStatusCode.Error, "Failed to upload file to HDFS.");
-                        return StatusCode(500, "Failed to upload file to HDFS.");
+                        return StatusCode(500, new { Error = "Failed to upload file to HDFS - HDFS文件上传失败" });
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error uploading file to HDFS.");
+                _logger.LogError(ex, "Error uploading file to HDFS: {FileName}", file?.FileName);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return StatusCode(500, new { Error = $"Internal server error - 内部服务器错误: {ex.Message}" });
             }
         }
     }

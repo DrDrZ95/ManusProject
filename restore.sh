@@ -152,3 +152,6 @@ git checkout -b main origin/main
 
 echo "5. 确保本地 跟踪"
 git branch --set-upstream-to=origin/main
+
+git config --global user.email ""
+git config --global user.name ""

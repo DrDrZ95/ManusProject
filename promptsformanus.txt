@@ -1,3 +1,8 @@
+Due to the sandbox reset, the previous changes seem to have been lost. The core of the project is still located at `/home/ubuntu/ai-agent`. Please perform a git push operation. We will gradually restore the previous requirements later.
+
+
+* For the rest, please refer to the following:
+
 stop current task, I have reconfigured the project configuration that you previously set up, please follow the steps below to do it:
 
 1.All project interactions take place in `/home/ubuntu/ai-agent`, you can try to study the previous construction history.
@@ -12,3 +17,4 @@ git remote set-url origin git@github.com:drdrz95/ManusProject.git
 
 * `new chat` try start agent to re-connection with manus'computer
 * 2025-7-20 https://8329-iccdxo0d61hh12lnw3w7r-c793d2b8.manusvm.computer/?folder=/home/ubuntu
+* 2025-7-31 https://8329-izw2b347q5ipjys9luv50-558063f7.manus.computer/?folder=/home/ubuntu

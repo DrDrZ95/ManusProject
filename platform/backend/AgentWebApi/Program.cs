@@ -13,6 +13,7 @@
 // 创建WebApplicationBuilder - 构建器模式
 builder.Services.AddAgentTelemetry("AI-Agent.WebApi"); // Centralized telemetry provider
 builder.Services.AddUserInputServices(); // Add UserInput services - 添加用户输入服务
+builder.Services.AddFileUploadServices(); // Add FileUpload services with OWASP security - 添加文件上传服务和OWASP安全措施
 builder.Services.AddPrometheusMetrics(); // Add Prometheus metrics services - 添加Prometheus指标服务
 builder.Services.AddSignalRServices(builder.Configuration); // Add SignalR services with JWT authentication - 添加SignalR服务和JWT认证
 
@@ -32,6 +33,7 @@ using (var activity = telemetryProvider.StartSpan("AI-Agent.ApplicationStartup")
     // Configure the HTTP request pipeline using Extension Methods - Extension Method Pattern
     // 使用扩展方法配置HTTP请求管道 - 扩展方法模式
     app.ConfigureApplicationPipeline();
+    app.UseFileUploadSecurity(); // Use FileUpload security middleware with OWASP measures - 使用文件上传安全中间件和OWASP措施
     // app.UseIdentityServerServices(app.Environment); // Optional IdentityServer4 middleware - 可选的IdentityServer4中间件
     app.UseSignalRServices(builder.Configuration); // SignalR middleware with automatic reconnection - SignalR中间件和自动重连
     app.UseAiAgentYarp(); // Optional AI-Agent gateway middleware - 可选的AI-Agent网关中间件
