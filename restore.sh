@@ -142,7 +142,7 @@ cd /home/ubuntu/ai-agent
 echo "1. 初始化"
 git init
 echo "2. 添加远程remote"
-git remote add origin "https://github.com/DrDrZ95/ManusProject"
+git remote add origin "git@github.com:DrDrZ95/ManusProject.git"
 
 echo "3. 拉取最新变更"
 git fetch origin
@@ -155,3 +155,6 @@ git branch --set-upstream-to=origin/main
 
 git config --global user.email ""
 git config --global user.name ""
+
+echo "6. 确保指纹，用于本linux与github官网确保安全连接，防止被盗用，known_hosts"
+ssh -T git@github.com

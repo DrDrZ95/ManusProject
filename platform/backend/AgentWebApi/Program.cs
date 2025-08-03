@@ -34,7 +34,6 @@ using (var activity = telemetryProvider.StartSpan("AI-Agent.ApplicationStartup")
     // 使用扩展方法配置HTTP请求管道 - 扩展方法模式
     app.ConfigureApplicationPipeline();
     app.UseFileUploadSecurity(); // Use FileUpload security middleware with OWASP measures - 使用文件上传安全中间件和OWASP措施
-    // app.UseIdentityServerServices(app.Environment); // Optional IdentityServer4 middleware - 可选的IdentityServer4中间件
     app.UseSignalRServices(builder.Configuration); // SignalR middleware with automatic reconnection - SignalR中间件和自动重连
     app.UseAiAgentYarp(); // Optional AI-Agent gateway middleware - 可选的AI-Agent网关中间件
     app.UsePrometheusMetrics(); // Use Prometheus metrics middleware - 使用Prometheus指标中间件
