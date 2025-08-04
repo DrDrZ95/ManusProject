@@ -12,6 +12,7 @@
 // Create the WebApplicationBuilder - Builder Pattern
 // 创建WebApplicationBuilder - 构建器模式
 builder.Services.AddAgentTelemetry("AI-Agent.WebApi"); // Centralized telemetry provider
+builder.Services.AddIdentityServices(builder.Configuration); // Add Identity services with PostgreSQL and JWT - 添加带有PostgreSQL和JWT的Identity服务
 builder.Services.AddUserInputServices(); // Add UserInput services - 添加用户输入服务
 builder.Services.AddFileUploadServices(); // Add FileUpload services with OWASP security - 添加文件上传服务和OWASP安全措施
 builder.Services.AddPrometheusMetrics(); // Add Prometheus metrics services - 添加Prometheus指标服务
@@ -34,11 +35,15 @@ using (var activity = telemetryProvider.StartSpan("AI-Agent.ApplicationStartup")
     // 使用扩展方法配置HTTP请求管道 - 扩展方法模式
     app.ConfigureApplicationPipeline();
     app.UseFileUploadSecurity(); // Use FileUpload security middleware with OWASP measures - 使用文件上传安全中间件和OWASP措施
+    app.UseIdentityServices(); // Use Identity middleware with authentication and authorization - 使用带有认证和授权的Identity中间件
     app.UseSignalRServices(builder.Configuration); // SignalR middleware with automatic reconnection - SignalR中间件和自动重连
     app.UseAiAgentYarp(); // Optional AI-Agent gateway middleware - 可选的AI-Agent网关中间件
     app.UsePrometheusMetrics(); // Use Prometheus metrics middleware - 使用Prometheus指标中间件
-    app.UseBasicAuth(); // Configure application to use authentication and authorization middleware
     app.MapControllers(); // Map eBPF controllers
+
+    // Initialize Identity database
+    // 初始化Identity数据库
+    await app.InitializeIdentityDatabaseAsync();
 
     // 3. Simulate a typical Agent application execution sequence
     // 模拟典型的Agent应用程序执行序列
