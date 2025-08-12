@@ -2,11 +2,11 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Embeddings;
-using AgentWebApi.Services.SemanticKernel;
-using AgentWebApi.Services.VectorDatabase;
-using AgentWebApi.Services.SemanticKernel.Planner;
+using Agent.Core.Services.SemanticKernel;
+using Agent.Core.Services.VectorDatabase;
+using Agent.Core.Services.SemanticKernel.Planner;
 
-namespace AgentWebApi.Extensions;
+namespace Agent.Core.Extensions;
 
 /// <summary>
 /// Extension methods for configuring Semantic Kernel services

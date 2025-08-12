@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using AgentWebApi.Data;
-using AgentWebApi.Data.Repositories;
+using Agent.Core.Data;
+using Agent.Core.Data.Repositories;
 
-namespace AgentWebApi.Extensions;
+namespace Agent.Core.Extensions;
 
 /// <summary>
 /// PostgreSQL database extensions for dependency injection

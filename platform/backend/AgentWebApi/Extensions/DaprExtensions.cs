@@ -4,7 +4,7 @@ using Dapr.Client;
 using Dapr.Extensions.Configuration;
 using System;
 
-namespace AgentWebApi.Extensions
+namespace Agent.Core.Extensions
 {
     /// <summary>
     /// Extension methods for configuring Dapr in the application.

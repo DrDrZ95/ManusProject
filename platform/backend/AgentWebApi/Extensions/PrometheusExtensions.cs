@@ -1,4 +1,4 @@
-using AgentWebApi.Services.Prometheus;
+using Agent.Core.Services.Prometheus;
 using Prometheus;
 
 namespace Microsoft.Extensions.DependencyInjection

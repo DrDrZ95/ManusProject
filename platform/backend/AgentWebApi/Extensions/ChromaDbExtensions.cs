@@ -1,6 +1,6 @@
 using ChromaDB.Client;
 
-namespace AgentWebApi.Extensions;
+namespace Agent.Core.Extensions;
 
 /// <summary>
 /// Extension methods for configuring ChromaDB services

@@ -1,6 +1,6 @@
-using AgentWebApi.Services.FileUpload;
+using Agent.Core.Services.FileUpload;
 
-namespace AgentWebApi.Extensions;
+namespace Agent.Core.Extensions;
 
 /// <summary>
 /// File upload service extensions for dependency injection

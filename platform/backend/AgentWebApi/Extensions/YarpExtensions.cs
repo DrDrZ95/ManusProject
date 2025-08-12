@@ -1,10 +1,10 @@
-using AgentWebApi.Gateway;
+using Agent.Core.Gateway;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Yarp.ReverseProxy.Configuration;
 
-namespace AgentWebApi.Extensions;
+namespace Agent.Core.Extensions;
 
 /// <summary>
 /// YARP 网关和熔断器扩展方法 - YARP Gateway and Circuit Breaker Extension Methods

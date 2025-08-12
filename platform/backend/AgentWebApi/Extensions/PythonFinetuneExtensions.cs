@@ -1,8 +1,8 @@
-using AgentWebApi.Services.Finetune;
-using AgentWebApi.Data.Entities;
-using AgentWebApi.Data.Repositories;
+using Agent.Core.Services.Finetune;
+using Agent.Core.Data.Entities;
+using Agent.Core.Data.Repositories;
 
-namespace AgentWebApi.Extensions;
+namespace Agent.Core.Extensions;
 
 /// <summary>
 /// Python.NET fine-tuning extensions for dependency injection

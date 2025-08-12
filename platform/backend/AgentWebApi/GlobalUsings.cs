@@ -1,42 +1,36 @@
-global using AgentWebApi.Extensions;
-global using AgentWebApi.McpTools;
-global using AgentWebApi.Services;
-global using AgentWebApi.Services.Qwen;
-global using AgentWebApi.Services.SemanticKernel;
-global using AgentWebApi.Services.VectorDatabase;
-global using AgentWebApi.Services.RAG; // 添加RAG服务的全局引用
-global using AgentWebApi.Services.Sandbox; // 添加沙盒终端服务的全局引用
-global using AgentWebApi.Services.Workflow; // 添加工作流服务的全局引用
-global using AgentWebApi.Services.Prompts; // 添加提示词服务的全局引用
-global using AgentWebApi.Services.Finetune; // 添加Python微调服务的全局引用
-global using AgentWebApi.Identity; // 添加身份验证的全局引用
-global using AgentWebApi.Hubs; // 添加SignalR集线器的全局引用
-global using AgentWebApi.Gateway; // 添加YARP网关的全局引用
-global using AgentWebApi.Data; // 添加数据访问的全局引用
-global using AgentWebApi.Data.Repositories; // 添加仓储模式的全局引用
+global using Agent.Core.Authorization;
+global using AgentWebApi.Controllers;
+global using Agent.Core.Data;
+global using Agent.Core.Data.Repositories;
+global using Agent.Core.eBPF;
+global using Agent.Core.Extensions;
+global using Agent.Core.Gateway;
+global using Agent.Core.Hubs;
+global using Agent.Core.Identity;
+global using Agent.Core.McpTools;
+global using Agent.Core.Models;
+global using Agent.Core.Models.Identity;
+global using Agent.Core.Services;
+global using Agent.Core.Services.Authorization;
+global using Agent.Core.Services.Finetune;
+global using Agent.Core.Services.Hdfs;
+global using Agent.Core.Services.Prometheus;
+global using Agent.Core.Services.Prompts;
+global using Agent.Core.Services.Qwen;
+global using Agent.Core.Services.RAG;
+global using Agent.Core.Services.Sandbox;
+global using Agent.Core.Services.SemanticKernel;
+global using Agent.Core.Services.SemanticKernel.Planner;
+global using Agent.Core.Services.Telemetry;
+global using Agent.Core.Services.UserInput;
+global using Agent.Core.Services.VectorDatabase;
+global using Agent.Core.Services.Workflow;
+
 global using ChromaDB.Client;
 global using ChromaDB.Client.Models;
 global using Microsoft.AspNetCore.Builder;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.SemanticKernel;
 global using ModelContextProtocol.Extensions;
-
-
-
 global using System.Diagnostics;
-
-
-global using AgentWebApi.Services.Hdfs;
-
-
-global using AgentWebApi.Services.Telemetry;
-
-
-global using AgentWebApi.Services.SemanticKernel.Planner;
-
-
-global using AgentWebApi.Services.UserInput;
-
-
-global using AgentWebApi.Services.Prometheus;
 

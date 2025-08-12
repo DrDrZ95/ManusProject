@@ -4,7 +4,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using System;
 
-namespace AgentWebApi.Extensions
+namespace Agent.Core.Extensions
 {
     /// <summary>
     /// Extension methods for configuring OpenTelemetry in the application.

@@ -1,6 +1,6 @@
-using AgentWebApi.Services.Sandbox;
+using Agent.Core.Services.Sandbox;
 
-namespace AgentWebApi.Extensions;
+namespace Agent.Core.Extensions;
 
 /// <summary>
 /// Sandbox Terminal service extensions for dependency injection

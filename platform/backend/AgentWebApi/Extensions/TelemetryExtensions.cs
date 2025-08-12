@@ -1,8 +1,8 @@
 
-using AgentWebApi.Services.Telemetry;
+using Agent.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AgentWebApi.Extensions
+namespace Agent.Core.Extensions
 {
     public static class TelemetryExtensions
     {

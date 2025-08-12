@@ -1,9 +1,8 @@
-using AgentWebApi.McpTools;
-using AgentWebApi.Services.Qwen;
+using Agent.Core.McpTools;
+using Agent.Core.Services.Qwen;
 using Microsoft.Extensions.DependencyInjection;
-using ModelContextProtocol.Extensions;
 
-namespace AgentWebApi.Extensions
+namespace Agent.Core.Extensions
 {
     /// <summary>
     /// Provides extension methods for configuring application services.
@@ -41,7 +40,7 @@ namespace AgentWebApi.Extensions
 
 
 
-namespace AgentWebApi.Extensions
+namespace Agent.Core.Extensions
 {
     /// <summary>
     /// Provides extension methods for configuring the application's request pipeline.
@@ -82,7 +81,7 @@ namespace AgentWebApi.Extensions
 
 
 
-namespace AgentWebApi.Extensions
+namespace Agent.Core.Extensions
 {
     /// <summary>
     /// Provides extension methods for configuring authentication and authorization services.

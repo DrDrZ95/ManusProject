@@ -31,6 +31,9 @@ source ~/.bashrc
 cd /home/ubuntu/
 dotnet --version
 
+cd /home/ubuntu/ai-agent && cd /home/ubuntu/ai-agent/platform/backend
+dotnet --version
+
 # ========================================
 # 2. 安装 Python 与系统依赖项
 # ========================================

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using AgentWebApi.Services.Finetune;
-using AgentWebApi.Data.Entities;
-using AgentWebApi.Services.Telemetry;
+using Agent.Core.Services.Finetune;
+using Agent.Core.Data.Entities;
+using Agent.Core.Services.Telemetry;
 
 namespace AgentWebApi.Controllers;
 
@@ -312,7 +312,7 @@ public class FinetuneController : ControllerBase
                 {
                     JobId = jobId,
                     Logs = logs,
-                    LogLines = logs.Split(\'\n\', StringSplitOptions.RemoveEmptyEntries).ToList()
+                    LogLines = logs.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries).ToList()
                 };
 
                 return Ok(response);
