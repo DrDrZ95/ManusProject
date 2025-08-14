@@ -1,7 +1,7 @@
-using AgentWebApi.Services.RAG;
+using Agent.Api.Services.RAG;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AgentWebApi.Examples;
+namespace Agent.Api.Examples;
 
 /// <summary>
 /// Enterprise RAG scenario examples and use cases

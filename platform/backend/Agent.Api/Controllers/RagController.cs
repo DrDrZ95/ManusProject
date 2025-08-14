@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using AgentWebApi.Services.RAG;
-using AgentWebApi.Services.Telemetry;
+using Agent.Api.Services.RAG;
+using Agent.Api.Services.Telemetry;
 using System.Diagnostics;
 
-namespace AgentWebApi.Controllers;
+namespace Agent.Api.Controllers;
 
 /// <summary>
 /// RAG (Retrieval Augmented Generation) controller for enterprise scenarios

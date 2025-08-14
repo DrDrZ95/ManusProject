@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
-namespace AgentWebApi.Controllers;
+namespace Agent.Api.Controllers;
 
 /// <summary>
 /// Sandbox Terminal Controller

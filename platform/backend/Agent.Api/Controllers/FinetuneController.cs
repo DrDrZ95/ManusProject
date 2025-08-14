@@ -3,7 +3,7 @@ using Agent.Core.Services.Finetune;
 using Agent.Core.Data.Entities;
 using Agent.Core.Services.Telemetry;
 
-namespace AgentWebApi.Controllers;
+namespace Agent.Api.Controllers;
 
 /// <summary>
 /// Python.NET fine-tuning controller

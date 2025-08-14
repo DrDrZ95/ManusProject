@@ -28,13 +28,13 @@ public static class IdentityExtensions
         // Add PostgreSQL DbContext
         // 添加PostgreSQL数据库上下文
         var connectionString = configuration.GetConnectionString("DefaultConnection") 
-            ?? "Host=localhost;Database=AgentWebApiDb;Username=postgres;Password=postgres";
+            ?? "Host=localhost;Database=Agent.ApiDb;Username=postgres;Password=postgres";
 
         services.AddDbContext<ApplicationDbContext>(options =>
         {
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
-                npgsqlOptions.MigrationsAssembly("AgentWebApi");
+                npgsqlOptions.MigrationsAssembly("Agent.Api");
                 npgsqlOptions.EnableRetryOnFailure(
                     maxRetryCount: 3,
                     maxRetryDelay: TimeSpan.FromSeconds(30),
@@ -86,8 +86,8 @@ public static class IdentityExtensions
         // 添加JWT Bearer认证
         var jwtSettings = configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"] ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLong!";
-        var issuer = jwtSettings["Issuer"] ?? "AgentWebApi";
-        var audience = jwtSettings["Audience"] ?? "AgentWebApiUsers";
+        var issuer = jwtSettings["Issuer"] ?? "Agent.Api";
+        var audience = jwtSettings["Audience"] ?? "Agent.ApiUsers";
 
         services.AddAuthentication(options =>
         {

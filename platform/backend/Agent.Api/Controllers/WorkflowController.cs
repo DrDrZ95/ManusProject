@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using AgentWebApi.Services.Workflow;
+using Agent.Api.Services.Workflow;
 
-namespace AgentWebApi.Controllers;
+namespace Agent.Api.Controllers;
 
 /// <summary>
 /// Workflow management controller

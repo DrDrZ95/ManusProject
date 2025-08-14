@@ -55,7 +55,13 @@ global using Yarp.ReverseProxy.LoadBalancing;
 global using Yarp.ReverseProxy.Health;
 global using Yarp.ReverseProxy.SessionAffinity;
 
+global using Polly;
+global using Polly.Retry;
+
 global using Prometheus;
 
 global using PromCounter   = Prometheus.Counter;
 global using PromHistogram = Prometheus.Histogram;
+
+
+

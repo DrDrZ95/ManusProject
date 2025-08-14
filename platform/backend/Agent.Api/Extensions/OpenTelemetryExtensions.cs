@@ -20,7 +20,7 @@ namespace Agent.Core.Extensions
         /// <returns>The service collection.</returns>
         public static IServiceCollection AddOpenTelemetryServices(
             this IServiceCollection services,
-            string serviceName = "AgentWebApi",
+            string serviceName = "Agent.Api",
             string serviceVersion = "1.0.0")
         {
             services.AddOpenTelemetry()
@@ -30,7 +30,7 @@ namespace Agent.Core.Extensions
                         .SetResourceBuilder(
                             ResourceBuilder.CreateDefault()
                                 .AddService(serviceName: serviceName, serviceVersion: serviceVersion))
-                        .AddSource("AgentWebApi")
+                        .AddSource("Agent.Api")
                         .AddAspNetCoreInstrumentation()
                         .AddHttpClientInstrumentation()
                         .AddConsoleExporter()

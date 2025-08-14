@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using AgentWebApi.Services.Prompts;
+using Agent.Api.Services.Prompts;
 
-namespace AgentWebApi.Controllers;
+namespace Agent.Api.Controllers;
 
 /// <summary>
 /// Prompts management controller

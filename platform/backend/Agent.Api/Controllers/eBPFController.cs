@@ -1,7 +1,7 @@
 using Agent.Core.eBPF.Detective;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AgentWebApi.Controllers;
+namespace Agent.Api.Controllers;
 
 /// <summary>
 /// eBPF 侦探控制器 - eBPF Detective Controller

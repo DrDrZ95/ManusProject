@@ -1,5 +1,5 @@
 /// <summary>
-/// Main entry point for the AgentWebApi application.
+/// Main entry point for the Agent.Api application.
 /// 应用程序的主入口点。
 /// </summary>
 /// <remarks>

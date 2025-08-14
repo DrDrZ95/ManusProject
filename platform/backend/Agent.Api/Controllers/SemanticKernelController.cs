@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using AgentWebApi.Services.SemanticKernel;
-using AgentWebApi.Services.VectorDatabase;
+using Agent.Api.Services.SemanticKernel;
+using Agent.Api.Services.VectorDatabase;
 
-namespace AgentWebApi.Controllers;
+namespace Agent.Api.Controllers;
 
 /// <summary>
 /// Semantic Kernel API controller for AI operations

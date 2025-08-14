@@ -1,10 +1,10 @@
-using AgentWebApi.Services.Hdfs;
-using AgentWebApi.Services.FileUpload;
+using Agent.Api.Services.Hdfs;
+using Agent.Api.Services.FileUpload;
 using Microsoft.AspNetCore.Mvc;
-using AgentWebApi.Services.Telemetry;
+using Agent.Api.Services.Telemetry;
 using System.Text;
 
-namespace AgentWebApi.Controllers;
+namespace Agent.Api.Controllers;
 
 /// <summary>
 /// HDFS 文件处理控制器 - HDFS File Processing Controller

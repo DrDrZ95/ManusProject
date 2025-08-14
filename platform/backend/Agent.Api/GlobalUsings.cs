@@ -1,5 +1,5 @@
 global using Agent.Core.Authorization;
-global using AgentWebApi.Controllers;
+global using Agent.Api.Controllers;
 global using Agent.Core.Data;
 global using Agent.Core.Data.Repositories;
 global using Agent.Core.eBPF;

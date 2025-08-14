@@ -45,7 +45,7 @@ public class ChromaDbService : IChromaDbService
         {
             _logger.LogInformation("Creating collection: {CollectionName}", name);
             
-            var collection = await _client.CreateCollectionAsync(name, metadata);
+            var collection = await _client.GetOrCreateCollection(name, metadata);
             
             _logger.LogInformation("Successfully created collection: {CollectionName}", name);
             return collection;

@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using AgentWebApi.Services;
+using Agent.Api.Services;
 using ChromaDB.Client.Models;
-using AgentWebApi.Services.Telemetry;
+using Agent.Api.Services.Telemetry;
 
-namespace AgentWebApi.Controllers;
+namespace Agent.Api.Controllers;
 
 /// <summary>
 /// Controller for ChromaDB operations

@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using Microsoft.SemanticKernel;
 
-namespace AgentWebApi.Plugins;
+namespace Agent.Api.Plugins;
 
 /// <summary>
 /// Sample plugin for mathematical operations

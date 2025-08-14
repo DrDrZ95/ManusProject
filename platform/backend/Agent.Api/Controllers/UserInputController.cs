@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using AgentWebApi.Services.UserInput;
-using AgentWebApi.Services.Prometheus;
+using Agent.Api.Services.UserInput;
+using Agent.Api.Services.Prometheus;
 
-namespace AgentWebApi.Controllers
+namespace Agent.Api.Controllers
 {
     /// <summary>
     /// User input controller

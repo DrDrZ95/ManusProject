@@ -42,7 +42,7 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
                 metadata["supported_modalities"] = string.Join(",", config.SupportedModalities);
             }
 
-            var chromaCollection = await _client.CreateCollectionAsync(name, metadata);
+            var chromaCollection = await _client.GetOrCreateCollection(name, metadata);
 
             var vectorCollection = new VectorCollection
             {
@@ -130,7 +130,7 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
         {
             _logger.LogInformation("Listing all vector collections");
 
-            var chromaCollections = await _client.ListCollectionsAsync();
+            var chromaCollections = await _client.ListCollections();
             var vectorCollections = new List<VectorCollection>();
 
             foreach (var chromaCollection in chromaCollections)
