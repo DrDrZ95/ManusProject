@@ -17,7 +17,7 @@ This project aims to provide a robust and extensible solution for:
 4.  **Data Management**: PostgreSQL integration for persistent storage of application data and fine-tuning records.
 5.  **Real-time Communication**: SignalR for real-time interactions between the backend and frontend.
 6.  **API Gateway**: YARP (Yet Another Reverse Proxy) for intelligent routing, load balancing, and circuit breaking.
-7.  **Authentication & Authorization**: IdentityServer4 for secure access control and role-based distribution.
+7.  **Authentication & Authorization**: ASP.NET Core Identity with JWT Bearer for secure access control and role-based distribution.
 8.  **Model Fine-tuning**: Python.NET integration for managing and tracking fine-tuning jobs.
 9.  **Frontend**: A React-based user interface (`platform/frontend/agent-chat/`) for intuitive interaction.
 
@@ -26,25 +26,30 @@ This project aims to provide a robust and extensible solution for:
 ```
 ai-agent/
 ├── platform/               # Core application components
-│   ├── backend/            # .NET 8.0 Web API Project
-│   │   ├── Controllers/        # API Endpoints
-│   │   ├── Data/               # EF Core DbContext and Repositories (PostgreSQL)
-│   │   ├── eBPF/               # eBPF Detective Module (Services, Controllers, Scripts)
-│   │   ├── Extensions/         # Extension Methods for modular configuration
-│   │   ├── Gateway/            # YARP Gateway and Circuit Breaker
-│   │   ├── Hubs/               # SignalR Hubs
-│   │   ├── Identity/           # IdentityServer4 Configuration
-│   │   ├── McpTools/           # Model Context Protocol integration tools
-│   │   ├── Plugins/            # Semantic Kernel Plugins
-│   │   ├── Services/           # Core Service Implementations (Semantic Kernel, RAG, Sandbox, Workflow, Prompts, Finetune, HDFS)
-│   │   ├── appsettings.Development.json
-│   │   ├── appsettings.json
-│   │   ├── AgentWebApi.csproj
-│   │   └── Program.cs
+│   ├── backend/            # .NET 8.0 Backend Projects
+│   │   ├── Agent.Api/          # ASP.NET Core Web API Entry Point
+│   │   │   ├── Controllers/    # API Endpoints (remaining after refactoring)
+│   │   │   ├── Extensions/     # Extension Methods (remaining after refactoring)
+│   │   │   ├── GlobalUsings.cs # Global using directives for Agent.Api
+│   │   │   ├── Program.cs      # Application startup and configuration
+│   │   │   └── Agent.Api.csproj
+│   │   ├── Agent.Core/         # Core business logic and shared modules
+│   │   │   ├── Authorization/  # Custom authorization policies and handlers
+│   │   │   ├── Controllers/    # Core API Endpoints (moved from Agent.Api)
+│   │   │   ├── Data/           # EF Core DbContext, Repositories, and Entities (PostgreSQL)
+│   │   │   ├── eBPF/           # eBPF Detective Module (Services, Controllers, Scripts)
+│   │   │   ├── Extensions/     # Extension Methods for modular configuration
+│   │   │   ├── Gateway/        # YARP Gateway and Circuit Breaker components
+│   │   │   ├── Hubs/           # SignalR Hubs
+│   │   │   ├── Identity/       # ASP.NET Core Identity models and configurations
+│   │   │   ├── McpTools/       # Model Context Protocol integration tools
+│   │   │   ├── Models/         # Shared data models
+│   │   │   ├── Services/       # Core Service Implementations (Semantic Kernel, RAG, Sandbox, Workflow, Prompts, Finetune, HDFS, FileUpload, Prometheus, Qwen, Telemetry, UserInput, VectorDatabase)
+│   │   │   └── Agent.Core.csproj
+│   │   └── unittest/           # Unit tests for backend components
+│   │       └── Agent.Core.Tests/ # Unit tests for Agent.Core
 │   └── frontend/           # React Frontend application
 │       └── agent-chat/         # React chat application with silver theme
-├── unittest/               # Unit tests for backend components
-│   └── AgentWebApi.Tests/  # Unit tests for AgentWebApi
 ├── README.md               # Main project documentation (English)
 ├── README.zh_CN.md         # Main project documentation (Simplified Chinese)
 ├── config/                 # Configuration files (if any)
@@ -106,11 +111,11 @@ Refer to the specific `docs/` for detailed setup and running instructions for ea
 
 ## OpenTelemetry Tracing
 
-The `platform/backend/` project integrates OpenTelemetry for distributed tracing, providing insights into the application\\\'s execution flow. A typical Agent application execution sequence is instrumented as follows:
+The `platform/backend/Agent.Api` project integrates OpenTelemetry for distributed tracing, providing insights into the application's execution flow. A typical Agent application execution sequence is instrumented as follows:
 
 ```csharp
 // 1. Define ActivitySource for tracing
-using var activitySource = new ActivitySource("AI-Agent.WebApi");
+using var activitySource = new ActivitySource("AI-Agent.Application");
 
 // ... service configurations ...
 
@@ -194,8 +199,6 @@ Project framework: MIT License. Individual components and models may be subject 
 
 ## Acknowledgements
 
-Microsoft .NET Team, OpenTelemetry Community, YARP Project, Polly Project, IdentityServer Team, SignalR Team, ChromaDB, Microsoft Semantic Kernel, bpftrace, and all contributing open-source projects.
-
-
+Microsoft .NET Team, OpenTelemetry Community, YARP Project, Polly Project, SignalR Team, ChromaDB, Microsoft Semantic Kernel, bpftrace, and all contributing open-source projects.
 
 

@@ -17,7 +17,7 @@
 4.  **数据管理**：PostgreSQL 集成，用于持久存储应用程序数据和微调记录。
 5.  **实时通信**：SignalR 用于后端和前端之间的实时交互。
 6.  **API 网关**：YARP（Yet Another Reverse Proxy）用于智能路由、负载均衡和熔断。
-7.  **认证与授权**：IdentityServer4 用于安全访问控制和基于角色的分发。
+7.  **认证与授权**：ASP.NET Core Identity with JWT Bearer 用于安全访问控制和基于角色的分发。
 8.  **模型微调**：Python.NET 集成，用于管理和跟踪微调作业。
 9.  **前端**：基于 React 的用户界面 (`platform/frontend/agent-chat/`)，用于直观交互。
 
@@ -26,21 +26,28 @@
 ```
 ai-agent/
 ├── platform/               # 核心应用程序组件
-│   ├── backend/            # .NET 8.0 Web API 项目 (后端)
-│   │   ├── Controllers/        # API 端点
-│   │   ├── Data/               # EF Core DbContext 和存储库 (PostgreSQL)
-│   │   ├── eBPF/               # eBPF 侦探模块 (服务、控制器、脚本)
-│   │   ├── Extensions/         # 模块化配置的扩展方法
-│   │   ├── Gateway/            # YARP 网关和熔断器
-│   │   ├── Hubs/               # SignalR Hubs
-│   │   ├── Identity/           # IdentityServer4 配置
-│   │   ├── McpTools/           # 模型上下文协议集成工具
-│   │   ├── Plugins/            # Semantic Kernel 插件
-│   │   ├── Services/           # 核心服务实现 (Semantic Kernel, RAG, Sandbox, Workflow, Prompts, Finetune, HDFS)
-│   │   ├── appsettings.Development.json
-│   │   ├── appsettings.json
-│   │   ├── AgentWebApi.csproj
-│   │   └── Program.cs
+│   ├── backend/            # .NET 8.0 后端项目
+│   │   ├── Agent.Api/          # ASP.NET Core Web API 入口点
+│   │   │   ├── Controllers/    # API 端点 (重构后保留)
+│   │   │   ├── Extensions/     # 扩展方法 (重构后保留)
+│   │   │   ├── GlobalUsings.cs # Agent.Api 的全局 using 指令
+│   │   │   ├── Program.cs      # 应用程序启动和配置
+│   │   │   └── Agent.Api.csproj
+│   │   ├── Agent.Core/         # 核心业务逻辑和共享模块
+│   │   │   ├── Authorization/  # 自定义授权策略和处理程序
+│   │   │   ├── Controllers/    # 核心 API 端点 (从 Agent.Api 移动)
+│   │   │   ├── Data/           # EF Core DbContext、存储库和实体 (PostgreSQL)
+│   │   │   ├── eBPF/           # eBPF 侦探模块 (服务、控制器、脚本)
+│   │   │   ├── Extensions/     # 模块化配置的扩展方法
+│   │   │   ├── Gateway/        # YARP 网关和熔断器组件
+│   │   │   ├── Hubs/           # SignalR Hubs
+│   │   │   ├── Identity/       # ASP.NET Core Identity 模型和配置
+│   │   │   ├── McpTools/       # 模型上下文协议集成工具
+│   │   │   ├── Models/         # 共享数据模型
+│   │   │   ├── Services/       # 核心服务实现 (Semantic Kernel, RAG, Sandbox, Workflow, Prompts, Finetune, HDFS, FileUpload, Prometheus, Qwen, Telemetry, UserInput, VectorDatabase)
+│   │   │   └── Agent.Core.csproj
+│   │   └── unittest/           # 后端组件的单元测试
+│   │       └── Agent.Core.Tests/ # Agent.Core 的单元测试
 │   └── frontend/           # React 前端应用程序
 │       └── agent-chat/         # 带银色主题的 React 聊天应用程序
 ├── README.md               # 主要项目文档 (英文)
@@ -57,19 +64,20 @@ ai-agent/
 │   ├── ebpf_integration.md
 │   ├── identity_signalr_integration.md
 │   ├── kubernetes_istio_grayscale_release.zh_CN.md
+│   ├── mlflow_integration.md
+│   ├── mlflow_integration.zh_CN.md
 │   ├── rag_prompt_engineering.md
 │   ├── sandbox_terminal_integration.md
 │   ├── semantic_kernel_examples.md
 │   ├── workflow_integration.md
-│   ├── yarp_gateway_integration.md
-│   └── kubernetes_istio_grayscale_release.zh_CN.md
+│   └── yarp_gateway_integration.md
 ├── finetune/               # 模型微调工具 (Python.NET 交互)
 ├── models/                 # 模型文件目录
 ├── scripts/                # 设置和实用工具脚本
 ├── src/                    # 源代码 (旧版 Python/FastAPI 模型服务器，如果适用)
 ├── .gitignore              # 指定 Git 应忽略的有意未跟踪的文件
 └── venv/                   # Python 虚拟环境
-``````
+```
 
 ## 快速开始
 
@@ -103,11 +111,11 @@ docker-compose up -d
 
 ## OpenTelemetry 跟踪
 
-`platform/backend/` 项目集成了 OpenTelemetry，用于分布式跟踪，提供对应用程序执行流程的洞察。典型的 Agent 应用程序执行序列的检测如下：
+`platform/backend/Agent.Api` 项目集成了 OpenTelemetry，用于分布式跟踪，提供对应用程序执行流程的洞察。典型的 Agent 应用程序执行序列的检测如下：
 
 ```csharp
 // 1. 定义用于跟踪的 ActivitySource
-using var activitySource = new ActivitySource("AI-Agent.WebApi");
+using var activitySource = new ActivitySource("AI-Agent.Application");
 
 // ... 服务配置 ...
 
@@ -178,7 +186,7 @@ app.Run();
     *   [RAG Prompt 工程](docs/rag_prompt_engineering.md)
     *   [沙盒终端集成](docs/sandbox_terminal_integration.md)
     *   [工作流集成](docs/workflow_integration.md)
-    *   [Identity & SignalR 集成](docs/identity_signalR_integration.md)
+    *   [Identity & SignalR 集成](docs/identity_signalr_integration.md)
     *   [YARP 网关集成](docs/yarp_gateway_integration.md)
     *   [eBPF 集成](docs/ebpf_integration.md)
     *   [Kubernetes、Istio 与灰度发布指南](docs/kubernetes_istio_grayscale_release.zh_CN.md)
@@ -191,8 +199,6 @@ app.Run();
 
 ## 致谢
 
-Microsoft .NET 团队、OpenTelemetry 社区、YARP 项目、Polly 项目、IdentityServer 团队、SignalR 团队、ChromaDB、Microsoft Semantic Kernel、bpftrace 以及所有贡献的开源项目。
-
-
+Microsoft .NET 团队、OpenTelemetry 社区、YARP 项目、Polly 项目、SignalR 团队、ChromaDB、Microsoft Semantic Kernel、bpftrace 以及所有贡献的开源项目。
 
 
