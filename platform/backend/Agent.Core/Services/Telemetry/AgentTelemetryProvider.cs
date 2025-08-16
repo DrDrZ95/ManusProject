@@ -1,4 +1,4 @@
-using System.Diagnostics;
+using OpenTelemetry.Trace;
 
 namespace Agent.Core.Services.Telemetry
 {

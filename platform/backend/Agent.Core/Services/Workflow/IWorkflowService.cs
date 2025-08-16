@@ -116,6 +116,8 @@ public interface IWorkflowService
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>Progress information - 进度信息</returns>
     Task<WorkflowProgress> GetProgressAsync(string planId, CancellationToken cancellationToken = default);
+
+    Task<string> CreateWorkflowAsync(string llmResponse);
 }
 
 /// <summary>

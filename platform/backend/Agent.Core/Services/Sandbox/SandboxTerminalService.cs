@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -100,6 +101,10 @@ public class SandboxTerminalService : ISandboxTerminalService
                 }
             };
 
+            var processTask = process.WaitForExitAsync(cancellationToken);;
+            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(timeout), cancellationToken);
+            var completed = await Task.WhenAny(processTask, timeoutTask);
+            
             // 启动进程 - Start process
             process.Start();
             process.BeginOutputReadLine();
@@ -107,10 +112,9 @@ public class SandboxTerminalService : ISandboxTerminalService
 
             // 等待完成或超时 - Wait for completion or timeout
             var timeoutMs = Math.Min(timeout * 1000, _options.MaxTimeout * 1000);
-            var completed = await process.WaitForExitAsync(cancellationToken)
-                .WaitAsync(TimeSpan.FromMilliseconds(timeoutMs), cancellationToken);
+            
 
-            if (!completed)
+            if (!completed.IsCompleted && !completed.IsCompletedSuccessfully)
             {
                 // 超时处理 - Timeout handling
                 _logger.LogWarning("Command timed out after {Timeout}s: {Command}", timeout, command);
@@ -203,56 +207,55 @@ public class SandboxTerminalService : ISandboxTerminalService
         
         using var process = new Process { StartInfo = processStartInfo };
         
-        try
+        process.Start();
+
+        // 创建读取任务 - Create reading tasks
+        var outputTask = ReadStreamAsync(process.StandardOutput, "STDOUT", cancellationToken);
+        var errorTask = ReadStreamAsync(process.StandardError, "STDERR", cancellationToken);
+
+        // 等待进程完成 - Wait for process completion
+        var processTask = process.WaitForExitAsync(cancellationToken);
+        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(timeout), cancellationToken);
+
+        // 流式输出 - Stream output
+        await foreach (var line in MergeStreams(outputTask, errorTask, cancellationToken))
         {
-            process.Start();
-
-            // 创建读取任务 - Create reading tasks
-            var outputTask = ReadStreamAsync(process.StandardOutput, "STDOUT", cancellationToken);
-            var errorTask = ReadStreamAsync(process.StandardError, "STDERR", cancellationToken);
-
-            // 等待进程完成 - Wait for process completion
-            var processTask = process.WaitForExitAsync(cancellationToken);
-            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(timeout), cancellationToken);
-
-            // 流式输出 - Stream output
-            await foreach (var line in MergeStreams(outputTask, errorTask, cancellationToken))
-            {
-                yield return line;
-                
-                // 检查进程是否完成 - Check if process completed
-                if (process.HasExited)
-                {
-                    break;
-                }
-            }
-
-            // 等待进程完成或超时 - Wait for completion or timeout
-            var completedTask = await Task.WhenAny(processTask, timeoutTask);
+            yield return line;
             
-            if (completedTask == timeoutTask && !process.HasExited)
+            // 检查进程是否完成 - Check if process completed
+            if (process.HasExited)
             {
-                _logger.LogWarning("Streaming command timed out: {Command}", command);
-                try
-                {
-                    process.Kill(true);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to kill timed out streaming process");
-                }
-                yield return "Error: Command timed out";
+                break;
             }
         }
-        catch (OperationCanceledException)
+
+        // 等待进程完成或超时 - Wait for completion or timeout
+        var completedTask = await Task.WhenAny(processTask, timeoutTask);
+        
+        if (completedTask == timeoutTask && !process.HasExited)
+        {
+            _logger.LogWarning("Streaming command timed out: {Command}", command);
+            try
+            {
+                process.Kill(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to kill timed out streaming process");
+            }
+            yield return "Error: Command timed out";
+        }
+        
+        if (!completedTask.IsCompletedSuccessfully)
         {
             _logger.LogInformation("Streaming command was cancelled: {Command}", command);
             yield return "Command execution was cancelled";
         }
-        catch (Exception ex)
+
+        if (completedTask.Exception != null)
         {
-            _logger.LogError(ex, "Failed to execute streaming command: {Command}", command);
-            yield return $"Error: {ex.Message}";
+            _logger.LogError(completedTask.Exception, "Failed to execute streaming command: {Command}", command);
+            yield return $"Error: {completedTask.Exception.Message}";
         }
     }
 
@@ -521,21 +524,20 @@ public class SandboxTerminalService : ISandboxTerminalService
         string prefix,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        try
+        Exception? error = null;
+        while (!reader.EndOfStream && !cancellationToken.IsCancellationRequested)
         {
-            while (!reader.EndOfStream && !cancellationToken.IsCancellationRequested)
+            // .NET 8 中没有统一要求 ReadLineAsync(token)，用 WaitAsync 兼容
+            var line = await reader.ReadLineAsync().WaitAsync(cancellationToken);
+            if (line is not null)
             {
-                var line = await reader.ReadLineAsync();
-                if (line != null)
-                {
-                    yield return $"[{prefix}] {line}";
-                }
+                yield return $"[{prefix}] {line}";
             }
         }
-        catch (Exception ex)
+
+        if (!reader.EndOfStream)
         {
-            _logger.LogError(ex, "Error reading from {Prefix} stream", prefix);
-            yield return $"[{prefix}] Error: {ex.Message}";
+            yield return $"貌似发生了错误：[{prefix}] {reader.ReadLine()}";
         }
     }
 

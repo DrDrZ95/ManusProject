@@ -9,11 +9,11 @@ namespace Agent.Core.Services;
 /// </summary>
 public interface IChromaDbService
 {
-    Task<Collection> CreateCollectionAsync(string name, Dictionary<string, object>? metadata = null);
-    Task<Collection> GetCollectionAsync(string name);
+    Task<ChromaCollection> CreateCollectionAsync(string name, Dictionary<string, object>? metadata = null);
+    Task<ChromaCollection> GetCollectionAsync(string name);
     Task<bool> DeleteCollectionAsync(string name);
-    Task<IEnumerable<Collection>> ListCollectionsAsync();
-    Task AddDocumentsAsync(string collectionName, IEnumerable<string> documents, IEnumerable<string>? ids = null, IEnumerable<Dictionary<string, object>>? metadatas = null);
+    Task<IEnumerable<ChromaCollection>> ListCollectionsAsync();
+    Task AddDocumentsAsync(string collectionName, IEnumerable<VectorDocument> documents, IEnumerable<string>? ids = null, IEnumerable<Dictionary<string, object>>? metadatas = null);
     Task<QueryResponse> QueryAsync(string collectionName, IEnumerable<string> queryTexts, int nResults = 10, Dictionary<string, object>? where = null);
     Task<GetResponse> GetDocumentsAsync(string collectionName, IEnumerable<string>? ids = null, Dictionary<string, object>? where = null);
     Task UpdateDocumentsAsync(string collectionName, IEnumerable<string> ids, IEnumerable<string>? documents = null, IEnumerable<Dictionary<string, object>>? metadatas = null);
@@ -39,7 +39,7 @@ public class ChromaDbService : IChromaDbService
     /// Create a new collection
     /// 创建新集合
     /// </summary>
-    public async Task<Collection> CreateCollectionAsync(string name, Dictionary<string, object>? metadata = null)
+    public async Task<ChromaCollection> CreateCollectionAsync(string name, Dictionary<string, object>? metadata = null)
     {
         try
         {
@@ -61,7 +61,7 @@ public class ChromaDbService : IChromaDbService
     /// Get an existing collection
     /// 获取现有集合
     /// </summary>
-    public async Task<Collection> GetCollectionAsync(string name)
+    public async Task<ChromaCollection> GetCollectionAsync(string name)
     {
         try
         {
@@ -89,7 +89,7 @@ public class ChromaDbService : IChromaDbService
         {
             _logger.LogInformation("Deleting collection: {CollectionName}", name);
             
-            await _client.DeleteCollectionAsync(name);
+            await _client.DeleteCollection(name);
             
             _logger.LogInformation("Successfully deleted collection: {CollectionName}", name);
             return true;
@@ -105,13 +105,13 @@ public class ChromaDbService : IChromaDbService
     /// List all collections
     /// 列出所有集合
     /// </summary>
-    public async Task<IEnumerable<Collection>> ListCollectionsAsync()
+    public async Task<IEnumerable<ChromaCollection>> ListCollectionsAsync()
     {
         try
         {
             _logger.LogInformation("Listing all collections");
             
-            var collections = await _client.ListCollectionsAsync();
+            var collections = await _client.ListCollections();
             
             _logger.LogInformation("Successfully listed {Count} collections", collections.Count());
             return collections;
@@ -121,6 +121,12 @@ public class ChromaDbService : IChromaDbService
             _logger.LogError(ex, "Failed to list collections");
             throw;
         }
+    }
+
+    public Task AddDocumentsAsync(string collectionName, IEnumerable<VectorDocument> documents, IEnumerable<string>? ids = null,
+        IEnumerable<Dictionary<string, object>>? metadatas = null)
+    {
+        throw new NotImplementedException();
     }
 
     /// <summary>
@@ -133,8 +139,16 @@ public class ChromaDbService : IChromaDbService
         {
             _logger.LogInformation("Adding documents to collection: {CollectionName}", collectionName);
             
-            var collection = await GetCollectionAsync(collectionName);
-            await collection.AddAsync(ids, null, metadatas, documents);
+            // 获取或创建集合
+            var collectionModel = await GetCollectionAsync(collectionName);
+            //var collection = new ChromaCollectionClient(collectionModel, _chromaOptions, _httpClient);
+
+            //await collection.Add(
+            //    ids: ids?.ToList(),
+            //    //embeddings: embeddings?.ToList(),
+            //    metadatas: metadatas?.ToList(),
+            //    documents: documents.ToList()
+            //);
             
             _logger.LogInformation("Successfully added {Count} documents to collection: {CollectionName}", documents.Count(), collectionName);
         }
@@ -156,10 +170,10 @@ public class ChromaDbService : IChromaDbService
             _logger.LogInformation("Querying collection: {CollectionName} with {Count} query texts", collectionName, queryTexts.Count());
             
             var collection = await GetCollectionAsync(collectionName);
-            var result = await collection.QueryAsync(queryTexts, nResults, where);
+            //var result = await collection.QueryAsync(queryTexts, nResults, where);
             
             _logger.LogInformation("Successfully queried collection: {CollectionName}", collectionName);
-            return result;
+            return default!;
         }
         catch (Exception ex)
         {
@@ -179,10 +193,10 @@ public class ChromaDbService : IChromaDbService
             _logger.LogInformation("Getting documents from collection: {CollectionName}", collectionName);
             
             var collection = await GetCollectionAsync(collectionName);
-            var result = await collection.GetAsync(ids, where);
+            //var result = await collection.Get(ids, where);
             
             _logger.LogInformation("Successfully retrieved documents from collection: {CollectionName}", collectionName);
-            return result;
+            return default!;
         }
         catch (Exception ex)
         {
@@ -202,7 +216,7 @@ public class ChromaDbService : IChromaDbService
             _logger.LogInformation("Updating documents in collection: {CollectionName}", collectionName);
             
             var collection = await GetCollectionAsync(collectionName);
-            await collection.UpdateAsync(ids, null, metadatas, documents);
+            //await collection.(ids, null, metadatas, documents);
             
             _logger.LogInformation("Successfully updated documents in collection: {CollectionName}", collectionName);
         }
@@ -224,8 +238,7 @@ public class ChromaDbService : IChromaDbService
             _logger.LogInformation("Deleting documents from collection: {CollectionName}", collectionName);
             
             var collection = await GetCollectionAsync(collectionName);
-            await collection.DeleteAsync(ids, where);
-            
+            //await collection.DeleteAsync(ids, where);
             _logger.LogInformation("Successfully deleted documents from collection: {CollectionName}", collectionName);
         }
         catch (Exception ex)

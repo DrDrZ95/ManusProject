@@ -35,6 +35,8 @@ public interface IRagService
     Task<string> CreateKnowledgeBaseAsync(string name, RagCollectionConfig config);
     Task DeleteKnowledgeBaseAsync(string name);
     Task<IEnumerable<string>> ListKnowledgeBasesAsync();
+    Task<object> QueryAsync(string collectionName, string query, RagOptions ragOptions);
+    Task<string> RetrieveAndGenerateAsync(string input);
 }
 
 /// <summary>
@@ -161,6 +163,8 @@ public class RagQuery
     /// Re-ranking options - 重排序选项
     /// </summary>
     public ReRankingOptions? ReRanking { get; set; }
+
+    public string QueryText { get; set; }
 }
 
 /// <summary>
@@ -242,6 +246,8 @@ public class RagRetrievalResult
     /// Retrieval metadata - 检索元数据
     /// </summary>
     public Dictionary<string, object> Metadata { get; set; } = new();
+
+    public IEnumerable<string>? RetrievedDocuments { get; set; }
 }
 
 /// <summary>
@@ -321,6 +327,8 @@ public class RagGenerationRequest
     /// Conversation history - 对话历史
     /// </summary>
     public List<ChatMessage>? ConversationHistory { get; set; }
+
+    public string Prompt { get; set; }
 }
 
 /// <summary>
@@ -390,6 +398,9 @@ public class RagResponse
     /// Generation time - 生成时间
     /// </summary>
     public long GenerationTimeMs { get; set; }
+
+    public string Summary { get; set; }
+    public string  AnalysisResult { get; set; }
 }
 
 /// <summary>
@@ -417,6 +428,8 @@ public class RagOptions
     /// Domain-specific filters - 领域特定过滤器
     /// </summary>
     public Dictionary<string, object>? DomainFilters { get; set; }
+
+    public int MaxResults { get; set; }
 }
 
 /// <summary>

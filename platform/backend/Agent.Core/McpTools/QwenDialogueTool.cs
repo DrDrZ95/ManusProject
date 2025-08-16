@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Agent.Core.Services.Qwen;
+using Newtonsoft.Json;
 
 namespace Agent.Core.McpTools;
 
@@ -7,6 +8,10 @@ public class QwenDialogueTool : ITool
 {
     private readonly IQwenServiceClient _qwenServiceClient;
     private readonly ILogger<QwenDialogueTool> _logger;
+
+    public McpSchemaType Type { get; set; }
+
+    public Dictionary<string, McpSchema> Properties { get; set; }
 
     public QwenDialogueTool(IQwenServiceClient qwenServiceClient, ILogger<QwenDialogueTool> logger)
     {
@@ -19,7 +24,7 @@ public class QwenDialogueTool : ITool
 
     public async Task<ToolOutput> ExecuteAsync(ToolInput toolInput, CancellationToken cancellationToken = default)
     {
-        if (toolInput.Parameters == null || !toolInput.Parameters.TryGetValue("prompt", out var promptValue) || promptValue?.Value is not string userPrompt || string.IsNullOrWhiteSpace(userPrompt))
+        if (toolInput.Parameters == null || !toolInput.Parameters.TryGetValue("prompt", out var promptValue) || promptValue?.ToString() is not string userPrompt || string.IsNullOrWhiteSpace(userPrompt))
         {
             _logger.LogWarning("QwenDialogueTool: Prompt parameter is missing or invalid.");
             return new ToolOutput
@@ -79,20 +84,17 @@ public class QwenDialogueTool : ITool
             Description = Description,
             InputSchema = new McpSchema
             (
-                Type = McpSchemaType.Object,
-                Properties = new Dictionary<string, McpSchema>
-                {
-                    { "prompt", new McpSchema(McpSchemaType.String, "The user's message or question to the Qwen3 AI model.") }
-                },
-                Required = new List<string> { "prompt" }
+                //Type = McpSchemaType.Object,
+                //Properties = default!,
+                //Required = new List<string> { "prompt" }
             ),
             OutputSchema = new McpSchema
             (
-                Type = McpSchemaType.Object,
-                Properties = new Dictionary<string, McpSchema>
-                {
-                    { "response", new McpSchema(McpSchemaType.String, "The AI model's response.") }
-                }
+                //Type = McpSchemaType.Object,
+                //Properties = new Dictionary<string, McpSchema>
+                //{
+                //    { "response", new McpSchema(McpSchemaType.String, "The AI model's response.") }
+                //}
             )
         };
     }

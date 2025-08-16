@@ -104,32 +104,27 @@ public class SemanticKernelService : ISemanticKernelService
     /// </summary>
     public async IAsyncEnumerable<string> GetStreamingChatCompletionAsync(string prompt, string? systemMessage = null)
     {
-        try
+        _logger.LogInformation("Getting streaming chat completion for prompt length: {PromptLength}", prompt.Length);
+
+        var chatHistory = new ChatHistory();
+        
+        if (!string.IsNullOrEmpty(systemMessage))
         {
-            _logger.LogInformation("Getting streaming chat completion for prompt length: {PromptLength}", prompt.Length);
-
-            var chatHistory = new ChatHistory();
-            
-            if (!string.IsNullOrEmpty(systemMessage))
-            {
-                chatHistory.AddSystemMessage(systemMessage);
-            }
-            
-            chatHistory.AddUserMessage(prompt);
-
-            var executionSettings = new OpenAIPromptExecutionSettings
-            {
-                MaxTokens = _options.MaxTokens,
-                Temperature = _options.Temperature
-            };
-
-            return GetStreamingResponseAsync(chatHistory, executionSettings);
+            chatHistory.AddSystemMessage(systemMessage);
         }
-        catch (Exception ex)
+        
+        chatHistory.AddUserMessage(prompt);
+
+        var executionSettings = new OpenAIPromptExecutionSettings
         {
-            _logger.LogError(ex, "Failed to get streaming chat completion");
-            throw;
-        }
+            MaxTokens = _options.MaxTokens,
+            Temperature = _options.Temperature
+        };
+
+        await foreach (var content in GetStreamingResponseAsync(chatHistory, executionSettings))
+        {
+            yield return content;
+        };
     }
 
     /// <summary>
@@ -240,7 +235,7 @@ public class SemanticKernelService : ISemanticKernelService
     /// Invoke a kernel function
     /// 调用内核函数
     /// </summary>
-    public async Task<string> InvokeFunctionAsync(string functionName, Dictionary<string, object>? arguments = null)
+    public async Task<string> InvokeFunctionAsync(string plugName, string functionName, Dictionary<string, object>? arguments = null)
     {
         try
         {
@@ -279,7 +274,7 @@ public class SemanticKernelService : ISemanticKernelService
                 }
             }
 
-            var result = await _kernel.InvokeAsync(functionName, kernelArguments);
+            var result = await _kernel.InvokeAsync(plugName, functionName, kernelArguments);
             
             _logger.LogInformation("Function {FunctionName} invoked successfully", functionName);
             return result.ToString();
@@ -295,7 +290,7 @@ public class SemanticKernelService : ISemanticKernelService
     /// Invoke a kernel function with typed return value
     /// 调用内核函数并返回类型化的值
     /// </summary>
-    public async Task<T> InvokeFunctionAsync<T>(string functionName, Dictionary<string, object>? arguments = null)
+    public async Task<T> InvokeFunctionAsync<T>(string plugName, string functionName, Dictionary<string, object>? arguments = null)
     {
         try
         {
@@ -320,12 +315,12 @@ public class SemanticKernelService : ISemanticKernelService
                     kernelArguments[kvp.Key] = kvp.Value;
                 }
             }
-
-            var result = await _kernel.InvokeAsync(functionName, kernelArguments);
+            
+            var result = await _kernel.InvokeAsync(plugName, functionName, kernelArguments);
             
             _logger.LogInformation("Function {FunctionName} invoked successfully", functionName);
             
-            if (result.Value is T typedResult)
+            if (result is T typedResult)
             {
                 return typedResult;
             }
@@ -539,6 +534,11 @@ public class SemanticKernelService : ISemanticKernelService
             _logger.LogError(ex, "Failed to remove memory from collection: {CollectionName}", collectionName);
             throw;
         }
+    }
+
+    public Task<string> ExecutePromptAsync(string initialLlmInteractionFor)
+    {
+        throw new NotImplementedException();
     }
 
     #endregion

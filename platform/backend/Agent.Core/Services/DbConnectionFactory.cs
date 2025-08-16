@@ -39,6 +39,7 @@ public class DbConnectionFactory : IDbConnectionFactory
         // This example uses SQL Server, but could be extended for other database types
         DbConnection connection = new SqlConnection(connectionString);
         
+        
         try
         {
             await connection.OpenAsync(cancellationToken);

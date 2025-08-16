@@ -645,7 +645,7 @@ public class RagService : IRagService
             var systemPrompt = BuildSystemPrompt(request.SystemPrompt, context, request.IncludeSources);
 
             // Generate streaming response - 生成流式响应
-            return await _semanticKernel.GetStreamingChatCompletionAsync(request.Query, systemPrompt);
+            return _semanticKernel.GetStreamingChatCompletionAsync(request.Query, systemPrompt);
         }
         catch (Exception ex)
         {
@@ -1014,6 +1014,16 @@ public class RagService : IRagService
             _logger.LogError(ex, "Failed to list knowledge bases");
             throw;
         }
+    }
+
+    public Task<object> QueryAsync(string collectionName, string query, RagOptions ragOptions)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<string> RetrieveAndGenerateAsync(string input)
+    {
+        throw new NotImplementedException();
     }
 
     #endregion

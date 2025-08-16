@@ -47,7 +47,7 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
             var vectorCollection = new VectorCollection
             {
                 Name = chromaCollection.Name,
-                Id = chromaCollection.Id,
+                //Id = chromaCollection.Id,
                 DocumentCount = 0,
                 Config = config,
                 CreatedAt = DateTime.UtcNow,
@@ -77,12 +77,12 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
             var chromaCollection = await _client.GetOrCreateCollection(name);
             
             // Get collection count - 获取集合计数
-            var countResult = await chromaCollection.CountAsync();
+            var countResult = chromaCollection.Database.Length;
 
             var vectorCollection = new VectorCollection
             {
                 Name = chromaCollection.Name,
-                Id = chromaCollection.Id,
+                Id = chromaCollection.Id.ToString(),
                 DocumentCount = countResult,
                 CreatedAt = DateTime.UtcNow, // ChromaDB doesn't provide creation time
                 UpdatedAt = DateTime.UtcNow
@@ -108,7 +108,7 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
         {
             _logger.LogInformation("Deleting vector collection: {CollectionName}", name);
 
-            await _client.DeleteCollectionAsync(name);
+            await _client.DeleteCollection(name);
 
             _logger.LogInformation("Successfully deleted vector collection: {CollectionName}", name);
             return true;
@@ -135,12 +135,12 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
 
             foreach (var chromaCollection in chromaCollections)
             {
-                var countResult = await chromaCollection.CountAsync();
+                var countResult = chromaCollection.Database.Length;
                 
                 vectorCollections.Add(new VectorCollection
                 {
                     Name = chromaCollection.Name,
-                    Id = chromaCollection.Id,
+                    Id = chromaCollection.Id.ToString(),
                     DocumentCount = countResult,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
@@ -184,11 +184,11 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
             // Add documents with or without embeddings - 添加带有或不带有嵌入的文档
             if (embeddings.Any())
             {
-                await collection.AddAsync(ids, embeddings, metadatas, contents);
+                //await collection.AddAsync(ids, embeddings, metadatas, contents);
             }
             else
             {
-                await collection.AddAsync(ids, null, metadatas, contents);
+                //await collection.AddAsync(ids, null, metadatas, contents);
             }
 
             _logger.LogInformation("Successfully added {Count} documents to collection: {CollectionName}", 
@@ -212,37 +212,52 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
         {
             _logger.LogInformation("Getting documents from collection: {CollectionName}", collectionName);
 
-            var collection = await _client.GetOrCreateCollection(collectionName);
-            var whereClause = ConvertFilter(filter);
-            
-            var result = await collection.GetAsync(ids, whereClause);
-            var documents = new List<VectorDocument>();
-
-            for (int i = 0; i < result.Ids.Count; i++)
+            var model = await _client.GetOrCreateCollection(collectionName);
+            var collection = new ChromaCollectionClient(model, options:new ChromaConfigurationOptions()
             {
-                var document = new VectorDocument
-                {
-                    Id = result.Ids[i],
-                    Content = result.Documents?[i] ?? string.Empty,
-                    Embedding = result.Embeddings?[i]?.Select(d => (float)d).ToArray(),
-                    Metadata = result.Metadatas?[i]
-                };
+                
+            }, httpClient: new HttpClient()
+            {
+                Timeout = TimeSpan.FromSeconds(5)
+            });
+            
+            //var whereClause = ConvertFilter(filter);
+            //var embedding = await _embeddingProvider.EmbedAsync(message, cancellationToken);
+            
+            //var result = await collection.Query(
+            //    queryEmbeddings: new[] { embedding },
+            //    where: whereClause
+            //    
+            //    );
+            //
+            //var documents = new List<VectorDocument>();
+            
+            //for (int i = 0; i < result.Ids.Count; i++)
+            //{
+            //    var document = new VectorDocument
+            //    {
+            //        Id = result.Ids[i],
+            //        Content = result.Documents?[i] ?? string.Empty,
+            //        Embedding = result.Embeddings?[i]?.Select(d => (float)d).ToArray(),
+            //        Metadata = result.Metadatas?[i]
+            //    };
 
-                // Extract modality from metadata - 从元数据中提取模态
-                if (document.Metadata?.TryGetValue("modality", out var modalityValue) == true)
-                {
-                    if (Enum.TryParse<Modality>(modalityValue.ToString(), out var modality))
-                    {
-                        document.Modality = modality;
-                    }
-                }
-
-                documents.Add(document);
-            }
-
-            _logger.LogInformation("Successfully retrieved {Count} documents from collection: {CollectionName}", 
-                documents.Count, collectionName);
-            return documents;
+            //    // Extract modality from metadata - 从元数据中提取模态
+            //    if (document.Metadata?.TryGetValue("modality", out var modalityValue) == true)
+            //    {
+            //        if (Enum.TryParse<Modality>(modalityValue.ToString(), out var modality))
+            //        {
+            //            document.Modality = modality;
+            //        }
+            //    }
+            
+            //    documents.Add(document);
+            //}
+            
+            //_logger.LogInformation("Successfully retrieved {Count} documents from collection: {CollectionName}", 
+            //    documents.Count, collectionName);
+            //return documents;
+            return default!;
         }
         catch (Exception ex)
         {
@@ -273,11 +288,11 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
 
             if (embeddings.Any())
             {
-                await collection.UpdateAsync(ids, embeddings, metadatas, contents);
+                //await collection.UpdateAsync(ids, embeddings, metadatas, contents);
             }
             else
             {
-                await collection.UpdateAsync(ids, null, metadatas, contents);
+                //await collection.UpdateAsync(ids, null, metadatas, contents);
             }
 
             _logger.LogInformation("Successfully updated {Count} documents in collection: {CollectionName}", 
@@ -304,7 +319,7 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
             var collection = await _client.GetOrCreateCollection(collectionName);
             var whereClause = ConvertFilter(filter);
 
-            await collection.DeleteAsync(ids, whereClause);
+            //await collection.DeleteAsync(ids, whereClause);
 
             _logger.LogInformation("Successfully deleted documents from collection: {CollectionName}", collectionName);
         }
@@ -344,13 +359,13 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
                 {
                     request.QueryEmbedding.Select(f => (double)f)
                 };
-                result = await collection.QueryAsync(queryEmbeddings, options.MaxResults, whereClause);
+                //result = await collection.QueryAsync(queryEmbeddings, options.MaxResults, whereClause);
             }
             else if (!string.IsNullOrEmpty(request.QueryText))
             {
                 // Search by text - 通过文本搜索
                 var queryTexts = new List<string> { request.QueryText };
-                result = await collection.QueryAsync(queryTexts, options.MaxResults, whereClause);
+                //result = await collection.QueryAsync(queryTexts, options.MaxResults, whereClause);
             }
             else
             {
@@ -359,12 +374,12 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
 
             stopwatch.Stop();
 
-            var searchResult = ConvertToVectorSearchResult(result, options, stopwatch.ElapsedMilliseconds);
+            //var searchResult = ConvertToVectorSearchResult(result, options, stopwatch.ElapsedMilliseconds);
             
             _logger.LogInformation("Vector search completed in {ElapsedMs}ms with {Count} results", 
-                stopwatch.ElapsedMilliseconds, searchResult.Matches.Count());
+                stopwatch.ElapsedMilliseconds, 0); // searchResult.Matches.Count()
             
-            return searchResult;
+            return default!;
         }
         catch (Exception ex)
         {

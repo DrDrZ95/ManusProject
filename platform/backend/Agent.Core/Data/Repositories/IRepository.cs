@@ -26,7 +26,7 @@ public interface IRepository<TEntity, TKey> where TEntity : class
     /// </summary>
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>List of entities - 实体列表</returns>
-    Task<List<TEntity>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Find entities by predicate - 根据条件查找实体

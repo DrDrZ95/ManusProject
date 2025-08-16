@@ -1,7 +1,5 @@
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using Agent.Core.Identity;
 
 namespace Agent.Core.Hubs;
 

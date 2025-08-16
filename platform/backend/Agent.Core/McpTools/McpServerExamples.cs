@@ -2,6 +2,8 @@ using Microsoft.Extensions.Logging;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.AI;
+using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
 
 namespace Agent.Core.McpTools
 {
@@ -61,7 +63,7 @@ namespace Agent.Core.McpTools
                 Temperature = 0.3f,
             };
 
-            var summary = await thisServer.AsSamplingChatClient().GetResponseAsync(messages, options, cancellationToken);
+            var summary = await thisServer.AsSamplingChatClient().GetResponseAsync((IEnumerable<Microsoft.Extensions.AI.ChatMessage>)messages, options, cancellationToken);
             _logger.LogInformation("Content summarized successfully");
             
             return $"Summary: {summary}";

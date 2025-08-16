@@ -2,6 +2,7 @@ global using Agent.Core.Authorization;
 global using Agent.Core.Data;
 global using Agent.Core.Data.Repositories;
 global using Agent.Core.Data.Entities;
+global using Agent.Core.Domain;
 global using Agent.Core.eBPF;
 global using Agent.Core.Gateway;
 global using Agent.Core.Hubs;
@@ -36,6 +37,7 @@ global using System.Diagnostics;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Configuration;
 global using Microsoft.AspNetCore.Http;
+global using Microsoft.Data.SqlClient;
 global using System.Collections.Generic;
 global using System;
 global using System.Threading.Tasks;
@@ -63,5 +65,24 @@ global using Prometheus;
 global using PromCounter   = Prometheus.Counter;
 global using PromHistogram = Prometheus.Histogram;
 
+namespace Agent.Core.Domain;
 
+/// <summary>
+/// Chat message for conversation history
+/// 对话历史的聊天消息
+/// </summary>
+public class ChatMessage
+{
+    /// <summary>
+    /// Message role (system, user, assistant) - 消息角色（系统、用户、助手）
+    /// </summary>
+    public string Role { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Message content - 消息内容
+    /// </summary>
+    public string Content { get; set; } = string.Empty;
+    
+    public Dictionary<string, object>? Metadata { get; set; }
+}
 

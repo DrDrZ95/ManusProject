@@ -42,7 +42,7 @@ namespace Agent.Core.Services
             
             _logger.LogInformation("MCP server host created successfully");
             
-            return builder;
+            return default;
         }
 
         /// <summary>

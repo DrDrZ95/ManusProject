@@ -45,7 +45,7 @@ public class DynamicExternalAccessTool : ITool
 
         // Extract operation type
         if (!toolInput.Parameters.TryGetValue("operation", out var operationValue) || 
-            operationValue?.Value is not string operation)
+            operationValue?.ToString() is not string operation)
         {
             return CreateErrorOutput("Operation parameter is required (api, database, or file).");
         }
@@ -71,13 +71,13 @@ public class DynamicExternalAccessTool : ITool
     {
         // Extract required parameters
         if (!toolInput.Parameters.TryGetValue("url", out var urlValue) || 
-            urlValue?.Value is not string url)
+            urlValue?.ToString() is not string url)
         {
             return CreateErrorOutput("URL parameter is required for API operations.");
         }
 
         if (!toolInput.Parameters.TryGetValue("method", out var methodValue) || 
-            methodValue?.Value is not string method)
+            methodValue?.ToString() is not string method)
         {
             return CreateErrorOutput("Method parameter is required for API operations (GET, POST, etc.).");
         }
@@ -85,14 +85,14 @@ public class DynamicExternalAccessTool : ITool
         // Extract optional parameters
         string? requestBody = null;
         if (toolInput.Parameters.TryGetValue("body", out var bodyValue) && 
-            bodyValue?.Value is string body)
+            bodyValue?.ToString() is string body)
         {
             requestBody = body;
         }
 
         Dictionary<string, string>? headers = null;
         if (toolInput.Parameters.TryGetValue("headers", out var headersValue) && 
-            headersValue?.Value is string headersJson)
+            headersValue?.ToString() is string headersJson)
         {
             try
             {
@@ -168,13 +168,13 @@ public class DynamicExternalAccessTool : ITool
     {
         // Extract required parameters
         if (!toolInput.Parameters.TryGetValue("connectionName", out var connectionNameValue) || 
-            connectionNameValue?.Value is not string connectionName)
+            connectionNameValue?.ToString() is not string connectionName)
         {
             return CreateErrorOutput("ConnectionName parameter is required for database operations.");
         }
 
         if (!toolInput.Parameters.TryGetValue("query", out var queryValue) || 
-            queryValue?.Value is not string query)
+            queryValue?.ToString() is not string query)
         {
             return CreateErrorOutput("Query parameter is required for database operations.");
         }
@@ -182,7 +182,7 @@ public class DynamicExternalAccessTool : ITool
         // Extract optional parameters
         Dictionary<string, object>? parameters = null;
         if (toolInput.Parameters.TryGetValue("parameters", out var parametersValue) && 
-            parametersValue?.Value is string parametersJson)
+            parametersValue?.ToString() is string parametersJson)
         {
             try
             {
@@ -272,13 +272,13 @@ public class DynamicExternalAccessTool : ITool
     {
         // Extract required parameters
         if (!toolInput.Parameters.TryGetValue("action", out var actionValue) || 
-            actionValue?.Value is not string action)
+            actionValue?.ToString() is not string action)
         {
             return CreateErrorOutput("Action parameter is required for file operations (read, write, append, delete).");
         }
 
         if (!toolInput.Parameters.TryGetValue("path", out var pathValue) || 
-            pathValue?.Value is not string path)
+            pathValue?.ToString() is not string path)
         {
             return CreateErrorOutput("Path parameter is required for file operations.");
         }
@@ -306,7 +306,7 @@ public class DynamicExternalAccessTool : ITool
 
                 case "write":
                     if (!toolInput.Parameters.TryGetValue("content", out var contentValue) || 
-                        contentValue?.Value is not string writeContent)
+                        contentValue?.ToString() is not string writeContent)
                     {
                         return CreateErrorOutput("Content parameter is required for write file operations.");
                     }
@@ -323,7 +323,7 @@ public class DynamicExternalAccessTool : ITool
 
                 case "append":
                     if (!toolInput.Parameters.TryGetValue("content", out var appendContentValue) || 
-                        appendContentValue?.Value is not string appendContent)
+                        appendContentValue?.ToString() is not string appendContent)
                     {
                         return CreateErrorOutput("Content parameter is required for append file operations.");
                     }
@@ -367,41 +367,41 @@ public class DynamicExternalAccessTool : ITool
             Description = Description,
             InputSchema = new McpSchema
             (
-                Type = McpSchemaType.Object,
-                Properties = new Dictionary<string, McpSchema>
-                {
-                    { "operation", new McpSchema(McpSchemaType.String, "Type of operation to perform: api, database, or file.") },
-                    
-                    // API operation parameters
-                    { "url", new McpSchema(McpSchemaType.String, "URL for API operations.") },
-                    { "method", new McpSchema(McpSchemaType.String, "HTTP method for API operations (GET, POST, PUT, DELETE).") },
-                    { "body", new McpSchema(McpSchemaType.String, "Request body for API operations (optional).") },
-                    { "headers", new McpSchema(McpSchemaType.String, "JSON string of headers for API operations (optional).") },
-                    
-                    // Database operation parameters
-                    { "connectionName", new McpSchema(McpSchemaType.String, "Name of the database connection to use.") },
-                    { "query", new McpSchema(McpSchemaType.String, "SQL query to execute.") },
-                    { "parameters", new McpSchema(McpSchemaType.String, "JSON string of parameters for the SQL query (optional).") },
-                    
-                    // File operation parameters
-                    { "action", new McpSchema(McpSchemaType.String, "File action to perform: read, write, append, or delete.") },
-                    { "path", new McpSchema(McpSchemaType.String, "Path to the file.") },
-                    { "content", new McpSchema(McpSchemaType.String, "Content to write or append to the file.") }
-                },
-                Required = new List<string> { "operation" }
+                //Type = McpSchemaType.Object,
+                //Properties = new Dictionary<string, McpSchema>
+                //{
+                //    { "operation", new McpSchema(McpSchemaType.String, "Type of operation to perform: api, database, or file.") },
+                //    
+                //    // API operation parameters
+                //    { "url", new McpSchema(McpSchemaType.String, "URL for API operations.") },
+                //    { "method", new McpSchema(McpSchemaType.String, "HTTP method for API operations (GET, POST, PUT, DELETE).") },
+                //    { "body", new McpSchema(McpSchemaType.String, "Request body for API operations (optional).") },
+                //    { "headers", new McpSchema(McpSchemaType.String, "JSON string of headers for API operations (optional).") },
+                //    
+                //    // Database operation parameters
+                //    { "connectionName", new McpSchema(McpSchemaType.String, "Name of the database connection to use.") },
+                //    { "query", new McpSchema(McpSchemaType.String, "SQL query to execute.") },
+                //    { "parameters", new McpSchema(McpSchemaType.String, "JSON string of parameters for the SQL query (optional).") },
+                //    
+                //    // File operation parameters
+                //    { "action", new McpSchema(McpSchemaType.String, "File action to perform: read, write, append, or delete.") },
+                //    { "path", new McpSchema(McpSchemaType.String, "Path to the file.") },
+                //    { "content", new McpSchema(McpSchemaType.String, "Content to write or append to the file.") }
+                //},
+                //Required = new List<string> { "operation" }
             ),
             OutputSchema = new McpSchema
             (
-                Type = McpSchemaType.Object,
-                Properties = new Dictionary<string, McpSchema>
-                {
-                    { "statusCode", new McpSchema(McpSchemaType.Number, "HTTP status code for API operations.") },
-                    { "content", new McpSchema(McpSchemaType.String, "Response content for API operations or file read operations.") },
-                    { "data", new McpSchema(McpSchemaType.String, "JSON string of data returned from database queries.") },
-                    { "rowCount", new McpSchema(McpSchemaType.Number, "Number of rows returned from database queries.") },
-                    { "rowsAffected", new McpSchema(McpSchemaType.Number, "Number of rows affected by database operations.") },
-                    { "message", new McpSchema(McpSchemaType.String, "Success or error message.") }
-                }
+                //Type = McpSchemaType.Object,
+                //Properties = new Dictionary<string, McpSchema>
+                //{
+                //    { "statusCode", new McpSchema(McpSchemaType.Number, "HTTP status code for API operations.") },
+                //    { "content", new McpSchema(McpSchemaType.String, "Response content for API operations or file read operations.") },
+                //    { "data", new McpSchema(McpSchemaType.String, "JSON string of data returned from database queries.") },
+                //    { "rowCount", new McpSchema(McpSchemaType.Number, "Number of rows returned from database queries.") },
+                //    { "rowsAffected", new McpSchema(McpSchemaType.Number, "Number of rows affected by database operations.") },
+                //    { "message", new McpSchema(McpSchemaType.String, "Success or error message.") }
+                //}
             )
         };
     }

@@ -20,8 +20,8 @@ public interface ISemanticKernelService
     Task<IEnumerable<float[]>> GenerateEmbeddingsAsync(IEnumerable<string> texts);
 
     // Kernel Functions - 内核函数
-    Task<string> InvokeFunctionAsync(string functionName, Dictionary<string, object>? arguments = null);
-    Task<T> InvokeFunctionAsync<T>(string functionName, Dictionary<string, object>? arguments = null);
+    Task<string> InvokeFunctionAsync(string plugName, string functionName, Dictionary<string, object>? arguments = null);
+    Task<T> InvokeFunctionAsync<T>(string plugName, string functionName, Dictionary<string, object>? arguments = null);
 
     // Plugin Management - 插件管理
     void AddPlugin(object plugin, string? pluginName = null);
@@ -32,17 +32,7 @@ public interface ISemanticKernelService
     Task SaveMemoryAsync(string collectionName, string text, string id, Dictionary<string, object>? metadata = null);
     Task<IEnumerable<MemoryResult>> SearchMemoryAsync(string collectionName, string query, int limit = 10, float minRelevance = 0.7f);
     Task RemoveMemoryAsync(string collectionName, string id);
-}
-
-/// <summary>
-/// Chat message representation
-/// 聊天消息表示
-/// </summary>
-public class ChatMessage
-{
-    public string Role { get; set; } = string.Empty;
-    public string Content { get; set; } = string.Empty;
-    public Dictionary<string, object>? Metadata { get; set; }
+    Task<string> ExecutePromptAsync(string initialLlmInteractionFor);
 }
 
 /// <summary>

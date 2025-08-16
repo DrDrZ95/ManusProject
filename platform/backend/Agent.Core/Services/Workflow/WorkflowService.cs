@@ -526,6 +526,11 @@ public class WorkflowService : IWorkflowService
         return progress;
     }
 
+    public Task<string> CreateWorkflowAsync(string llmResponse)
+    {
+        throw new NotImplementedException();
+    }
+
     #region Private Helper Methods
 
     /// <summary>

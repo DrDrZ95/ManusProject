@@ -45,12 +45,13 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
     /// <summary>
     /// Get all entities - 获取所有实体
     /// </summary>
-    public virtual async Task<List<TEntity>> GetAllAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         try
         {
             _logger.LogDebug("Getting all entities of type {EntityType}", typeof(TEntity).Name);
-            return await _dbSet.ToListAsync(cancellationToken);
+            await Task.CompletedTask;
+            return _dbSet.AsQueryable();
         }
         catch (Exception ex)
         {

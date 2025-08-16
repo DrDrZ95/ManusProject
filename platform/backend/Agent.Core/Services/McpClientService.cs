@@ -61,7 +61,7 @@ namespace Agent.Core.Services
         {
             _logger.LogInformation("Listing tools from MCP client");
             
-            var tools = await client.ListToolsAsync(cancellationToken);
+            var tools = await client.ListToolsAsync();
             
             _logger.LogInformation("Found {Count} tools from MCP client", tools.Count);
             
@@ -76,7 +76,7 @@ namespace Agent.Core.Services
         /// <param name="parameters">The parameters for the tool.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The result of the tool call.</returns>
-        public async Task<CallToolResponse> CallToolAsync(
+        public async ValueTask<CallToolResult> CallToolAsync(
             IMcpClient client,
             string toolName,
             Dictionary<string, object?> parameters,
@@ -110,7 +110,7 @@ namespace Agent.Core.Services
             IMcpClient client,
             CancellationToken cancellationToken = default);
             
-        Task<CallToolResponse> CallToolAsync(
+        ValueTask<CallToolResult> CallToolAsync(
             IMcpClient client,
             string toolName,
             Dictionary<string, object?> parameters,

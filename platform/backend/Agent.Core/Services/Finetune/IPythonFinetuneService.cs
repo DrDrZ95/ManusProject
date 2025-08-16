@@ -244,6 +244,8 @@ public class FinetuneProgress
     /// Log messages - 日志消息
     /// </summary>
     public List<string>? LogMessages { get; set; }
+
+    public decimal ProgressPercentage { get; set; }
 }
 
 /// <summary>
@@ -286,6 +288,8 @@ public class PythonEnvironmentInfo
     /// Error messages - 错误消息
     /// </summary>
     public List<string> ErrorMessages { get; set; } = new();
+
+    public bool IsPythonInstalled { get; set; } = false;
 }
 
 /// <summary>
@@ -365,5 +369,8 @@ public class ResourceEstimation
     /// Optimization suggestions - 优化建议
     /// </summary>
     public List<string> Suggestions { get; set; } = new();
+
+    public object? EstimatedGpuMemoryMb { get; set; }
+    public object? EstimatedTrainingTimeMinutes { get; set; }
 }
 
