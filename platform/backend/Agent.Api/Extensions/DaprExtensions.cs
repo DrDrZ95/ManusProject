@@ -38,7 +38,7 @@ namespace Agent.Core.Extensions
             app.UseCloudEvents();
             
             // Map Dapr subscriber endpoints
-            app.MapSubscribeHandler();
+            //app.MapSubscribeHandler();
             
             return app;
         }

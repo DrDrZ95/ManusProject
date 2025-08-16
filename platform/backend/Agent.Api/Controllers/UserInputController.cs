@@ -1,7 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
-using Agent.Api.Services.UserInput;
-using Agent.Api.Services.Prometheus;
-
 namespace Agent.Api.Controllers
 {
     /// <summary>

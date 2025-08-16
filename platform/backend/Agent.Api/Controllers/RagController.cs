@@ -1,7 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Agent.Api.Services.RAG;
-using Agent.Api.Services.Telemetry;
-using System.Diagnostics;
 
 namespace Agent.Api.Controllers;
 
@@ -400,7 +397,7 @@ public class RagController : ControllerBase
                 }
                 span.SetAttribute("rag.streaming_completed", true);
 
-                return new EmptyResult();
+                return new ContentResult();
             }
             catch (Exception ex)
             {
@@ -786,22 +783,7 @@ public class CreateKnowledgeBaseRequest
     public RagCollectionConfig Config { get; set; } = new();
 }
 
-/// <summary>
-/// Chat message for conversation history
-/// 对话历史的聊天消息
-/// </summary>
-public class ChatMessage
-{
-    /// <summary>
-    /// Message role (system, user, assistant) - 消息角色（系统、用户、助手）
-    /// </summary>
-    public string Role { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Message content - 消息内容
-    /// </summary>
-    public string Content { get; set; } = string.Empty;
-}
 
 #endregion
 

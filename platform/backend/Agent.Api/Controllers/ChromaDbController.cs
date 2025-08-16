@@ -1,7 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Agent.Api.Services;
-using ChromaDB.Client.Models;
-using Agent.Api.Services.Telemetry;
 
 namespace Agent.Api.Controllers;
 
@@ -274,12 +271,6 @@ public class CreateCollectionRequest
     public Dictionary<string, object>? Metadata { get; set; }
 }
 
-public class AddDocumentsRequest
-{
-    public IEnumerable<string> Documents { get; set; } = new List<string>();
-    public IEnumerable<string>? Ids { get; set; }
-    public IEnumerable<Dictionary<string, object>>? Metadatas { get; set; }
-}
 
 public class QueryRequest
 {

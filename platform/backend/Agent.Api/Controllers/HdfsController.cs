@@ -1,8 +1,6 @@
-using Agent.Api.Services.Hdfs;
-using Agent.Api.Services.FileUpload;
 using Microsoft.AspNetCore.Mvc;
-using Agent.Api.Services.Telemetry;
 using System.Text;
+using Agent.Core.Services.FileUpload;
 
 namespace Agent.Api.Controllers;
 

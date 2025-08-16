@@ -7,6 +7,7 @@ using Agent.Core.Data;
 using Agent.Core.Models.Identity;
 using Agent.Core.Services.Authorization;
 using Agent.Core.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Agent.Core.Extensions;
 

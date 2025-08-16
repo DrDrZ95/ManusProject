@@ -1,6 +1,7 @@
 using Agent.Core.Services.Finetune;
 using Agent.Core.Data.Entities;
 using Agent.Core.Data.Repositories;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Agent.Core.Extensions;
 

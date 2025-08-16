@@ -6,17 +6,20 @@
 /// This class follows the Minimal API pattern introduced in .NET 6, combined with
 /// the Extension Method pattern for modular configuration.
 /// 
-/// 该类遵循.NET 6中引入的最小API模式，结合扩展方法模式实现模块化配置。
+/// 该类遵循.NET 8中引入的最小API模式，结合扩展方法模式实现模块化配置。
 /// </remarks>
+
+var builder = WebApplication.CreateBuilder(args);
+var services = builder.Services;
 
 // Create the WebApplicationBuilder - Builder Pattern
 // 创建WebApplicationBuilder - 构建器模式
-builder.Services.AddAgentTelemetry("AI-Agent.WebApi"); // Centralized telemetry provider
-builder.Services.AddIdentityServices(builder.Configuration); // Add Identity services with PostgreSQL and JWT - 添加带有PostgreSQL和JWT的Identity服务
-builder.Services.AddUserInputServices(); // Add UserInput services - 添加用户输入服务
-builder.Services.AddFileUploadServices(); // Add FileUpload services with OWASP security - 添加文件上传服务和OWASP安全措施
-builder.Services.AddPrometheusMetrics(); // Add Prometheus metrics services - 添加Prometheus指标服务
-builder.Services.AddSignalRServices(builder.Configuration); // Add SignalR services with JWT authentication - 添加SignalR服务和JWT认证
+services.AddAgentTelemetry("AI-Agent.WebApi"); // Centralized telemetry provider
+services.AddIdentityServices(builder.Configuration); // Add Identity services with PostgreSQL and JWT - 添加带有PostgreSQL和JWT的Identity服务
+services.AddUserInputServices(); // Add UserInput services - 添加用户输入服务
+services.AddFileUploadServices(); // Add FileUpload services with OWASP security - 添加文件上传服务和OWASP安全措施
+services.AddPrometheusMetrics(); // Add Prometheus metrics services - 添加Prometheus指标服务
+services.AddSignalRServices(builder.Configuration); // Add SignalR services with JWT authentication - 添加SignalR服务和JWT认证
 
 // Build the application - Builder Pattern
 // 构建应用程序 - 构建器模式

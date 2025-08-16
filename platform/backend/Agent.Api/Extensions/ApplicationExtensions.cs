@@ -57,19 +57,19 @@ namespace Agent.Core.Extensions
         {
             // Configure development environment - Strategy Pattern
             // 配置开发环境 - 策略模式
-            app.ConfigureDevelopmentEnvironment();
+            //app.ConfigureDevelopmentEnvironment();
             
             // Configure static files - Chain of Responsibility Pattern
             // 配置静态文件 - 责任链模式
-            app.ConfigureStaticFiles();
+            //app.ConfigureStaticFiles();
             
             // Configure MCP endpoints - Facade Pattern
             // 配置MCP端点 - 外观模式
-            app.ConfigureMcpEndpoints();
+            //app.ConfigureMcpEndpoints();
             
             // Configure development test endpoints - Command Pattern
             // 配置开发测试端点 - 命令模式
-            app.ConfigureDevTestEndpoints();
+            //app.ConfigureDevTestEndpoints();
             
             // Configure Dapr middleware - Middleware Pattern
             // 配置Dapr中间件 - 中间件模式

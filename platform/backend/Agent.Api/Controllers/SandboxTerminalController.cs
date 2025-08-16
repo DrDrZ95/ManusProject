@@ -125,18 +125,30 @@ public class SandboxTerminalController : ControllerBase
                 await Response.Body.FlushAsync(HttpContext.RequestAborted);
             }
 
-            return new EmptyResult();
+            return new ContentResult {
+                StatusCode = StatusCodes.Status404NotFound,   // 对应 HTTP 204
+                Content    = string.Empty,                     // NoContent 一般没内容
+                ContentType = "text/plain; charset=utf-8"
+            };
         }
         catch (OperationCanceledException)
         {
             _logger.LogInformation("Streaming command was cancelled: {Command}", request.Command);
-            return new EmptyResult();
+            return new ContentResult {
+                StatusCode = StatusCodes.Status404NotFound,   // 对应 HTTP 204
+                Content    = string.Empty,                     // NoContent 一般没内容
+                ContentType = "text/plain; charset=utf-8"
+            };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to execute streaming command: {Command}", request.Command);
             await Response.WriteAsync($"Error: {ex.Message}\n");
-            return new EmptyResult();
+            return new ContentResult {
+                StatusCode = StatusCodes.Status404NotFound,   // 对应 HTTP 204
+                Content    = string.Empty,                     // NoContent 一般没内容
+                ContentType = "text/plain; charset=utf-8"
+            };
         }
     }
 

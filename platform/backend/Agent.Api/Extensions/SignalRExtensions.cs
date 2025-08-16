@@ -1,11 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Agent.Core.Hubs;
-using Agent.Core.Identity;
 
-namespace Agent.Core.Extensions;
+namespace Agent.Api.Extensions;
 
 /// <summary>
 /// SignalR configuration extensions with automatic reconnection and JWT authentication

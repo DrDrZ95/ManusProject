@@ -1,7 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
-using Agent.Api.Services.SemanticKernel;
-using Agent.Api.Services.VectorDatabase;
-
 namespace Agent.Api.Controllers;
 
 /// <summary>
@@ -67,7 +63,7 @@ public class SemanticKernelController : ControllerBase
         {
             _logger.LogInformation("Processing streaming chat completion request");
 
-            var responseStream = await _semanticKernelService.GetStreamingChatCompletionAsync(
+            var responseStream = _semanticKernelService.GetStreamingChatCompletionAsync(
                 request.Prompt, 
                 request.SystemMessage);
 
@@ -81,7 +77,11 @@ public class SemanticKernelController : ControllerBase
                 await Response.Body.FlushAsync();
             }
 
-            return new EmptyResult();
+            return new ContentResult {
+                StatusCode = StatusCodes.Status404NotFound,   // 对应 HTTP 204
+                Content    = string.Empty,                     // NoContent 一般没内容
+                ContentType = "text/plain; charset=utf-8"
+            };
         }
         catch (Exception ex)
         {
@@ -273,6 +273,7 @@ public class SemanticKernelController : ControllerBase
             _logger.LogInformation("Invoking function: {FunctionName}", request.FunctionName);
 
             var result = await _semanticKernelService.InvokeFunctionAsync(
+                request.PlugName,
                 request.FunctionName,
                 request.Arguments);
 
@@ -367,7 +368,7 @@ public class SemanticKernelController : ControllerBase
         try
         {
             _logger.LogInformation("Adding {Count} documents to collection: {CollectionName}", 
-                request.Documents.Count, request.CollectionName);
+                request.Documents.Count(), request.CollectionName);
 
             var vectorDocuments = new List<VectorDocument>();
 
@@ -468,6 +469,7 @@ public class SearchMemoryResponse
 
 public class InvokeFunctionRequest
 {
+    public string PlugName { get; set; } = string.Empty;
     public string FunctionName { get; set; } = string.Empty;
     public Dictionary<string, object>? Arguments { get; set; }
 }
@@ -499,12 +501,6 @@ public class SemanticSearchResponse
     public int TotalMatches { get; set; }
     public long ExecutionTimeMs { get; set; }
     public bool Success { get; set; }
-}
-
-public class AddDocumentsRequest
-{
-    public string CollectionName { get; set; } = string.Empty;
-    public List<DocumentRequest> Documents { get; set; } = new();
 }
 
 public class DocumentRequest

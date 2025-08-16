@@ -21,16 +21,23 @@ public static class ChromaDbExtensions
         var chromaDbUrl = configuration.GetConnectionString("ChromaDb") ?? "http://localhost:8000";
         
         // Register ChromaDB client as singleton
-        services.AddSingleton<ChromaDBClient>(provider =>
+        services.AddSingleton<ChromaClient>(provider =>
         {
-            var logger = provider.GetRequiredService<ILogger<ChromaDBClient>>();
+            var logger = provider.GetRequiredService<ILogger<ChromaClient>>();
             logger.LogInformation("Initializing ChromaDB client with URL: {ChromaDbUrl}", chromaDbUrl);
-            
-            return new ChromaDBClient(chromaDbUrl);
+
+            var desultOptions = new ChromaDbOptions();
+            return new ChromaClient(new ChromaConfigurationOptions
+            {
+                ChromaToken = default
+            }, new HttpClient
+            {
+                BaseAddress = new Uri(desultOptions.Url)
+            });
         });
         
         // Register ChromaDB service
-        services.AddScoped<Services.IChromaDbService, Services.ChromaDbService>();
+        services.AddScoped<IChromaDbService, ChromaDbService>();
         
         return services;
     }
@@ -47,13 +54,20 @@ public static class ChromaDbExtensions
         var options = new ChromaDbOptions();
         configureOptions(options);
         
+        var desultOptions = new ChromaDbOptions();
         // Register ChromaDB client as singleton
-        services.AddSingleton<ChromaDBClient>(provider =>
+        services.AddSingleton<ChromaClient>(provider =>
         {
-            var logger = provider.GetRequiredService<ILogger<ChromaDBClient>>();
+            var logger = provider.GetRequiredService<ILogger<ChromaClient>>();
             logger.LogInformation("Initializing ChromaDB client with URL: {ChromaDbUrl}", options.Url);
             
-            return new ChromaDBClient(options.Url);
+            return new ChromaClient(new ChromaConfigurationOptions
+            {
+                ChromaToken = default
+            }, new HttpClient
+            {
+                BaseAddress = new Uri(desultOptions.Url)
+            });
         });
         
         // Register ChromaDB service

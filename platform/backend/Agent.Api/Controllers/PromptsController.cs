@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Agent.Api.Services.Prompts;
 
 namespace Agent.Api.Controllers;
 
