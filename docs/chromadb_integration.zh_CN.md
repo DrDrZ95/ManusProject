@@ -1,7 +1,7 @@
 # ChromaDB 集成文档
 
 ## 概述
-本文档描述了 AgentWebApi 项目中的 ChromaDB 集成，包括设置、配置和使用示例。
+本文档描述了 AgentApi 项目中的 ChromaDB 集成，包括设置、配置和使用示例。
 
 ## 架构
 
@@ -96,7 +96,7 @@ Content-Type: application/json
 
 ### 使用 Docker Compose
 ```bash
-# 启动 ChromaDB 和 AgentWebApi
+# 启动 ChromaDB 和 AgentApi
 docker-compose -f docker-compose.chromadb.yml up -d
 
 # 查看日志
@@ -142,7 +142,7 @@ builder.Services.AddChromaDb(options =>
 
 ### 健康端点
 - ChromaDB: `http://localhost:8000/api/v1/heartbeat`
-- AgentWebApi: `http://localhost:5000/health`
+- AgentApi: `http://localhost:5000/health`
 - Nginx: `http://localhost:80/health`
 
 ### 日志记录

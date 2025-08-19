@@ -110,49 +110,49 @@ Istio 是一个功能强大的服务网格，用于连接、保护、控制和�
 
 ### 3.1. 部署应用程序
 
-假设您有两个版本的 `AgentWebApi` 和 `AgentUI` 应用程序，版本格式为 `A.XX.YY` (例如 `A.01.00`, `A.01.01`)。
+假设您有两个版本的 `Agent.Api` 和 `AgentUI` 应用程序，版本格式为 `A.XX.YY` (例如 `A.01.00`, `A.01.01`)。
 
 1.  **部署旧版本 (V1)**：
     首先部署您的应用程序的稳定版本 (例如 `A.01.00`)。确保您的 Kubernetes Deployment 和 Service YAML 文件中包含 `app` 和 `version` 标签。
 
-    例如，`AgentWebApi` 的 `deployment.A.01.00.yml` 和 `service.yml`：
+    例如，`Agent.Api` 的 `deployment.A.01.00.yml` 和 `service.yml`：
     ```yaml
-    # agentwebapi/deployment.A.01.00.yml
+    # agentapi/deployment.A.01.00.yml
     apiVersion: apps/v1
     kind: Deployment
     metadata:
-      name: agentwebapi-deployment-A.01.00
+      name: agentapi-deployment-A.01.00
       labels:
-        app: agentwebapi
+        app: agentapi
         version: A.01.00
     spec:
       replicas: 2
       selector:
         matchLabels:
-          app: agentwebapi
+          app: agentapi
           version: A.01.00
       template:
         metadata:
           labels:
-            app: agentwebapi
+            app: agentapi
             version: A.01.00
         spec:
           containers:
-          - name: agentwebapi
-            image: your-registry/agentwebapi:A.01.00
+          - name: agentapi
+            image: your-registry/agentapi:A.01.00
             ports:
             - containerPort: 80
     ---
-    # agentwebapi/service.yml (Service 通常不带版本标签，因为它路由到所有版本)
+    # agentapi/service.yml (Service 通常不带版本标签，因为它路由到所有版本)
     apiVersion: v1
     kind: Service
     metadata:
-      name: agentwebapi-service
+      name: agentapi-service
       labels:
-        app: agentwebapi
+        app: agentapi
     spec:
       selector:
-        app: agentwebapi
+        app: agentapi
       ports:
         - protocol: TCP
           port: 80
@@ -161,8 +161,8 @@ Istio 是一个功能强大的服务网格，用于连接、保护、控制和�
     ```
     部署：
     ```bash
-    kubectl apply -f kubernetes/agentwebapi/deployment.A.01.00.yml
-    kubectl apply -f kubernetes/agentwebapi/service.yml
+    kubectl apply -f kubernetes/agentapi/deployment.A.01.00.yml
+    kubectl apply -f kubernetes/agentapi/service.yml
     # 对 AgentUI 也进行类似操作
     kubectl apply -f kubernetes/agentui/deployment.A.01.00.yml
     kubectl apply -f kubernetes/agentui/service.yml
@@ -205,11 +205,11 @@ Istio 是一个功能强大的服务网格，用于连接、保护、控制和�
             subset: v1 # 初始指向 V1 版本
           weight: 100
     ---
-    # virtualservice-agentwebapi.yml
+    # virtualservice-agentapi.yml
     apiVersion: networking.istio.io/v1beta1
     kind: VirtualService
     metadata:
-      name: agentwebapi-virtualservice
+      name: agentapi-virtualservice
     spec:
       hosts:
       - "*"
@@ -218,7 +218,7 @@ Istio 是一个功能强大的服务网格，用于连接、保护、控制和�
       http:
       - route:
         - destination:
-            host: agentwebapi-service
+            host: agentapi-service
             subset: v1 # 初始指向 V1 版本
           weight: 100
     ```
@@ -226,7 +226,7 @@ Istio 是一个功能强大的服务网格，用于连接、保护、控制和�
     ```bash
     kubectl apply -f gateway.yml
     kubectl apply -f virtualservice-agentui.yml
-    kubectl apply -f virtualservice-agentwebapi.yml
+    kubectl apply -f virtualservice-agentapi.yml
     ```
 
 3.  **创建 DestinationRule**：
@@ -248,13 +248,13 @@ Istio 是一个功能强大的服务网格，用于连接、保护、控制和�
         labels:
           version: A.01.01 # 对应新版本
     ---
-    # destinationrule-agentwebapi.yml
+    # destinationrule-agentapi.yml
     apiVersion: networking.istio.io/v1beta1
     kind: DestinationRule
     metadata:
-      name: agentwebapi-destinationrule
+      name: agentapi-destinationrule
     spec:
-      host: agentwebapi-service
+      host: agentapi-service
       subsets:
       - name: v1
         labels:
@@ -266,7 +266,7 @@ Istio 是一个功能强大的服务网格，用于连接、保护、控制和�
     部署：
     ```bash
     kubectl apply -f destinationrule-agentui.yml
-    kubectl apply -f destinationrule-agentwebapi.yml
+    kubectl apply -f destinationrule-agentapi.yml
     ```
 
 ### 3.2. 执行灰度发布
@@ -274,23 +274,23 @@ Istio 是一个功能强大的服务网格，用于连接、保护、控制和�
 现在，您可以部署新版本 (V2，例如 `A.01.01`) 并逐步将流量路由过去。
 
 1.  **部署新版本 (V2)**：
-    部署 `AgentWebApi` 和 `AgentUI` 的新版本 Deployment (例如 `A.01.01`)。Service 保持不变，因为它通过 `app` 标签选择所有版本的 Pod。
+    部署 `Agent.Api` 和 `AgentUI` 的新版本 Deployment (例如 `A.01.01`)。Service 保持不变，因为它通过 `app` 标签选择所有版本的 Pod。
 
     ```bash
-    kubectl apply -f kubernetes/agentwebapi/deployment.A.01.01.yml
+    kubectl apply -f kubernetes/agentapi/deployment.A.01.01.yml
     kubectl apply -f kubernetes/agentui/deployment.A.01.01.yml
     ```
 
 2.  **逐步路由流量**：
     通过修改 VirtualService 的 `weight` 字段，将一小部分流量路由到新版本。
 
-    例如，将 10% 的流量路由到 `AgentWebApi` 的 V2 版本：
+    例如，将 10% 的流量路由到 `AgentApi` 的 V2 版本：
     ```yaml
-    # virtualservice-agentwebapi-canary-10.yml
+    # virtualservice-agentapi-canary-10.yml
     apiVersion: networking.istio.io/v1beta1
     kind: VirtualService
     metadata:
-      name: agentwebapi-virtualservice
+      name: agentapi-virtualservice
     spec:
       hosts:
       - "*"
@@ -299,30 +299,30 @@ Istio 是一个功能强大的服务网格，用于连接、保护、控制和�
       http:
       - route:
         - destination:
-            host: agentwebapi-service
+            host: agentapi-service
             subset: v1
           weight: 90 # 90% 流量到旧版本
         - destination:
-            host: agentwebapi-service
+            host: agentapi-service
             subset: v2
           weight: 10 # 10% 流量到新版本
     ```
     应用此配置：
     ```bash
-    kubectl apply -f virtualservice-agentwebapi-canary-10.yml
+    kubectl apply -f virtualservice-agentapi-canary-10.yml
     ```
     观察新版本的表现。如果一切正常，可以逐步增加 V2 的权重 (例如 50%、100%)，直到所有流量都路由到新版本。
 
 3.  **完成灰度发布**：
     当所有流量都路由到新版本 (V2) 并且新版本稳定运行时，您可以删除旧版本 (V1) 的 Deployment。
 
-    例如，将 100% 的流量路由到 `AgentWebApi` 的 V2 版本：
+    例如，将 100% 的流量路由到 `Agent.Api` 的 V2 版本：
     ```yaml
-    # virtualservice-agentwebapi-canary-100.yml
+    # virtualservice-agentapi-canary-100.yml
     apiVersion: networking.istio.io/v1beta1
     kind: VirtualService
     metadata:
-      name: agentwebapi-virtualservice
+      name: agentapi-virtualservice
     spec:
       hosts:
       - "*"
@@ -331,17 +331,17 @@ Istio 是一个功能强大的服务网格，用于连接、保护、控制和�
       http:
       - route:
         - destination:
-            host: agentwebapi-service
+            host: agentapi-service
             subset: v2
           weight: 100 # 100% 流量到新版本
     ```
     应用此配置：
     ```bash
-    kubectl apply -f virtualservice-agentwebapi-canary-100.yml
+    kubectl apply -f virtualservice-agentapi-canary-100.yml
     ```
     然后删除旧版本 Deployment：
     ```bash
-    kubectl delete deployment agentwebapi-deployment-A.01.00
+    kubectl delete deployment agentapi-deployment-A.01.00
     kubectl delete deployment agentui-deployment-A.01.00
     ```
 
@@ -359,8 +359,8 @@ Istio 是一个功能强大的服务网格，用于连接、保护、控制和�
 
 例如：
 
-*   `kubernetes/agentwebapi/deployment.A.01.00.yml`
-*   `kubernetes/agentwebapi/deployment.A.01.01.yml`
+*   `kubernetes/agentapi/deployment.A.01.00.yml`
+*   `kubernetes/agentapi/deployment.A.01.01.yml`
 *   `kubernetes/agentui/deployment.B.02.00.yml`
 
 Service 和 Ingress (或 Gateway/VirtualService) 通常不包含版本号，因为它们旨在路由到不同版本的 Pod，或者在版本升级过程中保持稳定。

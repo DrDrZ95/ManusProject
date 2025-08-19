@@ -25,41 +25,42 @@ This project aims to provide a robust and extensible solution for:
 
 ```
 ai-agent/
-├── platform/               # Core application components
-│   ├── backend/            # .NET 8.0 Backend Projects
-│   │   ├── Agent.Api/          # ASP.NET Core Web API Entry Point
-│   │   │   ├── Controllers/    # API Endpoints (remaining after refactoring)
-│   │   │   ├── Extensions/     # Extension Methods (remaining after refactoring)
-│   │   │   ├── GlobalUsings.cs # Global using directives for Agent.Api
-│   │   │   ├── Program.cs      # Application startup and configuration
+├── apps/                         # Core application components
+│   ├── agent-api/                # .NET 8.0 Backend Projects
+│   │   ├── Agent.Api/            # ASP.NET Core Web API Entry Point
+│   │   │   ├── Controllers/      # API Endpoints (remaining after refactoring)
+│   │   │   ├── Extensions/       # Extension Methods (remaining after refactoring)
+│   │   │   ├── GlobalUsings.cs   # Global using directives for Agent.Api
+│   │   │   ├── Program.cs        # Application startup and configuration
 │   │   │   └── Agent.Api.csproj
-│   │   ├── Agent.Core/         # Core business logic and shared modules
-│   │   │   ├── Authorization/  # Custom authorization policies and handlers
-│   │   │   ├── Controllers/    # Core API Endpoints (moved from Agent.Api)
-│   │   │   ├── Data/           # EF Core DbContext, Repositories, and Entities (PostgreSQL)
-│   │   │   ├── eBPF/           # eBPF Detective Module (Services, Controllers, Scripts)
-│   │   │   ├── Extensions/     # Extension Methods for modular configuration
-│   │   │   ├── Gateway/        # YARP Gateway and Circuit Breaker components
-│   │   │   ├── Hubs/           # SignalR Hubs
-│   │   │   ├── Identity/       # ASP.NET Core Identity models and configurations
-│   │   │   ├── McpTools/       # Model Context Protocol integration tools
-│   │   │   ├── Models/         # Shared data models
-│   │   │   ├── Services/       # Core Service Implementations (Semantic Kernel, RAG, Sandbox, Workflow, Prompts, Finetune, HDFS, FileUpload, Prometheus, Qwen, Telemetry, UserInput, VectorDatabase)
+│   │   ├── Agent.Core/           # Core business logic and shared modules
+│   │   │   ├── Authorization/    # Custom authorization policies and handlers
+│   │   │   ├── Controllers/      # Core API Endpoints (moved from Agent.Api)
+│   │   │   ├── Data/             # EF Core DbContext, Repositories, and Entities (PostgreSQL)
+│   │   │   ├── eBPF/             # eBPF Detective Module (Services, Controllers, Scripts)
+│   │   │   ├── Extensions/       # Extension Methods for modular configuration
+│   │   │   ├── Gateway/          # YARP Gateway and Circuit Breaker components
+│   │   │   ├── Hubs/             # SignalR Hubs
+│   │   │   ├── Identity/         # ASP.NET Core Identity models and configurations
+│   │   │   ├── McpTools/         # Model Context Protocol integration tools
+│   │   │   ├── Models/           # Shared data models
+│   │   │   ├── Services/         # Core Service Implementations (Semantic Kernel, RAG, Sandbox, Workflow, Prompts, Finetune, HDFS, FileUpload, Prometheus, Qwen, Telemetry, UserInput, VectorDatabase)
 │   │   │   └── Agent.Core.csproj
-│   │   └── unittest/           # Unit tests for backend components
-│   │       └── Agent.Core.Tests/ # Unit tests for Agent.Core
-│   └── frontend/           # React Frontend application
-│       └── agent-chat/         # React chat application with silver theme
-├── README.md               # Main project documentation (English)
-├── README.zh_CN.md         # Main project documentation (Simplified Chinese)
-├── config/                 # Configuration files (if any)
-├── docker/                 # Docker deployment configuration
-│   ├── Dockerfile.webapi   # Dockerfile for .NET Web API
-│   ├── Dockerfile.react    # Dockerfile for React UI
-│   ├── docker-compose.yml  # Docker Compose configuration
-│   ├── examples/           # Example docker-compose configurations
-│   └── nginx.conf          # Nginx configuration for React UI
-├── docs/                   # Comprehensive Documentation
+│   └── agent-ui/                 # React Frontend application
+├── test/                         # Unit tests (moved from unittest/)
+│   └── Agent.Core.Tests/         # Unit tests for Agent.Core
+├── infra/                        # Infrastructure (deployment configuration)
+│   ├── docker/                   # Docker deployment configuration
+│   │   ├── Dockerfile.webapi     # Dockerfile for .NET Web API
+│   │   ├── Dockerfile.react      # Dockerfile for React UI
+│   │   ├── docker-compose.yml    # Docker Compose configuration
+│   │   ├── examples/             # Example docker-compose configurations
+│   │   └── nginx.conf            # Nginx configuration for React UI
+│   ├── helm/                     # Helm charts for deployment
+│   └── kubernetes/               # Raw Kubernetes manifests
+├── datasets/                     # Model fine-tuning datasets
+├── tools/                        # Setup and utility scripts
+├── docs/                         # Comprehensive Documentation
 │   ├── chromadb_integration.md
 │   ├── ebpf_integration.md
 │   ├── identity_signalr_integration.md
@@ -71,12 +72,10 @@ ai-agent/
 │   ├── semantic_kernel_examples.md
 │   ├── workflow_integration.md
 │   └── yarp_gateway_integration.md
-├── finetune/               # Model fine-tuning utilities (Python.NET interaction)
-├── models/                 # Directory for model files
-├── scripts/                # Setup and utility scripts
-├── src/                    # Source code (legacy Python/FastAPI model server, if applicable)
-├── .gitignore              # Specifies intentionally untracked files that Git should ignore
-└── venv/                   # Python virtual environment
+├── llm/                          # Legacy Python/FastAPI model server
+├── README.md                     # Main project documentation (English)
+├── README.zh_CN.md               # Main project documentation (Simplified Chinese)
+└── .gitignore                    # Specifies intentionally untracked files that Git should ignore
 ```
 
 ## Quick Start

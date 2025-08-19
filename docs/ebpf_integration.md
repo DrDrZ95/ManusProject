@@ -1,6 +1,6 @@
 # AI-Agent eBPF Detective Module Integration
 
-This document details the integration of an eBPF-based detective module into the `AgentWebApi` project, enabling low-level system monitoring and analysis.
+This document details the integration of an eBPF-based detective module into the `Agent.Api` project, enabling low-level system monitoring and analysis.
 
 ## 1. Overview
 
@@ -17,10 +17,10 @@ The eBPF (extended Berkeley Packet Filter) detective module leverages the power 
 
 ## 3. File Hierarchy Design
 
-The eBPF detective module is structured as an independent component within the `AgentWebApi` project:
+The eBPF detective module is structured as an independent component within the `Agent.Api` project:
 
 ```
-AgentWebApi/
+Agent.Core/
 ├── eBPF/
 │   ├── Detective/
 │   │   ├── IeBPFDetectiveService.cs   # eBPF 服务接口 - eBPF Service Interface
@@ -250,13 +250,13 @@ END
 ### 6.1. Prerequisites
 
 - **Linux Environment**: The eBPF module requires a Linux operating system with kernel version 4.9 or higher (for `bpftrace` compatibility).
-- **`bpftrace` Installation**: Ensure `bpftrace` is installed and accessible on the system where `AgentWebApi` will run.
+- **`bpftrace` Installation**: Ensure `bpftrace` is installed and accessible on the system where `Agent.Api` will run.
 - **Root Privileges**: `bpftrace` typically requires root privileges to run. The `eBPFDetectiveService` uses `sudo` to execute `bpftrace` commands.
 
 ### 6.2. Integration Steps
 
-1. **Copy eBPF Files**: Ensure the `eBPF` directory (containing `Detective`, `Controllers`, and `Scripts` subdirectories) is copied to the `AgentWebApi` project root.
-2. **Add Dependencies**: Add necessary NuGet packages (e.g., `Microsoft.AspNetCore.Mvc.Core`, `Microsoft.Extensions.Logging.Abstractions`) to `AgentWebApi.csproj` if not already present.
+1. **Copy eBPF Files**: Ensure the `eBPF` directory (containing `Detective`, `Controllers`, and `Scripts` subdirectories) is copied to the `Agent.Core` project root.
+2. **Add Dependencies**: Add necessary NuGet packages (e.g., `Microsoft.AspNetCore.Mvc.Core`, `Microsoft.Extensions.Logging.Abstractions`) to `Agent.Api.csproj` if not already present.
 3. **Register Services**: Register `IeBPFDetectiveService` and `eBPFDetectiveService` in the `Program.cs` using extension methods (e.g., `AddeBPFDetectiveServices()`).
 4. **Map Controllers**: Ensure the eBPF controllers are mapped in `Program.cs`.
 
@@ -280,9 +280,9 @@ app.MapControllers();
 
 ### 6.4. Security Considerations
 
-- **`sudo` Usage**: Running `bpftrace` with `sudo` grants root privileges. Ensure that the `AgentWebApi` application is properly secured and that only authorized users can trigger eBPF scripts.
+- **`sudo` Usage**: Running `bpftrace` with `sudo` grants root privileges. Ensure that the `Agent.Core` application is properly secured and that only authorized users can trigger eBPF scripts.
 - **Script Validation**: Implement robust validation for `bpftrace` script names and arguments to prevent malicious injection.
-- **Least Privilege**: Consider running `AgentWebApi` with the minimum necessary privileges. For production environments, explore alternatives to `sudo` for eBPF execution, such as capabilities or `setuid` wrappers, if applicable and secure.
+- **Least Privilege**: Consider running `Agent.Core` with the minimum necessary privileges. For production environments, explore alternatives to `sudo` for eBPF execution, such as capabilities or `setuid` wrappers, if applicable and secure.
 
 ## 7. Usage Examples (API Endpoints)
 

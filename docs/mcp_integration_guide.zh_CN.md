@@ -14,16 +14,16 @@
 
 - .NET 8.0 SDK 已安装。
 - 本地 Qwen3 Python FastAPI 服务正在 `http://localhost:2025/generate` 上运行。
-- `AgentWebApi` 项目已按先前步骤搭建。
+- `Agent.Api` 项目已按先前步骤搭建。
 
 ## 3. 集成步骤
 
 ### 3.1. 安装 ModelContextProtocol NuGet 包
 
-首先，将 `ModelContextProtocol` NuGet 包添加到 `AgentWebApi` 项目。由于该包可能仍处于预发布阶段，需要使用 `--prerelease` 选项：
+首先，将 `ModelContextProtocol` NuGet 包添加到 `Agent.Api` 项目。由于该包可能仍处于预发布阶段，需要使用 `--prerelease` 选项：
 
 ```bash
-cd /home/ubuntu/ai-agent/AgentWebApi
+cd /home/ubuntu/ai-agent/Agent.Api
 export PATH="$PATH:/home/ubuntu/.dotnet" 
 dotnet add package ModelContextProtocol --prerelease
 ```
@@ -37,10 +37,10 @@ dotnet add package ModelContextProtocol --prerelease
 定义请求和响应的数据结构：
 
 ```csharp
-// 文件: AgentWebApi/Services/QwenDtos.cs
+// 文件: Agent.Core/Services/QwenDtos.cs
 using System.Text.Json.Serialization;
 
-namespace AgentWebApi.Services.Qwen;
+namespace Agent.Core.Services.Qwen;
 
 public class QwenGenerationRequest
 {
@@ -78,11 +78,11 @@ public class QwenGenerationResponse
 实现一个服务，通过 HTTP POST 请求调用 Qwen3 Python API：
 
 ```csharp
-// 文件: AgentWebApi/Services/QwenServiceClient.cs
+// 文件: Agent.Core/Services/QwenServiceClient.cs
 using System.Net.Http.Json;
 using System.Text.Json;
 
-namespace AgentWebApi.Services.Qwen;
+namespace Agent.Core.Services.Qwen;
 
 public interface IQwenServiceClient
 {
@@ -151,13 +151,13 @@ public class QwenServiceClient : IQwenServiceClient
 创建一个实现 `ModelContextProtocol.Models.Tools.ITool` 接口的类，该类将使用 `IQwenServiceClient` 与 Qwen3 模型交互。
 
 ```csharp
-// 文件: AgentWebApi/McpTools/QwenDialogueTool.cs
-using AgentWebApi.Services.Qwen;
+// 文件: Agent.Core/McpTools/QwenDialogueTool.cs
+using Agent.Core.Services.Qwen;
 using ModelContextProtocol.Models.Contexts;
 using ModelContextProtocol.Models.Primitives;
 using ModelContextProtocol.Models.Tools;
 
-namespace AgentWebApi.McpTools;
+namespace Agent.Core.McpTools;
 
 public class QwenDialogueTool : ITool
 {
@@ -276,7 +276,7 @@ public class QwenDialogueTool : ITool
 
 ### 3.4. 配置 Program.cs
 
-在 `AgentWebApi/Program.cs` 文件中，我们需要：
+在 `Agent.Api/Program.cs` 文件中，我们需要：
 1.  注册 `HttpClient` 和 `IQwenServiceClient`。
 2.  添加 MCP 服务并注册我们的工具。
 3.  映射 MCP SSE 端点。
@@ -284,9 +284,9 @@ public class QwenDialogueTool : ITool
 5.  (可选) 添加一个测试端点以方便从浏览器触发工具调用。
 
 ```csharp
-// 文件: AgentWebApi/Program.cs
-using AgentWebApi.McpTools;
-using AgentWebApi.Services.Qwen;
+// 文件: Agent.Api/Program.cs
+using Agent.Core.McpTools;
+using Agent.Core.Services.Qwen;
 using ModelContextProtocol.Extensions;
 using ModelContextProtocol.Models.Contexts;
 using ModelContextProtocol.Models.Primitives;
@@ -392,14 +392,14 @@ app.Run();
 1.  确保 Qwen3 Python FastAPI 服务正在运行 (通常在 `http://localhost:2025`)。
 2.  启动 .NET Web API 服务：
     ```bash
-    cd /home/ubuntu/ai-agent/AgentWebApi
+    cd /home/ubuntu/ai-agent/apps/agent-api/Agent.Api
     dotnet run
     ```
     Web API 通常会监听如 `https://localhost:7XXX` 和 `http://localhost:5XXX` 的端口。
 
 ### 4.2. 测试对话客户端 (index.html)
 
-项目中包含一个位于 `AgentWebApi/wwwroot/index.html` 的简单 HTML 页面，用于测试与 MCP SSE 端点的交互。
+项目中包含一个位于 `Agent.Api/wwwroot/index.html` 的简单 HTML 页面，用于测试与 MCP SSE 端点的交互。
 
 - 在浏览器中打开 Web API 的根 URL (例如 `https://localhost:7258`，具体端口请查看 `dotnet run` 的输出)。`index.html` 应该会自动加载。
 - 页面会尝试连接到 `/mcp/sse` 端点。

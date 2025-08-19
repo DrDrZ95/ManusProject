@@ -471,7 +471,7 @@ To enable detailed logging for the tool:
   "Logging": {
     "LogLevel": {
       "Default": "Information",
-      "AgentWebApi.McpTools.DynamicExternalAccessTool": "Debug"
+      "Agent.Core.McpTools.DynamicExternalAccessTool": "Debug"
     }
   }
 }

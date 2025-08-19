@@ -45,7 +45,7 @@ using ClickHouse.Client.ADO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace AgentWebApi.Services
+namespace Agent.Core.Services
 {
     /// <summary>
     /// 用于创建 ClickHouse 数据库连接的工厂。
@@ -128,7 +128,7 @@ using System.Threading.Tasks;
 using ClickHouse.Client.ADO;
 using Microsoft.Extensions.Logging;
 
-namespace AgentWebApi.Services
+namespace Agent.Core.Services
 {
     /// <summary>
     /// 用于与 ClickHouse 数据库交互的仓储。
@@ -265,7 +265,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace AgentWebApi.Services
+namespace Agent.Core.Services
 {
     /// <summary>
     /// 用于将代理活动记录到 ClickHouse 的服务。
@@ -425,10 +425,10 @@ ORDER BY (session_id, timestamp);
 ```csharp
 using System;
 using System.Threading.Tasks;
-using AgentWebApi.Services;
+using Agent.Core.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AgentWebApi.Controllers
+namespace Agent.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -483,10 +483,10 @@ namespace AgentWebApi.Controllers
 ```csharp
 using System;
 using System.Threading.Tasks;
-using AgentWebApi.Services;
+using Agent.Core.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AgentWebApi.Controllers
+namespace Agent.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

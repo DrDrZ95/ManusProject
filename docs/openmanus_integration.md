@@ -27,7 +27,7 @@ The most direct integration path leverages the Model Context Protocol (MCP) comp
 └─────────────┘     └───────────────┘     └────────────┘
 ```
 
-Our ai-agent solution includes `DynamicExternalAccessTool.cs` and `QwenDialogueTool.cs` in the `AgentWebApi/McpTools/` directory, which can be extended to communicate with AI-Agent agents through the MCP protocol.
+Our ai-agent solution includes `DynamicExternalAccessTool.cs` and `QwenDialogueTool.cs` in the `Agent.Core/McpTools/` directory, which can be extended to communicate with AI-Agent agents through the MCP protocol.
 
 ### 2. Shared Tool Ecosystem
 

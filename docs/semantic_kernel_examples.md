@@ -1,7 +1,7 @@
 # Microsoft Semantic Kernel 集成示例
 
 ## 概述
-本文档提供了在 AgentWebApi 项目中使用 Microsoft Semantic Kernel 的详细代码示例，包括聊天完成、嵌入生成、记忆操作和向量搜索。
+本文档提供了在 Agent.Api 项目中使用 Microsoft Semantic Kernel 的详细代码示例，包括聊天完成、嵌入生成、记忆操作和向量搜索。
 
 ## 配置示例
 
@@ -292,7 +292,7 @@ Content-Type: application/json
 ### 1. 依赖注入配置
 ```csharp
 // Program.cs
-using AgentWebApi.Extensions;
+using Agent.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 

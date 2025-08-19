@@ -62,7 +62,7 @@ Docker 设置包括：
 ### .NET Web API
 
 ```bash
-cd AgentWebApi
+cd Agent.Api
 dotnet run
 ```
 

@@ -27,7 +27,7 @@ AI-Agent 是一个用于构建通用 AI 代理的开源框架，旨在提供类�
 └─────────────┘     └───────────────┘     └────────────┘
 ```
 
-我们的 ai-agent 解决方案在 `AgentWebApi/McpTools/` 目录中包含 `DynamicExternalAccessTool.cs` 和 `QwenDialogueTool.cs`，可以扩展这些工具通过 MCP 协议与 AI-Agent 代理进行通信。
+我们的 ai-agent 解决方案在 `Agent.Core/McpTools/` 目录中包含 `DynamicExternalAccessTool.cs` 和 `QwenDialogueTool.cs`，可以扩展这些工具通过 MCP 协议与 AI-Agent 代理进行通信。
 
 ### 2. 共享工具生态系统
 

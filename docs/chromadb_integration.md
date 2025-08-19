@@ -1,7 +1,7 @@
 # ChromaDB Integration Documentation
 
 ## Overview
-This document describes the ChromaDB integration in the AgentWebApi project, including setup, configuration, and usage examples.
+This document describes the ChromaDB integration in the Agent.Api project, including setup, configuration, and usage examples.
 
 ## Architecture
 
@@ -96,7 +96,7 @@ Content-Type: application/json
 
 ### Using Docker Compose
 ```bash
-# Start ChromaDB and AgentWebApi
+# Start ChromaDB and Agent.Api
 docker-compose -f docker-compose.chromadb.yml up -d
 
 # View logs
@@ -142,7 +142,7 @@ builder.Services.AddChromaDb(options =>
 
 ### Health Endpoints
 - ChromaDB: `http://localhost:8000/api/v1/heartbeat`
-- AgentWebApi: `http://localhost:5000/health`
+- Agent.Api: `http://localhost:5000/health`
 - Nginx: `http://localhost:80/health`
 
 ### Logging

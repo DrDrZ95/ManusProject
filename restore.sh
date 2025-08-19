@@ -93,8 +93,8 @@ echo "✅ bpftrace(eBPF) 安装完成。"
 # 4. 还原 .NET 与前端依赖
 # ========================================
 echo "📦 恢复 .NET 和 pnpm 项目依赖..."
-dotnet restore /home/ubuntu/ai-agent/platform/backend/AgentWebApi/AgentWebApi.csproj
-cd /home/ubuntu/ai-agent/platform/frontend/AgentUI/agent-chat
+dotnet restore /home/ubuntu/ai-agent/apps/agent-api/Agent.Api/Agent.Api.csproj
+cd /home/ubuntu/ai-agent/apps/agent-ui
 pnpm install
 
 # ========================================

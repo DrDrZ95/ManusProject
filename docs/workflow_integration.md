@@ -3,9 +3,9 @@
 
 ## Overview - 概述
 
-This document describes the integration of workflow management functionality from the AI-Agent project into the AgentWebApi. The implementation provides comprehensive workflow planning, task tracking, and todo list file interaction capabilities.
+This document describes the integration of workflow management functionality from the AI-Agent project into the Agent.Api. The implementation provides comprehensive workflow planning, task tracking, and todo list file interaction capabilities.
 
-本文档描述了将AI-Agent项目的工作流管理功能集成到AgentWebApi中的实现。该实现提供了全面的工作流规划、任务跟踪和待办事项列表文件交互功能。
+本文档描述了将AI-Agent项目的工作流管理功能集成到Agent.Api中的实现。该实现提供了全面的工作流规划、任务跟踪和待办事项列表文件交互功能。
 
 ## Architecture - 架构
 
@@ -18,7 +18,7 @@ This document describes the integration of workflow management functionality fro
 
 ### Key Features from AI-Agent - 来自AI-Agent的关键功能
 
-| Feature | AI-Agent | AgentWebApi Implementation |
+| Feature | AI-Agent | Agent.Api Implementation |
 |---------|-----------|---------------------------|
 | Plan Creation | Python planning tool | C# workflow service - C#工作流服务 |
 | Step Status Tracking | Enum-based status | Enhanced status with timestamps - 带时间戳的增强状态 |
@@ -560,7 +560,7 @@ public async Task<IActionResult> SyncFromFile([FromBody] SyncRequest request)
 {
   "Logging": {
     "LogLevel": {
-      "AgentWebApi.Services.Workflow": "Debug"
+      "Agent.Core.Services.Workflow": "Debug"
     }
   }
 }
@@ -618,7 +618,7 @@ Enable debug logging for detailed workflow information:
 {
   "Logging": {
     "LogLevel": {
-      "AgentWebApi.Services.Workflow": "Debug"
+      "Agent.Core.Services.Workflow": "Debug"
     }
   }
 }

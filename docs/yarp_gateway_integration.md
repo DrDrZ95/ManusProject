@@ -1,6 +1,6 @@
 # AI-Agent YARP Gateway Integration
 
-This document outlines the integration of YARP (Yet Another Reverse Proxy) as a gateway mechanism within the `AgentWebApi` project, including a circuit breaker mechanism for enhanced resilience.
+This document outlines the integration of YARP (Yet Another Reverse Proxy) as a gateway mechanism within the `Agent.Api` project, including a circuit breaker mechanism for enhanced resilience.
 
 ## 1. Overview
 
@@ -211,7 +211,7 @@ The YARP configuration is typically defined in `appsettings.json` under the `Yar
 
 ## 5. Usage
 
-Once configured and enabled, all requests to the `AgentWebApi` will pass through the YARP gateway. The circuit breaker will automatically monitor the health of the backend services and apply resilience policies as defined.
+Once configured and enabled, all requests to the `Agent.Api` will pass through the YARP gateway. The circuit breaker will automatically monitor the health of the backend services and apply resilience policies as defined.
 
 For example, a request to `/api/semantickernel/chat` would be routed to the `semantic-kernel-cluster` and be subject to the `ai-service` circuit breaker policy defined in `CircuitBreakerMiddleware.cs`.
 

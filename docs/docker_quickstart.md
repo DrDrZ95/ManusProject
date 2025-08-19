@@ -62,7 +62,7 @@ For development, you can run each component separately:
 ### .NET Web API
 
 ```bash
-cd AgentWebApi
+cd Agent.Api
 dotnet run
 ```
 

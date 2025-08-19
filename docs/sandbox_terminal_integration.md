@@ -3,9 +3,9 @@
 
 ## Overview - 概述
 
-This document describes the integration of sandbox terminal functionality from the AI-Agent project into the AgentWebApi. The implementation provides a secure, local sandbox environment for command execution.
+This document describes the integration of sandbox terminal functionality from the AI-Agent project into the Agent.Api. The implementation provides a secure, local sandbox environment for command execution.
 
-本文档描述了将AI-Agent项目的沙盒终端功能集成到AgentWebApi中的实现。该实现提供了一个安全的本地沙盒环境用于命令执行。
+本文档描述了将AI-Agent项目的沙盒终端功能集成到Agent.Api中的实现。该实现提供了一个安全的本地沙盒环境用于命令执行。
 
 ## Architecture - 架构
 
@@ -18,7 +18,7 @@ This document describes the integration of sandbox terminal functionality from t
 
 ### Key Differences from AI-Agent - 与AI-Agent的主要差异
 
-| Feature | AI-Agent | AgentWebApi Implementation |
+| Feature | AI-Agent | Agent.Api Implementation |
 |---------|-----------|---------------------------|
 | Environment | Docker containers | Local processes - 本地进程 |
 | Language | Python | C# .NET |
@@ -302,7 +302,7 @@ public async Task StreamLogs()
 {
   "Logging": {
     "LogLevel": {
-      "AgentWebApi.Services.Sandbox": "Debug"
+      "Agent.Core.Services.Sandbox": "Debug"
     }
   }
 }
@@ -391,7 +391,7 @@ Enable debug logging for detailed execution information:
 {
   "Logging": {
     "LogLevel": {
-      "AgentWebApi.Services.Sandbox": "Debug"
+      "Agent.Core.Services.Sandbox": "Debug"
     }
   }
 }
