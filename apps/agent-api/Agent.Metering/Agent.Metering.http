@@ -1,0 +1,6 @@
+@Agent.Metering_HostAddress = http://localhost:5090
+
+GET {{Agent.Metering_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

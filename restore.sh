@@ -138,6 +138,8 @@ echo "💡 若需再次激活微调环境，请执行：source finetune/venv/bin
 # ========================================
 exit
 
+ssh-keygen -t RSA -C "@"
+
 if [ ! -d "/home/ubuntu/ai-agent" ]; then
     mkdir -p /home/ubuntu/ai-agent
 fi
@@ -147,17 +149,20 @@ git init
 echo "2. 添加远程remote"
 git remote add origin "git@github.com:DrDrZ95/ManusProject.git"
 
-echo "3. 拉取最新变更"
-git fetch origin
-
-echo "4. 切换到 main 分支"
-git checkout -b main origin/main
-
-echo "5. 确保本地 跟踪"
-git branch --set-upstream-to=origin/main
-
 git config --global user.email ""
 git config --global user.name ""
 
-echo "6. 确保指纹，用于本linux与github官网确保安全连接，防止被盗用，known_hosts"
+echo "3. 确保指纹，用于本linux与github官网确保安全连接，防止被盗用，known_hosts，优先执行第一个。"
+ssh -vT git@github.com
 ssh -T git@github.com
+
+echo "4. 拉取最新变更"
+git fetch origin
+
+echo "5. 切换到 main 分支"
+git checkout -b main origin/main
+
+echo "6. 确保本地 跟踪"
+git branch --set-upstream-to=origin/main
+
+git pull
