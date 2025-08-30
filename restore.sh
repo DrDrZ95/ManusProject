@@ -165,4 +165,5 @@ git checkout -b main origin/main
 echo "6. 确保本地 跟踪"
 git branch --set-upstream-to=origin/main
 
+echo "7.可以忽略"
 git pull
