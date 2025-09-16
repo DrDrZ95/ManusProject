@@ -9,12 +9,15 @@
 /// 该类遵循.NET 8中引入的最小API模式，结合扩展方法模式实现模块化配置。
 /// </remarks>
 
+using Agent.Api;
+
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 
 // Create the WebApplicationBuilder - Builder Pattern
 // 创建WebApplicationBuilder - 构建器模式
 services.AddAgentTelemetry("AI-Agent.WebApi"); // Centralized telemetry provider
+services.AddMcpClients(); // Add MCP Clients using Scrutor
 services.AddIdentityServices(builder.Configuration); // Add Identity services with PostgreSQL and JWT - 添加带有PostgreSQL和JWT的Identity服务
 services.AddUserInputServices(); // Add UserInput services - 添加用户输入服务
 services.AddFileUploadServices(); // Add FileUpload services with OWASP security - 添加文件上传服务和OWASP安全措施
