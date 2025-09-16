@@ -1,25 +1,24 @@
+using System;
+
 namespace Agent.McpGateway
 {
     public class McpClientFactory : IMcpClientFactory
     {
-        public IMcpClient CreateClaudeClient()
+        public IMcpClient CreateClient(string clientType)
         {
-            return new ClaudeMcpClient();
-        }
-
-        public IMcpClient CreateChromeClient()
-        {
-            return new ChromeMcpClient();
-        }
-
-        public IMcpClient CreateGitHubClient()
-        {
-            return new GitHubMcpClient();
-        }
-
-        public IMcpClient CreatePostgreSqlClient()
-        {
-            return new PostgreSqlClient();
+            switch (clientType.ToLower())
+            {
+                case "claude":
+                    return new ClaudeMcpClient();
+                case "chrome":
+                    return new ChromeMcpClient();
+                case "github":
+                    return new GitHubMcpClient();
+                case "postgresql":
+                    return new PostgreSqlClient();
+                default:
+                    throw new ArgumentException($"Unknown client type: {clientType}");
+            }
         }
     }
 }

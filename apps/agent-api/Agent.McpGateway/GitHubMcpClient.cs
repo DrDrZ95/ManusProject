@@ -92,6 +92,13 @@ namespace Agent.McpGateway
                 id = jsonRpcRequest?["id"] ?? JValue.CreateNull()
             });
         }
+
+        public async Task<string> ExecuteJsonRpc(string method, string parametersJson)
+        {
+            // For simplicity, we\"ll just pass the method and parametersJson to InteractAsync
+            // In a real scenario, you would parse the method and parametersJson to call specific internal methods
+            return await InteractAsync($"{{\"method\":\"{method}\", \"params\":{parametersJson}}}");
+        }
     }
 }
 

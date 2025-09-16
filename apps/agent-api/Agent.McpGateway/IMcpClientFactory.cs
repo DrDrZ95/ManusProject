@@ -4,10 +4,7 @@ namespace Agent.McpGateway
 {
     public interface IMcpClientFactory
     {
-        IMcpClient CreateClaudeClient();
-        IMcpClient CreateChromeClient();
-        IMcpClient CreateGitHubClient();
-        IMcpClient CreatePostgreSqlClient();
+        IMcpClient CreateClient(string clientType);
     }
 }
 
