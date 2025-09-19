@@ -1,6 +1,7 @@
 using System;
+using Agent.McpGateway.Clients;
 
-namespace Agent.McpGateway
+namespace Agent.McpGateway.Clients
 {
     public class McpClientFactory : IMcpClientFactory
     {

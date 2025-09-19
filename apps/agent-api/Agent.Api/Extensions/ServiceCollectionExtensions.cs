@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Scrutor;
 using Agent.McpGateway;
 
-namespace Agent.Api
+namespace Agent.Api.Extensions
 {
     public static class ServiceCollectionExtensions
     {

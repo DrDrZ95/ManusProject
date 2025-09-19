@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace Agent.McpGateway
+namespace Agent.McpGateway.Clients
 {
     public interface IMcpClient
     {

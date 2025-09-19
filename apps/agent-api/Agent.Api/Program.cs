@@ -9,7 +9,7 @@
 /// 该类遵循.NET 8中引入的最小API模式，结合扩展方法模式实现模块化配置。
 /// </remarks>
 
-using Agent.Api;
+using Agent.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;

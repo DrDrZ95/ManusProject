@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace Agent.McpGateway
+namespace Agent.McpGateway.Clients
 {
     public class PostgreSqlClient : IMcpClient
     {
@@ -12,7 +12,7 @@ namespace Agent.McpGateway
 
         public async Task<string> ExecuteJsonRpc(string method, string parametersJson)
         {
-            // For simplicity, we'll just return a placeholder response.
+            // For simplicity, we\'ll just return a placeholder response.
             // In a real scenario, you would parse the method and parametersJson to call specific internal methods.
             return await Task.FromResult($"PostgreSqlClient received JSON-RPC method: {method} with params: {parametersJson}");
         }

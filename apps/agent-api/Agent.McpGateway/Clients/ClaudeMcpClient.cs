@@ -1,7 +1,8 @@
 using System.Threading.Tasks;
 using System.Text.Json;
+using Agent.McpGateway.JsonRpc;
 
-namespace Agent.McpGateway
+namespace Agent.McpGateway.Clients
 {
     public class ClaudeMcpClient : IClaudeMcpClient
     {

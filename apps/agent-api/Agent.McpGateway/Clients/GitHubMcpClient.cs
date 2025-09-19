@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Agent.McpGateway
+namespace Agent.McpGateway.Clients
 {
     public class GitHubMcpClient : IMcpClient
     {

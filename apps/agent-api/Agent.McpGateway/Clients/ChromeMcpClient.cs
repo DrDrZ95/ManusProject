@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Agent.McpGateway
+namespace Agent.McpGateway.Clients
 {
     public class ChromeMcpClient : IMcpClient
     {
@@ -115,7 +115,7 @@ namespace Agent.McpGateway
 
         public async Task<string> ExecuteJsonRpc(string method, string parametersJson)
         {
-            // For simplicity, we\'ll just pass the method and parametersJson to InteractAsync
+            // For simplicity, we\"ll just pass the method and parametersJson to InteractAsync
             // In a real scenario, you would parse the method and parametersJson to call specific internal methods
             return await InteractAsync($"{{\"method\":\"{method}\", \"params\":{parametersJson}}}");
         }
