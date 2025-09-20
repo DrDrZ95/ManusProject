@@ -1,22 +1,5 @@
-Due to the sandbox reset, the previous changes seem to have been lost. The core of the project is still located at `/home/ubuntu/ai-agent`. Please perform a git push operation. We will gradually restore the previous requirements later.
-
-* For the rest, please refer to the following:
-
-stop current task, I have reconfigured the project configuration that you previously set up, please follow the steps below to do it:
-
-1.All project interactions take place in `/home/ubuntu/ai-agent`, you can try to study the previous construction history.
-2.Due to the previous sandbox reset, all SDK environments were lost.
-3.Later, I will inform you of the list of SDKs that need to be installed.
-4.try to push directly.
-
-fix git push
-git remote set-url origin git@github.com:drdrz95/ManusProject.git
-
-`system enviroments`
-
-* `new chat` try start agent to re-connection with manus'computer
-* 2025-7-20 https://8329-iccdxo0d61hh12lnw3w7r-c793d2b8.manusvm.computer/?folder=/home/ubuntu
-* 2025-7-31 https://8329-izw2b347q5ipjys9luv50-558063f7.manus.computer/?folder=/home/ubuntu
-* 2025-8-25 https://8329-i9jllc0kaqwptl8abbyvs-b9d0e889.manus.computer/?folder=/home/ubuntu
-
-Due to the sandbox reset. The core of the project is still located at `/home/ubuntu/ai-agent`. Please perform a series of operations such as git push.
+I have deleted all the files of `/ai-agent`. From now on, please use the GitHub remote repository `ManusProject` of connectors as the main project: 
+1. Please pull and host this remote repository in the "ai-agent/" folder. You can first try to pull the "main" remote branch. Just do it once. If there are any issues, please report them promptly. 
+* Please ensure that this step is carried out correctly.
+2. The subsequent core interactions also revolve around this remote repository of the connectors. If you encounter the problem that the api-agent cannot find the file later, please prioritize pulling this remote repository.
+3. The version of this remote repository is guaranteed to be our latest build history. So there is no need to worry. Your core task in the future is to continuously optimize and interact with this remote repository.
