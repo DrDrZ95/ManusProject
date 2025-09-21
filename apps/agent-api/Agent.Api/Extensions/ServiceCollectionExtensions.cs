@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Scrutor;
-using Agent.McpGateway;
+using Agent.McpGateway.Clients;
 
 namespace Agent.Api.Extensions
 {

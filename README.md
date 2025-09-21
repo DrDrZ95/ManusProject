@@ -45,21 +45,24 @@ ai-agent/
 │   │   │   ├── McpTools/         # Model Context Protocol integration tools
 │   │   │   ├── Models/           # Shared data models
 │   │   │   ├── Services/         # Core Service Implementations (Semantic Kernel, RAG, Sandbox, Workflow, Prompts, Finetune, HDFS, FileUpload, Prometheus, Qwen, Telemetry, UserInput, VectorDatabase)
+│   │   │   ├── WebSearch/        # Web Search module (SearXNG, SerpApi)
 │   │   │   └── Agent.Core.csproj
 │   └── agent-ui/                 # React Frontend application
-├── test/                         # Unit tests (moved from unittest/)
-│   └── Agent.Core.Tests/         # Unit tests for Agent.Core
-├── infra/                        # Infrastructure (deployment configuration)
+├── infra/                        # Infrastructure (deployment configuration and environment setup)
 │   ├── docker/                   # Docker deployment configuration
 │   │   ├── Dockerfile.webapi     # Dockerfile for .NET Web API
 │   │   ├── Dockerfile.react      # Dockerfile for React UI
 │   │   ├── docker-compose.yml    # Docker Compose configuration
 │   │   ├── examples/             # Example docker-compose configurations
 │   │   └── nginx.conf            # Nginx configuration for React UI
+│   ├── envsetup/                 # Environment setup scripts (e.g., download_model.sh, install_dependencies.sh)
 │   ├── helm/                     # Helm charts for deployment
 │   └── kubernetes/               # Raw Kubernetes manifests
-├── datasets/                     # Model fine-tuning datasets
-├── tools/                        # Setup and utility scripts
+├── llm/                          # Large Language Model related components
+│   ├── deploy/                   # Deployment scripts and model server (e.g., api_examples.py, model_server.py)
+│   └── finetune/                 # Model fine-tuning scripts and utilities (e.g., install_dependencies.sh, utils.py)
+├── test/                         # Unit tests
+│   └── Agent.Core.Tests/         # Unit tests for Agent.Core
 ├── docs/                         # Comprehensive Documentation
 │   ├── chromadb_integration.md
 │   ├── ebpf_integration.md
@@ -72,7 +75,6 @@ ai-agent/
 │   ├── semantic_kernel_examples.md
 │   ├── workflow_integration.md
 │   └── yarp_gateway_integration.md
-├── llm/                          # Legacy Python/FastAPI model server
 ├── README.md                     # Main project documentation (English)
 ├── README.zh_CN.md               # Main project documentation (Simplified Chinese)
 └── .gitignore                    # Specifies intentionally untracked files that Git should ignore

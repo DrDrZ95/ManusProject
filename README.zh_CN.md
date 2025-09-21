@@ -26,41 +26,44 @@
 ```
 ai-agent/
 ├── apps/                         # 核心应用组件
-│   ├── agent-api/                # .NET 8.0 后端（Web API + 核心逻辑）
-│   │   ├── Agent.Api/            # ASP.NET Core Web API 入口
-│   │   │   ├── Controllers/      # API 控制器（瘦控制器）
-│   │   │   ├── Extensions/       # 启动与依赖注入扩展
-│   │   │   ├── GlobalUsings.cs   # 全局 using 指令
-│   │   │   ├── Program.cs        # 启动与配置
+│   ├── agent-api/                # .NET 8.0 后端项目
+│   │   ├── Agent.Api/            # ASP.NET Core Web API 入口点
+│   │   │   ├── Controllers/      # API 端点（重构后保留）
+│   │   │   ├── Extensions/       # 扩展方法（重构后保留）
+│   │   │   ├── GlobalUsings.cs   # Agent.Api 的全局 using 指令
+│   │   │   ├── Program.cs        # 应用程序启动和配置
 │   │   │   └── Agent.Api.csproj
-│   │   ├── Agent.Core/           # 核心业务逻辑与共享模块
-│   │   │   ├── Authorization/    # 授权策略与处理器
-│   │   │   ├── Controllers/      # 核心 API 控制器
-│   │   │   ├── Data/             # EF Core 上下文、实体、仓储
-│   │   │   ├── eBPF/             # eBPF 探针（服务、脚本）
-│   │   │   ├── Extensions/       # 模块化扩展
-│   │   │   ├── Gateway/          # YARP 网关与熔断
+│   │   ├── Agent.Core/           # 核心业务逻辑和共享模块
+│   │   │   ├── Authorization/    # 自定义授权策略和处理器
+│   │   │   ├── Controllers/      # 核心 API 端点（从 Agent.Api 移动）
+│   │   │   ├── Data/             # EF Core DbContext、仓储和实体 (PostgreSQL)
+│   │   │   ├── eBPF/             # eBPF 侦探模块（服务、控制器、脚本）
+│   │   │   ├── Extensions/       # 模块化配置的扩展方法
+│   │   │   ├── Gateway/          # YARP 网关和熔断组件
 │   │   │   ├── Hubs/             # SignalR Hubs
-│   │   │   ├── Identity/         # 身份认证配置与模型
-│   │   │   ├── McpTools/         # MCP 工具集成
-│   │   │   ├── Models/           # 共享模型
-│   │   │   ├── Services/         # 核心服务实现（RAG、SK、Workflow、Sandbox、Finetune、HDFS、Prometheus、向量库等）
+│   │   │   ├── Identity/         # ASP.NET Core Identity 模型和配置
+│   │   │   ├── McpTools/         # 模型上下文协议集成工具
+│   │   │   ├── Models/           # 共享数据模型
+│   │   │   ├── Services/         # 核心服务实现（Semantic Kernel, RAG, Sandbox, Workflow, Prompts, Finetune, HDFS, FileUpload, Prometheus, Qwen, Telemetry, UserInput, VectorDatabase）
+│   │   │   ├── WebSearch/        # Web 搜索模块 (SearXNG, SerpApi)
 │   │   │   └── Agent.Core.csproj
-│   └── agent-ui/                 # React 前端应用
-├── test/                         # 单元测试（由 unittest/ 移动）
-│   └── Agent.Core.Tests/         # Agent.Core 单测
-├── infra/                        # 基础设施（部署配置）
-│   ├── docker/                   # Docker 构建与 Compose 配置
-│   │   ├── Dockerfile.webapi
-│   │   ├── Dockerfile.react
-│   │   ├── docker-compose.yml
-│   │   ├── examples/             # docker-compose 示例
-│   │   └── nginx.conf            # 前端 Nginx 配置
-│   ├── helm/                     # Helm Charts
-│   └── kubernetes/               # 原生 Kubernetes 清单
-├── datasets/                     # 模型微调数据集
-├── tools/                        # 脚本与工具
-├── docs/                         # 文档中心
+│   └── agent-ui/                 # React 前端应用程序
+├── infra/                        # 基础设施（部署配置和环境设置）
+│   ├── docker/                   # Docker 部署配置
+│   │   ├── Dockerfile.webapi     # .NET Web API 的 Dockerfile
+│   │   ├── Dockerfile.react      # React UI 的 Dockerfile
+│   │   ├── docker-compose.yml    # Docker Compose 配置
+│   │   ├── examples/             # Docker Compose 示例配置
+│   │   └── nginx.conf            # React UI 的 Nginx 配置
+│   ├── envsetup/                 # 环境设置脚本（例如，download_model.sh, install_dependencies.sh）
+│   ├── helm/                     # Helm charts 用于部署
+│   └── kubernetes/               # 原始 Kubernetes 清单
+├── llm/                          # 大型语言模型相关组件
+│   ├── deploy/                   # 部署脚本和模型服务器（例如，api_examples.py, model_server.py）
+│   └── finetune/                 # 模型微调脚本和工具（例如，install_dependencies.sh, utils.py）
+├── test/                         # 单元测试
+│   └── Agent.Core.Tests/         # Agent.Core 的单元测试
+├── docs/                         # 综合文档
 │   ├── chromadb_integration.md
 │   ├── ebpf_integration.md
 │   ├── identity_signalr_integration.md
@@ -72,10 +75,9 @@ ai-agent/
 │   ├── semantic_kernel_examples.md
 │   ├── workflow_integration.md
 │   └── yarp_gateway_integration.md
-├── llm/                          # Python/FastAPI 模型服务
-├── README.md                     # 项目文档（英文）
-├── README.zh_CN.md               # 项目文档（中文）
-└── .gitignore                    # 忽略规则
+├── README.md                     # 主项目文档（英文）
+├── README.zh_CN.md               # 主项目文档（简体中文）
+└── .gitignore                    # 指定 Git 应忽略的有意未跟踪文件
 ```
 
 ## 快速开始
