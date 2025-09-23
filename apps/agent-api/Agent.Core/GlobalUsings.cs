@@ -7,7 +7,7 @@ global using Agent.Core.eBPF;
 global using Agent.Core.Gateway;
 global using Agent.Core.Hubs;
 global using Agent.Core.Identity;
-global using Agent.Core.McpTools;
+
 global using Agent.Core.Models;
 global using Agent.Core.Models.Identity;
 global using Agent.Core.Services;

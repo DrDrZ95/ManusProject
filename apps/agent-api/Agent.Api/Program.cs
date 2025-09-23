@@ -10,6 +10,7 @@
 /// </remarks>
 
 using Agent.Api.Extensions;
+using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -23,6 +24,7 @@ services.AddUserInputServices(); // Add UserInput services - 添加用户输入�
 services.AddFileUploadServices(); // Add FileUpload services with OWASP security - 添加文件上传服务和OWASP安全措施
 services.AddPrometheusMetrics(); // Add Prometheus metrics services - 添加Prometheus指标服务
 services.AddSignalRServices(builder.Configuration); // Add SignalR services with JWT authentication - 添加SignalR服务和JWT认证
+services.AddHangfireServices(); // Add Hangfire services - 添加Hangfire服务
 
 // Build the application - Builder Pattern
 // 构建应用程序 - 构建器模式
@@ -45,6 +47,7 @@ using (var activity = telemetryProvider.StartSpan("AI-Agent.ApplicationStartup")
     app.UseSignalRServices(builder.Configuration); // SignalR middleware with automatic reconnection - SignalR中间件和自动重连
     app.UseAiAgentYarp(); // Optional AI-Agent gateway middleware - 可选的AI-Agent网关中间件
     app.UsePrometheusMetrics(); // Use Prometheus metrics middleware - 使用Prometheus指标中间件
+    app.UseHangfireDashboard(); // Use Hangfire Dashboard - 使用Hangfire Dashboard
     app.MapControllers(); // Map eBPF controllers
 
     // Initialize Identity database
