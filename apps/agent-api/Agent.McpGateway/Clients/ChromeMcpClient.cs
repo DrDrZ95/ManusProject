@@ -1,49 +1,68 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using System.Text.Json;
+using Agent.McpGateway.UniversalMcp;
 using Newtonsoft.Json.Linq;
 
 namespace Agent.McpGateway.Clients
 {
-    public class ChromeMcpClient : IMcpClient
+    /// <summary>
+    /// Chrome MCP 客户端实现
+    /// Chrome MCP Client Implementation
+    /// </summary>
+    public class ChromeMcpClient : McpBaseClient<ChromeEntity>
     {
-        public async Task<string> InteractAsync(string request)
+        public ChromeMcpClient() : base("Chrome")
         {
-            // Placeholder for Chrome MCP interaction logic
-            // This method will parse the JSON-RPC request and call the appropriate handler
+            // Constructor logic
+        }
+
+        /// <summary>
+        /// 执行 JSON-RPC 请求
+        /// Executes a JSON-RPC request
+        /// </summary>
+        /// <param name="method">JSON-RPC 方法名</param>
+        /// <param name="parameters">请求参数</param>
+        /// <returns>JSON-RPC 响应</returns>
+        public override async Task<string> ExecuteJsonRpc(string method, object parameters)
+        {
+            string parametersJson = JsonSerializer.Serialize(parameters);
+            // This part still uses the old InteractAsync logic for demonstration
+            // In a real scenario, you would parse the method and parametersJson to call specific internal methods
             try
             {
-                JObject jsonRpcRequest = JObject.Parse(request);
-                string? method = jsonRpcRequest["method"]?.ToString();
-                JToken? @params = jsonRpcRequest["params"];
+                JObject jsonRpcRequest = JObject.Parse($"{{\"method\":\"{method}\", \"params\":{parametersJson}}}");
+                string? rpcMethod = jsonRpcRequest["method"]?.ToString();
+                JToken? rpcParams = jsonRpcRequest["params"];
 
-                if (string.IsNullOrEmpty(method))
+                if (string.IsNullOrEmpty(rpcMethod))
                 {
-                    return CreateErrorResponse(request, -32600, "Invalid Request: Method not found");
+                    return CreateErrorResponse($"{{\"method\":\"{method}\", \"params\":{parametersJson}}}", -32600, "Invalid Request: Method not found");
                 }
 
-                switch (method)
+                switch (rpcMethod)
                 {
                     case "Browser.navigate":
-                        return await NavigateAsync(@params?["url"]?.ToString() ?? string.Empty);
+                        return await NavigateAsync(rpcParams?["url"]?.ToString() ?? string.Empty);
                     case "Page.captureScreenshot":
-                        return await CaptureScreenshotAsync(@params?["format"]?.ToString() ?? string.Empty);
+                        return await CaptureScreenshotAsync(rpcParams?["format"]?.ToString() ?? string.Empty);
                     case "DOM.getOuterHTML":
-                        return await GetOuterHtmlAsync(@params?["nodeId"]?.ToString() ?? string.Empty);
+                        return await GetOuterHtmlAsync(rpcParams?["nodeId"]?.ToString() ?? string.Empty);
                     case "Target.createTarget":
-                        return await CreateSessionAsync(@params?["url"]?.ToString() ?? string.Empty);
+                        return await CreateSessionAsync(rpcParams?["url"]?.ToString() ?? string.Empty);
                     case "Target.closeTarget":
-                        return await CloseSessionAsync(@params?["targetId"]?.ToString() ?? string.Empty);
+                        return await CloseSessionAsync(rpcParams?["targetId"]?.ToString() ?? string.Empty);
                     default:
-                        return CreateErrorResponse(request, -32601, "Method not found");
+                        return CreateErrorResponse($"{{\"method\":\"{method}\", \"params\":{parametersJson}}}", -32601, "Method not found");
                 }
             }
             catch (JsonException)
             {
-                return CreateErrorResponse(request, -32700, "Parse error");
+                return CreateErrorResponse($"{{\"method\":\"{method}\", \"params\":{parametersJson}}}", -32700, "Parse error");
             }
             catch (System.Exception ex)
             {
-                return CreateErrorResponse(request, -32000, $"Internal error: {ex.Message}");
+                return CreateErrorResponse($"{{\"method\":\"{method}\", \"params\":{parametersJson}}}", -32000, $"Internal error: {ex.Message}");
             }
         }
 
@@ -84,7 +103,7 @@ namespace Agent.McpGateway.Clients
 
         private string CreateJsonResponse(string method, object result)
         {
-            return JsonConvert.SerializeObject(new
+            return JsonSerializer.Serialize(new
             {
                 jsonrpc = "2.0",
                 method = method,
@@ -101,7 +120,7 @@ namespace Agent.McpGateway.Clients
             }
             catch { /* ignore parse error for error response */ }
 
-            return JsonConvert.SerializeObject(new
+            return JsonSerializer.Serialize(new
             {
                 jsonrpc = "2.0",
                 error = new
@@ -113,11 +132,31 @@ namespace Agent.McpGateway.Clients
             });
         }
 
-        public async Task<string> ExecuteJsonRpc(string method, string parametersJson)
+        // --- Implement abstract methods from McpBaseClient --- //
+
+        public override Task<IEnumerable<ChromeEntity>> GetAllAsync()
         {
-            // For simplicity, we\"ll just pass the method and parametersJson to InteractAsync
-            // In a real scenario, you would parse the method and parametersJson to call specific internal methods
-            return await InteractAsync($"{{\"method\":\"{method}\", \"params\":{parametersJson}}}");
+            return Task.FromResult<IEnumerable<ChromeEntity>>(new List<ChromeEntity>());
+        }
+
+        public override Task<ChromeEntity> GetByIdAsync(string id)
+        {
+            return Task.FromResult(new ChromeEntity { Id = id, Name = $"ChromeEntity-{id}" });
+        }
+
+        public override Task<ChromeEntity> CreateAsync(ChromeEntity entity)
+        {
+            return Task.FromResult(entity);
+        }
+
+        public override Task<ChromeEntity> UpdateAsync(ChromeEntity entity)
+        {
+            return Task.FromResult(entity);
+        }
+
+        public override Task<bool> DeleteAsync(string id)
+        {
+            return Task.FromResult(true);
         }
     }
 }

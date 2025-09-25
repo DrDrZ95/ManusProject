@@ -1,43 +1,64 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using System.Text.Json;
+using Agent.McpGateway.UniversalMcp;
 using Newtonsoft.Json.Linq;
 
 namespace Agent.McpGateway.Clients
 {
-    public class GitHubMcpClient : IMcpClient
+    /// <summary>
+    /// GitHub MCP 客户端实现
+    /// GitHub MCP Client Implementation
+    /// </summary>
+    public class GitHubMcpClient : McpBaseClient<GitHubEntity>
     {
-        public async Task<string> InteractAsync(string request)
+        public GitHubMcpClient() : base("GitHub")
         {
+            // Constructor logic
+        }
+
+        /// <summary>
+        /// 执行 JSON-RPC 请求
+        /// Executes a JSON-RPC request
+        /// </summary>
+        /// <param name="method">JSON-RPC 方法名</param>
+        /// <param name="parameters">请求参数</param>
+        /// <returns>JSON-RPC 响应</returns>
+        public override async Task<string> ExecuteJsonRpc(string method, object parameters)
+        {
+            string parametersJson = JsonSerializer.Serialize(parameters);
+            // This part still uses the old InteractAsync logic for demonstration
+            // In a real scenario, you would parse the method and parametersJson to call specific internal methods
             try
             {
-                JObject jsonRpcRequest = JObject.Parse(request);
-                string? method = jsonRpcRequest["method"]?.ToString();
-                JToken? @params = jsonRpcRequest["params"];
+                JObject jsonRpcRequest = JObject.Parse($"{{\"method\":\"{method}\", \"params\":{parametersJson}}}");
+                string? rpcMethod = jsonRpcRequest["method"]?.ToString();
+                JToken? rpcParams = jsonRpcRequest["params"];
 
-                if (string.IsNullOrEmpty(method))
+                if (string.IsNullOrEmpty(rpcMethod))
                 {
-                    return CreateErrorResponse(request, -32600, "Invalid Request: Method not found");
+                    return CreateErrorResponse($"{{\"method\":\"{method}\", \"params\":{parametersJson}}}", -32600, "Invalid Request: Method not found");
                 }
 
-                switch (method)
+                switch (rpcMethod)
                 {
                     case "GitHub.Everything":
-                        return await EverythingAsync(@params?["query"]?.ToString() ?? string.Empty);
+                        return await EverythingAsync(rpcParams?["query"]?.ToString() ?? string.Empty);
                     case "GitHub.Fetch":
-                        return await FetchAsync(@params?["repo"]?.ToString() ?? string.Empty, @params?["path"]?.ToString() ?? string.Empty);
+                        return await FetchAsync(rpcParams?["repo"]?.ToString() ?? string.Empty, rpcParams?["path"]?.ToString() ?? string.Empty);
                     case "GitHub.Filesystem":
-                        return await FilesystemAsync(@params?["repo"]?.ToString() ?? string.Empty, @params?["path"]?.ToString() ?? string.Empty, @params?["action"]?.ToString() ?? string.Empty);
+                        return await FilesystemAsync(rpcParams?["repo"]?.ToString() ?? string.Empty, rpcParams?["path"]?.ToString() ?? string.Empty, rpcParams?["action"]?.ToString() ?? string.Empty);
                     default:
-                        return CreateErrorResponse(request, -32601, "Method not found");
+                        return CreateErrorResponse($"{{\"method\":\"{method}\", \"params\":{parametersJson}}}", -32601, "Method not found");
                 }
             }
             catch (JsonException)
             {
-                return CreateErrorResponse(request, -32700, "Parse error");
+                return CreateErrorResponse($"{{\"method\":\"{method}\", \"params\":{parametersJson}}}", -32700, "Parse error");
             }
             catch (System.Exception ex)
             {
-                return CreateErrorResponse(request, -32000, $"Internal error: {ex.Message}");
+                return CreateErrorResponse($"{{\"method\":\"{method}\", \"params\":{parametersJson}}}", -32000, $"Internal error: {ex.Message}");
             }
         }
 
@@ -64,7 +85,7 @@ namespace Agent.McpGateway.Clients
 
         private string CreateJsonResponse(string method, object result)
         {
-            return JsonConvert.SerializeObject(new
+            return JsonSerializer.Serialize(new
             {
                 jsonrpc = "2.0",
                 method = method,
@@ -81,7 +102,7 @@ namespace Agent.McpGateway.Clients
             }
             catch { /* ignore parse error for error response */ }
 
-            return JsonConvert.SerializeObject(new
+            return JsonSerializer.Serialize(new
             {
                 jsonrpc = "2.0",
                 error = new
@@ -93,11 +114,31 @@ namespace Agent.McpGateway.Clients
             });
         }
 
-        public async Task<string> ExecuteJsonRpc(string method, string parametersJson)
+        // --- Implement abstract methods from McpBaseClient --- //
+
+        public override Task<IEnumerable<GitHubEntity>> GetAllAsync()
         {
-            // For simplicity, we\"ll just pass the method and parametersJson to InteractAsync
-            // In a real scenario, you would parse the method and parametersJson to call specific internal methods
-            return await InteractAsync($"{{\"method\":\"{method}\", \"params\":{parametersJson}}}");
+            return Task.FromResult<IEnumerable<GitHubEntity>>(new List<GitHubEntity>());
+        }
+
+        public override Task<GitHubEntity> GetByIdAsync(string id)
+        {
+            return Task.FromResult(new GitHubEntity { Id = id, Name = $"GitHubEntity-{id}" });
+        }
+
+        public override Task<GitHubEntity> CreateAsync(GitHubEntity entity)
+        {
+            return Task.FromResult(entity);
+        }
+
+        public override Task<GitHubEntity> UpdateAsync(GitHubEntity entity)
+        {
+            return Task.FromResult(entity);
+        }
+
+        public override Task<bool> DeleteAsync(string id)
+        {
+            return Task.FromResult(true);
         }
     }
 }

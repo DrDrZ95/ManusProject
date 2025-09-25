@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Scrutor;
 using Agent.McpGateway.Clients;
+using Agent.McpGateway.UniversalMcp;
 
 namespace Agent.Api.Extensions
 {
@@ -8,13 +9,14 @@ namespace Agent.Api.Extensions
     {
         public static IServiceCollection AddMcpClients(this IServiceCollection services)
         {
+            // Register the generic IMcpClientFactory
             services.AddScoped<IMcpClientFactory, McpClientFactory>();
 
-            services.Scan(scan => scan
-                .FromAssemblyOf<IMcpClient>()
-                .AddClasses(classes => classes.AssignableTo<IMcpClient>())
-                .AsImplementedInterfaces()
-                .WithScopedLifetime());
+            // Register specific IMcpClient implementations
+            services.AddScoped<IMcpClient<ClaudeEntity>, ClaudeMcpClient>();
+            services.AddScoped<IMcpClient<ChromeEntity>, ChromeMcpClient>();
+            services.AddScoped<IMcpClient<GitHubEntity>, GitHubMcpClient>();
+            services.AddScoped<IMcpClient<PostgreSqlEntity>, PostgreSqlClient>();
 
             return services;
         }
