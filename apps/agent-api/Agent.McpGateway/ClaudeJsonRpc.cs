@@ -1,4 +1,4 @@
-namespace Agent.McpGateway.JsonRpc
+namespace Agent.McpGateway
 {
     public static class ClaudeJsonRpc
     {

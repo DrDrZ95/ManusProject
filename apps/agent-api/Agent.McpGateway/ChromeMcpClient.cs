@@ -1,10 +1,6 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Text.Json;
-using Agent.McpGateway.UniversalMcp;
-using Newtonsoft.Json.Linq;
 
-namespace Agent.McpGateway.Clients
+
+namespace Agent.McpGateway
 {
     /// <summary>
     /// Chrome MCP 客户端实现

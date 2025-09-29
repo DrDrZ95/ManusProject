@@ -1,9 +1,6 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Text.Json;
-using Agent.McpGateway.UniversalMcp;
 
-namespace Agent.McpGateway.Clients
+
+namespace Agent.McpGateway
 {
     /// <summary>
     /// PostgreSQL MCP 客户端实现

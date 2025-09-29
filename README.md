@@ -42,6 +42,7 @@ ai-agent/
 │   │   │   ├── Gateway/          # YARP Gateway and Circuit Breaker components
 │   │   │   ├── Hubs/             # SignalR Hubs
 │   │   │   ├── Identity/         # ASP.NET Core Identity models and configurations
+│   │   ├── Agent.McpGateway/   # MCP Gateway implementation with simplified namespace and GlobalUsings
 │   │   │   ├── McpTools/         # Model Context Protocol integration tools
 │   │   │   ├── Models/           # Shared data models
 │   │   │   ├── Services/         # Core Service Implementations (Semantic Kernel, RAG, Sandbox, Workflow, Prompts, Finetune, HDFS, FileUpload, Prometheus, Qwen, Telemetry, UserInput, VectorDatabase)

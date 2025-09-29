@@ -1,7 +1,6 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
-namespace Agent.McpGateway.Clients
+
+namespace Agent.McpGateway
 {
     /// <summary>
     /// MCP 客户端接口

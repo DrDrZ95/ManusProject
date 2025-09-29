@@ -18,12 +18,12 @@
     
     <!-- YARP Gateway and Circuit Breaker -->
     <PackageReference Include="Yarp.ReverseProxy" Version="2.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="8.0.0" />
+
     <PackageReference Include="Polly" Version="8.2.0" />
     <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
     
-    <!-- HTTP 韧性：新推荐做法（基于 Polly v8 的官方扩展）-->
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.7.0" />
+
 
     <!-- Authentication SDKs -->
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.0" />

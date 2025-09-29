@@ -1,7 +1,7 @@
-using Agent.McpGateway.Clients;
+
 using System.Threading.Tasks;
 
-namespace Agent.McpGateway.UniversalMcp
+namespace Agent.McpGateway
 {
     /// <summary>
     /// 通用 MCP 客户端基类

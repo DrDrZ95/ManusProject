@@ -1,7 +1,6 @@
-using System.Threading.Tasks;
-using Agent.McpGateway.UniversalMcp;
 
-namespace Agent.McpGateway.Clients
+
+namespace Agent.McpGateway
 {
     /// <summary>
     /// Claude MCP 客户端接口
