@@ -13,7 +13,7 @@ function App() {
 
   return (
     <ChatProvider>
-      <div className="flex h-screen bg-white overflow-hidden">
+      <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden font-sans text-gray-800 dark:text-gray-200">
         {/* Mobile sidebar toggle */}
         <button
           className="md:hidden fixed top-4 left-4 z-20 p-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-md shadow-lg"

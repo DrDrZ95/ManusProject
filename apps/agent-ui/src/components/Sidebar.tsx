@@ -12,11 +12,11 @@ export const Sidebar = () => {
   } = useContext(ChatContext);
 
   return (
-    <aside className="h-screen w-64 bg-gradient-to-b from-gray-100 to-gray-200 border-r border-gray-300 flex flex-col shadow-lg">
+    <aside className="h-screen w-64 bg-sidebar-background text-sidebar-foreground border-r border-sidebar-border flex flex-col shadow-lg">
       <div className="p-4 border-b border-gray-300">
         <button 
           onClick={createNewConversation}
-          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white py-3 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+          className="w-full flex items-center justify-center gap-2 bg-sidebar-primary text-sidebar-primary-foreground py-3 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
         >
           <Plus size={18} />
           <span className="font-medium">New Chat</span>
@@ -40,9 +40,9 @@ export const Sidebar = () => {
                   onClick={() => setCurrentConversationId(conversation.id)}
                   className={`w-full flex items-center gap-2 py-3 px-3 rounded-lg text-left text-sm transition-all duration-200 group ${
                     currentConversationId === conversation.id
-                      ? 'bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-md'
-                      : 'hover:bg-white hover:shadow-md text-gray-700'
-                  }`}
+                      ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-md'
+                      : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sidebar-foreground'
+                  }`
                 >
                   <MessageSquare size={16} className="flex-shrink-0" />
                   <span className="truncate flex-1 font-medium">{conversation.title}</span>

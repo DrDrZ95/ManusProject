@@ -48,7 +48,8 @@ ai-agent/
 │   │   │   ├── Services/         # Core Service Implementations (Semantic Kernel, RAG, Sandbox, Workflow, Prompts, Finetune, HDFS, FileUpload, Prometheus, Qwen, Telemetry, UserInput, VectorDatabase)
 │   │   │   ├── WebSearch/        # Web Search module (SearXNG, SerpApi)
 │   │   │   └── Agent.Core.csproj
-│   └── agent-ui/                 # React Frontend application
+│   └── agent-ui/                 # React Frontend application (Notion-style UI update in progress)
+
 ├── infra/                        # Infrastructure (deployment configuration and environment setup)
 │   ├── docker/                   # Docker deployment configuration
 │   │   ├── Dockerfile.webapi     # Dockerfile for .NET Web API

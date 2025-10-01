@@ -42,13 +42,13 @@ ai-agent/
 │   │   │   ├── Gateway/          # YARP 网关和熔断组件
 │   │   │   ├── Hubs/             # SignalR Hubs
 │   │   │   ├── Identity/         # ASP.NET Core Identity 模型和配置
-│   │   ├── Agent.McpGateway/   # MCP 网关实现，简化了命名空间并集成了 GlobalUsings
 │   │   │   ├── McpTools/         # 模型上下文协议集成工具
 │   │   │   ├── Models/           # 共享数据模型
 │   │   │   ├── Services/         # 核心服务实现（Semantic Kernel, RAG, Sandbox, Workflow, Prompts, Finetune, HDFS, FileUpload, Prometheus, Qwen, Telemetry, UserInput, VectorDatabase）
 │   │   │   ├── WebSearch/        # Web 搜索模块 (SearXNG, SerpApi)
 │   │   │   └── Agent.Core.csproj
-│   └── agent-ui/                 # React 前端应用程序
+│   └── agent-ui/                 # React 前端应用程序 (Notion-style UI update in progress)
+
 ├── infra/                        # 基础设施（部署配置和环境设置）
 │   ├── docker/                   # Docker 部署配置
 │   │   ├── Dockerfile.webapi     # .NET Web API 的 Dockerfile
