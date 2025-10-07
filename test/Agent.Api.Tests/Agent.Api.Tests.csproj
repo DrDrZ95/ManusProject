@@ -11,6 +11,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="Moq" Version="4.20.70" />
+    <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.65.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.57.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.57.0" />
     <PackageReference Include="xunit" Version="2.6.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -23,8 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\apps\agent-api\Agent.Api\Agent.Api.csproj" />
-    <ProjectReference Include="..\apps\agent-api\Agent.Core\Agent.Core.csproj" />
+    <ProjectReference Include="../../apps/agent-api/Agent.Api/Agent.Api.csproj" />
+    <ProjectReference Include="../../apps/agent-api/Agent.Core/Agent.Core.csproj" />
   </ItemGroup>
 
 </Project>
