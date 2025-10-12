@@ -735,14 +735,11 @@ public class SemanticKernelServiceTests
     public void GetAvailableFunctions_WithRegisteredPlugins_ReturnsFunctionNames()
     {
         // Arrange
-        var mockPlugin1 = new Mock<KernelPlugin>("Plugin1");
-        mockPlugin1.Setup(p => p.GetEnumerator()).Returns(new List<KernelFunction> { new Mock<KernelFunction>().Object }.GetEnumerator());
-        mockPlugin1.Object.AddFunction(KernelFunctionFactory.CreateFromMethod(() => "", "Function1"));
+        var mockFunction1 = KernelFunctionFactory.CreateFromMethod(() => "", "Function1");
+        var mockFunction2 = KernelFunctionFactory.CreateFromMethod(() => "", "Function2");
 
-        var mockPlugin2 = new Mock<KernelPlugin>("Plugin2");
-        mockPlugin2.Object.AddFunction(KernelFunctionFactory.CreateFromMethod(() => "", "Function2"));
-
-        _mockKernel.Setup(k => k.Plugins.GetEnumerator()).Returns(new List<KernelPlugin> { mockPlugin1.Object, mockPlugin2.Object }.GetEnumerator());
+        var plugin1 = KernelPlugin.CreateFromFunctions("Plugin1", "Plugin1 Description", new[] { mockFunction1 });
+        var plugin2 = KernelPlugin.CreateFromFunctions("Plugin2", "Plugin2 Description", new[]        _mockKernel.Setup(k => k.Plugins.GetEnumerator()).Returns(new List<KernelPlugin> { plugin1, plugin2 }.GetEnumerator());
 
         // Act
         var result = _semanticKernelService.GetAvailableFunctions().ToList();
@@ -785,10 +782,9 @@ public class SemanticKernelServiceTests
         await _semanticKernelService.SaveMemoryAsync(collectionName, text, id);
 
         // Assert
-        _mockVectorDatabase.Verify(v => v.SaveVectorAsync(
+        _mockVectorDatabase.Verify(v => v.AddDocumentsAsync(
             collectionName,
-            It.Is<VectorDocument>(doc => doc.Id == id && doc.Content == text && doc.Embedding.SequenceEqual(embedding)),
-            It.IsAny<CancellationToken>()), Times.Once);
+            It.Is<IEnumerable<VectorDocument>>(docs => docs.First().Id == id && docs.First().Content == text && docs.First().Embedding.SequenceEqual(embedding))), Times.Once);
     }
 
     [Fact]
@@ -807,10 +803,9 @@ public class SemanticKernelServiceTests
         await _semanticKernelService.SaveMemoryAsync(collectionName, text, id, metadata);
 
         // Assert
-        _mockVectorDatabase.Verify(v => v.SaveVectorAsync(
+        _mockVectorDatabase.Verify(v => v.AddDocumentsAsync(
             collectionName,
-            It.Is<VectorDocument>(doc => doc.Id == id && doc.Content == text && doc.Metadata["source"].ToString() == "document"),
-            It.IsAny<CancellationToken>()), Times.Once);
+            It.Is<IEnumerable<VectorDocument>>(docs => docs.First().Id == id && docs.First().Content == text && docs.First().Metadata["source"].ToString() == "document"))), Times.Once);
     }
 
     [Fact]
@@ -834,20 +829,18 @@ public class SemanticKernelServiceTests
         var collectionName = "testCollection";
         var query = "test query";
         var queryEmbedding = new float[] { 0.5f, 0.6f };
-        var searchResult = new List<VectorSearchResult>
+        var searchMatches = new List<VectorSearchMatch>
         {
-            new VectorSearchResult { Id = "doc1", Content = "content1", Score = 0.9f }
+            new VectorSearchMatch { Id = "doc1", Content = "content1", Score = 0.9f }
         };
 
         _mockEmbeddingService.Setup(s => s.GenerateEmbeddingAsync(query, It.IsAny<Kernel>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ReadOnlyMemory<float>(queryEmbedding));
-        _mockVectorDatabase.Setup(v => v.SearchVectorAsync(
+        _mockVectorDatabase.Setup(v => v.SearchByEmbeddingAsync(
             collectionName,
             It.Is<float[]>(e => e.SequenceEqual(queryEmbedding)),
-            It.IsAny<int>(),
-            It.IsAny<double>(),
-            It.IsAny<CancellationToken>()))
-            .ReturnsAsync(searchResult);
+            It.IsAny<VectorSearchOptions>()))
+            .ReturnsAsync(new VectorSearchResult { Matches = searchMatches });
 
         // Act
         var result = await _semanticKernelService.SearchMemoryAsync(collectionName, query);
@@ -864,24 +857,19 @@ public class SemanticKernelServiceTests
         var collectionName = "testCollection";
         var query = "test query";
         var queryEmbedding = new float[] { 0.5f, 0.6f };
-        var searchResult = new List<VectorSearchResult>
+        var searchMatches = new List<VectorSearchMatch>
         {
-            new VectorSearchResult { Id = "doc1", Content = "content1", Score = 0.9f },
-            new VectorSearchResult { Id = "doc2", Content = "content2", Score = 0.6f }
+            new VectorSearchMatch { Id = "doc1", Content = "content1", Score = 0.9f },
+            new VectorSearchMatch { Id = "doc2", Content = "content2", Score = 0.6f }
         };
 
         _mockEmbeddingService.Setup(s => s.GenerateEmbeddingAsync(query, It.IsAny<Kernel>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ReadOnlyMemory<float>(queryEmbedding));
-        _mockVectorDatabase.Setup(v => v.SearchVectorAsync(
+        _mockVectorDatabase.Setup(v => v.SearchByEmbeddingAsync(
             collectionName,
             It.Is<float[]>(e => e.SequenceEqual(queryEmbedding)),
-            It.IsAny<int>(),
-            0.7,
-            It.IsAny<CancellationToken>()))
-            .ReturnsAsync(searchResult.Where(r => r.Score >= 0.7));
-
-        // Act
-        var result = await _semanticKernelService.SearchMemoryAsync(collectionName, query, minRelevanceScore: 0.7);
+            It.IsAny<VectorSearchOptions>()))
+            .ReturnsAsync(new VectorSearchResult { Matches = searchMatches.Where(r => r.Score >= 0.7f) });
 
         // Assert
         Assert.Single(result);
@@ -913,30 +901,30 @@ public class SemanticKernelServiceTests
     }
 
     [Fact]
-    public async Task DeleteMemoryAsync_ValidInput_CallsVectorDatabaseService()
+    public async Task RemoveMemoryAsync_ValidInput_CallsVectorDatabaseService()
     {
         // Arrange
         var collectionName = "testCollection";
         var id = "testId";
 
         // Act
-        await _semanticKernelService.DeleteMemoryAsync(collectionName, id);
+        await _semanticKernelService.RemoveMemoryAsync(collectionName, id);
 
         // Assert
-        _mockVectorDatabase.Verify(v => v.DeleteVectorAsync(collectionName, id, It.IsAny<CancellationToken>()), Times.Once);
+        _mockVectorDatabase.Verify(v => v.DeleteDocumentsAsync(collectionName, It.Is<IEnumerable<string>>(ids => ids.Contains(id)), null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task DeleteMemoryAsync_VectorDatabaseFails_ThrowsException()
+    public async Task RemoveMemoryAsync_VectorDatabaseFails_ThrowsException()
     {
         // Arrange
         var collectionName = "testCollection";
         var id = "testId";
-        _mockVectorDatabase.Setup(v => v.DeleteVectorAsync(collectionName, id, It.IsAny<CancellationToken>()))
+        _mockVectorDatabase.Setup(v => v.DeleteDocumentsAsync(collectionName, It.IsAny<IEnumerable<string>>(), null, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Vector database error"));
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _semanticKernelService.DeleteMemoryAsync(collectionName, id));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _semanticKernelService.RemoveMemoryAsync(collectionName, id));
     }
 
     #endregion
