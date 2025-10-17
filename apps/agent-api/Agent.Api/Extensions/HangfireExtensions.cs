@@ -1,6 +1,7 @@
 using Hangfire;
-using Hangfire.MemoryStorage;
+using Hangfire.Redis.StackExchange;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 
 namespace Agent.Api.Extensions
 {
@@ -10,17 +11,17 @@ namespace Agent.Api.Extensions
     /// </summary>
     public static class HangfireExtensions
     {
-        public static IServiceCollection AddHangfireServices(this IServiceCollection services)
+        public static IServiceCollection AddHangfireServices(this IServiceCollection services, IConfiguration configuration)
         {
             // 添加 Hangfire 服务
             // Add Hangfire services
-            services.AddHangfire(configuration => configuration
+            services.AddHangfire(hangfireConfig => hangfireConfig
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
                 .UseSimpleAssemblyNameTypeSerializer()
                 .UseRecommendedSerializerSettings()
                 // 使用内存存储，生产环境应替换为持久化存储，如 SQL Server, PostgreSQL, Redis 等
                 // Use in-memory storage; in production, replace with persistent storage like SQL Server, PostgreSQL, Redis, etc.
-                .UseMemoryStorage());
+                .UseRedisStorage(configuration.GetSection("Redis:ConnectionString").Value));
 
             // 添加 Hangfire 服务器，用于处理后台任务
             // Add Hangfire server for processing background jobs
@@ -66,8 +67,7 @@ namespace Agent.Api.Extensions
     //         // Add your authentication logic here
     //         // var httpContext = context.Get//HttpContext();
     //         // return httpContext.User.IsInRole("Admin");
-    //         return true;
+    //         // return true;
     //     }
     // }
 }
-

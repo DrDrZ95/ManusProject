@@ -24,7 +24,8 @@ services.AddUserInputServices(); // Add UserInput services - 添加用户输入�
 services.AddFileUploadServices(); // Add FileUpload services with OWASP security - 添加文件上传服务和OWASP安全措施
 services.AddPrometheusMetrics(); // Add Prometheus metrics services - 添加Prometheus指标服务
 services.AddSignalRServices(builder.Configuration); // Add SignalR services with JWT authentication - 添加SignalR服务和JWT认证
-services.AddHangfireServices(); // Add Hangfire services - 添加Hangfire服务
+services.AddHangfireServices(builder.Configuration);
+services.AddRedisDistributedCache(builder.Configuration); // Add Hangfire services - 添加Hangfire服务
 
 // Build the application - Builder Pattern
 // 构建应用程序 - 构建器模式
