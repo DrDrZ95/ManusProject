@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Agent.Core.Data.Entities;
 using Agent.Core.Data.Repositories;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Agent.Core.Services.Finetune;
 
@@ -19,7 +19,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
 {
     private readonly IRepository<FinetuneRecordEntity, string> _repository;
     private readonly ILogger<PythonFinetuneService> _logger;
-    private readonly IMemoryCache _cache;
+    private readonly IDistributedCache _cache;
     private readonly IConfiguration _configuration;
     private readonly Dictionary<string, Process> _runningProcesses = new();
     private readonly object _lockObject = new();
@@ -28,7 +28,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
     public PythonFinetuneService(
         IRepository<FinetuneRecordEntity, string> repository,
         ILogger<PythonFinetuneService> logger,
-        IMemoryCache cache,
+        IDistributedCache cache,
         IConfiguration configuration)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -581,9 +581,10 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
     public async Task<List<string>> GetAvailableModelsAsync()
     {
         // 从缓存获取 - Get from cache
-        if (_cache.TryGetValue("available_models", out List<string>? cachedModels))
+        var cachedModelsJson = await _cache.GetStringAsync("available_models");
+        if (!string.IsNullOrEmpty(cachedModelsJson))
         {
-            return cachedModels ?? new List<string>();
+            return JsonSerializer.Deserialize<List<string>>(cachedModelsJson) ?? new List<string>();
         }
 
         var models = new List<string>
@@ -598,7 +599,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
         };
 
         // 缓存1小时 - Cache for 1 hour
-        _cache.Set("available_models", models, TimeSpan.FromHours(1));
+        await _cache.SetStringAsync("available_models", JsonSerializer.Serialize(models), new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1) });
         
         return models;
     }

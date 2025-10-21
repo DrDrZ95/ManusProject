@@ -5,6 +5,8 @@ using Microsoft.Extensions.Options;
 
 namespace Agent.Core.Services.Workflow;
 
+using Agent.Core.Services.Workflow.Options;
+
 /// <summary>
 /// Workflow service implementation
 /// 工作流服务实现

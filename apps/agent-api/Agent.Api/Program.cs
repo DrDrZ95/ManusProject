@@ -12,6 +12,7 @@
 using Agent.Api.Extensions;
 using Hangfire;
 
+public partial class Program { } // Make Program class accessible for testing
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 
