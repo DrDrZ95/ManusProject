@@ -12,7 +12,7 @@
 using Agent.Api.Extensions;
 using Hangfire;
 
-public partial class Program { } // Make Program class accessible for testing
+
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 
@@ -109,5 +109,7 @@ using (var activity = telemetryProvider.StartSpan("AI-Agent.ApplicationStartup")
 // Run the application
 // 运行应用程序
 app.Run();
+
+public partial class Program { } // Make Program class accessible for testing
 
 
