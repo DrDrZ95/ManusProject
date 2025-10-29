@@ -19,6 +19,8 @@ var services = builder.Services;
 // Create the WebApplicationBuilder - Builder Pattern
 // 创建WebApplicationBuilder - 构建器模式
 services.AddAgentTelemetry("AI-Agent.WebApi"); // Centralized telemetry provider
+services.AddApiVersioningServices();
+services.AddSwaggerDocumentation();
 services.AddMcpClients(); // Add MCP Clients using Scrutor
 services.AddIdentityServices(builder.Configuration); // Add Identity services with PostgreSQL and JWT - 添加带有PostgreSQL和JWT的Identity服务
 services.AddUserInputServices(); // Add UserInput services - 添加用户输入服务
@@ -43,7 +45,8 @@ using (var activity = telemetryProvider.StartSpan("AI-Agent.ApplicationStartup")
 
     // Configure the HTTP request pipeline using Extension Methods - Extension Method Pattern
     // 使用扩展方法配置HTTP请求管道 - 扩展方法模式
-    app.ConfigureApplicationPipeline();
+    app.UseSwaggerDocumentation();
+app.ConfigureApplicationPipeline();
     app.UseFileUploadSecurity(); // Use FileUpload security middleware with OWASP measures - 使用文件上传安全中间件和OWASP措施
     app.UseIdentityServices(); // Use Identity middleware with authentication and authorization - 使用带有认证和授权的Identity中间件
     app.UseSignalRServices(builder.Configuration); // SignalR middleware with automatic reconnection - SignalR中间件和自动重连
@@ -110,6 +113,6 @@ using (var activity = telemetryProvider.StartSpan("AI-Agent.ApplicationStartup")
 // 运行应用程序
 app.Run();
 
-public partial class Program { } // Make Program class accessible for testing
+
 
 
