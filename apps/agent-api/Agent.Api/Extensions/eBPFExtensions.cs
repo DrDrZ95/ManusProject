@@ -1,8 +1,4 @@
-
-using Agent.Core.eBPF.Detective;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace Agent.Core.Extensions;
+namespace Agent.Api.Extensions;
 
 /// <summary>
 /// eBPF 侦探模块扩展方法 - eBPF Detective Module Extension Methods

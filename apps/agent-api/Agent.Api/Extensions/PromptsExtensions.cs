@@ -1,6 +1,4 @@
-using Agent.Core.Services.Prompts;
-
-namespace Agent.Core.Extensions;
+namespace Agent.Api.Extensions;
 
 /// <summary>
 /// Prompts service extensions for dependency injection

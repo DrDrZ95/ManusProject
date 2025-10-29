@@ -6,7 +6,7 @@ using Agent.Core.Services.SemanticKernel;
 using Agent.Core.Services.VectorDatabase;
 using Agent.Core.Services.SemanticKernel.Planner;
 
-namespace Agent.Core.Extensions;
+namespace Agent.Api.Extensions;
 
 /// <summary>
 /// Extension methods for configuring Semantic Kernel services

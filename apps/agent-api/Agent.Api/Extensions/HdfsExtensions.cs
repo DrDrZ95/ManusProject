@@ -1,8 +1,4 @@
-
-using Agent.Core.Services.Hdfs;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace Agent.Core.Extensions;
+namespace Agent.Api.Extensions;
 
 /// <summary>
 /// HDFS 服务扩展方法 - HDFS Service Extension Methods

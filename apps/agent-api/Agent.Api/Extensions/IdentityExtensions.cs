@@ -1,15 +1,4 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Agent.Core.Data;
-using Agent.Core.Models.Identity;
-using Agent.Core.Services.Authorization;
-using Agent.Core.Authorization;
-using Microsoft.AspNetCore.Authorization;
-
-namespace Agent.Core.Extensions;
+namespace Agent.Api.Extensions;
 
 /// <summary>
 /// Identity service extensions for dependency injection

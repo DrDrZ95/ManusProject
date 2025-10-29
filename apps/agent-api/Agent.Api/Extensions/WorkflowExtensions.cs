@@ -1,6 +1,4 @@
-using Agent.Core.Services.Workflow;
-
-namespace Agent.Core.Extensions;
+namespace Agent.Api.Extensions;
 
 /// <summary>
 /// Workflow service extensions for dependency injection

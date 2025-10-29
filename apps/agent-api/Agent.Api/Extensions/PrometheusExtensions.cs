@@ -1,21 +1,18 @@
-using Agent.Core.Services.Prometheus;
-using Prometheus;
+namespace Agent.Api.Extensions;
 
-namespace Microsoft.Extensions.DependencyInjection
+public static class PrometheusExtensions
 {
-    public static class PrometheusExtensions
+    public static IServiceCollection AddPrometheusMetrics(this IServiceCollection services)
     {
-        public static IServiceCollection AddPrometheusMetrics(this IServiceCollection services)
-        {
-            services.AddSingleton<IPrometheusService, PrometheusService>();
-            return services;
-        }
+        services.AddSingleton<IPrometheusService, PrometheusService>();
+        return services;
+    }
 
-        public static IApplicationBuilder UsePrometheusMetrics(this IApplicationBuilder app)
-        {
-            app.UseMetricServer(); // Exposes metrics at /metrics
-            return app;
-        }
+    public static IApplicationBuilder UsePrometheusMetrics(this IApplicationBuilder app)
+    {
+        app.UseMetricServer(); // Exposes metrics at /metrics
+        return app;
     }
 }
+
 

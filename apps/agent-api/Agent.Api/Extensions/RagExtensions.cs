@@ -1,6 +1,4 @@
-using Agent.Core.Services.RAG;
-
-namespace Agent.Core.Extensions;
+namespace Agent.Api.Extensions;
 
 /// <summary>
 /// RAG service extensions for dependency injection

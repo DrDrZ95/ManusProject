@@ -1,16 +1,10 @@
-using Microsoft.OpenApi.Models;
-using Asp.Versioning.ApiExplorer;
-using Microsoft.Extensions.Options;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Reflection;
-using Asp.Versioning;
-using System.Linq;
+
 
 namespace Agent.Api.Extensions
 {
     public static class SwaggerExtensions
     {
-public static IServiceCollection AddSwaggerDocumentation(this IServiceCollection services)
+        public static IServiceCollection AddSwaggerDocumentation(this IServiceCollection services)
         {
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
             services.AddSwaggerGen(c =>
@@ -20,7 +14,7 @@ public static IServiceCollection AddSwaggerDocumentation(this IServiceCollection
             });
 
             return services;
-}
+        }
 
 
         public static IApplicationBuilder UseSwaggerDocumentation(this IApplicationBuilder app)

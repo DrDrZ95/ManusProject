@@ -1,6 +1,4 @@
-using ChromaDB.Client;
-
-namespace Agent.Core.Extensions;
+namespace Agent.Api.Extensions;
 
 /// <summary>
 /// Extension methods for configuring ChromaDB services
@@ -71,7 +69,7 @@ public static class ChromaDbExtensions
         });
         
         // Register ChromaDB service
-        services.AddScoped<Services.IChromaDbService, Services.ChromaDbService>();
+        services.AddScoped<IChromaDbService, ChromaDbService>();
         
         return services;
     }

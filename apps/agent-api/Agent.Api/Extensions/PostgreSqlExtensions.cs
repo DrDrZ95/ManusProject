@@ -1,8 +1,4 @@
-using Microsoft.EntityFrameworkCore;
-using Agent.Core.Data;
-using Agent.Core.Data.Repositories;
-
-namespace Agent.Core.Extensions;
+namespace Agent.Api.Extensions;
 
 /// <summary>
 /// PostgreSQL database extensions for dependency injection

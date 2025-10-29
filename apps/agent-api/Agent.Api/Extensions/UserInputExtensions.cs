@@ -1,14 +1,12 @@
-using Agent.Core.Services.UserInput;
+namespace Agent.Api.Extensions;
 
-namespace Microsoft.Extensions.DependencyInjection
+public static class UserInputExtensions
 {
-    public static class UserInputExtensions
+    public static IServiceCollection AddUserInputServices(this IServiceCollection services)
     {
-        public static IServiceCollection AddUserInputServices(this IServiceCollection services)
-        {
-            services.AddScoped<IUserInputService, UserInputService>();
-            return services;
-        }
+        services.AddScoped<IUserInputService, UserInputService>();
+        return services;
     }
 }
+
 

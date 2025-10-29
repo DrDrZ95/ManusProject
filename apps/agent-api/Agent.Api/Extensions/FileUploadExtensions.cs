@@ -1,7 +1,5 @@
-using Agent.Core.Services.FileUpload;
-using Microsoft.AspNetCore.Http.Features;
 
-namespace Agent.Core.Extensions;
+namespace Agent.Api.Extensions;
 
 /// <summary>
 /// File upload service extensions for dependency injection
