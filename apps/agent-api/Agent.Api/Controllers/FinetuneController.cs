@@ -40,7 +40,7 @@ public class FinetuneController : ControllerBase
         using (var span = _telemetryProvider.StartSpan("FinetuneController.StartFinetune"))
         {
             span.SetAttribute("finetune.job_name", request.JobName);
-            _logger.LogInformation("Starting fine-tuning job: {JobName} - 启动微调任务: {JobName}", request.JobName);
+            _logger.LogInformation("Starting fine-tuning job: {JobName} - 启动微调任务: {JobName}", request.JobName, request.JobName);
             
             // 验证请求参数 - Validate request parameters
             if (string.IsNullOrWhiteSpace(request.JobName))
@@ -80,7 +80,7 @@ public class FinetuneController : ControllerBase
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to start fine-tuning job: {JobName} - 启动微调任务失败: {JobName}", request.JobName);
+                _logger.LogError(ex, "Failed to start fine-tuning job: {JobName} - 启动微调任务失败: {JobName}", request.JobName, request.JobName);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
                 return StatusCode(500, new { 
@@ -104,7 +104,7 @@ public class FinetuneController : ControllerBase
         using (var span = _telemetryProvider.StartSpan("FinetuneController.GetJobStatus"))
         {
             span.SetAttribute("finetune.job_id", jobId);
-            _logger.LogInformation("Getting job status: {JobId} - 获取任务状态: {JobId}", jobId);
+            _logger.LogInformation("Getting job status: {JobId} - 获取任务状态: {JobId}", jobId, jobId);
             
             if (string.IsNullOrWhiteSpace(jobId))
             {
@@ -147,7 +147,7 @@ public class FinetuneController : ControllerBase
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get job status: {JobId} - 获取任务状态失败: {JobId}", jobId);
+                _logger.LogError(ex, "Failed to get job status: {JobId} - 获取任务状态失败: {JobId}", jobId, jobId);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
                 return StatusCode(500, new { 
@@ -171,7 +171,7 @@ public class FinetuneController : ControllerBase
         using (var span = _telemetryProvider.StartSpan("FinetuneController.CancelJob"))
         {
             span.SetAttribute("finetune.job_id", jobId);
-            _logger.LogInformation("Cancelling job: {JobId} - 取消任务: {JobId}", jobId);
+            _logger.LogInformation("Cancelling job: {JobId} - 取消任务: {JobId}", jobId, jobId);
             
             if (string.IsNullOrWhiteSpace(jobId))
             {
@@ -204,7 +204,7 @@ public class FinetuneController : ControllerBase
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to cancel job: {JobId} - 取消任务失败: {JobId}", jobId);
+                _logger.LogError(ex, "Failed to cancel job: {JobId} - 取消任务失败: {JobId}", jobId, jobId);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
                 return StatusCode(500, new { 
@@ -233,7 +233,7 @@ public class FinetuneController : ControllerBase
             span.SetAttribute("finetune.filter_status", status?.ToString());
             span.SetAttribute("finetune.limit", limit);
             _logger.LogInformation("Getting jobs with status: {Status}, limit: {Limit} - 获取任务列表，状态: {Status}, 限制: {Limit}", 
-                status, limit);
+                status, limit, status, limit);
             
             if (limit <= 0 || limit > 1000)
             {
@@ -290,7 +290,7 @@ public class FinetuneController : ControllerBase
         using (var span = _telemetryProvider.StartSpan("FinetuneController.GetJobLogs"))
         {
             span.SetAttribute("finetune.job_id", jobId);
-            _logger.LogInformation("Getting job logs: {JobId} - 获取任务日志: {JobId}", jobId);
+            _logger.LogInformation("Getting job logs: {JobId} - 获取任务日志: {JobId}", jobId, jobId);
             
             if (string.IsNullOrWhiteSpace(jobId))
             {
@@ -319,7 +319,7 @@ public class FinetuneController : ControllerBase
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get job logs: {JobId} - 获取任务日志失败: {JobId}", jobId);
+                _logger.LogError(ex, "Failed to get job logs: {JobId} - 获取任务日志失败: {JobId}", jobId, jobId);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
                 return StatusCode(500, new { 
@@ -408,7 +408,7 @@ public class FinetuneController : ControllerBase
         using (var span = _telemetryProvider.StartSpan("FinetuneController.EstimateResources"))
         {
             span.SetAttribute("finetune.job_name", request.JobName);
-            _logger.LogInformation("Estimating resources for job: {JobName} - 估算任务资源: {JobName}", request.JobName);
+            _logger.LogInformation("Estimating resources for job: {JobName} - 估算任务资源: {JobName}", request.JobName, request.JobName);
             
             if (string.IsNullOrWhiteSpace(request.DatasetPath))
             {
@@ -451,7 +451,7 @@ public class FinetuneController : ControllerBase
         {
             span.SetAttribute("finetune.job_id", jobId);
             span.SetAttribute("finetune.progress_percentage", progress.ProgressPercentage);
-            _logger.LogInformation("Updating job progress: {JobId} - 更新任务进度: {JobId}", jobId);
+            _logger.LogInformation("Updating job progress: {JobId} - 更新任务进度: {JobId}", jobId, jobId);
             
             if (string.IsNullOrWhiteSpace(jobId))
             {
@@ -479,7 +479,7 @@ public class FinetuneController : ControllerBase
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to update job progress: {JobId} - 更新任务进度失败: {JobId}", jobId);
+                _logger.LogError(ex, "Failed to update job progress: {JobId} - 更新任务进度失败: {JobId}", jobId, jobId);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
                 return StatusCode(500, new { 

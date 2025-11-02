@@ -111,8 +111,8 @@ public class SandboxTerminalController : ControllerBase
 
             // 设置流式响应 - Setup streaming response
             Response.ContentType = "text/plain; charset=utf-8";
-            Response.Headers.Add("Cache-Control", "no-cache");
-            Response.Headers.Add("Connection", "keep-alive");
+            Response.Headers.Append("Cache-Control", "no-cache");
+            Response.Headers.Append("Connection", "keep-alive");
 
             // 流式执行命令 - Stream command execution
             await foreach (var output in _terminalService.ExecuteCommandStreamAsync(

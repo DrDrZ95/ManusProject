@@ -67,9 +67,9 @@ public class SemanticKernelController : ControllerBase
                 request.Prompt, 
                 request.SystemMessage);
 
-            Response.Headers.Add("Content-Type", "text/event-stream");
-            Response.Headers.Add("Cache-Control", "no-cache");
-            Response.Headers.Add("Connection", "keep-alive");
+            Response.Headers.Append("Content-Type", "text/event-stream");
+            Response.Headers.Append("Cache-Control", "no-cache");
+            Response.Headers.Append("Connection", "keep-alive");
 
             await foreach (var chunk in responseStream)
             {

@@ -65,7 +65,11 @@ public static class ApplicationPipelineExtensions
         // 配置开发测试端点 - 命令模式
         //app.ConfigureDevTestEndpoints();
         
-        // Configure Dapr middleware - Middleware Pattern
+        // Configure Dapr middleware // 配置全局异常处理中间件 - Middleware Pattern
+        // Configure global exception handling middleware - 中间件模式
+        app.UseMiddleware<Middleware.GlobalExceptionMiddleware>();
+
+        // 配置Dapr中间件 - Middleware Pattern
         // 配置Dapr中间件 - 中间件模式
         app.UseDaprMiddleware();
     }
