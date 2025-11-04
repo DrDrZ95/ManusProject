@@ -31,6 +31,18 @@ namespace Agent.Api.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         { 
+            // 1. Capture request body for context if needed (e.g., for logging/tracing)
+            // 捕获请求体以获取上下文信息（例如，用于日志/跟踪）
+            // This is a placeholder for the user's requirement to add context information to the collection pipeline.
+            // This pattern is typically used in a separate logging/tracing middleware *before* the exception handler.
+            // For a simple exception handler, we'll focus on the response stream.
+
+            // 2. Ensure the response body is readable for logging/tracing in case of an exception
+            // 确保响应体在发生异常时可读，以便进行日志/跟踪
+            var originalBodyStream = context.Response.Body;
+            using var responseBody = new MemoryStream();
+            context.Response.Body = responseBody;
+
             try
             {
                 await _next(context);
@@ -38,6 +50,13 @@ namespace Agent.Api.Middleware
             catch (Exception ex)
             {
                 await HandleExceptionAsync(context, ex);
+            }
+            finally
+            {
+                // 3. Restore the original stream and copy the response content back
+                // 恢复原始流并复制响应内容
+                responseBody.Seek(0, SeekOrigin.Begin); // Refer to stream.Seek(0, SeekOrigin.Begin);
+                await responseBody.CopyToAsync(originalBodyStream);
             }
         }
 
@@ -49,10 +68,12 @@ namespace Agent.Api.Middleware
 
             _logger.LogError(exception, "An unhandled exception has occurred. Error Code: {ErrorCode}, Message: {Message}", errorCode, message);
 
-            // Future Elastic integration idea:
-            // 1. Create a concurrent queue to hold exception data.
+            // Future Elastic integration idea (User's requirement):
+            // 1. Create a concurrent queue to hold exception data (e.g., request/response context, exception details).
             // 2. A background thread would dequeue items and send them to Elastic Search in batches.
             // 3. This decouples the request pipeline from the logging infrastructure, improving performance.
+            // 4. The use of threads for streaming collection is a key part of this future integration.
+            //    Example: Task.Run(() => ElasticClient.IndexDocument(exceptionContext));
 
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)statusCode;

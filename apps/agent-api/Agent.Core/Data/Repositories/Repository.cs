@@ -396,3 +396,133 @@ public class WorkflowPlanRepository : Repository<WorkflowPlanEntity, string>, IW
     }
 }
 
+
+
+
+
+
+
+
+    /// <summary>
+    /// Get entity by ID with includes - 根据ID获取实体（包含关联数据）
+    /// </summary>
+    public virtual async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes)
+    {
+        try
+        {
+            _logger.LogDebug("Getting entity by ID: {Id} with includes", id);
+            var query = _dbSet.AsQueryable();
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+            
+            // EF Core 6+ can use FindAsync with includes, but it's safer to use Where(id) for consistency
+            // and to ensure includes are applied. We assume the entity has a single primary key.
+            var parameter = Expression.Parameter(typeof(TEntity), "e");
+            var property = Expression.Property(parameter, "Id"); // Assuming the primary key property is named "Id"
+            var constant = Expression.Constant(id);
+            var equal = Expression.Equal(property, constant);
+            var lambda = Expression.Lambda<Func<TEntity, bool>>(equal, parameter);
+
+            return await query.FirstOrDefaultAsync(lambda, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting entity by ID: {Id} with includes", id);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Find entities by predicate with includes - 根据条件查找实体（包含关联数据）
+    /// </summary>
+    public virtual async Task<List<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes)
+    {
+        try
+        {
+            _logger.LogDebug("Finding entities with predicate and includes for type {EntityType}", typeof(TEntity).Name);
+            var query = _dbSet.AsQueryable();
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+            return await query.Where(predicate).ToListAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error finding entities with predicate and includes for type {EntityType}", typeof(TEntity).Name);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Get paged results with includes - 获取分页结果（包含关联数据）
+    /// </summary>
+    public virtual async Task<PagedResult<TEntity>> GetPagedAsync(
+        int pageNumber,
+        int pageSize,
+        Expression<Func<TEntity, bool>>? predicate = null,
+        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
+        CancellationToken cancellationToken = default,
+        params Expression<Func<TEntity, object>>[] includes)
+    {
+        try
+        {
+            _logger.LogDebug("Getting paged results with includes for type {EntityType}, Page: {PageNumber}, Size: {PageSize}", 
+                typeof(TEntity).Name, pageNumber, pageSize);
+
+            // 验证分页参数 - Validate paging parameters
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 10;
+            if (pageSize > 1000) pageSize = 1000; // 限制最大页面大小 - Limit maximum page size
+
+            var query = _dbSet.AsQueryable();
+            
+            // 应用关联数据 - Apply includes
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+
+            // 应用过滤条件 - Apply filter predicate
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+
+            // 获取总数 - Get total count
+            var totalCount = await query.CountAsync(cancellationToken);
+
+            // 应用排序 - Apply ordering
+            if (orderBy != null)
+            {
+                query = orderBy(query);
+            }
+
+            // 应用分页 - Apply paging
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            var result = new PagedResult<TEntity>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+
+            _logger.LogDebug("Retrieved {ItemCount} items out of {TotalCount} for page {PageNumber}", 
+                items.Count, totalCount, pageNumber);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting paged results with includes for type {EntityType}", typeof(TEntity).Name);
+            throw;
+        }
+    }
+

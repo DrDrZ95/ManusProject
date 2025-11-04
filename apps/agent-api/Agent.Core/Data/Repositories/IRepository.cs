@@ -22,6 +22,15 @@ public interface IRepository<TEntity, TKey> where TEntity : class
     Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Get entity by ID with includes - 根据ID获取实体（包含关联数据）
+    /// </summary>
+    /// <param name="id">Entity ID - 实体ID</param>
+    /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
+    /// <param name="includes">Navigation properties to include - 要包含的导航属性</param>
+    /// <returns>Entity or null - 实体或null</returns>
+    Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes);
+
+    /// <summary>
     /// Get all entities - 获取所有实体
     /// </summary>
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
@@ -35,6 +44,15 @@ public interface IRepository<TEntity, TKey> where TEntity : class
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>List of matching entities - 匹配的实体列表</returns>
     Task<List<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Find entities by predicate with includes - 根据条件查找实体（包含关联数据）
+    /// </summary>
+    /// <param name="predicate">Search predicate - 搜索条件</param>
+    /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
+    /// <param name="includes">Navigation properties to include - 要包含的导航属性</param>
+    /// <returns>List of matching entities - 匹配的实体列表</returns>
+    Task<List<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes);
 
     /// <summary>
     /// Get first entity matching predicate - 获取第一个匹配条件的实体
@@ -115,6 +133,24 @@ public interface IRepository<TEntity, TKey> where TEntity : class
         Expression<Func<TEntity, bool>>? predicate = null,
         Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get paged results with includes - 获取分页结果（包含关联数据）
+    /// </summary>
+    /// <param name="pageNumber">Page number (1-based) - 页码（从1开始）</param>
+    /// <param name="pageSize">Page size - 页面大小</param>
+    /// <param name="predicate">Optional filter predicate - 可选的过滤条件</param>
+    /// <param name="orderBy">Optional ordering - 可选的排序</param>
+    /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
+    /// <param name="includes">Navigation properties to include - 要包含的导航属性</param>
+    /// <returns>Paged result - 分页结果</returns>
+    Task<PagedResult<TEntity>> GetPagedAsync(
+        int pageNumber,
+        int pageSize,
+        Expression<Func<TEntity, bool>>? predicate = null,
+        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
+        CancellationToken cancellationToken = default,
+        params Expression<Func<TEntity, object>>[] includes);
 }
 
 /// <summary>
