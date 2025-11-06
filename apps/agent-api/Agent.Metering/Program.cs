@@ -1,15 +1,12 @@
-using Agent.Core.Extensions;
-using Agent.Metering.Extensions;
-using Agent.Metering.Middleware;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddEbpfMetering();
-builder.Services.AddCoreServices();
+var services = builder.Services;
+services.AddEndpointsApiExplorer();
+services.AddSwaggerGen();
+services.AddEbpfMetering();
+services.AddCoreServices();
 
 var app = builder.Build();
 

@@ -78,7 +78,7 @@ public class SemanticKernelController : ControllerBase
             }
 
             return new ContentResult {
-                StatusCode = StatusCodes.Status404NotFound,   // 对应 HTTP 204
+                StatusCode = StatusCodes.Status204NoContent,   // 对应 HTTP 204
                 Content    = string.Empty,                     // NoContent 一般没内容
                 ContentType = "text/plain; charset=utf-8"
             };

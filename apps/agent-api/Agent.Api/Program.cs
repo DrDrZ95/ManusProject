@@ -6,12 +6,8 @@
 /// This class follows the Minimal API pattern introduced in .NET 6, combined with
 /// the Extension Method pattern for modular configuration.
 /// 
-/// 该类遵循.NET 8中引入的最小API模式，结合扩展方法模式实现模块化配置。
+/// 该类遵循NET 中引入的最小API模式，结合扩展方法模式实现模块化配置。
 /// </remarks>
-
-using Agent.Api.Extensions;
-using Hangfire;
-
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -46,7 +42,7 @@ using (var activity = telemetryProvider.StartSpan("AI-Agent.ApplicationStartup")
     // Configure the HTTP request pipeline using Extension Methods - Extension Method Pattern
     // 使用扩展方法配置HTTP请求管道 - 扩展方法模式
     app.UseSwaggerDocumentation();
-app.ConfigureApplicationPipeline();
+    app.ConfigureApplicationPipeline();
     app.UseFileUploadSecurity(); // Use FileUpload security middleware with OWASP measures - 使用文件上传安全中间件和OWASP措施
     app.UseIdentityServices(); // Use Identity middleware with authentication and authorization - 使用带有认证和授权的Identity中间件
     app.UseSignalRServices(builder.Configuration); // SignalR middleware with automatic reconnection - SignalR中间件和自动重连

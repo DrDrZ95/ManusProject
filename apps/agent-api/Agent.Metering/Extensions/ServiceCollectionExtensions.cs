@@ -10,5 +10,10 @@ namespace Agent.Metering.Extensions
             services.AddSingleton<IEbpfService, EbpfService>();
             return services;
         }
+
+        public static void AddCoreServices(this IServiceCollection services)
+        {
+            
+        }
     }
 }

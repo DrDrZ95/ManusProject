@@ -42,6 +42,11 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
         }
     }
 
+    public Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes)
+    {
+        throw new NotImplementedException();
+    }
+
     /// <summary>
     /// Get all entities - 获取所有实体
     /// </summary>
@@ -75,6 +80,11 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
             _logger.LogError(ex, "Error finding entities with predicate for type {EntityType}", typeof(TEntity).Name);
             throw;
         }
+    }
+
+    public Task<List<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes)
+    {
+        throw new NotImplementedException();
     }
 
     /// <summary>
@@ -313,24 +323,14 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
             throw;
         }
     }
+
+    public Task<PagedResult<TEntity>> GetPagedAsync(int pageNumber, int pageSize, Expression<Func<TEntity, bool>>? predicate = null, Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
+        CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes)
+    {
+        throw new NotImplementedException();
+    }
 }
 
-/// <summary>
-/// Specialized repository for workflow plans
-/// 工作流计划的专用仓储
-/// </summary>
-public interface IWorkflowPlanRepository : IRepository<WorkflowPlanEntity, string>
-{
-    /// <summary>
-    /// Get plans with their steps - 获取包含步骤的计划
-    /// </summary>
-    Task<List<WorkflowPlanEntity>> GetPlansWithStepsAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Get plan with steps by ID - 根据ID获取包含步骤的计划
-    /// </summary>
-    Task<WorkflowPlanEntity?> GetPlanWithStepsAsync(string planId, CancellationToken cancellationToken = default);
-}
 
 /// <summary>
 /// Specialized repository implementation for workflow plans
@@ -351,11 +351,11 @@ public class WorkflowPlanRepository : Repository<WorkflowPlanEntity, string>, IW
         try
         {
             _logger.LogDebug("Getting all workflow plans with steps");
-            
+
             // 注意：这里需要手动加载步骤，因为我们没有在实体中定义导航属性
             // Note: We need to manually load steps here since we don't have navigation properties in entities
             var plans = await _dbSet.ToListAsync(cancellationToken);
-            
+
             _logger.LogInformation("Retrieved {Count} workflow plans", plans.Count);
             return plans;
         }
@@ -369,14 +369,15 @@ public class WorkflowPlanRepository : Repository<WorkflowPlanEntity, string>, IW
     /// <summary>
     /// Get plan with steps by ID - 根据ID获取包含步骤的计划
     /// </summary>
-    public async Task<WorkflowPlanEntity?> GetPlanWithStepsAsync(string planId, CancellationToken cancellationToken = default)
+    public async Task<WorkflowPlanEntity?> GetPlanWithStepsAsync(string planId,
+        CancellationToken cancellationToken = default)
     {
         try
         {
             _logger.LogDebug("Getting workflow plan with steps by ID: {PlanId}", planId);
-            
+
             var plan = await GetByIdAsync(planId, cancellationToken);
-            
+
             if (plan != null)
             {
                 _logger.LogInformation("Retrieved workflow plan with ID: {PlanId}", planId);
@@ -385,7 +386,7 @@ public class WorkflowPlanRepository : Repository<WorkflowPlanEntity, string>, IW
             {
                 _logger.LogWarning("Workflow plan not found with ID: {PlanId}", planId);
             }
-            
+
             return plan;
         }
         catch (Exception ex)
@@ -394,19 +395,12 @@ public class WorkflowPlanRepository : Repository<WorkflowPlanEntity, string>, IW
             throw;
         }
     }
-}
-
-
-
-
-
-
-
 
     /// <summary>
     /// Get entity by ID with includes - 根据ID获取实体（包含关联数据）
     /// </summary>
-    public virtual async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes)
+    public virtual async Task<WorkflowPlanEntity?> GetByIdAsync(string id, CancellationToken cancellationToken = default,
+        params Expression<Func<WorkflowPlanEntity, object>>[] includes)
     {
         try
         {
@@ -416,14 +410,14 @@ public class WorkflowPlanRepository : Repository<WorkflowPlanEntity, string>, IW
             {
                 query = query.Include(include);
             }
-            
+
             // EF Core 6+ can use FindAsync with includes, but it's safer to use Where(id) for consistency
             // and to ensure includes are applied. We assume the entity has a single primary key.
-            var parameter = Expression.Parameter(typeof(TEntity), "e");
+            var parameter = Expression.Parameter(typeof(WorkflowPlanEntity), "e");
             var property = Expression.Property(parameter, "Id"); // Assuming the primary key property is named "Id"
             var constant = Expression.Constant(id);
             var equal = Expression.Equal(property, constant);
-            var lambda = Expression.Lambda<Func<TEntity, bool>>(equal, parameter);
+            var lambda = Expression.Lambda<Func<WorkflowPlanEntity, bool>>(equal, parameter);
 
             return await query.FirstOrDefaultAsync(lambda, cancellationToken);
         }
@@ -437,21 +431,25 @@ public class WorkflowPlanRepository : Repository<WorkflowPlanEntity, string>, IW
     /// <summary>
     /// Find entities by predicate with includes - 根据条件查找实体（包含关联数据）
     /// </summary>
-    public virtual async Task<List<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes)
+    public virtual async Task<List<WorkflowPlanEntity>> FindAsync(Expression<Func<WorkflowPlanEntity, bool>> predicate,
+        CancellationToken cancellationToken = default, params Expression<Func<WorkflowPlanEntity, object>>[] includes)
     {
         try
         {
-            _logger.LogDebug("Finding entities with predicate and includes for type {EntityType}", typeof(TEntity).Name);
+            _logger.LogDebug("Finding entities with predicate and includes for type {EntityType}",
+                typeof(WorkflowPlanEntity).Name);
             var query = _dbSet.AsQueryable();
             foreach (var include in includes)
             {
                 query = query.Include(include);
             }
+
             return await query.Where(predicate).ToListAsync(cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error finding entities with predicate and includes for type {EntityType}", typeof(TEntity).Name);
+            _logger.LogError(ex, "Error finding entities with predicate and includes for type {EntityType}",
+                typeof(WorkflowPlanEntity).Name);
             throw;
         }
     }
@@ -459,18 +457,19 @@ public class WorkflowPlanRepository : Repository<WorkflowPlanEntity, string>, IW
     /// <summary>
     /// Get paged results with includes - 获取分页结果（包含关联数据）
     /// </summary>
-    public virtual async Task<PagedResult<TEntity>> GetPagedAsync(
+    public virtual async Task<PagedResult<WorkflowPlanEntity>> GetPagedAsync(
         int pageNumber,
         int pageSize,
-        Expression<Func<TEntity, bool>>? predicate = null,
-        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
+        Expression<Func<WorkflowPlanEntity, bool>>? predicate = null,
+        Func<IQueryable<WorkflowPlanEntity>, IOrderedQueryable<WorkflowPlanEntity>>? orderBy = null,
         CancellationToken cancellationToken = default,
-        params Expression<Func<TEntity, object>>[] includes)
+        params Expression<Func<WorkflowPlanEntity, object>>[] includes)
     {
         try
         {
-            _logger.LogDebug("Getting paged results with includes for type {EntityType}, Page: {PageNumber}, Size: {PageSize}", 
-                typeof(TEntity).Name, pageNumber, pageSize);
+            _logger.LogDebug(
+                "Getting paged results with includes for type {EntityType}, Page: {PageNumber}, Size: {PageSize}",
+                typeof(WorkflowPlanEntity).Name, pageNumber, pageSize);
 
             // 验证分页参数 - Validate paging parameters
             if (pageNumber < 1) pageNumber = 1;
@@ -478,7 +477,7 @@ public class WorkflowPlanRepository : Repository<WorkflowPlanEntity, string>, IW
             if (pageSize > 1000) pageSize = 1000; // 限制最大页面大小 - Limit maximum page size
 
             var query = _dbSet.AsQueryable();
-            
+
             // 应用关联数据 - Apply includes
             foreach (var include in includes)
             {
@@ -506,7 +505,7 @@ public class WorkflowPlanRepository : Repository<WorkflowPlanEntity, string>, IW
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
 
-            var result = new PagedResult<TEntity>
+            var result = new PagedResult<WorkflowPlanEntity>
             {
                 Items = items,
                 TotalCount = totalCount,
@@ -514,15 +513,16 @@ public class WorkflowPlanRepository : Repository<WorkflowPlanEntity, string>, IW
                 PageSize = pageSize
             };
 
-            _logger.LogDebug("Retrieved {ItemCount} items out of {TotalCount} for page {PageNumber}", 
+            _logger.LogDebug("Retrieved {ItemCount} items out of {TotalCount} for page {PageNumber}",
                 items.Count, totalCount, pageNumber);
 
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting paged results with includes for type {EntityType}", typeof(TEntity).Name);
+            _logger.LogError(ex, "Error getting paged results with includes for type {EntityType}",
+                typeof(WorkflowPlanEntity).Name);
             throw;
         }
     }
-
+}
