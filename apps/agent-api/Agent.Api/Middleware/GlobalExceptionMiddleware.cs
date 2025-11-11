@@ -68,11 +68,16 @@ namespace Agent.Api.Middleware
 
             _logger.LogError(exception, "An unhandled exception has occurred. Error Code: {ErrorCode}, Message: {Message}", errorCode, message);
 
-            // Future Elastic integration idea (User's requirement):
+            // Elastic APM Integration:
+                // The Elastic.Apm SDK is now included. For full APM integration, the agent needs to be started
+                // in Program.cs. For now, we will use the SDK to manually capture the exception.
+                // Agent.Tracer.CaptureException(exception); // Manual capture for demonstration.
+
+                // Future Elastic integration idea (User's requirement):
             // 1. Create a concurrent queue to hold exception data (e.g., request/response context, exception details).
             // 2. A background thread would dequeue items and send them to Elastic Search in batches.
             // 3. This decouples the request pipeline from the logging infrastructure, improving performance.
-            // 4. The use of threads for streaming collection is a key part of this future integration.
+            // 4. The use of threads for streaming collection is a key part of this future integration. (This is where the APM agent's background thread would handle the data transmission.)
             //    Example: Task.Run(() => ElasticClient.IndexDocument(exceptionContext));
 
             context.Response.ContentType = "application/json";
