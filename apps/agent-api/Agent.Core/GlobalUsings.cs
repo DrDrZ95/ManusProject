@@ -14,6 +14,7 @@ global using Agent.Core.Services;
 global using Agent.Core.Services.Authorization;
 global using Agent.Core.Services.Finetune;
 global using Agent.Core.Services.Hdfs;
+global using Agent.Core.Services.Multimodal;
 global using Agent.Core.Services.Prometheus;
 global using Agent.Core.Services.Prompts;
 global using Agent.Core.Services.Qwen;

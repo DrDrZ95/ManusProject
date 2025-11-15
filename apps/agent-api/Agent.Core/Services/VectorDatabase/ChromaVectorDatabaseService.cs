@@ -1,8 +1,3 @@
-using System.Diagnostics;
-using Microsoft.Extensions.Logging;
-using ChromaDB.Client;
-using ChromaDB.Client.Models;
-
 namespace Agent.Core.Services.VectorDatabase;
 
 /// <summary>
@@ -71,7 +66,7 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
         // 2. Perform vector search (cross-modal image-text search)
         var searchRequest = new VectorSearchRequest
         {
-            Embedding = imageEmbedding,
+            QueryEmbedding = imageEmbedding,
             TopK = options?.TopK ?? 10,
             Filter = options?.Filter
         };
@@ -134,7 +129,7 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
         // Prioritize searching with audio embedding, can combine with text embedding if needed
         var searchRequest = new VectorSearchRequest
         {
-            Embedding = audioEmbedding,
+            QueryEmbedding = audioEmbedding,
             QueryTexts = new[] { transcription }, // 也可以将转录文本作为辅助查询
             TopK = options?.TopK ?? 10,
             Filter = options?.Filter
@@ -146,7 +141,7 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
     }
 
     // ... existing methods ...
-    }
+    
     #region Collection Management - 集合管理
 
     /// <summary>
