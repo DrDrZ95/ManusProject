@@ -25,10 +25,19 @@ public interface IVectorDatabaseService
     Task<VectorSearchResult> SearchByTextAsync(string collectionName, string text, VectorSearchOptions? options = null);
     Task<VectorSearchResult> SearchByEmbeddingAsync(string collectionName, float[] embedding, VectorSearchOptions? options = null);
 
-    // Multimodal Support - 多模态支持
-    Task<VectorSearchResult> SearchByImageAsync(string collectionName, byte[] imageData, VectorSearchOptions? options = null);
-    Task<VectorSearchResult> SearchByAudioAsync(string collectionName, byte[] audioData, VectorSearchOptions? options = null);
-    Task<VectorSearchResult> SearchMultimodalAsync(string collectionName, MultimodalSearchRequest request);
+    // Cross-Modal Search - 跨模态搜索 (Using local file paths as requested by user)
+    /// <summary>
+    /// Performs a cross-modal search using an image file path.
+    /// 使用图像文件路径执行跨模态搜索。
+    /// </summary>
+    Task<VectorSearchResult> SearchByImageAsync(string collectionName, string imagePath, VectorSearchOptions? options = null);
+
+    /// <summary>
+    /// Performs a voice search using an audio file path.
+    /// 使用音频文件路径执行语音搜索。
+    /// </summary>
+    Task<VectorSearchResult> SearchByAudioAsync(string collectionName, string audioPath, VectorSearchOptions? options = null);
+
 }
 
 /// <summary>

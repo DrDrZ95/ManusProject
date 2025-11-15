@@ -13,13 +13,140 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
 {
     private readonly ChromaClient _client;
     private readonly ILogger<ChromaVectorDatabaseService> _logger;
+    // 依赖注入的图像嵌入服务 - Image embedding service dependency
+    private readonly IImageEmbeddingService _imageEmbeddingService; 
+    // 依赖注入的音频嵌入服务 - Audio embedding service dependency
+    private readonly IAudioEmbeddingService _audioEmbeddingService; 
+    // 依赖注入的语音转文本服务 - Speech-to-text service dependency
+    private readonly ISpeechToTextService _speechToTextService;
 
-    public ChromaVectorDatabaseService(ChromaClient client, ILogger<ChromaVectorDatabaseService> logger)
+    public ChromaVectorDatabaseService(
+        ChromaClient client, 
+        ILogger<ChromaVectorDatabaseService> logger, 
+        IImageEmbeddingService imageEmbeddingService,
+        IAudioEmbeddingService audioEmbeddingService,
+        ISpeechToTextService speechToTextService)
     {
         _client = client ?? throw new ArgumentNullException(nameof(client));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _imageEmbeddingService = imageEmbeddingService ?? throw new ArgumentNullException(nameof(imageEmbeddingService));
+        _audioEmbeddingService = audioEmbeddingService ?? throw new ArgumentNullException(nameof(audioEmbeddingService));
+        _speechToTextService = speechToTextService ?? throw new ArgumentNullException(nameof(speechToTextService));
     }
 
+    // ... existing methods ...
+
+    /// <summary>
+    /// Performs a cross-modal search using an image file path.
+    /// 使用图像文件路径执行跨模态搜索。
+    /// </summary>
+    public async Task<VectorSearchResult> SearchByImageAsync(string collectionName, string imagePath, VectorSearchOptions? options = null)
+    {
+        _logger.LogInformation("Starting cross-modal search by image for collection {CollectionName} with image {ImagePath}", collectionName, imagePath);
+
+        if (!File.Exists(imagePath))
+        {
+            _logger.LogError("Image file not found at path: {ImagePath}", imagePath);
+            throw new FileNotFoundException("Image file not found.", imagePath);
+        }
+
+        // 1. 图像预处理和嵌入生成 (CLIP模型集成)
+        // 1. Image preprocessing and embedding generation (CLIP model integration)
+        // 假设 IImageEmbeddingService 内部处理了图像预处理（缩放、归一化）和CLIP模型的调用
+        // Assume IImageEmbeddingService handles image preprocessing (scaling, normalization) and CLIP model invocation
+        float[] imageEmbedding;
+        try
+        {
+            // 集成 CLIP 模型生成图像嵌入 - Integrate CLIP model to generate image embeddings
+            // 使用本地部署的模型或OpenAI CLIP API - Use OpenAI CLIP API or a locally deployed model
+            imageEmbedding = await _imageEmbeddingService.GenerateImageEmbeddingAsync(imagePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to generate image embedding for {ImagePath}", imagePath);
+            throw new InvalidOperationException("Failed to generate image embedding.", ex);
+        }
+
+        // 2. 执行向量搜索 (跨模态图像-文本搜索)
+        // 2. Perform vector search (cross-modal image-text search)
+        var searchRequest = new VectorSearchRequest
+        {
+            Embedding = imageEmbedding,
+            TopK = options?.TopK ?? 10,
+            Filter = options?.Filter
+        };
+
+        // 假设 SearchAsync 内部会处理 ChromaDB 的查询逻辑
+        // Assume SearchAsync handles the ChromaDB query logic
+        return await SearchAsync(collectionName, searchRequest);
+    }
+
+    // ... existing methods ...
+
+    /// <summary>
+    /// Performs a voice search using an audio file path.
+    /// 使用音频文件路径执行语音搜索。
+    /// </summary>
+    public async Task<VectorSearchResult> SearchByAudioAsync(string collectionName, string audioPath, VectorSearchOptions? options = null)
+    {
+        _logger.LogInformation("Starting voice search by audio for collection {CollectionName} with audio {AudioPath}", collectionName, audioPath);
+
+        if (!File.Exists(audioPath))
+        {
+            _logger.LogError("Audio file not found at path: {AudioPath}", audioPath);
+            throw new FileNotFoundException("Audio file not found.", audioPath);
+        }
+
+        // 1. 音频转文本 (Whisper集成)
+        // 1. Audio-to-text conversion (Whisper integration)
+        string transcription;
+        try
+        {
+            // 使用 Whisper 进行语音转文本 - Use Whisper for speech-to-text
+            transcription = await _speechToTextService.TranscribeAsync(audioPath);
+            _logger.LogInformation("Audio transcription: {Transcription}", transcription);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to transcribe audio for {AudioPath}", audioPath);
+            throw new InvalidOperationException("Failed to transcribe audio.", ex);
+        }
+
+        // 2. 音频特征提取和嵌入生成 (CLAP集成)
+        // 2. Audio feature extraction and embedding generation (CLAP integration)
+        // 也可以直接使用文本嵌入，但为了实现语音搜索，我们假设使用音频嵌入模型
+        // We could use text embedding directly, but for voice search, we assume an audio embedding model
+        float[] audioEmbedding;
+        try
+        {
+            // 使用 CLAP 或其他音频嵌入模型 - Use CLAP or other audio embedding model
+            audioEmbedding = await _audioEmbeddingService.GenerateAudioEmbeddingAsync(audioPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to generate audio embedding for {AudioPath}", audioPath);
+            throw new InvalidOperationException("Failed to generate audio embedding.", ex);
+        }
+
+        // 3. 执行向量搜索 (语音搜索功能)
+        // 3. Perform vector search (voice search functionality)
+        // 优先使用音频嵌入进行搜索，如果需要，可以结合文本嵌入
+        // Prioritize searching with audio embedding, can combine with text embedding if needed
+        var searchRequest = new VectorSearchRequest
+        {
+            Embedding = audioEmbedding,
+            QueryTexts = new[] { transcription }, // 也可以将转录文本作为辅助查询
+            TopK = options?.TopK ?? 10,
+            Filter = options?.Filter
+        };
+
+        // 假设 SearchAsync 内部会处理 ChromaDB 的查询逻辑
+        // Assume SearchAsync handles the ChromaDB query logic
+        return await SearchAsync(collectionName, searchRequest);
+    }
+
+    // ... existing methods ...
+    }
     #region Collection Management - 集合管理
 
     /// <summary>
