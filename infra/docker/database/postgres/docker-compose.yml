@@ -1,0 +1,35 @@
+# database/postgres/docker-compose.yml - PostgreSQL 数据库配置
+# CLI 启动命令: docker-compose -f infra/docker/database/postgres/docker-compose.yml up -d
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: postgres_db
+    restart: always
+    environment:
+      # 数据库名称 - Database name
+      POSTGRES_DB: ai_agent_db
+      # 数据库用户 - Database user
+      POSTGRES_USER: ai_agent_user
+      # 数据库密码 - Database password (请在生产环境中替换为安全密码)
+      POSTGRES_PASSWORD: ai_agent_password
+    ports:
+      # 映射端口: 宿主机端口:容器端口
+      - "5432:5432"
+    volumes:
+      # 数据持久化卷 - Persistent data volume
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # 健康检查: 检查数据库是否启动并接受连接
+      test: ["CMD-SHELL", "pg_isready -U ai_agent_user -d ai_agent_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    # 外部卷定义，用于数据持久化
+    external: false
+

@@ -1,0 +1,36 @@
+# vector/chromadb/docker-compose.yml - ChromaDB 向量数据库配置
+# CLI 启动命令: docker-compose -f infra/docker/vector/chromadb/docker-compose.yml up -d
+
+version: '3.8'
+
+services:
+  chromadb:
+    # 使用官方 ChromaDB 镜像
+    image: chromadb/chroma:latest
+    container_name: chromadb_vector
+    restart: always
+    environment:
+      # 启用持久化 - Enable persistence
+      IS_PERSISTENT: "TRUE"
+      # 持久化存储路径 - Persistence storage path
+      PERSIST_DIRECTORY: "/chroma/data"
+      # 启用匿名遥测 - Disable anonymous telemetry
+      ANONYMIZED_TELEMETRY: "FALSE"
+    ports:
+      # 映射端口: 宿主机端口:容器端口
+      - "8000:8000"
+    volumes:
+      # 数据持久化卷 - Persistent data volume
+      - chromadb_data:/chroma/data
+    healthcheck:
+      # 健康检查: 检查 ChromaDB API 是否响应
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  chromadb_data:
+    # 外部卷定义，用于数据持久化
+    external: false
+

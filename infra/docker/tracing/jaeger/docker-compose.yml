@@ -1,0 +1,30 @@
+# tracing/jaeger/docker-compose.yml - Jaeger/Zipkin 分布式追踪配置
+# CLI 启动命令: docker-compose -f infra/docker/tracing/jaeger/docker-compose.yml up -d
+
+version: '3.8'
+
+services:
+  jaeger:
+    # 使用 all-in-one 镜像，包含 Collector, Query, Agent
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger_tracing
+    restart: always
+    environment:
+      # 启用 Zipkin 兼容性 - Enable Zipkin compatibility
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      # 存储类型 (内存) - Storage type (memory)
+      - STORAGE=memory
+    ports:
+      # Jaeger UI 端口
+      - "16686:16686"
+      # Jaeger Agent 接收 Thrift 协议端口 (用于 OpenTelemetry Collector)
+      - "6831:6831/udp"
+      # Zipkin 兼容性端口
+      - "9411:9411"
+    healthcheck:
+      # 健康检查: 检查 Jaeger UI 是否可访问
+      test: ["CMD", "curl", "-f", "http://localhost:16686"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+

@@ -1,0 +1,35 @@
+# monitoring/grafana/docker-compose.yml - Grafana 可视化配置
+# CLI 启动命令: docker-compose -f infra/docker/monitoring/grafana/docker-compose.yml up -d
+
+version: '3.8'
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana_dashboard
+    restart: always
+    ports:
+      # 映射端口: 宿主机端口:容器端口
+      - "3000:3000"
+    volumes:
+      # 数据持久化卷 - Persistent data volume
+      - grafana_data:/var/lib/grafana
+    environment:
+      # 默认管理员用户 - Default admin user
+      - GF_SECURITY_ADMIN_USER=admin
+      # 默认管理员密码 - Default admin password (请在生产环境中替换)
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # 允许匿名访问 (可选) - Allow anonymous access (optional)
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    healthcheck:
+      # 健康检查: 检查 Grafana 登录页面是否可访问
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:3000/login"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  grafana_data:
+    # 外部卷定义，用于数据持久化
+    external: false
+
