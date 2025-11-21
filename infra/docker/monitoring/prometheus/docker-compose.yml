@@ -1,0 +1,37 @@
+# monitoring/prometheus/docker-compose.yml - Prometheus 监控配置
+# CLI 启动命令: docker-compose -f infra/docker/monitoring/prometheus/docker-compose.yml up -d
+
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus_monitor
+    restart: always
+    ports:
+      # 映射端口: 宿主机端口:容器端口
+      - "9090:9090"
+    volumes:
+      # 配置文件映射 - Configuration file mapping
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      # 数据持久化卷 - Persistent data volume
+      - prometheus_data:/prometheus
+    command:
+      # 启动命令，指定配置文件
+      --config.file=/etc/prometheus/prometheus.yml
+      # 指定数据存储路径
+      --storage.tsdb.path=/prometheus
+      # 指定数据保留时间 (例如: 15天)
+      --storage.tsdb.retention.time=15d
+    healthcheck:
+      # 健康检查: 检查 Prometheus API 是否响应
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:9090/-/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  prometheus_data:
+    # 外部卷定义，用于数据持久化
+    external: false
+

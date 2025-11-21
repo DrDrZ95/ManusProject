@@ -1,63 +1,64 @@
+# docker-compose.yml - 主配置文件 (Infrastructure Services)
+# 启动所有服务: docker-compose up -d
+# 停止所有服务: docker-compose down
+
 version: '3.8'
 
 services:
-  # .NET Web API service
-  webapi:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.webapi
-    container_name: ai-agent-webapi
-    ports:
-      - "5000:80"
-      - "5001:443"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://+:80
-    networks:
-      - ai-agent-network
-    restart: unless-stopped
-    # Add volume mounts if needed for persistent data
-    # volumes:
-    #   - webapi-data:/app/data
+  # 1. PostgreSQL 数据库服务
+  # 包含在 database/postgres/docker-compose.yml 中
+  postgres:
+    extends:
+      file: database/postgres/docker-compose.yml
+      service: postgres
 
-  # React UI service
-  reactui:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.react
-    container_name: ai-agent-reactui
-    ports:
-      - "3000:80"
-    depends_on:
-      - webapi
-    networks:
-      - ai-agent-network
-    restart: unless-stopped
+  # 2. Redis 缓存和 Hangfire 存储服务
+  # 包含在 cache/redis/docker-compose.yml 中
+  redis:
+    extends:
+      file: cache/redis/docker-compose.yml
+      service: redis
 
-  # Python Qwen3 Model Server (optional, uncomment if needed)
-  # modelserver:
-  #   build:
-  #     context: ..
-  #     dockerfile: docker/Dockerfile.python
-  #   container_name: ai-agent-modelserver
-  #   ports:
-  #     - "2025:2025"
-  #   volumes:
-  #     - ../models:/app/models
-  #   networks:
-  #     - ai-agent-network
-  #   restart: unless-stopped
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         memory: 16G
-  #       reservations:
-  #         memory: 8G
+  # 3. ChromaDB 向量数据库服务
+  # 包含在 vector/chromadb/docker-compose.yml 中
+  chromadb:
+    extends:
+      file: vector/chromadb/docker-compose.yml
+      service: chromadb
 
-networks:
-  ai-agent-network:
-    driver: bridge
+  # 4. Prometheus 监控服务
+  # 包含在 monitoring/prometheus/docker-compose.yml 中
+  prometheus:
+    extends:
+      file: monitoring/prometheus/docker-compose.yml
+      service: prometheus
 
-# Uncomment if you need persistent volumes
-# volumes:
-#   webapi-data:
+  # 5. Grafana 可视化服务
+  # 包含在 monitoring/grafana/docker-compose.yml 中
+  grafana:
+    extends:
+      file: monitoring/grafana/docker-compose.yml
+      service: grafana
+
+  # 6. Jaeger 分布式追踪服务
+  # 包含在 tracing/jaeger/docker-compose.yml 中
+  jaeger:
+    extends:
+      file: tracing/jaeger/docker-compose.yml
+      service: jaeger
+
+  # 7. Nginx 反向代理服务
+  # 包含在 proxy/nginx/docker-compose.yml 中
+  nginx:
+    extends:
+      file: proxy/nginx/docker-compose.yml
+      service: nginx
+
+volumes:
+  # 定义所有组件可能使用的共享卷
+  postgres_data:
+  redis_data:
+  chromadb_data:
+  prometheus_data:
+  grafana_data:
+

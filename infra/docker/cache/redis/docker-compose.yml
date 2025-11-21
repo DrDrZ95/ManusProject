@@ -1,0 +1,29 @@
+# cache/redis/docker-compose.yml - Redis 缓存和 Hangfire 存储配置
+# CLI 启动命令: docker-compose -f infra/docker/cache/redis/docker-compose.yml up -d
+
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis_cache
+    restart: always
+    command: redis-server --appendonly yes
+    ports:
+      # 映射端口: 宿主机端口:容器端口
+      - "6379:6379"
+    volumes:
+      # 数据持久化卷 - Persistent data volume (用于 AOF 持久化)
+      - redis_data:/data
+    healthcheck:
+      # 健康检查: 检查 Redis 是否响应 PING 命令
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  redis_data:
+    # 外部卷定义，用于数据持久化
+    external: false
+
