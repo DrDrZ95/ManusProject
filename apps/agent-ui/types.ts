@@ -132,6 +132,9 @@ export interface AppState {
 export const MOCK_TERMINAL_WELCOME = `
 \x1b[38;2;224;224;224mAgent-OS Terminal\x1b[0m v1.0.0
 Linux kernel 6.8.0-generic x86_64
+
+Since this module is an independent space within a Container, and due to limited resources, you can perform simple operations.
+
 Type "help" for available commands.
 
 `;

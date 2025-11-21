@@ -406,15 +406,24 @@ export const Sidebar: React.FC = () => {
         >
           {/* App Logo & Header */}
           <div className="px-4 pt-4 pb-2">
-              <button 
-                onClick={store.navigateToHome} 
-                className="flex items-center gap-2 group w-full text-left outline-none mb-4"
-              >
-                  <div className="w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center shadow-sm group-hover:bg-gray-800 transition-colors">
-                     <Icons.Zap className="w-5 h-5" fill="currentColor" />
-                  </div>
-                  <span className="text-xl font-bold text-gray-900 tracking-tight">Agent</span>
-              </button>
+              <div className="flex items-center justify-between mb-4">
+                <button 
+                    onClick={store.navigateToHome} 
+                    className="flex items-center gap-2 group text-left outline-none"
+                >
+                    <div className="w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center shadow-sm group-hover:bg-gray-800 transition-colors">
+                        <Icons.Zap className="w-5 h-5" fill="currentColor" />
+                    </div>
+                    <span className="text-xl font-bold text-gray-900 tracking-tight">Agent</span>
+                </button>
+                <button 
+                    onClick={store.toggleSidebar}
+                    className="p-1.5 text-gray-400 hover:text-black transition-colors rounded-md hover:bg-gray-100"
+                    title="Collapse Sidebar"
+                >
+                    <Icons.ClosePanelLeft className="w-5 h-5" />
+                </button>
+              </div>
 
               {/* Prominent New Chat Button */}
               <button 
