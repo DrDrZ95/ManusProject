@@ -1,13 +1,153 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>agent-chat</title>
-  </head>
+    <title>Agent Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              grok: {
+                bg: '#F3F4F6',          // Light Silver Background
+                surface: '#FFFFFF',     // White Surface
+                surfaceHighlight: '#F9FAFB', // Very light gray for hovers
+                messageUser: '#E5E7EB', // Silver User Bubble
+                messageModel: '#FFFFFF',// White Model Bubble
+                input: '#FFFFFF',       // White Input
+                border: '#D1D5DB',      // Silver Border
+                teal: '#000000',        // Black as primary accent (High Contrast)
+                tealHover: '#374151',   // Dark Gray hover
+                pink: '#FF4F8B',
+                text: '#111827',        // Deep Charcoal Text
+                subtext: '#6B7280',     // Slate Gray Subtext
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            },
+            animation: {
+              'blink': 'blink 1s step-end infinite',
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'fadeIn': 'fadeIn 0.5s ease-out forwards',
+            },
+            keyframes: {
+              blink: {
+                '0%, 100%': { opacity: '1' },
+                '50%': { opacity: '0' },
+              },
+              fadeIn: {
+                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+    <style>
+      body {
+        background-color: #F3F4F6;
+        color: #111827;
+        font-family: 'Inter', sans-serif;
+        overflow: hidden;
+      }
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #F3F4F6; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #D1D5DB; 
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #9CA3AF; 
+      }
+      
+      .markdown-content p { margin-bottom: 1rem; line-height: 1.6; }
+      .markdown-content h1, .markdown-content h2, .markdown-content h3 { 
+        font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #000; 
+      }
+      .markdown-content ul, .markdown-content ol { margin-bottom: 1rem; padding-left: 1.5rem; }
+      .markdown-content li { margin-bottom: 0.25rem; }
+      .markdown-content ul { list-style-type: disc; }
+      .markdown-content ol { list-style-type: decimal; }
+      .markdown-content code { 
+        background-color: #F3F4F6; 
+        padding: 0.2em 0.4em; 
+        border-radius: 4px; 
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9em;
+        color: #111827;
+        border: 1px solid #E5E7EB;
+      }
+      .markdown-content pre {
+        background-color: #F9FAFB; /* Light gray background for code blocks */
+        padding: 0;
+        border-radius: 0.5rem;
+        overflow-x: auto;
+        margin-bottom: 1rem;
+        border: 1px solid #E5E7EB;
+      }
+      .markdown-content pre code {
+        background-color: transparent;
+        padding: 0;
+        color: #1F2937; /* Dark gray text */
+        font-size: 0.875rem;
+        border: none;
+      }
+      .markdown-content a { color: #000000; text-decoration: underline; font-weight: 500; }
+      .markdown-content a:hover { color: #374151; }
+      
+      /* Utility for hiding scrollbar but keeping functionality */
+      .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+      }
+      .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "uuid": "https://aistudiocdn.com/uuid@^13.0.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "zustand": "https://aistudiocdn.com/zustand@^5.0.8",
+    "framer-motion": "https://aistudiocdn.com/framer-motion@^12.23.24",
+    "clsx": "https://aistudiocdn.com/clsx@^2.1.1",
+    "react-syntax-highlighter/": "https://aistudiocdn.com/react-syntax-highlighter@^16.1.0/",
+    "react-syntax-highlighter": "https://aistudiocdn.com/react-syntax-highlighter@^16.1.0",
+    "react-markdown": "https://aistudiocdn.com/react-markdown@^10.1.0",
+    "remark-gfm": "https://aistudiocdn.com/remark-gfm@^4.0.1",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/client": "https://aistudiocdn.com/react-dom@^19.2.0/client",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
+    "date-fns": "https://aistudiocdn.com/date-fns@^4.1.0",
+    "@xterm/addon-fit": "https://aistudiocdn.com/@xterm/addon-fit@^0.10.0",
+    "xterm": "https://aistudiocdn.com/xterm@^5.3.0",
+    "@xterm/addon-webgl": "https://aistudiocdn.com/@xterm/addon-webgl@^0.18.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+    <script type="module" src="./index.tsx"></script>
+  <script type="module" src="/index.tsx"></script>
+</body>
 </html>
