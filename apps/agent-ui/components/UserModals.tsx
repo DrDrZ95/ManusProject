@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
 import { Icons } from './icons';
@@ -45,13 +45,40 @@ const ModalContent = ({ children, title, icon: Icon }: { children: React.ReactNo
   </motion.div>
 );
 
+const CARTOON_AVATARS = [
+  'https://api.dicebear.com/9.x/adventurer/svg?seed=Felix',
+  'https://api.dicebear.com/9.x/adventurer/svg?seed=Coco',
+  'https://api.dicebear.com/9.x/adventurer/svg?seed=Max',
+  'https://api.dicebear.com/9.x/fun-emoji/svg?seed=Spooky',
+  'https://api.dicebear.com/9.x/bottts/svg?seed=Robot',
+  'https://api.dicebear.com/9.x/avataaars/svg?seed=Milo',
+  'https://api.dicebear.com/9.x/avataaars/svg?seed=Zoe',
+  'https://api.dicebear.com/9.x/big-smile/svg?seed=Happy'
+];
+
 export const UserModals: React.FC = () => {
   const activeModal = useStore(s => s.activeModal);
   const setActiveModal = useStore(s => s.setActiveModal);
   const lang = useStore(s => s.language);
-  const t = translations[lang];
+  const user = useStore(s => s.user);
+  const updateUser = useStore(s => s.updateUser);
+  const settings = useStore(s => s.settings);
+  const updateSettings = useStore(s => s.updateSettings);
 
-  const onClose = () => setActiveModal(null);
+  const t = translations[lang];
+  const [isSelectingAvatar, setIsSelectingAvatar] = useState(false);
+  const [tempBio, setTempBio] = useState(user?.bio || '');
+  const [tempName, setTempName] = useState(user?.name || 'Agent User');
+
+  const onClose = () => {
+      setIsSelectingAvatar(false);
+      setActiveModal(null);
+  };
+
+  const handleSaveProfile = () => {
+      updateUser({ name: tempName, bio: tempBio });
+      onClose();
+  };
 
   if (!activeModal) return null;
 
@@ -63,39 +90,39 @@ export const UserModals: React.FC = () => {
             <ModalContent title={t.upgradeSubscription} icon={Icons.Zap}>
               <div className="space-y-6">
                 <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold mb-2">Unleash Full Potential</h3>
-                  <p className="text-gray-500">Get access to Agent Pro with advanced reasoning and faster speeds.</p>
+                  <h3 className="text-2xl font-bold mb-2">{t.unleashPotential}</h3>
+                  <p className="text-gray-500">{t.getAccessPro}</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="border border-gray-200 rounded-xl p-6 hover:border-blue-500 transition-colors cursor-pointer relative">
-                    <div className="text-lg font-semibold mb-2">Agent Free</div>
-                    <div className="text-3xl font-bold mb-4">$0<span className="text-sm text-gray-400 font-normal">/mo</span></div>
+                    <div className="text-lg font-semibold mb-2">{t.freePlan}</div>
+                    <div className="text-3xl font-bold mb-4">$0<span className="text-sm text-gray-400 font-normal">{t.perMonth}</span></div>
                     <ul className="space-y-3 text-sm text-gray-600">
-                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-green-500" /> Standard Response Speed</li>
-                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-green-500" /> Daily Conversation Limits</li>
-                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-green-500" /> Access to Kimi Basic</li>
+                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-green-500" /> {t.standardSpeed}</li>
+                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-green-500" /> {t.dailyLimits}</li>
+                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-green-500" /> {t.accessKimi}</li>
                     </ul>
                   </div>
 
                   <div className="border-2 border-black rounded-xl p-6 relative shadow-lg bg-gray-50">
-                    <div className="absolute top-0 right-0 bg-black text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-lg">RECOMMENDED</div>
-                    <div className="text-lg font-semibold mb-2">Agent Pro</div>
-                    <div className="text-3xl font-bold mb-4">$20<span className="text-sm text-gray-400 font-normal">/mo</span></div>
+                    <div className="absolute top-0 right-0 bg-black text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-lg">{t.recommended}</div>
+                    <div className="text-lg font-semibold mb-2">{t.proPlanCard}</div>
+                    <div className="text-3xl font-bold mb-4">$20<span className="text-sm text-gray-400 font-normal">{t.perMonth}</span></div>
                     <ul className="space-y-3 text-sm text-gray-600">
-                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-black" /> Fast Response Speed</li>
-                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-black" /> Unlimited Conversations</li>
-                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-black" /> Access to Deepseek & GPT-OSS</li>
-                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-black" /> Priority Support</li>
+                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-black" /> {t.fastSpeed}</li>
+                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-black" /> {t.unlimitedChats}</li>
+                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-black" /> {t.accessDeepseek}</li>
+                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-black" /> {t.prioritySupport}</li>
                     </ul>
                   </div>
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-gray-100">
                   <button className="w-full bg-black text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-800 transition-all shadow-lg transform hover:scale-[1.01]">
-                    Upgrade to Pro
+                    {t.upgradeBtn}
                   </button>
-                  <p className="text-center text-xs text-gray-400 mt-4">Secure payment processed by Stripe. Cancel anytime.</p>
+                  <p className="text-center text-xs text-gray-400 mt-4">{t.securePayment}</p>
                 </div>
               </div>
             </ModalContent>
@@ -105,33 +132,70 @@ export const UserModals: React.FC = () => {
             <ModalContent title={t.account} icon={Icons.User}>
               <div className="space-y-6">
                 <div className="flex items-center gap-6 pb-6 border-b border-gray-100">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center shadow-inner">
-                    <Icons.User className="w-8 h-8 text-gray-500" />
+                  <div className="relative group cursor-pointer" onClick={() => setIsSelectingAvatar(!isSelectingAvatar)}>
+                    <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden shadow-sm border border-gray-200">
+                       <img src={user?.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Icons.Edit className="w-6 h-6 text-white" />
+                    </div>
                   </div>
                   <div>
-                    <button className="text-sm font-medium text-blue-600 hover:underline">Change Avatar</button>
-                    <div className="text-xs text-gray-400 mt-1">JPG, GIF or PNG. Max size of 800K</div>
+                    <button onClick={() => setIsSelectingAvatar(!isSelectingAvatar)} className="text-sm font-medium text-blue-600 hover:underline">{t.changeAvatar}</button>
+                    <div className="text-xs text-gray-400 mt-1">{t.avatarSize}</div>
                   </div>
                 </div>
 
+                {isSelectingAvatar && (
+                    <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        className="grid grid-cols-4 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200"
+                    >
+                        {CARTOON_AVATARS.map((avatarUrl, idx) => (
+                            <button 
+                                key={idx}
+                                onClick={() => { updateUser({ avatar: avatarUrl }); setIsSelectingAvatar(false); }}
+                                className={clsx(
+                                    "aspect-square rounded-lg overflow-hidden border-2 transition-all hover:scale-105",
+                                    user?.avatar === avatarUrl ? "border-black ring-2 ring-black/20" : "border-transparent hover:border-gray-300"
+                                )}
+                            >
+                                <img src={avatarUrl} alt={`Avatar ${idx}`} className="w-full h-full object-cover" />
+                            </button>
+                        ))}
+                    </motion.div>
+                )}
+
                 <div className="grid gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Display Name</label>
-                    <input type="text" defaultValue="Agent User" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-black focus:ring-0 bg-gray-50" />
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t.displayName}</label>
+                    <input 
+                        type="text" 
+                        value={tempName}
+                        onChange={(e) => setTempName(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-black focus:ring-0 bg-gray-50" 
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                    <input type="email" defaultValue="user@example.com" disabled className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed" />
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t.emailLabel}</label>
+                    <input type="email" defaultValue={user?.email} disabled className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
-                    <textarea rows={3} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-black focus:ring-0 bg-gray-50" placeholder="Tell us about yourself..."></textarea>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t.bio}</label>
+                    <textarea 
+                        rows={3} 
+                        value={tempBio}
+                        onChange={(e) => setTempBio(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-black focus:ring-0 bg-gray-50" 
+                        placeholder={t.bioPlaceholder}
+                    />
                   </div>
                 </div>
 
                 <div className="flex justify-end pt-4">
-                  <button onClick={onClose} className="px-6 py-2.5 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors">
-                    Save Changes
+                  <button onClick={handleSaveProfile} className="px-6 py-2.5 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors">
+                    {t.saveChanges}
                   </button>
                 </div>
               </div>
@@ -142,45 +206,45 @@ export const UserModals: React.FC = () => {
              <ModalContent title={t.getHelp} icon={Icons.Help}>
                <div className="space-y-6">
                  <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                   <h4 className="font-semibold text-blue-900 mb-1">Need immediate assistance?</h4>
-                   <p className="text-sm text-blue-700">Our support team is available 24/7 to help you with any issues.</p>
+                   <h4 className="font-semibold text-blue-900 mb-1">{t.needHelpTitle}</h4>
+                   <p className="text-sm text-blue-700">{t.needHelpDesc}</p>
                  </div>
 
                  <div className="space-y-4">
                     <details className="group border border-gray-200 rounded-lg overflow-hidden">
                       <summary className="flex items-center justify-between p-4 cursor-pointer bg-gray-50 hover:bg-gray-100 font-medium">
-                        <span>How do I use the Linux Terminal?</span>
+                        <span>{t.faq1Title}</span>
                         <Icons.ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" />
                       </summary>
                       <div className="p-4 text-sm text-gray-600 leading-relaxed border-t border-gray-200">
-                        The terminal is a simulated environment connected to the backend. You can run standard Linux commands like `ls`, `cd`, and `cat`. Currently, it operates in a restricted sandbox mode.
+                        {t.faq1Desc}
                       </div>
                     </details>
                     <details className="group border border-gray-200 rounded-lg overflow-hidden">
                       <summary className="flex items-center justify-between p-4 cursor-pointer bg-gray-50 hover:bg-gray-100 font-medium">
-                        <span>Is my data private?</span>
+                        <span>{t.faq2Title}</span>
                         <Icons.ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" />
                       </summary>
                       <div className="p-4 text-sm text-gray-600 leading-relaxed border-t border-gray-200">
-                        Yes, all conversation data is stored locally in your browser (Local Storage) and is not sent to any server other than the AI inference provider for generation.
+                        {t.faq2Desc}
                       </div>
                     </details>
                     <details className="group border border-gray-200 rounded-lg overflow-hidden">
                       <summary className="flex items-center justify-between p-4 cursor-pointer bg-gray-50 hover:bg-gray-100 font-medium">
-                        <span>Can I export my chats?</span>
+                        <span>{t.faq3Title}</span>
                         <Icons.ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" />
                       </summary>
                       <div className="p-4 text-sm text-gray-600 leading-relaxed border-t border-gray-200">
-                        Currently, you can email chats to yourself using the context menu on the sidebar. Full export features are coming soon.
+                        {t.faq3Desc}
                       </div>
                     </details>
                  </div>
 
                  <div className="pt-6 border-t border-gray-100">
-                   <label className="block text-sm font-medium text-gray-700 mb-2">Contact Support</label>
-                   <textarea rows={4} className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-black focus:ring-0 bg-gray-50" placeholder="Describe your issue..."></textarea>
+                   <label className="block text-sm font-medium text-gray-700 mb-2">{t.contactSupport}</label>
+                   <textarea rows={4} className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-black focus:ring-0 bg-gray-50" placeholder={t.describeIssue}></textarea>
                    <button onClick={onClose} className="mt-3 w-full py-2.5 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">
-                     Send Message
+                     {t.sendMessage}
                    </button>
                  </div>
                </div>
@@ -192,24 +256,40 @@ export const UserModals: React.FC = () => {
                <div className="space-y-8">
                  
                  <section>
-                   <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">General</h3>
+                   <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">{t.general}</h3>
                    <div className="space-y-4">
                      <div className="flex items-center justify-between">
                        <div>
-                         <div className="font-medium text-gray-900">Stream Responses</div>
-                         <div className="text-xs text-gray-500">Show text as it is being generated</div>
+                         <div className="font-medium text-gray-900">{t.streamResponses}</div>
+                         <div className="text-xs text-gray-500">{t.streamDesc}</div>
                        </div>
-                       <div className="w-11 h-6 bg-black rounded-full relative cursor-pointer">
-                          <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm" />
+                       <div 
+                         className={clsx("w-11 h-6 rounded-full relative cursor-pointer transition-colors", settings.streamResponses ? "bg-black" : "bg-gray-200")}
+                         onClick={() => updateSettings({ streamResponses: !settings.streamResponses })}
+                       >
+                          <motion.div 
+                            layout
+                            className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm" 
+                            initial={false}
+                            animate={{ left: settings.streamResponses ? '1.5rem' : '0.25rem' }}
+                          />
                        </div>
                      </div>
                      <div className="flex items-center justify-between">
                        <div>
-                         <div className="font-medium text-gray-900">Sound Effects</div>
-                         <div className="text-xs text-gray-500">Play subtle sounds for messages</div>
+                         <div className="font-medium text-gray-900">{t.soundEffects}</div>
+                         <div className="text-xs text-gray-500">{t.soundDesc}</div>
                        </div>
-                       <div className="w-11 h-6 bg-gray-200 rounded-full relative cursor-pointer">
-                          <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm" />
+                       <div 
+                         className={clsx("w-11 h-6 rounded-full relative cursor-pointer transition-colors", settings.soundEffects ? "bg-black" : "bg-gray-200")}
+                         onClick={() => updateSettings({ soundEffects: !settings.soundEffects })}
+                       >
+                          <motion.div 
+                            layout
+                            className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm" 
+                            initial={false}
+                            animate={{ left: settings.soundEffects ? '1.5rem' : '0.25rem' }}
+                          />
                        </div>
                      </div>
                    </div>
@@ -218,19 +298,27 @@ export const UserModals: React.FC = () => {
                  <div className="h-px bg-gray-100" />
 
                  <section>
-                   <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Data & Privacy</h3>
+                   <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">{t.dataPrivacy}</h3>
                    <div className="space-y-4">
                      <div className="flex items-center justify-between">
                        <div>
-                         <div className="font-medium text-gray-900">Training Data</div>
-                         <div className="text-xs text-gray-500">Allow conversations to be used for training</div>
+                         <div className="font-medium text-gray-900">{t.trainingData}</div>
+                         <div className="text-xs text-gray-500">{t.trainingDesc}</div>
                        </div>
-                       <div className="w-11 h-6 bg-gray-200 rounded-full relative cursor-pointer">
-                          <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm" />
+                       <div 
+                         className={clsx("w-11 h-6 rounded-full relative cursor-pointer transition-colors", settings.allowTraining ? "bg-black" : "bg-gray-200")}
+                         onClick={() => updateSettings({ allowTraining: !settings.allowTraining })}
+                       >
+                          <motion.div 
+                            layout
+                            className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm" 
+                            initial={false}
+                            animate={{ left: settings.allowTraining ? '1.5rem' : '0.25rem' }}
+                          />
                        </div>
                      </div>
                      <div className="flex items-center justify-between">
-                        <button className="text-red-600 text-sm font-medium hover:underline">Clear All Data</button>
+                        <button className="text-red-600 text-sm font-medium hover:underline">{t.clearData}</button>
                      </div>
                    </div>
                  </section>
@@ -239,7 +327,7 @@ export const UserModals: React.FC = () => {
 
                  <div className="flex justify-end">
                     <button onClick={onClose} className="px-6 py-2.5 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors">
-                      Done
+                      {t.done}
                     </button>
                  </div>
                </div>

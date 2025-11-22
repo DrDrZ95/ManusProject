@@ -49,7 +49,7 @@ export interface NewsItem {
 
 export type ModelType = 'kimi' | 'deepseek' | 'gpt-oss';
 export type ModalType = 'upgrade' | 'account' | 'help' | 'settings' | null;
-export type InputMode = 'general' | 'work_report' | 'oa_workflow' | 'project' | 'company';
+export type InputMode = 'general' | 'work_assistant' | 'oa' | 'company';
 
 // API Types
 export interface User {
@@ -58,6 +58,7 @@ export interface User {
   email: string;
   avatar?: string;
   role?: string;
+  bio?: string;
 }
 
 export interface LoginRequest {
@@ -67,10 +68,17 @@ export interface LoginRequest {
   provider?: 'google' | 'outlook' | 'credentials';
 }
 
+export interface Settings {
+  streamResponses: boolean;
+  soundEffects: boolean;
+  allowTraining: boolean;
+}
+
 export interface AppState {
   // Auth State
   isAuthenticated: boolean;
   user: User | null;
+  settings: Settings;
 
   // Chat State
   sessions: ChatSession[];
@@ -96,6 +104,8 @@ export interface AppState {
   // Actions
   login: (credentials: LoginRequest) => Promise<void>;
   logout: () => void;
+  updateUser: (updates: Partial<User>) => void;
+  updateSettings: (updates: Partial<Settings>) => void;
 
   setInput: (input: string) => void;
   addAttachment: (file: File) => Promise<void>;
@@ -128,13 +138,3 @@ export interface AppState {
   setActiveModal: (modal: ModalType) => void;
   setInputMode: (mode: InputMode) => void;
 }
-
-export const MOCK_TERMINAL_WELCOME = `
-\x1b[38;2;224;224;224mAgent-OS Terminal\x1b[0m v1.0.0
-Linux kernel 6.8.0-generic x86_64
-
-Since this module is an independent space within a Container, and due to limited resources, you can perform simple operations.
-
-Type "help" for available commands.
-
-`;

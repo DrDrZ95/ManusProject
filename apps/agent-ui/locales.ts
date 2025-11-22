@@ -21,6 +21,10 @@ export const translations = {
     languageName: "English",
     systemInstruction: "You are Agent, a highly advanced AI assistant. You are helpful, precise, and can see the user's terminal environment. When showing code, use markdown code blocks. Keep responses concise but informative.",
     
+    // Voice
+    listening: "Listening...",
+    tapToSpeak: "Tap to speak",
+
     // Context Menu & Groups
     rename: "Rename",
     delete: "Delete",
@@ -44,17 +48,15 @@ export const translations = {
 
     // Input Modes
     modeGeneral: "General",
-    modeWorkReport: "Work Progress Report",
-    modeOA: "OA Workflow",
-    modeProject: "Project Assistance",
-    modeCompany: "About the Company",
+    modeWorkAssistant: "Work Assistant",
+    modeOA: "OA",
+    modeCompany: "Company Info",
 
-    // Placeholders - Optimized & Detailed
-    placeholderGeneral: "Ask anything...",
-    placeholderWorkReport: "Draft a structured daily report summarizing key achievements, code commits, and blockers for the engineering team sync...",
-    placeholderOA: "Guide me through the internal reimbursement process for travel expenses, including category selection and approval chain...",
-    placeholderProject: "Generate a Gantt chart timeline for the Q3 migration project, outlining milestones, dependencies, and resource allocation...",
-    placeholderCompany: "Retrieve the latest organizational structure for the Product Design department and summarize the key leadership hierarchy...",
+    // Placeholders
+    placeholderGeneral: "Ask anything, or start coding...",
+    placeholderWorkAssistant: "I can help you draft emails, summarize reports, or organize your daily tasks...",
+    placeholderOA: "Need help with reimbursement flows, leave requests, or IT support tickets?",
+    placeholderCompany: "Ask about company policies, organizational structure, or cultural values...",
 
     // Login
     welcomeBack: "Welcome back",
@@ -69,7 +71,69 @@ export const translations = {
     usePhone: "Use Phone Number",
     useEmail: "Use Email / ID",
     forgotPassword: "Forgot password?",
-    rememberMe: "Remember me"
+    rememberMe: "Remember me",
+
+    // Terminal
+    terminalWelcomeMsg: `\x1b[38;2;224;224;224mAgent-OS Terminal\x1b[0m v1.0.0
+Linux kernel 6.8.0-generic x86_64
+
+Since this module is an independent space within a Container, and due to limited resources, you can perform simple operations.
+
+Type "help" for available commands.
+
+`,
+
+    // User Modals
+    // Upgrade
+    unleashPotential: "Unleash Full Potential",
+    getAccessPro: "Get access to Agent Pro with advanced reasoning and faster speeds.",
+    freePlan: "Agent Free",
+    proPlanCard: "Agent Pro",
+    recommended: "RECOMMENDED",
+    perMonth: "/mo",
+    standardSpeed: "Standard Response Speed",
+    dailyLimits: "Daily Conversation Limits",
+    accessKimi: "Access to MoonShot Basic",
+    fastSpeed: "Fast Response Speed",
+    unlimitedChats: "Unlimited Conversations",
+    accessDeepseek: "Access to Deepseek & OpenAI",
+    prioritySupport: "Priority Support",
+    upgradeBtn: "Upgrade to Pro",
+    securePayment: "Secure payment processed by Stripe. Cancel anytime.",
+    
+    // Account
+    changeAvatar: "Change Avatar",
+    avatarSize: "JPG, GIF or PNG. Max size of 800K",
+    displayName: "Display Name",
+    emailLabel: "Email Address",
+    bio: "Bio",
+    bioPlaceholder: "Tell us about yourself...",
+    saveChanges: "Save Changes",
+
+    // Help
+    needHelpTitle: "Need immediate assistance?",
+    needHelpDesc: "Our support team is available 24/7 to help you with any issues.",
+    faq1Title: "How do I use the Linux Terminal?",
+    faq1Desc: "The terminal is a simulated environment connected to the backend. You can run standard Linux commands like `ls`, `cd`, and `cat`. Currently, it operates in a restricted sandbox mode.",
+    faq2Title: "Is my data private?",
+    faq2Desc: "Yes, all conversation data is stored locally in your browser (Local Storage) and is not sent to any server other than the AI inference provider for generation.",
+    faq3Title: "Can I export my chats?",
+    faq3Desc: "Currently, you can email chats to yourself using the context menu on the sidebar. Full export features are coming soon.",
+    contactSupport: "Contact Support",
+    describeIssue: "Describe your issue...",
+    sendMessage: "Send Message",
+
+    // Settings
+    general: "General",
+    streamResponses: "Stream Responses",
+    streamDesc: "Show text as it is being generated",
+    soundEffects: "Sound Effects",
+    soundDesc: "Play subtle sounds for messages",
+    dataPrivacy: "Data & Privacy",
+    trainingData: "Training Data",
+    trainingDesc: "Allow conversations to be used for training",
+    clearData: "Clear All Data",
+    done: "Done"
   },
   zh: {
     newChat: "新对话",
@@ -91,6 +155,10 @@ export const translations = {
     modelGptOss: "OpenAI",
     languageName: "中文",
     systemInstruction: "你是 Agent，一个高度先进的人工智能助手。你乐于助人、精准，并且可以看到用户的终端环境。在显示代码时，使用 markdown 代码块。保持回答简洁但信息丰富。",
+
+    // Voice
+    listening: "正在聆听...",
+    tapToSpeak: "点击麦克风说话",
 
     // Context Menu & Groups
     rename: "重命名",
@@ -115,17 +183,15 @@ export const translations = {
 
     // Input Modes
     modeGeneral: "通用模式",
-    modeWorkReport: "工作进度汇报",
-    modeOA: "OA 工作流",
-    modeProject: "项目协助",
-    modeCompany: "关于公司",
+    modeWorkAssistant: "工作助理",
+    modeOA: "OA 系统",
+    modeCompany: "企业信息",
 
-    // Placeholders - Optimized & Detailed
-    placeholderGeneral: "问点什么...",
-    placeholderWorkReport: "起草一份结构化的日报，总结关键成就、代码提交记录以及遇到的阻碍，用于工程团队同步...",
-    placeholderOA: "引导我完成差旅费用的内部报销流程，包括类别选择和审批链条说明...",
-    placeholderProject: "为Q3迁移项目生成甘特图时间表，概述里程碑、依赖关系和资源分配...",
-    placeholderCompany: "检索产品设计部门的最新组织架构，并总结关键的领导层级体系...",
+    // Placeholders
+    placeholderGeneral: "随便问点什么，或者开始写代码...",
+    placeholderWorkAssistant: "我可以帮您起草邮件、总结日报、润色文档或规划日程...",
+    placeholderOA: "需要处理报销申请、请假流程、或提交 IT 支持工单吗？",
+    placeholderCompany: "询问关于公司规章制度、组织架构、福利政策或企业文化的问题...",
 
     // Login
     welcomeBack: "欢迎回来",
@@ -140,7 +206,69 @@ export const translations = {
     usePhone: "使用手机号登录",
     useEmail: "使用邮箱/ID登录",
     forgotPassword: "忘记密码？",
-    rememberMe: "记住我"
+    rememberMe: "记住我",
+
+    // Terminal
+    terminalWelcomeMsg: `\x1b[38;2;224;224;224mAgent-OS 终端\x1b[0m v1.0.0
+Linux 内核 6.8.0-generic x86_64
+
+由于此模块是容器内的独立空间，且资源有限，您仅可执行简单的操作。
+
+输入 "help" 查看可用命令。
+
+`,
+
+    // User Modals
+    // Upgrade
+    unleashPotential: "释放全部潜能",
+    getAccessPro: "获取 Agent Pro 权限，享受高级推理和更快的速度。",
+    freePlan: "Agent 免费版",
+    proPlanCard: "Agent 专业版",
+    recommended: "推荐",
+    perMonth: "/月",
+    standardSpeed: "标准响应速度",
+    dailyLimits: "每日对话限制",
+    accessKimi: "使用 MoonShot 基础模型",
+    fastSpeed: "极速响应",
+    unlimitedChats: "无限对话",
+    accessDeepseek: "使用 Deepseek & OpenAI",
+    prioritySupport: "优先支持",
+    upgradeBtn: "升级到专业版",
+    securePayment: "由 Stripe 提供安全支付。随时取消。",
+
+    // Account
+    changeAvatar: "更换头像",
+    avatarSize: "JPG, GIF 或 PNG。最大 800K",
+    displayName: "显示名称",
+    emailLabel: "邮箱地址",
+    bio: "个人简介",
+    bioPlaceholder: "介绍一下你自己...",
+    saveChanges: "保存更改",
+
+    // Help
+    needHelpTitle: "需要立即协助？",
+    needHelpDesc: "我们的支持团队 24/7 全天候为您解决任何问题。",
+    faq1Title: "如何使用 Linux 终端？",
+    faq1Desc: "终端是一个连接到后端的模拟环境。您可以运行标准的 Linux 命令，如 ls、cd 和 cat。目前，它在受限的沙盒模式下运行。",
+    faq2Title: "我的数据隐私吗？",
+    faq2Desc: "是的，所有对话数据都存储在您的浏览器本地（LocalStorage），除了用于生成的 AI 推理提供商外，不会发送到任何服务器。",
+    faq3Title: "我可以导出聊天记录吗？",
+    faq3Desc: "目前，您可以使用侧边栏上的上下文菜单将聊天记录通过邮件发送给自己。完整的导出功能即将推出。",
+    contactSupport: "联系支持",
+    describeIssue: "描述您的问题...",
+    sendMessage: "发送消息",
+
+    // Settings
+    general: "通用",
+    streamResponses: "流式响应",
+    streamDesc: "生成时显示文本",
+    soundEffects: "音效",
+    soundDesc: "播放微妙的消息提示音",
+    dataPrivacy: "数据与隐私",
+    trainingData: "训练数据",
+    trainingDesc: "允许使用对话进行训练",
+    clearData: "清除所有数据",
+    done: "完成"
   }
 };
 

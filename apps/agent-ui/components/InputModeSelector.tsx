@@ -17,9 +17,8 @@ export const InputModeSelector: React.FC = () => {
 
   const modes: { id: InputMode; label: string; icon: any }[] = [
     { id: 'general', label: t.modeGeneral, icon: Icons.Zap },
-    { id: 'work_report', label: t.modeWorkReport, icon: Icons.FileText },
-    { id: 'oa_workflow', label: t.modeOA, icon: Icons.GitMerge },
-    { id: 'project', label: t.modeProject, icon: Icons.Briefcase },
+    { id: 'work_assistant', label: t.modeWorkAssistant, icon: Icons.FileText },
+    { id: 'oa', label: t.modeOA, icon: Icons.GitMerge },
     { id: 'company', label: t.modeCompany, icon: Icons.Building2 },
   ];
 

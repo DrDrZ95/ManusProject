@@ -6,7 +6,7 @@ import { generateNews, shouldFetchNews } from './services/news';
 import { MOCK_SESSIONS } from './data/mockData';
 import { authApi } from './services/api';
 
-const STORAGE_KEY = 'grok-app-storage-v1';
+// Removed STORAGE_KEY to prevent persistence
 
 const createInitialSession = (): ChatSession => ({
   id: uuidv4(),
@@ -15,63 +15,58 @@ const createInitialSession = (): ChatSession => ({
   updatedAt: Date.now(),
 });
 
-// Load state from local storage
-const loadState = (): Partial<AppState> => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Hydrate with mock sessions if the user has no real sessions saved (simulating DB connection)
-      if (!parsed.sessions || parsed.sessions.length <= 1 && parsed.sessions[0].messages.length === 0) {
-          return { ...parsed, sessions: MOCK_SESSIONS, currentSessionId: MOCK_SESSIONS[0].id };
-      }
-      // Default isAuthenticated to true if missing (backward compatibility)
-      if (parsed.isAuthenticated === undefined) {
-        parsed.isAuthenticated = true;
-      }
-      return parsed;
-    }
-  } catch (e) {
-    console.error("Failed to load state", e);
-  }
-  // Default Fallback: Load Mock Data
-  return {
-      sessions: MOCK_SESSIONS,
-      currentSessionId: MOCK_SESSIONS[0].id,
-      isAuthenticated: true // Default to true as per requirements
-  };
+// Default initial state without loading from localStorage
+const initialState = {
+  sessions: MOCK_SESSIONS,
+  currentSessionId: MOCK_SESSIONS[0].id,
+  isAuthenticated: true // Default to true for simulation
 };
-
-const initialState = loadState();
 
 export const useStore = create<AppState>((set, get) => {
   return {
-    isAuthenticated: initialState.isAuthenticated ?? true,
-    user: initialState.user || null,
-    sessions: initialState.sessions || MOCK_SESSIONS,
-    groups: initialState.groups || [],
-    currentSessionId: initialState.currentSessionId || MOCK_SESSIONS[0].id,
+    isAuthenticated: initialState.isAuthenticated,
+    user: {
+      id: 'user-123',
+      name: 'Agent User',
+      email: 'user@example.com',
+      avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=Felix',
+      role: 'admin',
+      bio: ''
+    },
+    settings: {
+      streamResponses: true,
+      soundEffects: true,
+      allowTraining: false
+    },
+    sessions: initialState.sessions,
+    groups: [],
+    currentSessionId: initialState.currentSessionId,
     input: '',
     attachments: [],
     isLoading: false,
-    selectedModel: (initialState.selectedModel as any) || 'kimi',
-    isSidebarOpen: initialState.isSidebarOpen ?? true,
-    isTerminalOpen: initialState.isTerminalOpen ?? true,
-    terminalWidth: initialState.terminalWidth || 380,
-    language: initialState.language || 'en',
+    selectedModel: 'kimi',
+    isSidebarOpen: true,
+    isTerminalOpen: true,
+    terminalWidth: 380,
+    language: 'en',
     activeModal: null,
-    inputMode: (initialState.inputMode as any) || 'general',
+    inputMode: 'general',
     
-    news: initialState.news || [],
-    lastNewsFetch: initialState.lastNewsFetch || 0,
+    news: [],
+    lastNewsFetch: 0,
 
     login: async (credentials: LoginRequest) => {
       try {
         const user = await authApi.login(credentials);
-        set({ isAuthenticated: true, user });
+        // Preserve existing user settings/avatar if re-logging in within session
+        const existingUser = get().user;
+        set({ 
+          isAuthenticated: true, 
+          user: { ...user, ...existingUser, ...user } // merge but prioritize API response initially, realistically
+        });
       } catch (error) {
         console.error("Login failed", error);
-        throw error; // Re-throw for UI to handle
+        throw error; 
       }
     },
     
@@ -80,6 +75,14 @@ export const useStore = create<AppState>((set, get) => {
       set({ isAuthenticated: false, user: null });
     },
 
+    updateUser: (updates) => set(state => ({
+      user: state.user ? { ...state.user, ...updates } : null
+    })),
+
+    updateSettings: (updates) => set(state => ({
+      settings: { ...state.settings, ...updates }
+    })),
+
     setInput: (input) => set({ input }),
 
     addAttachment: async (file: File) => {
@@ -87,7 +90,6 @@ export const useStore = create<AppState>((set, get) => {
         const reader = new FileReader();
         reader.onload = () => {
           const base64String = reader.result as string;
-          // Extract base64 data part
           const base64Data = base64String.split(',')[1];
           
           const newAttachment: Attachment = {
@@ -170,14 +172,11 @@ export const useStore = create<AppState>((set, get) => {
     selectSession: (id) => set({ currentSessionId: id, attachments: [] }),
 
     navigateToHome: () => set((state) => {
-      // If the first session is empty (no messages), just go there.
-      // This prevents spamming "New Chat" every time user clicks logo.
       const firstSession = state.sessions[0];
       if (firstSession && firstSession.messages.length === 0) {
         return { currentSessionId: firstSession.id, input: '', attachments: [] };
       }
 
-      // Otherwise create a new one
       const newSession = createInitialSession();
       return {
         sessions: [newSession, ...state.sessions],
@@ -187,7 +186,6 @@ export const useStore = create<AppState>((set, get) => {
       };
     }),
 
-    // Group & Session Management
     createGroup: (id, title) => set((state) => {
       if (state.groups.length >= 10) return state;
       return { 
@@ -227,17 +225,9 @@ export const useStore = create<AppState>((set, get) => {
       return { sessions: newSessions, currentSessionId: nextSessionId };
     }),
 
-    // News Logic
     fetchNews: () => set((state) => {
-      if (shouldFetchNews(state.lastNewsFetch)) {
+      if (shouldFetchNews(state.lastNewsFetch) || state.news.length === 0) {
         return {
-          news: generateNews(),
-          lastNewsFetch: Date.now()
-        };
-      }
-      // If existing news is empty for some reason, fetch anyway
-      if (state.news.length === 0) {
-         return {
           news: generateNews(),
           lastNewsFetch: Date.now()
         };
@@ -256,22 +246,4 @@ export const useStore = create<AppState>((set, get) => {
   };
 });
 
-// Subscribe to store changes and persist to localStorage
-useStore.subscribe((state) => {
-  const stateToSave: Partial<AppState> = {
-    isAuthenticated: state.isAuthenticated, // Persist Auth State
-    user: state.user,
-    sessions: state.sessions,
-    groups: state.groups,
-    currentSessionId: state.currentSessionId,
-    terminalWidth: state.terminalWidth,
-    language: state.language,
-    selectedModel: state.selectedModel,
-    isSidebarOpen: state.isSidebarOpen,
-    isTerminalOpen: state.isTerminalOpen,
-    news: state.news,
-    lastNewsFetch: state.lastNewsFetch,
-    inputMode: state.inputMode
-  };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
-});
+// No subscription to localStorage to ensure clear on refresh

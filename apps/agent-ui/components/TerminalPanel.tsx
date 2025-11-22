@@ -1,10 +1,10 @@
+
 import React, { useEffect, useRef } from 'react';
 import { Terminal } from 'xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebglAddon } from '@xterm/addon-webgl';
 import { Icons } from './icons';
 import { useStore } from '../store';
-import { MOCK_TERMINAL_WELCOME } from '../types';
 import { translations } from '../locales';
 
 export const TerminalPanel: React.FC = () => {
@@ -67,7 +67,8 @@ export const TerminalPanel: React.FC = () => {
     term.open(terminalRef.current);
     fitAddon.fit();
     
-    term.write(MOCK_TERMINAL_WELCOME);
+    // Use the localized welcome message from translations
+    term.write(t.terminalWelcomeMsg);
     term.write('\r\n$ ');
 
     xtermRef.current = term;
@@ -98,7 +99,7 @@ export const TerminalPanel: React.FC = () => {
     return () => {
       term.dispose();
     };
-  }, []);
+  }, []); // Initialize once. If language changes, terminal needs remount to update welcome text.
 
   useEffect(() => {
     const handleResize = () => {
