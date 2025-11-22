@@ -23,6 +23,9 @@ These packages are required for the application to run in a production environme
 | `@xterm/addon-fit` | `^0.10.0` | Xterm.js addon for fitting the terminal to the container. |
 | `xterm` | `^5.3.0` | A terminal emulator for the browser. |
 | `@xterm/addon-webgl` | `^0.18.0` | Xterm.js addon for WebGL rendering. |
+| **`react-router-dom`** | **`^6.22.3`** | **DOM bindings for React Router (for navigation).** |
+| **`react-router`** | **`^6.22.3`** | **Core routing library for React.** |
+| **`@remix-run/router`** | **`^1.15.3`** | **The low-level routing core used by React Router.** |
 
 ## Development Dependencies (`devDependencies`)
 
