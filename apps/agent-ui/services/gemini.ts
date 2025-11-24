@@ -1,8 +1,8 @@
 
-import { ModelType, Attachment } from "../types";
+import { ModelType, Attachment, InputMode } from "../types";
 
 // Simulated response sets
-const MOCK_RESPONSES = [
+const GENERAL_RESPONSES = [
   // --- English Simulations ---
   `Here is a simulated Python script that demonstrates a simple REST API using Flask:
 
@@ -108,36 +108,112 @@ function decrement() {
 \`\`\`
 
 这段代码使用了 \`<script setup>\` 语法糖，更加简洁。您可以直接将其复制到您的 Vue 项目中使用。需要我为您解释一下 \`ref\` 的原理吗？`,
+];
 
-  `**本周工作总结草案**
+const OA_WORK_RESPONSES = [
+  `### 📧 Draft Email: Project Status Update
 
-根据您的要求，我为您整理了一份简洁的周报模板：
+**Subject:** Update on Q3 Development Milestones
 
-### 📅 本周工作重点
-1.  **核心功能开发**：完成了用户登录模块的 OAuth 2.0 对接，支持 Google 和 Outlook 第三方登录。
-2.  **性能优化**：重构了前端长列表渲染逻辑，首屏加载速度提升了 **40%**。
-3.  **Bug 修复**：解决了移动端侧边栏偶尔无法收起的问题 (Ticket #402)。
+Hi Team,
 
-### 🚀 下周计划
-*   启动支付网关（Stripe）的集成调研。
-*   配合设计团队完成“深色模式”的 UI 走查。
+I wanted to share a quick update on our progress for the Q3 deliverables.
 
-### ⚠️ 需要支持
-*   需要后端团队提供最新的 API 接口文档，以便进行联调。
+**Highlights:**
+*   ✅ Authentication module completed.
+*   ✅ API integration with third-party vendors finalized.
+*   🔄 UI/UX testing is currently 80% complete.
 
-您看这个格式是否符合您的需求？我可以帮您进一步润色语言，使其听起来更正式。`,
+**Next Steps:**
+We are aiming to deploy the staging environment by Friday. Please review the attached documentation before our sync meeting.
 
-  `关于 **Transformer 架构**，让我用通俗易懂的方式为您解释：
+Best regards,
+[Your Name]`,
 
-想象您在翻译一句话。传统的模型（如 RNN）像是一个逐字阅读的学生，读到后面可能忘了前面。
+  `### 📊 Weekly Report Summary
 
-而 **Transformer** 引入了一个核心概念：**注意力机制 (Attention Mechanism)**。
+**Key Achievements:**
+1.  **Resolved Critical Bug #402**: Fixed the memory leak issue in the main dashboard.
+2.  **Client Onboarding**: Successfully onboarded 3 new enterprise clients this week.
 
-1.  **全局视野**：它不再是一个字一个字读，而是一眼看到整句话。
-2.  **关注重点**：当它处理“苹果”这个词时，它会根据上下文判断这是“水果”还是“手机品牌”。如果句子里有“吃”，它会把更多的**注意力**分配给“水果”这个语义。
-3.  **并行计算**：因为不需要按顺序读，它可以同时处理所有单词，这使得它的训练速度比以前的模型快得多。
+**Blockers:**
+*   Waiting for the design assets for the new landing page.
 
-正是因为这种架构，才诞生了现在的 GPT、Claude 和 DeepSeek 等强大的大模型。`
+**Plan for Next Week:**
+*   Focus on performance optimization for the mobile app.`,
+  
+  `### 📋 Reimbursement Process Guide
+
+To submit your reimbursement request for the recent business trip:
+
+1.  Log in to the **OA Portal**.
+2.  Navigate to **My Requests** > **Expenses**.
+3.  Click **New Claim**.
+4.  Upload your receipts (PDF or JPG).
+5.  Select "Travel" as the category.
+6.  Submit for approval.
+
+*Note: Requests over $500 require VP approval.*`
+];
+
+const BRAINSTORM_RESPONSES = [
+  `### 💡 Brainstorming: Marketing Campaign Ideas
+
+Here are 5 creative concepts for the upcoming product launch:
+
+1.  **"Day in the Life" Series**: Short formatted videos featuring real users solving problems with our app.
+2.  **Interactive Webinar**: A live coding session showing how to build a plugin in 10 minutes.
+3.  **Community Challenge**: A "Hackathon" with prizes for the best open-source contribution.
+4.  **Influencer Takeover**: Partner with key tech influencers to manage our Twitter account for a day.
+5.  **Mystery Box**: Send physical "deployment kits" to our top 50 users.`,
+
+  `### 🧠 Mind Map: Feature Expansion
+
+**Core Core**
+*   **Security** -> 2FA, SSO, Audit Logs
+*   **Performance** -> CDN Edge, Caching, Lazy Loading
+
+**User Experience**
+*   **Mobile** -> Native App, Offline Mode
+*   **Accessibility** -> Screen Reader Support, High Contrast Mode
+
+**Integrations**
+*   **Slack** -> Notifications
+*   **GitHub** -> PR Sync
+*   **Jira** -> Ticket Creation`
+];
+
+const COMPANY_RESPONSES = [
+  `### 🏢 Company Policy: Remote Work
+
+**Overview:**
+Our company supports a "Hybrid First" approach.
+
+**Guidelines:**
+*   Employees are expected to be in the office **2 days a week** (typically Tuesday/Thursday).
+*   Remote days can be taken from any location with a stable internet connection.
+*   Core collaboration hours are **10:00 AM - 3:00 PM** regardless of location.
+
+**Equipment:**
+The company provides a stipend of $1,000 for home office setup every 2 years.`,
+
+  `### 👥 Organizational Structure
+
+**Executive Team**
+*   CEO: Jane Doe
+*   CTO: John Smith
+*   CPO: Sarah Johnson
+
+**Engineering (Reporting to CTO)**
+*   **Platform Team**: Infrastructure & DevOps
+*   **Product Team A**: User Facing Features
+*   **Product Team B**: Enterprise Solutions
+*   **Data Team**: Analytics & AI
+
+**Sales (Reporting to CRO)**
+*   Enterprise Sales
+*   Mid-Market Sales
+*   SDR Team`
 ];
 
 export const streamGeminiResponse = async (
@@ -148,14 +224,20 @@ export const streamGeminiResponse = async (
   attachments: Attachment[],
   onChunk: (text: string) => void,
   onFinish: () => void,
-  onError: (error: Error) => void
+  onError: (error: Error) => void,
+  inputMode: InputMode = 'general' // Added inputMode parameter
 ) => {
   // Simulate network latency
   await new Promise(resolve => setTimeout(resolve, 600));
 
   try {
-    // Pick a random response from the mock sets
-    const responseTemplate = MOCK_RESPONSES[Math.floor(Math.random() * MOCK_RESPONSES.length)];
+    // Pick response based on input mode
+    let responseSet = GENERAL_RESPONSES;
+    if (inputMode === 'oa_work') responseSet = OA_WORK_RESPONSES;
+    else if (inputMode === 'brainstorm') responseSet = BRAINSTORM_RESPONSES;
+    else if (inputMode === 'company') responseSet = COMPANY_RESPONSES;
+
+    const responseTemplate = responseSet[Math.floor(Math.random() * responseSet.length)];
     
     let fullText = "";
     // If there are attachments, acknowledge them

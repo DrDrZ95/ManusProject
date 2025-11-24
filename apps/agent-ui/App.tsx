@@ -30,6 +30,7 @@ const App: React.FC = () => {
   const terminalWidth = useStore(s => s.terminalWidth);
   const language = useStore(s => s.language);
   const news = useStore(s => s.news);
+  const inputMode = useStore(s => s.inputMode); // Get inputMode from store
   
   const setInput = useStore(s => s.setInput);
   const addMessage = useStore(s => s.addMessage);
@@ -181,7 +182,8 @@ const App: React.FC = () => {
           updatedSessions[sessionIndex] = { ...updatedSessions[sessionIndex], messages: msgs };
           return { sessions: updatedSessions };
        });
-      }
+      },
+      inputMode // Pass the current input mode
     );
   };
 

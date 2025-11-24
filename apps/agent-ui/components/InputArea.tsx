@@ -29,6 +29,7 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
   const addAttachment = useStore(s => s.addAttachment);
   const removeAttachment = useStore(s => s.removeAttachment);
   const inputMode = useStore(s => s.inputMode);
+  const setInputMode = useStore(s => s.setInputMode);
   
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -41,11 +42,21 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
   // Determine placeholder based on mode
   const getPlaceholder = () => {
     switch (inputMode) {
-        case 'work_assistant': return t.placeholderWorkAssistant;
-        case 'oa': return t.placeholderOA;
+        case 'brainstorm': return t.placeholderBrainstorm;
+        case 'oa_work': return t.placeholderOAWork;
         case 'company': return t.placeholderCompany;
         default: return t.placeholderGeneral;
     }
+  };
+
+  // Unified Slash Commands for both languages (Language Agnostic)
+  const getModeLabel = () => {
+     switch (inputMode) {
+        case 'brainstorm': return `/BrainStorm`;
+        case 'oa_work': return `/OA_Work`;
+        case 'company': return `/Company_Info`;
+        default: return '';
+     }
   };
 
   // Auto-resize textarea
@@ -62,6 +73,10 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
       if ((input.trim() || attachments.length > 0) && !isLoading) {
         onSend();
       }
+    }
+    // Handle deleting the mode block on backspace if input is empty
+    if (e.key === 'Backspace' && input === '' && inputMode !== 'general') {
+        setInputMode('general');
     }
   };
 
@@ -126,17 +141,40 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
                 </div>
               )}
 
-              {/* Text Area */}
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={getPlaceholder()}
-                rows={1}
-                className="w-full bg-transparent text-gray-900 placeholder-gray-400 px-4 py-4 text-[16px] resize-none outline-none max-h-[200px] overflow-y-auto scrollbar-hide"
-                style={{ minHeight: '56px' }}
-              />
+              {/* Main Input Container - Flex Row Layout */}
+              <div className="flex w-full items-start px-4 py-4 gap-2">
+                  {/* Mode Chip Block (Inline) */}
+                  {inputMode !== 'general' && (
+                     <motion.div 
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="flex-shrink-0 pt-0.5"
+                     >
+                        <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 px-2.5 py-1 rounded-md text-sm font-mono font-medium select-none border border-blue-100 cursor-default">
+                            {getModeLabel()}
+                            <button 
+                                onClick={() => setInputMode('general')}
+                                className="text-blue-400 hover:text-blue-700 rounded-full transition-colors flex items-center justify-center"
+                                title="Clear mode"
+                            >
+                                <Icons.Close className="w-3 h-3" />
+                            </button>
+                        </span>
+                     </motion.div>
+                  )}
+
+                  {/* Text Area */}
+                  <textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={getPlaceholder()}
+                    rows={1}
+                    className="flex-1 min-w-0 bg-transparent text-gray-900 placeholder-gray-400 text-[16px] resize-none outline-none overflow-y-auto scrollbar-hide py-1 leading-relaxed"
+                    style={{ minHeight: '32px', maxHeight: '200px' }}
+                  />
+              </div>
 
               {/* Actions Bar */}
               <div className="flex items-center justify-between px-2 pb-2">

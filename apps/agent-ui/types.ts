@@ -13,6 +13,7 @@ export interface Message {
   timestamp: number;
   isStreaming?: boolean;
   attachments?: Attachment[];
+  mode?: InputMode; // Added for simulation of work-mode data
 }
 
 export interface ChatSession {
@@ -49,7 +50,7 @@ export interface NewsItem {
 
 export type ModelType = 'kimi' | 'deepseek' | 'gpt-oss';
 export type ModalType = 'upgrade' | 'account' | 'help' | 'settings' | null;
-export type InputMode = 'general' | 'work_assistant' | 'oa' | 'company';
+export type InputMode = 'general' | 'brainstorm' | 'oa_work' | 'company';
 
 // API Types
 export interface User {

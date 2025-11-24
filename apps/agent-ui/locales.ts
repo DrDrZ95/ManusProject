@@ -46,17 +46,17 @@ export const translations = {
     settings: "Settings",
     signOut: "Sign Out",
 
-    // Input Modes
+    // Input Modes - Unified Labels
     modeGeneral: "General",
-    modeWorkAssistant: "Work Assistant",
-    modeOA: "OA",
-    modeCompany: "Company Info",
+    modeBrainstorm: "BrainStorm",
+    modeOAWork: "OA_Work",
+    modeCompany: "Company_Info",
 
     // Placeholders
     placeholderGeneral: "Ask anything, or start coding...",
-    placeholderWorkAssistant: "I can help you draft emails, summarize reports, or organize your daily tasks...",
-    placeholderOA: "Need help with reimbursement flows, leave requests, or IT support tickets?",
-    placeholderCompany: "Ask about company policies, organizational structure, or cultural values...",
+    placeholderBrainstorm: "Enter topic to generate ideas...",
+    placeholderOAWork: "Type your request (e.g., 'Draft email to team')...",
+    placeholderCompany: "Ask about policies or structure...",
 
     // Login
     welcomeBack: "Welcome back",
@@ -181,17 +181,17 @@ Type "help" for available commands.
     settings: "设置",
     signOut: "退出登录",
 
-    // Input Modes
+    // Input Modes - Unified Labels
     modeGeneral: "通用模式",
-    modeWorkAssistant: "工作助理",
-    modeOA: "OA 系统",
-    modeCompany: "企业信息",
+    modeBrainstorm: "BrainStorm",
+    modeOAWork: "OA_Work",
+    modeCompany: "Company_Info",
 
     // Placeholders
     placeholderGeneral: "随便问点什么，或者开始写代码...",
-    placeholderWorkAssistant: "我可以帮您起草邮件、总结日报、润色文档或规划日程...",
-    placeholderOA: "需要处理报销申请、请假流程、或提交 IT 支持工单吗？",
-    placeholderCompany: "询问关于公司规章制度、组织架构、福利政策或企业文化的问题...",
+    placeholderBrainstorm: "输入主题以生成创意...",
+    placeholderOAWork: "输入您的请求（例如：“起草发给团队的邮件”）...",
+    placeholderCompany: "询问关于政策或架构...",
 
     // Login
     welcomeBack: "欢迎回来",

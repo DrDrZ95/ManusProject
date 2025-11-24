@@ -42,7 +42,8 @@ import {
   FileText,
   GitMerge,
   Briefcase,
-  Building2
+  Building2,
+  Lightbulb
 } from 'lucide-react';
 
 export const Icons = {
@@ -88,5 +89,6 @@ export const Icons = {
   FileText: FileText,
   GitMerge: GitMerge,
   Briefcase: Briefcase,
-  Building2: Building2
+  Building2: Building2,
+  Lightbulb: Lightbulb
 };
