@@ -46,11 +46,11 @@ export const translations = {
     settings: "Settings",
     signOut: "Sign Out",
 
-    // Input Modes - Unified Labels
+    // Input Modes - Dropdown Descriptions
     modeGeneral: "General",
-    modeBrainstorm: "BrainStorm",
-    modeOAWork: "OA_Work",
-    modeCompany: "Company_Info",
+    modeBrainstorm: "Brainstorming",
+    modeOAWork: "OA / Work",
+    modeCompany: "Company Info",
 
     // Placeholders
     placeholderGeneral: "Ask anything, or start coding...",
@@ -72,6 +72,16 @@ export const translations = {
     useEmail: "Use Email / ID",
     forgotPassword: "Forgot password?",
     rememberMe: "Remember me",
+
+    // My Space
+    mySpace: "My Space",
+    remoteLinux: "Remote Linux",
+    functionUnderDev: "Function under development",
+    previewFile: "Preview File",
+    download: "Download",
+    file: "File",
+    closePreview: "Close Preview",
+    openMySpace: "Open My Space",
 
     // Terminal
     terminalWelcomeMsg: `\x1b[38;2;224;224;224mAgent-OS Terminal\x1b[0m v1.0.0
@@ -181,11 +191,11 @@ Type "help" for available commands.
     settings: "设置",
     signOut: "退出登录",
 
-    // Input Modes - Unified Labels
+    // Input Modes - Dropdown Descriptions
     modeGeneral: "通用模式",
-    modeBrainstorm: "BrainStorm",
-    modeOAWork: "OA_Work",
-    modeCompany: "Company_Info",
+    modeBrainstorm: "头脑风暴",
+    modeOAWork: "OA / 办公",
+    modeCompany: "企业信息",
 
     // Placeholders
     placeholderGeneral: "随便问点什么，或者开始写代码...",
@@ -207,6 +217,16 @@ Type "help" for available commands.
     useEmail: "使用邮箱/ID登录",
     forgotPassword: "忘记密码？",
     rememberMe: "记住我",
+
+    // My Space
+    mySpace: "我的空间",
+    remoteLinux: "远程 Linux",
+    functionUnderDev: "功能开发中",
+    previewFile: "文件预览",
+    download: "下载",
+    file: "文件",
+    closePreview: "关闭预览",
+    openMySpace: "打开我的空间",
 
     // Terminal
     terminalWelcomeMsg: `\x1b[38;2;224;224;224mAgent-OS 终端\x1b[0m v1.0.0

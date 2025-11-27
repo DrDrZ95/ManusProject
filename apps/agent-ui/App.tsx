@@ -5,7 +5,7 @@ import { useStore } from './store';
 import { Sidebar } from './components/Sidebar';
 import { InputArea } from './components/InputArea';
 import { MessageBubble } from './components/MessageBubble';
-import { TerminalPanel } from './components/TerminalPanel';
+import { MySpacePanel } from './components/MySpacePanel';
 import { NewsGrid } from './components/NewsGrid';
 import { UserModals } from './components/UserModals';
 import { LoginPage } from './components/LoginPage';
@@ -221,7 +221,8 @@ const App: React.FC = () => {
             <span className="font-bold text-lg tracking-tight text-black">Agent</span>
           </div>
           <button onClick={toggleTerminal} className={clsx("text-gray-600", isTerminalOpen && "text-black")}>
-             <Icons.Terminal className="w-5 h-5" />
+             {/* Updated to Folder icon for My Space */}
+             <Icons.Folder className="w-5 h-5" />
           </button>
        </div>
 
@@ -282,7 +283,7 @@ const App: React.FC = () => {
              style={{ width: isDragging ? terminalWidth : `${terminalWidth}px` }}
              className="w-full md:w-auto shrink-0 h-full shadow-[-10px_0_30px_rgba(0,0,0,0.05)] z-30 absolute md:relative right-0 bg-white overflow-hidden"
            >
-              <TerminalPanel />
+              <MySpacePanel />
            </div>
         </motion.div>
       )}
@@ -300,8 +301,9 @@ const App: React.FC = () => {
                onClick={toggleTerminal}
                className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-500 hover:text-black hover:border-gray-400 transition-all shadow-sm"
              >
-               <Icons.Terminal className="w-4 h-4" />
-               <span>{t.openTerminal}</span>
+               {/* Use Folder icon for My Space button */}
+               <Icons.Folder className="w-4 h-4" />
+               <span>{t.mySpace}</span>
              </button>
          </motion.div>
       )}

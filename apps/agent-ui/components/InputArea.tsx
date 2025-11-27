@@ -49,12 +49,12 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
     }
   };
 
-  // Unified Slash Commands for both languages (Language Agnostic)
+  // Unified Simplified Slash Commands (Language Agnostic)
   const getModeLabel = () => {
      switch (inputMode) {
-        case 'brainstorm': return `/BrainStorm`;
+        case 'brainstorm': return `/Brainstorm`;
         case 'oa_work': return `/OA_Work`;
-        case 'company': return `/Company_Info`;
+        case 'company': return `/Company`;
         default: return '';
      }
   };

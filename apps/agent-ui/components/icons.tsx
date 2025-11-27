@@ -43,7 +43,14 @@ import {
   GitMerge,
   Briefcase,
   Building2,
-  Lightbulb
+  Lightbulb,
+  File,
+  FileImage,
+  FileCode,
+  Download,
+  Eye,
+  Monitor,
+  Image
 } from 'lucide-react';
 
 export const Icons = {
@@ -90,5 +97,12 @@ export const Icons = {
   GitMerge: GitMerge,
   Briefcase: Briefcase,
   Building2: Building2,
-  Lightbulb: Lightbulb
+  Lightbulb: Lightbulb,
+  File: File,
+  FileImage: FileImage,
+  FileCode: FileCode,
+  Download: Download,
+  Preview: Eye,
+  Remote: Monitor,
+  Image: Image
 };

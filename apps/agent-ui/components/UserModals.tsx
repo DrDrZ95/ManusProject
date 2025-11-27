@@ -45,15 +45,21 @@ const ModalContent = ({ children, title, icon: Icon }: { children: React.ReactNo
   </motion.div>
 );
 
+// Optimized Anime & Cartoon Style Avatars
 const CARTOON_AVATARS = [
   'https://api.dicebear.com/9.x/adventurer/svg?seed=Felix',
   'https://api.dicebear.com/9.x/adventurer/svg?seed=Coco',
-  'https://api.dicebear.com/9.x/adventurer/svg?seed=Max',
-  'https://api.dicebear.com/9.x/fun-emoji/svg?seed=Spooky',
-  'https://api.dicebear.com/9.x/bottts/svg?seed=Robot',
-  'https://api.dicebear.com/9.x/avataaars/svg?seed=Milo',
+  'https://api.dicebear.com/9.x/notionists/svg?seed=Bear',
+  'https://api.dicebear.com/9.x/notionists/svg?seed=Cookie',
   'https://api.dicebear.com/9.x/avataaars/svg?seed=Zoe',
-  'https://api.dicebear.com/9.x/big-smile/svg?seed=Happy'
+  'https://api.dicebear.com/9.x/micah/svg?seed=Leo',
+  'https://api.dicebear.com/9.x/micah/svg?seed=Callie',
+  'https://api.dicebear.com/9.x/big-smile/svg?seed=Happy',
+  'https://api.dicebear.com/9.x/bottts/svg?seed=Robot',
+  'https://api.dicebear.com/9.x/fun-emoji/svg?seed=Spooky',
+  // Anime-ish styles using other collections or seeds
+  'https://api.dicebear.com/9.x/adventurer/svg?seed=Saitama', 
+  'https://api.dicebear.com/9.x/micah/svg?seed=Nezuko' 
 ];
 
 export const UserModals: React.FC = () => {
@@ -133,39 +139,60 @@ export const UserModals: React.FC = () => {
               <div className="space-y-6">
                 <div className="flex items-center gap-6 pb-6 border-b border-gray-100">
                   <div className="relative group cursor-pointer" onClick={() => setIsSelectingAvatar(!isSelectingAvatar)}>
-                    <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden shadow-sm border border-gray-200">
+                    <motion.div 
+                      layoutId="current-avatar"
+                      className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden shadow-sm border-4 border-white ring-1 ring-gray-200"
+                    >
                        <img src={user?.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    </motion.div>
+                    <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <Icons.Edit className="w-6 h-6 text-white" />
                     </div>
                   </div>
-                  <div>
-                    <button onClick={() => setIsSelectingAvatar(!isSelectingAvatar)} className="text-sm font-medium text-blue-600 hover:underline">{t.changeAvatar}</button>
+                  <div className="flex-1">
+                    <button onClick={() => setIsSelectingAvatar(!isSelectingAvatar)} className="text-base font-semibold text-black hover:underline flex items-center gap-2">
+                        {t.changeAvatar}
+                        <Icons.ChevronDown className={clsx("w-4 h-4 transition-transform", isSelectingAvatar && "rotate-180")} />
+                    </button>
                     <div className="text-xs text-gray-400 mt-1">{t.avatarSize}</div>
                   </div>
                 </div>
 
+                <AnimatePresence>
                 {isSelectingAvatar && (
                     <motion.div 
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
-                        className="grid grid-cols-4 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200"
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
                     >
-                        {CARTOON_AVATARS.map((avatarUrl, idx) => (
-                            <button 
-                                key={idx}
-                                onClick={() => { updateUser({ avatar: avatarUrl }); setIsSelectingAvatar(false); }}
-                                className={clsx(
-                                    "aspect-square rounded-lg overflow-hidden border-2 transition-all hover:scale-105",
-                                    user?.avatar === avatarUrl ? "border-black ring-2 ring-black/20" : "border-transparent hover:border-gray-300"
-                                )}
-                            >
-                                <img src={avatarUrl} alt={`Avatar ${idx}`} className="w-full h-full object-cover" />
-                            </button>
-                        ))}
+                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-200 mb-6">
+                            {CARTOON_AVATARS.map((avatarUrl, idx) => (
+                                <button 
+                                    key={idx}
+                                    onClick={() => { updateUser({ avatar: avatarUrl }); }}
+                                    className="relative aspect-square rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all group focus:outline-none"
+                                >
+                                    <img src={avatarUrl} alt={`Avatar ${idx}`} className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-300" />
+                                    
+                                    {/* Selected State */}
+                                    {user?.avatar === avatarUrl && (
+                                        <motion.div 
+                                            layoutId="avatar-selection-ring"
+                                            className="absolute inset-0 border-4 border-black rounded-xl"
+                                            initial={false}
+                                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                        />
+                                    )}
+                                    
+                                    {/* Hover State */}
+                                    <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </button>
+                            ))}
+                        </div>
                     </motion.div>
                 )}
+                </AnimatePresence>
 
                 <div className="grid gap-6">
                   <div>
@@ -174,7 +201,7 @@ export const UserModals: React.FC = () => {
                         type="text" 
                         value={tempName}
                         onChange={(e) => setTempName(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-black focus:ring-0 bg-gray-50" 
+                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-black focus:ring-0 bg-gray-50 transition-all" 
                     />
                   </div>
                   <div>
@@ -187,14 +214,14 @@ export const UserModals: React.FC = () => {
                         rows={3} 
                         value={tempBio}
                         onChange={(e) => setTempBio(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-black focus:ring-0 bg-gray-50" 
+                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-black focus:ring-0 bg-gray-50 transition-all" 
                         placeholder={t.bioPlaceholder}
                     />
                   </div>
                 </div>
 
                 <div className="flex justify-end pt-4">
-                  <button onClick={handleSaveProfile} className="px-6 py-2.5 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors">
+                  <button onClick={handleSaveProfile} className="px-6 py-2.5 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                     {t.saveChanges}
                   </button>
                 </div>
