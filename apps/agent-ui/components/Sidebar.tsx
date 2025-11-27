@@ -93,7 +93,18 @@ const ContextMenu = ({
   );
 };
 
-const SessionItem = ({ 
+interface SessionItemProps {
+  session: ChatSession;
+  isActive: boolean;
+  onSelect: () => void;
+  onContextMenu: (e: React.MouseEvent, session: ChatSession) => void;
+  isEditing: boolean;
+  editValue: string;
+  setEditValue: (v: string) => void;
+  onEditSubmit: () => void;
+}
+
+const SessionItem: React.FC<SessionItemProps> = ({ 
   session, 
   isActive, 
   onSelect, 
@@ -102,18 +113,9 @@ const SessionItem = ({
   editValue,
   setEditValue,
   onEditSubmit
-}: { 
-  session: ChatSession; 
-  isActive: boolean; 
-  onSelect: () => void; 
-  onContextMenu: (e: React.MouseEvent, session: ChatSession) => void;
-  isEditing: boolean;
-  editValue: string;
-  setEditValue: (v: string) => void;
-  onEditSubmit: () => void;
 }) => {
   return (
-    <div className="group relative">
+    <div className="group relative pl-2">
         {isEditing ? (
             <div className="px-2 py-1">
                  <input
@@ -131,19 +133,19 @@ const SessionItem = ({
                 <button
                     onClick={onSelect}
                     className={clsx(
-                    "w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-200 relative overflow-hidden",
+                    "w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 relative overflow-hidden",
                     isActive 
                         ? "bg-white text-black shadow-sm border border-gray-200 font-medium" 
-                        : "text-gray-600 hover:bg-gray-200/50 hover:text-black"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-black"
                     )}
                     onContextMenu={(e) => onContextMenu(e, session)}
                 >
-                    <div className="flex items-center gap-3 relative z-10">
-                    <Icons.Chat className={clsx("w-4 h-4 shrink-0", isActive ? "text-black" : "text-gray-400")} />
-                    <span className="truncate flex-1 pr-6">{session.title}</span>
+                    <div className="flex items-center gap-2 relative z-10">
+                    {/* Removed fixed Chat Icon here for cleaner list look */}
+                    <span className="truncate flex-1 pr-4">{session.title}</span>
                     </div>
                     {isActive && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-black rounded-r-full" />
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-black rounded-r-full" />
                     )}
                 </button>
                 {/* More Button (visible on hover) */}
@@ -154,7 +156,7 @@ const SessionItem = ({
                         isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                     )}
                 >
-                    <Icons.More className="w-4 h-4" />
+                    <Icons.More className="w-3.5 h-3.5" />
                 </button>
             </>
         )}
@@ -162,19 +164,7 @@ const SessionItem = ({
   );
 };
 
-const GroupItem = ({
-  group,
-  sessions,
-  currentSessionId,
-  onSelectSession,
-  onToggleCollapse,
-  onContextMenuSession,
-  onContextMenuGroup,
-  editingId,
-  editValue,
-  setEditValue,
-  onEditSubmit
-}: {
+interface GroupItemProps {
   group: Group;
   sessions: ChatSession[];
   currentSessionId: string | null;
@@ -186,11 +176,25 @@ const GroupItem = ({
   editValue: string;
   setEditValue: (v: string) => void;
   onEditSubmit: () => void;
+}
+
+const GroupItem: React.FC<GroupItemProps> = ({
+  group,
+  sessions,
+  currentSessionId,
+  onSelectSession,
+  onToggleCollapse,
+  onContextMenuSession,
+  onContextMenuGroup,
+  editingId,
+  editValue,
+  setEditValue,
+  onEditSubmit
 }) => {
     const isEditingGroup = editingId === group.id;
 
     return (
-        <div className="mb-2">
+        <div className="mb-1">
             {isEditingGroup ? (
                 <div className="px-2 py-1">
                     <input
@@ -205,13 +209,13 @@ const GroupItem = ({
                 </div>
             ) : (
                 <div 
-                    className="flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-gray-500 hover:text-black group cursor-pointer select-none"
+                    className="flex items-center justify-between px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-black group cursor-pointer select-none"
                     onContextMenu={(e) => onContextMenuGroup(e, group)}
                 >
-                    <div className="flex items-center gap-1 flex-1" onClick={() => onToggleCollapse(group.id)}>
+                    <div className="flex items-center gap-1.5 flex-1" onClick={() => onToggleCollapse(group.id)}>
                         {group.collapsed ? <Icons.ChevronRight className="w-3 h-3" /> : <Icons.ChevronDown className="w-3 h-3" />}
-                        <Icons.Folder className={clsx("w-3 h-3 ml-1", sessions.length > 0 ? "text-gray-600" : "text-gray-400")} />
-                        <span className="truncate ml-1">{group.title}</span>
+                        <Icons.Folder className={clsx("w-3.5 h-3.5", sessions.length > 0 ? "text-gray-600" : "text-gray-400")} />
+                        <span className="truncate">{group.title}</span>
                         <span className="text-gray-400 font-normal ml-1">({sessions.length})</span>
                     </div>
                     <button 
@@ -224,7 +228,7 @@ const GroupItem = ({
             )}
             
             {!group.collapsed && (
-                <div className="space-y-0.5 ml-4 pl-2 border-l border-gray-200/50">
+                <div className="space-y-0.5 ml-[1.15rem] border-l border-gray-200">
                     {sessions.map(session => (
                          <SessionItem 
                             key={session.id}
@@ -239,7 +243,7 @@ const GroupItem = ({
                          />
                     ))}
                     {sessions.length === 0 && (
-                        <div className="px-3 py-2 text-xs text-gray-400 italic ml-1">Empty</div>
+                        <div className="px-3 py-2 text-xs text-gray-400 italic ml-2">Empty</div>
                     )}
                 </div>
             )}
@@ -264,6 +268,7 @@ export const Sidebar: React.FC = () => {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [isChatsCollapsed, setIsChatsCollapsed] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -452,55 +457,66 @@ export const Sidebar: React.FC = () => {
           {/* Main List */}
           <div className="flex-1 overflow-y-auto px-3 min-w-[280px] pb-4 custom-scrollbar">
              
-             {/* Groups */}
+             {/* PROJECTS Section */}
              <div className="mb-4">
                  <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-3 mb-2 flex justify-between items-center">
                     <span>{t.groups}</span>
                     <span className="bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full text-[9px]">{store.groups.length}/10</span>
                  </div>
-                 {groupedSessions.map(({ group, sessions }) => (
-                     <GroupItem
-                        key={group.id}
-                        group={group}
-                        sessions={sessions}
-                        currentSessionId={store.currentSessionId}
-                        onSelectSession={store.selectSession}
-                        onToggleCollapse={(id) => store.updateGroup(id, { collapsed: !group.collapsed })}
-                        onContextMenuSession={handleContextMenuSession}
-                        onContextMenuGroup={handleContextMenuGroup}
-                        editingId={editingId}
-                        editValue={editValue}
-                        setEditValue={setEditValue}
-                        onEditSubmit={handleRenameSubmit}
-                     />
-                 ))}
-             </div>
-
-             {/* Ungrouped / Recent */}
-             <div>
-                <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-3 mb-2">
-                    {t.recent}
-                </div>
-                <div className="space-y-0.5">
-                    {ungroupedSessions.map(session => (
-                        <SessionItem
-                            key={session.id}
-                            session={session}
-                            isActive={session.id === store.currentSessionId}
-                            onSelect={() => store.selectSession(session.id)}
-                            onContextMenu={handleContextMenuSession}
-                            isEditing={editingId === session.id}
+                 {/* Projects Vertical Line Container */}
+                 <div className="border-l-2 border-gray-100 ml-3 pl-1">
+                     {groupedSessions.map(({ group, sessions }) => (
+                         <GroupItem
+                            key={group.id}
+                            group={group}
+                            sessions={sessions}
+                            currentSessionId={store.currentSessionId}
+                            onSelectSession={store.selectSession}
+                            onToggleCollapse={(id) => store.updateGroup(id, { collapsed: !group.collapsed })}
+                            onContextMenuSession={handleContextMenuSession}
+                            onContextMenuGroup={handleContextMenuGroup}
+                            editingId={editingId}
                             editValue={editValue}
                             setEditValue={setEditValue}
                             onEditSubmit={handleRenameSubmit}
-                        />
-                    ))}
-                    {ungroupedSessions.length === 0 && groupedSessions.length === 0 && (
-                         <div className="px-3 py-4 text-center text-sm text-gray-400">
-                            No chats yet.
-                         </div>
-                    )}
+                         />
+                     ))}
+                 </div>
+             </div>
+
+             {/* CHATS Section (Collapsible) */}
+             <div>
+                <div 
+                    className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-3 mb-2 flex items-center justify-between cursor-pointer hover:text-gray-600"
+                    onClick={() => setIsChatsCollapsed(!isChatsCollapsed)}
+                >
+                    <span>{t.recent}</span>
+                    {isChatsCollapsed ? <Icons.ChevronRight className="w-3 h-3" /> : <Icons.ChevronDown className="w-3 h-3" />}
                 </div>
+                
+                {!isChatsCollapsed && (
+                    /* Chats Vertical Line Container */
+                    <div className="border-l-2 border-gray-100 ml-3 pl-1 space-y-0.5">
+                        {ungroupedSessions.map(session => (
+                            <SessionItem
+                                key={session.id}
+                                session={session}
+                                isActive={session.id === store.currentSessionId}
+                                onSelect={() => store.selectSession(session.id)}
+                                onContextMenu={handleContextMenuSession}
+                                isEditing={editingId === session.id}
+                                editValue={editValue}
+                                setEditValue={setEditValue}
+                                onEditSubmit={handleRenameSubmit}
+                            />
+                        ))}
+                        {ungroupedSessions.length === 0 && groupedSessions.length === 0 && (
+                             <div className="px-3 py-4 text-center text-sm text-gray-400">
+                                No chats yet.
+                             </div>
+                        )}
+                    </div>
+                )}
              </div>
           </div>
 

@@ -6,7 +6,7 @@ import { Icons } from './icons';
 import clsx from 'clsx';
 import { translations } from '../locales';
 
-const ModalBackdrop = ({ children, onClose }: { children: React.ReactNode; onClose: () => void }) => (
+const ModalBackdrop: React.FC<{ children: React.ReactNode; onClose: () => void }> = ({ children, onClose }) => (
   <motion.div 
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
@@ -18,7 +18,7 @@ const ModalBackdrop = ({ children, onClose }: { children: React.ReactNode; onClo
   </motion.div>
 );
 
-const ModalContent = ({ children, title, icon: Icon }: { children: React.ReactNode; title: string; icon?: any }) => (
+const ModalContent: React.FC<{ children: React.ReactNode; title: string; icon?: any }> = ({ children, title, icon: Icon }) => (
   <motion.div 
     initial={{ scale: 0.95, opacity: 0, y: 20 }}
     animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -45,21 +45,22 @@ const ModalContent = ({ children, title, icon: Icon }: { children: React.ReactNo
   </motion.div>
 );
 
-// Optimized Anime & Cartoon Style Avatars
+// Optimized Cute Anime Style Avatars (Lorelei style with explicit cuteness parameters)
+// parameters: &eyes=variant02,variant04... selects larger/cuter eyes
+const AVATAR_PARAMS = "&eyes=variant02,variant04,variant09,variant12,variant14&eyebrows=variant01,variant02,variant03,variant04&mouth=happy01,happy02,happy08,smile01";
 const CARTOON_AVATARS = [
-  'https://api.dicebear.com/9.x/adventurer/svg?seed=Felix',
-  'https://api.dicebear.com/9.x/adventurer/svg?seed=Coco',
-  'https://api.dicebear.com/9.x/notionists/svg?seed=Bear',
-  'https://api.dicebear.com/9.x/notionists/svg?seed=Cookie',
-  'https://api.dicebear.com/9.x/avataaars/svg?seed=Zoe',
-  'https://api.dicebear.com/9.x/micah/svg?seed=Leo',
-  'https://api.dicebear.com/9.x/micah/svg?seed=Callie',
-  'https://api.dicebear.com/9.x/big-smile/svg?seed=Happy',
-  'https://api.dicebear.com/9.x/bottts/svg?seed=Robot',
-  'https://api.dicebear.com/9.x/fun-emoji/svg?seed=Spooky',
-  // Anime-ish styles using other collections or seeds
-  'https://api.dicebear.com/9.x/adventurer/svg?seed=Saitama', 
-  'https://api.dicebear.com/9.x/micah/svg?seed=Nezuko' 
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Milo${AVATAR_PARAMS}`,
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Sasha${AVATAR_PARAMS}`,
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Midnight${AVATAR_PARAMS}`,
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Luna${AVATAR_PARAMS}`,
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Oliver${AVATAR_PARAMS}`,
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Coco${AVATAR_PARAMS}`,
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Kitty${AVATAR_PARAMS}`,
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Leo${AVATAR_PARAMS}`,
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Amara${AVATAR_PARAMS}`,
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Willow${AVATAR_PARAMS}`,
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Daisy${AVATAR_PARAMS}`,
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Jack${AVATAR_PARAMS}`
 ];
 
 export const UserModals: React.FC = () => {

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -16,13 +15,13 @@ interface MessageBubbleProps {
   isLast: boolean;
 }
 
-const CodeBlock = ({ language, children }: { language: string, children: string }) => {
+const CodeBlock = ({ language, children }: { language: string, children?: React.ReactNode }) => {
   const [copied, setCopied] = useState(false);
   const lang = useStore(s => s.language);
   const t = translations[lang];
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(children);
+    navigator.clipboard.writeText(String(children));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -51,7 +50,7 @@ const CodeBlock = ({ language, children }: { language: string, children: string 
           padding: '1rem',
         }}
       >
-        {children}
+        {String(children).replace(/\n$/, '')}
       </SyntaxHighlighter>
     </div>
   );
@@ -120,7 +119,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast })
                       code({ node, inline, className, children, ...props }: any) {
                         const match = /language-(\w+)/.exec(className || '');
                         return !inline && match ? (
-                          <CodeBlock language={match[1]}>{String(children).replace(/\n$/, '')}</CodeBlock>
+                          <CodeBlock language={match[1]}>{children}</CodeBlock>
                         ) : (
                           <code className={className} {...props}>
                             {children}

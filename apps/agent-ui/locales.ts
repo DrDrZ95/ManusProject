@@ -2,9 +2,9 @@
 export const translations = {
   en: {
     newChat: "New chat",
-    newGroup: "New Group",
-    recent: "Recent",
-    groups: "Groups",
+    newGroup: "New Project",
+    recent: "Chats",
+    groups: "Projects",
     user: "User",
     proPlan: "Pro Plan",
     grokIntroTitle: "Agent",
@@ -29,15 +29,15 @@ export const translations = {
     rename: "Rename",
     delete: "Delete",
     emailChat: "Email Chat",
-    moveToGroup: "Move to Group",
-    removeFromGroup: "Remove from Group",
-    createGroup: "Create Group",
-    groupNamePlaceholder: "Group Name",
-    untitledGroup: "Untitled Group",
-    groupLimitReached: "Group limit reached (max 10)",
+    moveToGroup: "Move to Project",
+    removeFromGroup: "Remove from Project",
+    createGroup: "Create Project",
+    groupNamePlaceholder: "Project Name",
+    untitledGroup: "Untitled Project",
+    groupLimitReached: "Project limit reached (max 10)",
     confirmDelete: "Are you sure you want to delete this?",
-    deleteGroupWarning: "Deleting a group will move its chats to Recent.",
-    ungrouped: "Ungrouped",
+    deleteGroupWarning: "Deleting a project will move its chats to the main list.",
+    ungrouped: "No Project",
 
     // User Menu
     upgradeSubscription: "Upgrade Subscription",
@@ -49,7 +49,7 @@ export const translations = {
     // Input Modes - Dropdown Descriptions
     modeGeneral: "General",
     modeBrainstorm: "Brainstorming",
-    modeOAWork: "OA / Work",
+    modeOAWork: "OA / Work Assistant",
     modeCompany: "Company Info",
 
     // Placeholders
@@ -82,6 +82,9 @@ export const translations = {
     file: "File",
     closePreview: "Close Preview",
     openMySpace: "Open My Space",
+    itemsSelected: "Selected",
+    deleteSelected: "Delete Selected",
+    confirmBatchDelete: "Are you sure you want to delete these files? This action cannot be undone.",
 
     // Terminal
     terminalWelcomeMsg: `\x1b[38;2;224;224;224mAgent-OS Terminal\x1b[0m v1.0.0
@@ -147,9 +150,9 @@ Type "help" for available commands.
   },
   zh: {
     newChat: "新对话",
-    newGroup: "新建分组",
-    recent: "最近",
-    groups: "分组",
+    newGroup: "新建项目",
+    recent: "对话列表",
+    groups: "项目",
     user: "用户",
     proPlan: "专业版",
     grokIntroTitle: "Agent",
@@ -174,15 +177,15 @@ Type "help" for available commands.
     rename: "重命名",
     delete: "删除",
     emailChat: "邮件发送",
-    moveToGroup: "移动到分组",
-    removeFromGroup: "移出分组",
-    createGroup: "创建分组",
-    groupNamePlaceholder: "分组名称",
-    untitledGroup: "未命名分组",
-    groupLimitReached: "分组数量已达上限 (10)",
+    moveToGroup: "移动到项目",
+    removeFromGroup: "移出项目",
+    createGroup: "创建项目",
+    groupNamePlaceholder: "项目名称",
+    untitledGroup: "未命名项目",
+    groupLimitReached: "项目数量已达上限 (10)",
     confirmDelete: "确定要删除吗？",
-    deleteGroupWarning: "删除分组后，对话将移动到“最近”列表。",
-    ungrouped: "未分组",
+    deleteGroupWarning: "删除项目后，对话将移动到主列表。",
+    ungrouped: "未分类",
 
     // User Menu
     upgradeSubscription: "升级订阅",
@@ -194,7 +197,7 @@ Type "help" for available commands.
     // Input Modes - Dropdown Descriptions
     modeGeneral: "通用模式",
     modeBrainstorm: "头脑风暴",
-    modeOAWork: "OA / 办公",
+    modeOAWork: "OA / 工作助理",
     modeCompany: "企业信息",
 
     // Placeholders
@@ -227,6 +230,9 @@ Type "help" for available commands.
     file: "文件",
     closePreview: "关闭预览",
     openMySpace: "打开我的空间",
+    itemsSelected: "项已选择",
+    deleteSelected: "删除所选",
+    confirmBatchDelete: "确定要删除这些文件吗？此操作无法撤销。",
 
     // Terminal
     terminalWelcomeMsg: `\x1b[38;2;224;224;224mAgent-OS 终端\x1b[0m v1.0.0

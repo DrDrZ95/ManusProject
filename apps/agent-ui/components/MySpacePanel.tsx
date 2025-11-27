@@ -16,17 +16,63 @@ const MOCK_FILES = [
 ];
 
 export const MySpacePanel: React.FC = () => {
-  const isTerminalOpen = useStore((s) => s.isTerminalOpen); // Reusing isTerminalOpen for right panel visibility
+  const isTerminalOpen = useStore((s) => s.isTerminalOpen);
   const toggleTerminal = useStore((s) => s.toggleTerminal);
   const language = useStore(s => s.language);
   const t = translations[language];
 
   const [previewFile, setPreviewFile] = useState<typeof MOCK_FILES[0] | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [files, setFiles] = useState(MOCK_FILES);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   if (!isTerminalOpen) return null;
 
   const handleRemoteClick = () => {
     alert(t.functionUnderDev);
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(i => i !== id) 
+        : [...prev, id]
+    );
+  };
+
+  const handleDoubleClick = (file: typeof MOCK_FILES[0]) => {
+    setPreviewFile(file);
+  };
+
+  // Triggered via Hover Button
+  const handlePreviewClick = (e: React.MouseEvent, file: typeof MOCK_FILES[0]) => {
+    e.stopPropagation();
+    setPreviewFile(file);
+  };
+
+  // Triggered via Hover Button
+  const handleDownloadClick = (e: React.MouseEvent, file: typeof MOCK_FILES[0]) => {
+    e.stopPropagation();
+    // Simulate download
+    const link = document.createElement('a');
+    link.href = '#';
+    link.download = file.name;
+    // visual feedback
+    alert(`Downloading ${file.name}... (Simulation)`);
+  };
+
+  const handleDeleteRequest = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    setFiles(prev => prev.filter(f => !selectedIds.includes(f.id)));
+    setSelectedIds([]);
+    setShowDeleteConfirm(false);
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
   };
 
   const getFileIcon = (type: string) => {
@@ -38,9 +84,9 @@ export const MySpacePanel: React.FC = () => {
   };
 
   return (
-    <div className="h-full w-full flex flex-col bg-white relative overflow-hidden border-l border-gray-200">
+    <div className="h-full w-full flex flex-col bg-white relative overflow-hidden border-l border-gray-200 shadow-xl">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
+      <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center space-x-2 select-none">
           <div className="w-7 h-7 bg-black text-white rounded-lg flex items-center justify-center">
              <Icons.Folder className="w-4 h-4" />
@@ -68,38 +114,141 @@ export const MySpacePanel: React.FC = () => {
       </div>
 
       {/* File List */}
-      <div className="flex-1 overflow-y-auto p-2 bg-white custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-2 bg-white custom-scrollbar relative pb-16">
          <div className="space-y-1">
-            {MOCK_FILES.map((file) => (
-              <motion.div 
-                key={file.id}
-                layoutId={`file-${file.id}`}
-                onClick={() => setPreviewFile(file)}
-                className="group flex items-center p-3 rounded-xl hover:bg-gray-50 cursor-pointer border border-transparent hover:border-gray-100 transition-all"
-              >
-                 <div className="p-3 bg-gray-50 group-hover:bg-white rounded-lg border border-gray-100 group-hover:border-gray-200 shadow-sm mr-3 transition-colors">
-                    {getFileIcon(file.type)}
-                 </div>
-                 <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-900 truncate group-hover:text-black transition-colors">{file.name}</div>
-                    <div className="flex items-center text-[10px] text-gray-400 gap-2 mt-0.5">
-                       <span>{file.size}</span>
-                       <span className="w-0.5 h-0.5 bg-gray-300 rounded-full" />
-                       <span>{file.date}</span>
-                    </div>
-                 </div>
-                 <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                    <button className="p-2 text-gray-400 hover:text-black rounded-full hover:bg-gray-200">
-                       <Icons.Preview className="w-4 h-4" />
-                    </button>
-                    <button className="p-2 text-gray-400 hover:text-black rounded-full hover:bg-gray-200">
-                       <Icons.Download className="w-4 h-4" />
-                    </button>
-                 </div>
-              </motion.div>
-            ))}
+            {files.map((file) => {
+              const isSelected = selectedIds.includes(file.id);
+              return (
+                <motion.div 
+                  key={file.id}
+                  layoutId={`file-${file.id}`}
+                  onClick={() => toggleSelection(file.id)}
+                  onDoubleClick={() => handleDoubleClick(file)}
+                  className={clsx(
+                    "group flex items-center p-3 rounded-xl cursor-pointer border transition-all select-none relative",
+                    isSelected 
+                      ? "bg-blue-50 border-blue-200 shadow-sm" 
+                      : "bg-transparent hover:bg-gray-50 border-transparent hover:border-gray-100"
+                  )}
+                >
+                   <div className={clsx(
+                     "p-3 rounded-lg border shadow-sm mr-3 transition-colors",
+                     isSelected ? "bg-white border-blue-100" : "bg-gray-50 border-gray-100 group-hover:bg-white group-hover:border-gray-200"
+                   )}>
+                      {getFileIcon(file.type)}
+                   </div>
+                   <div className="flex-1 min-w-0">
+                      <div className={clsx("text-sm font-medium truncate transition-colors", isSelected ? "text-blue-700" : "text-gray-900")}>
+                        {file.name}
+                      </div>
+                      <div className="flex items-center text-[10px] text-gray-400 gap-2 mt-0.5">
+                         <span>{file.size}</span>
+                         <span className="w-0.5 h-0.5 bg-gray-300 rounded-full" />
+                         <span>{file.date}</span>
+                      </div>
+                   </div>
+                   
+                   {/* Hover Actions (Preview & Download) */}
+                   {!isSelected && (
+                     <div className="absolute right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-sm border border-gray-100">
+                        <button 
+                          onClick={(e) => handlePreviewClick(e, file)}
+                          className="p-1.5 text-gray-500 hover:text-black hover:bg-gray-100 rounded-md transition-colors"
+                          title={t.previewFile}
+                        >
+                           <Icons.Preview className="w-4 h-4" />
+                        </button>
+                        <div className="w-px h-3 bg-gray-300" />
+                        <button 
+                          onClick={(e) => handleDownloadClick(e, file)}
+                          className="p-1.5 text-gray-500 hover:text-black hover:bg-gray-100 rounded-md transition-colors"
+                          title={t.download}
+                        >
+                           <Icons.Download className="w-4 h-4" />
+                        </button>
+                     </div>
+                   )}
+
+                   {isSelected && (
+                      <div className="flex items-center justify-center pl-2">
+                         <Icons.Check className="w-5 h-5 text-blue-600" />
+                      </div>
+                   )}
+                </motion.div>
+              );
+            })}
+            {files.length === 0 && (
+              <div className="text-center text-gray-400 text-sm mt-10">
+                No files available.
+              </div>
+            )}
          </div>
       </div>
+
+      {/* Batch Actions Bar */}
+      <AnimatePresence>
+        {selectedIds.length > 0 && (
+          <motion.div 
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="absolute bottom-4 left-4 right-4 bg-white border border-gray-200 shadow-2xl rounded-xl p-3 z-40 flex items-center justify-between"
+          >
+             <div className="flex items-center gap-2 px-2">
+                <span className="bg-black text-white text-xs font-bold px-2 py-0.5 rounded-md">{selectedIds.length}</span>
+                <span className="text-sm font-medium text-gray-600">{t.itemsSelected}</span>
+             </div>
+             <button 
+               onClick={handleDeleteRequest}
+               className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors"
+             >
+                <Icons.Trash className="w-4 h-4" />
+                {t.deleteSelected}
+             </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-6"
+          >
+             <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm border border-gray-200"
+             >
+                <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-4 mx-auto">
+                   <Icons.Trash className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-bold text-center text-gray-900 mb-2">Delete {selectedIds.length} Item(s)?</h3>
+                <p className="text-center text-gray-500 text-sm mb-6 leading-relaxed">
+                  {t.confirmBatchDelete}
+                </p>
+                <div className="flex gap-3">
+                   <button 
+                     onClick={cancelDelete}
+                     className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
+                   >
+                     Cancel
+                   </button>
+                   <button 
+                     onClick={confirmDelete}
+                     className="flex-1 px-4 py-2.5 bg-red-500 text-white font-medium rounded-xl hover:bg-red-600 transition-colors shadow-lg shadow-red-200"
+                   >
+                     Delete
+                   </button>
+                </div>
+             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Preview Modal */}
       <AnimatePresence>
