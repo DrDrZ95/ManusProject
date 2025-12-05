@@ -72,6 +72,15 @@ export const translations = {
     useEmail: "Use Email / ID",
     forgotPassword: "Forgot password?",
     rememberMe: "Remember me",
+    loginMethodPassword: "Password",
+    loginMethodSMS: "SMS Code",
+    loginMethodWeChat: "WeChat",
+    wechatScanTitle: "Scan to Login",
+    wechatScanDesc: "Open WeChat and scan the QR code",
+    sendCode: "Get Code",
+    resendCode: "Resend",
+    enterCode: "Verification Code",
+    codeSent: "Code sent!",
 
     // My Space
     mySpace: "My Space",
@@ -117,6 +126,8 @@ Type "help" for available commands.
     // Account
     changeAvatar: "Change Avatar",
     avatarSize: "JPG, GIF or PNG. Max size of 800K",
+    styleAnime: "Anime Style",
+    styleSimple: "Simple Style",
     displayName: "Display Name",
     emailLabel: "Email Address",
     bio: "Bio",
@@ -220,6 +231,15 @@ Type "help" for available commands.
     useEmail: "使用邮箱/ID登录",
     forgotPassword: "忘记密码？",
     rememberMe: "记住我",
+    loginMethodPassword: "密码登录",
+    loginMethodSMS: "验证码登录",
+    loginMethodWeChat: "微信登录",
+    wechatScanTitle: "扫码登录",
+    wechatScanDesc: "请使用微信扫描二维码",
+    sendCode: "获取验证码",
+    resendCode: "重新发送",
+    enterCode: "输入验证码",
+    codeSent: "验证码已发送！",
 
     // My Space
     mySpace: "我的空间",
@@ -265,6 +285,8 @@ Linux 内核 6.8.0-generic x86_64
     // Account
     changeAvatar: "更换头像",
     avatarSize: "JPG, GIF 或 PNG。最大 800K",
+    styleAnime: "动漫风格",
+    styleSimple: "简约风格",
     displayName: "显示名称",
     emailLabel: "邮箱地址",
     bio: "个人简介",

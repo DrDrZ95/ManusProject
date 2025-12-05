@@ -141,7 +141,6 @@ const SessionItem: React.FC<SessionItemProps> = ({
                     onContextMenu={(e) => onContextMenu(e, session)}
                 >
                     <div className="flex items-center gap-2 relative z-10">
-                    {/* Removed fixed Chat Icon here for cleaner list look */}
                     <span className="truncate flex-1 pr-4">{session.title}</span>
                     </div>
                     {isActive && (
@@ -228,7 +227,8 @@ const GroupItem: React.FC<GroupItemProps> = ({
             )}
             
             {!group.collapsed && (
-                <div className="space-y-0.5 ml-[1.15rem] border-l border-gray-200">
+                // Removed border-l border-gray-200 here to remove guiding lines for Projects
+                <div className="space-y-0.5 ml-[1.15rem]">
                     {sessions.map(session => (
                          <SessionItem 
                             key={session.id}
@@ -464,7 +464,8 @@ export const Sidebar: React.FC = () => {
                     <span className="bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full text-[9px]">{store.groups.length}/10</span>
                  </div>
                  {/* Projects Vertical Line Container */}
-                 <div className="border-l-2 border-gray-100 ml-3 pl-1">
+                 <div className="ml-3 pl-1"> 
+                     {/* Removed border-l-2 border-gray-100 from here to remove the line */}
                      {groupedSessions.map(({ group, sessions }) => (
                          <GroupItem
                             key={group.id}
@@ -495,7 +496,7 @@ export const Sidebar: React.FC = () => {
                 </div>
                 
                 {!isChatsCollapsed && (
-                    /* Chats Vertical Line Container */
+                    /* Chats Vertical Line Container (kept for chats as requested, only removed for projects) */
                     <div className="border-l-2 border-gray-100 ml-3 pl-1 space-y-0.5">
                         {ungroupedSessions.map(session => (
                             <SessionItem

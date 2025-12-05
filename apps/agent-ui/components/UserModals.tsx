@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
@@ -45,324 +44,279 @@ const ModalContent: React.FC<{ children: React.ReactNode; title: string; icon?: 
   </motion.div>
 );
 
-// Optimized Cute Anime Style Avatars (Lorelei style with explicit cuteness parameters)
-// parameters: &eyes=variant02,variant04... selects larger/cuter eyes
+// Optimized Cute Anime Style Avatars
 const AVATAR_PARAMS = "&eyes=variant02,variant04,variant09,variant12,variant14&eyebrows=variant01,variant02,variant03,variant04&mouth=happy01,happy02,happy08,smile01";
-const CARTOON_AVATARS = [
+const ANIME_AVATARS = [
   `https://api.dicebear.com/9.x/lorelei/svg?seed=Milo${AVATAR_PARAMS}`,
   `https://api.dicebear.com/9.x/lorelei/svg?seed=Sasha${AVATAR_PARAMS}`,
-  `https://api.dicebear.com/9.x/lorelei/svg?seed=Midnight${AVATAR_PARAMS}`,
-  `https://api.dicebear.com/9.x/lorelei/svg?seed=Luna${AVATAR_PARAMS}`,
-  `https://api.dicebear.com/9.x/lorelei/svg?seed=Oliver${AVATAR_PARAMS}`,
-  `https://api.dicebear.com/9.x/lorelei/svg?seed=Coco${AVATAR_PARAMS}`,
-  `https://api.dicebear.com/9.x/lorelei/svg?seed=Kitty${AVATAR_PARAMS}`,
-  `https://api.dicebear.com/9.x/lorelei/svg?seed=Leo${AVATAR_PARAMS}`,
-  `https://api.dicebear.com/9.x/lorelei/svg?seed=Amara${AVATAR_PARAMS}`,
-  `https://api.dicebear.com/9.x/lorelei/svg?seed=Willow${AVATAR_PARAMS}`,
-  `https://api.dicebear.com/9.x/lorelei/svg?seed=Daisy${AVATAR_PARAMS}`,
-  `https://api.dicebear.com/9.x/lorelei/svg?seed=Jack${AVATAR_PARAMS}`
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Felix${AVATAR_PARAMS}`,
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Jazz${AVATAR_PARAMS}`,
 ];
 
 export const UserModals: React.FC = () => {
   const activeModal = useStore(s => s.activeModal);
   const setActiveModal = useStore(s => s.setActiveModal);
-  const lang = useStore(s => s.language);
+  const language = useStore(s => s.language);
+  const t = translations[language];
   const user = useStore(s => s.user);
   const updateUser = useStore(s => s.updateUser);
   const settings = useStore(s => s.settings);
   const updateSettings = useStore(s => s.updateSettings);
 
-  const t = translations[lang];
-  const [isSelectingAvatar, setIsSelectingAvatar] = useState(false);
-  const [tempBio, setTempBio] = useState(user?.bio || '');
-  const [tempName, setTempName] = useState(user?.name || 'Agent User');
+  const [displayName, setDisplayName] = useState(user?.name || '');
+  const [bio, setBio] = useState(user?.bio || '');
 
-  const onClose = () => {
-      setIsSelectingAvatar(false);
-      setActiveModal(null);
+  const closeModal = () => setActiveModal(null);
+
+  const handleSaveAccount = () => {
+    updateUser({ name: displayName, bio });
+    closeModal();
   };
 
-  const handleSaveProfile = () => {
-      updateUser({ name: tempName, bio: tempBio });
-      onClose();
+  const clearData = () => {
+      if (confirm('Are you sure you want to clear all data? This will reset the application state.')) {
+          localStorage.clear();
+          window.location.reload();
+      }
   };
 
   if (!activeModal) return null;
 
   return (
     <AnimatePresence>
-      {activeModal && (
-        <ModalBackdrop onClose={onClose}>
-          {activeModal === 'upgrade' && (
-            <ModalContent title={t.upgradeSubscription} icon={Icons.Zap}>
-              <div className="space-y-6">
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold mb-2">{t.unleashPotential}</h3>
-                  <p className="text-gray-500">{t.getAccessPro}</p>
+      <ModalBackdrop onClose={closeModal}>
+        {activeModal === 'upgrade' && (
+          <ModalContent title={t.upgradeSubscription} icon={Icons.CreditCard}>
+             {/* Upgrade Content */}
+             <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-gradient-to-tr from-yellow-200 to-yellow-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-yellow-200">
+                    <Icons.Zap className="w-8 h-8 text-white" fill="currentColor" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900">{t.unleashPotential}</h3>
+                <p className="text-gray-500 mt-2 max-w-md mx-auto">{t.getAccessPro}</p>
+             </div>
+
+             <div className="grid md:grid-cols-2 gap-4">
+                {/* Free Plan */}
+                <div className="border border-gray-200 rounded-xl p-5 relative opacity-70 hover:opacity-100 transition-opacity">
+                    <h4 className="font-bold text-lg mb-2">{t.freePlan}</h4>
+                    <div className="text-3xl font-bold mb-4">$0 <span className="text-sm font-normal text-gray-400">{t.perMonth}</span></div>
+                    <ul className="space-y-3 text-sm text-gray-600 mb-6">
+                        <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-green-500" /> {t.standardSpeed}</li>
+                        <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-green-500" /> {t.dailyLimits}</li>
+                        <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-green-500" /> {t.accessKimi}</li>
+                    </ul>
+                    <button className="w-full py-2 bg-gray-100 text-gray-700 font-bold rounded-lg text-sm cursor-default">Current Plan</button>
+                </div>
+
+                {/* Pro Plan */}
+                <div className="border-2 border-black rounded-xl p-5 relative shadow-xl transform scale-[1.02] bg-white">
+                    <div className="absolute top-0 right-0 bg-black text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg uppercase tracking-wider">{t.recommended}</div>
+                    <h4 className="font-bold text-lg mb-2">{t.proPlanCard}</h4>
+                    <div className="text-3xl font-bold mb-4">$20 <span className="text-sm font-normal text-gray-400">{t.perMonth}</span></div>
+                    <ul className="space-y-3 text-sm text-gray-600 mb-6">
+                        <li className="flex items-center gap-2"><Icons.Zap className="w-4 h-4 text-yellow-500" fill="currentColor" /> {t.fastSpeed}</li>
+                        <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-green-500" /> {t.unlimitedChats}</li>
+                        <li className="flex items-center gap-2"><Icons.Brain className="w-4 h-4 text-purple-500" /> {t.accessDeepseek}</li>
+                        <li className="flex items-center gap-2"><Icons.User className="w-4 h-4 text-blue-500" /> {t.prioritySupport}</li>
+                    </ul>
+                    <button className="w-full py-2 bg-black text-white hover:bg-gray-800 font-bold rounded-lg text-sm transition-all shadow-md hover:shadow-lg">{t.upgradeBtn}</button>
+                </div>
+             </div>
+             <p className="text-center text-xs text-gray-400 mt-6 flex items-center justify-center gap-1">
+                <Icons.CreditCard className="w-3 h-3" />
+                {t.securePayment}
+             </p>
+          </ModalContent>
+        )}
+
+        {activeModal === 'account' && (
+          <ModalContent title={t.account} icon={Icons.User}>
+             <div className="space-y-6">
+                {/* Avatar Section */}
+                <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-3">{t.changeAvatar}</label>
+                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                        {ANIME_AVATARS.map((url, idx) => (
+                            <button 
+                                key={idx}
+                                onClick={() => updateUser({ avatar: url })}
+                                className={clsx(
+                                    "relative w-16 h-16 rounded-full border-2 transition-all flex-shrink-0 overflow-hidden",
+                                    user?.avatar === url ? "border-black ring-2 ring-black/20" : "border-transparent hover:border-gray-300"
+                                )}
+                            >
+                                <img src={url} alt={`Avatar ${idx}`} className="w-full h-full object-cover" />
+                                {user?.avatar === url && (
+                                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                        <Icons.Check className="w-6 h-6 text-white drop-shadow-md" />
+                                    </div>
+                                )}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="border border-gray-200 rounded-xl p-6 hover:border-blue-500 transition-colors cursor-pointer relative">
-                    <div className="text-lg font-semibold mb-2">{t.freePlan}</div>
-                    <div className="text-3xl font-bold mb-4">$0<span className="text-sm text-gray-400 font-normal">{t.perMonth}</span></div>
-                    <ul className="space-y-3 text-sm text-gray-600">
-                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-green-500" /> {t.standardSpeed}</li>
-                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-green-500" /> {t.dailyLimits}</li>
-                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-green-500" /> {t.accessKimi}</li>
-                    </ul>
-                  </div>
-
-                  <div className="border-2 border-black rounded-xl p-6 relative shadow-lg bg-gray-50">
-                    <div className="absolute top-0 right-0 bg-black text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-lg">{t.recommended}</div>
-                    <div className="text-lg font-semibold mb-2">{t.proPlanCard}</div>
-                    <div className="text-3xl font-bold mb-4">$20<span className="text-sm text-gray-400 font-normal">{t.perMonth}</span></div>
-                    <ul className="space-y-3 text-sm text-gray-600">
-                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-black" /> {t.fastSpeed}</li>
-                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-black" /> {t.unlimitedChats}</li>
-                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-black" /> {t.accessDeepseek}</li>
-                      <li className="flex items-center gap-2"><Icons.Check className="w-4 h-4 text-black" /> {t.prioritySupport}</li>
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="mt-8 pt-6 border-t border-gray-100">
-                  <button className="w-full bg-black text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-800 transition-all shadow-lg transform hover:scale-[1.01]">
-                    {t.upgradeBtn}
-                  </button>
-                  <p className="text-center text-xs text-gray-400 mt-4">{t.securePayment}</p>
-                </div>
-              </div>
-            </ModalContent>
-          )}
-
-          {activeModal === 'account' && (
-            <ModalContent title={t.account} icon={Icons.User}>
-              <div className="space-y-6">
-                <div className="flex items-center gap-6 pb-6 border-b border-gray-100">
-                  <div className="relative group cursor-pointer" onClick={() => setIsSelectingAvatar(!isSelectingAvatar)}>
-                    <motion.div 
-                      layoutId="current-avatar"
-                      className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden shadow-sm border-4 border-white ring-1 ring-gray-200"
-                    >
-                       <img src={user?.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                    </motion.div>
-                    <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Icons.Edit className="w-6 h-6 text-white" />
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-1.5">{t.displayName}</label>
+                        <input 
+                            type="text" 
+                            value={displayName} 
+                            onChange={(e) => setDisplayName(e.target.value)}
+                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none"
+                        />
                     </div>
-                  </div>
-                  <div className="flex-1">
-                    <button onClick={() => setIsSelectingAvatar(!isSelectingAvatar)} className="text-base font-semibold text-black hover:underline flex items-center gap-2">
-                        {t.changeAvatar}
-                        <Icons.ChevronDown className={clsx("w-4 h-4 transition-transform", isSelectingAvatar && "rotate-180")} />
-                    </button>
-                    <div className="text-xs text-gray-400 mt-1">{t.avatarSize}</div>
-                  </div>
+                    <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-1.5">{t.emailLabel}</label>
+                        <input 
+                            type="email" 
+                            value={user?.email} 
+                            disabled
+                            className="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-500 cursor-not-allowed"
+                        />
+                    </div>
                 </div>
 
-                <AnimatePresence>
-                {isSelectingAvatar && (
-                    <motion.div 
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden"
-                    >
-                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-200 mb-6">
-                            {CARTOON_AVATARS.map((avatarUrl, idx) => (
-                                <button 
-                                    key={idx}
-                                    onClick={() => { updateUser({ avatar: avatarUrl }); }}
-                                    className="relative aspect-square rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all group focus:outline-none"
-                                >
-                                    <img src={avatarUrl} alt={`Avatar ${idx}`} className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-300" />
-                                    
-                                    {/* Selected State */}
-                                    {user?.avatar === avatarUrl && (
-                                        <motion.div 
-                                            layoutId="avatar-selection-ring"
-                                            className="absolute inset-0 border-4 border-black rounded-xl"
-                                            initial={false}
-                                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                        />
-                                    )}
-                                    
-                                    {/* Hover State */}
-                                    <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </button>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
-                </AnimatePresence>
-
-                <div className="grid gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">{t.displayName}</label>
-                    <input 
-                        type="text" 
-                        value={tempName}
-                        onChange={(e) => setTempName(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-black focus:ring-0 bg-gray-50 transition-all" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">{t.emailLabel}</label>
-                    <input type="email" defaultValue={user?.email} disabled className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">{t.bio}</label>
+                <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1.5">{t.bio}</label>
                     <textarea 
-                        rows={3} 
-                        value={tempBio}
-                        onChange={(e) => setTempBio(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-black focus:ring-0 bg-gray-50 transition-all" 
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
                         placeholder={t.bioPlaceholder}
+                        rows={3}
+                        className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none resize-none"
                     />
-                  </div>
                 </div>
 
-                <div className="flex justify-end pt-4">
-                  <button onClick={handleSaveProfile} className="px-6 py-2.5 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                    {t.saveChanges}
-                  </button>
-                </div>
-              </div>
-            </ModalContent>
-          )}
-
-          {activeModal === 'help' && (
-             <ModalContent title={t.getHelp} icon={Icons.Help}>
-               <div className="space-y-6">
-                 <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                   <h4 className="font-semibold text-blue-900 mb-1">{t.needHelpTitle}</h4>
-                   <p className="text-sm text-blue-700">{t.needHelpDesc}</p>
-                 </div>
-
-                 <div className="space-y-4">
-                    <details className="group border border-gray-200 rounded-lg overflow-hidden">
-                      <summary className="flex items-center justify-between p-4 cursor-pointer bg-gray-50 hover:bg-gray-100 font-medium">
-                        <span>{t.faq1Title}</span>
-                        <Icons.ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" />
-                      </summary>
-                      <div className="p-4 text-sm text-gray-600 leading-relaxed border-t border-gray-200">
-                        {t.faq1Desc}
-                      </div>
-                    </details>
-                    <details className="group border border-gray-200 rounded-lg overflow-hidden">
-                      <summary className="flex items-center justify-between p-4 cursor-pointer bg-gray-50 hover:bg-gray-100 font-medium">
-                        <span>{t.faq2Title}</span>
-                        <Icons.ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" />
-                      </summary>
-                      <div className="p-4 text-sm text-gray-600 leading-relaxed border-t border-gray-200">
-                        {t.faq2Desc}
-                      </div>
-                    </details>
-                    <details className="group border border-gray-200 rounded-lg overflow-hidden">
-                      <summary className="flex items-center justify-between p-4 cursor-pointer bg-gray-50 hover:bg-gray-100 font-medium">
-                        <span>{t.faq3Title}</span>
-                        <Icons.ChevronDown className="w-4 h-4 text-gray-400 group-open:rotate-180 transition-transform" />
-                      </summary>
-                      <div className="p-4 text-sm text-gray-600 leading-relaxed border-t border-gray-200">
-                        {t.faq3Desc}
-                      </div>
-                    </details>
-                 </div>
-
-                 <div className="pt-6 border-t border-gray-100">
-                   <label className="block text-sm font-medium text-gray-700 mb-2">{t.contactSupport}</label>
-                   <textarea rows={4} className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-black focus:ring-0 bg-gray-50" placeholder={t.describeIssue}></textarea>
-                   <button onClick={onClose} className="mt-3 w-full py-2.5 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">
-                     {t.sendMessage}
-                   </button>
-                 </div>
-               </div>
-             </ModalContent>
-          )}
-
-          {activeModal === 'settings' && (
-             <ModalContent title={t.settings} icon={Icons.Settings}>
-               <div className="space-y-8">
-                 
-                 <section>
-                   <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">{t.general}</h3>
-                   <div className="space-y-4">
-                     <div className="flex items-center justify-between">
-                       <div>
-                         <div className="font-medium text-gray-900">{t.streamResponses}</div>
-                         <div className="text-xs text-gray-500">{t.streamDesc}</div>
-                       </div>
-                       <div 
-                         className={clsx("w-11 h-6 rounded-full relative cursor-pointer transition-colors", settings.streamResponses ? "bg-black" : "bg-gray-200")}
-                         onClick={() => updateSettings({ streamResponses: !settings.streamResponses })}
-                       >
-                          <motion.div 
-                            layout
-                            className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm" 
-                            initial={false}
-                            animate={{ left: settings.streamResponses ? '1.5rem' : '0.25rem' }}
-                          />
-                       </div>
-                     </div>
-                     <div className="flex items-center justify-between">
-                       <div>
-                         <div className="font-medium text-gray-900">{t.soundEffects}</div>
-                         <div className="text-xs text-gray-500">{t.soundDesc}</div>
-                       </div>
-                       <div 
-                         className={clsx("w-11 h-6 rounded-full relative cursor-pointer transition-colors", settings.soundEffects ? "bg-black" : "bg-gray-200")}
-                         onClick={() => updateSettings({ soundEffects: !settings.soundEffects })}
-                       >
-                          <motion.div 
-                            layout
-                            className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm" 
-                            initial={false}
-                            animate={{ left: settings.soundEffects ? '1.5rem' : '0.25rem' }}
-                          />
-                       </div>
-                     </div>
-                   </div>
-                 </section>
-
-                 <div className="h-px bg-gray-100" />
-
-                 <section>
-                   <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">{t.dataPrivacy}</h3>
-                   <div className="space-y-4">
-                     <div className="flex items-center justify-between">
-                       <div>
-                         <div className="font-medium text-gray-900">{t.trainingData}</div>
-                         <div className="text-xs text-gray-500">{t.trainingDesc}</div>
-                       </div>
-                       <div 
-                         className={clsx("w-11 h-6 rounded-full relative cursor-pointer transition-colors", settings.allowTraining ? "bg-black" : "bg-gray-200")}
-                         onClick={() => updateSettings({ allowTraining: !settings.allowTraining })}
-                       >
-                          <motion.div 
-                            layout
-                            className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm" 
-                            initial={false}
-                            animate={{ left: settings.allowTraining ? '1.5rem' : '0.25rem' }}
-                          />
-                       </div>
-                     </div>
-                     <div className="flex items-center justify-between">
-                        <button className="text-red-600 text-sm font-medium hover:underline">{t.clearData}</button>
-                     </div>
-                   </div>
-                 </section>
-
-                 <div className="h-px bg-gray-100" />
-
-                 <div className="flex justify-end">
-                    <button onClick={onClose} className="px-6 py-2.5 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors">
-                      {t.done}
+                <div className="pt-4 border-t border-gray-100 flex justify-end">
+                    <button 
+                        onClick={handleSaveAccount}
+                        className="px-6 py-2 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition-colors"
+                    >
+                        {t.saveChanges}
                     </button>
-                 </div>
-               </div>
-             </ModalContent>
-          )}
-        </ModalBackdrop>
-      )}
+                </div>
+             </div>
+          </ModalContent>
+        )}
+
+        {activeModal === 'settings' && (
+            <ModalContent title={t.settings} icon={Icons.Settings}>
+                <div className="space-y-6">
+                    <div>
+                        <h3 className="text-sm font-bold text-gray-900 mb-3 uppercase tracking-wider">{t.general}</h3>
+                        <div className="space-y-3">
+                            <label className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
+                                <div>
+                                    <div className="font-medium text-gray-900">{t.streamResponses}</div>
+                                    <div className="text-xs text-gray-500">{t.streamDesc}</div>
+                                </div>
+                                <div className={clsx("w-11 h-6 bg-gray-200 rounded-full relative transition-colors", settings.streamResponses && "bg-green-500")}>
+                                    <input 
+                                        type="checkbox" 
+                                        className="hidden" 
+                                        checked={settings.streamResponses} 
+                                        onChange={(e) => updateSettings({ streamResponses: e.target.checked })}
+                                    />
+                                    <div className={clsx("w-5 h-5 bg-white rounded-full shadow-sm absolute top-0.5 transition-all", settings.streamResponses ? "left-[22px]" : "left-0.5")} />
+                                </div>
+                            </label>
+                            
+                            <label className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
+                                <div>
+                                    <div className="font-medium text-gray-900">{t.soundEffects}</div>
+                                    <div className="text-xs text-gray-500">{t.soundDesc}</div>
+                                </div>
+                                <div className={clsx("w-11 h-6 bg-gray-200 rounded-full relative transition-colors", settings.soundEffects && "bg-green-500")}>
+                                    <input 
+                                        type="checkbox" 
+                                        className="hidden" 
+                                        checked={settings.soundEffects} 
+                                        onChange={(e) => updateSettings({ soundEffects: e.target.checked })}
+                                    />
+                                    <div className={clsx("w-5 h-5 bg-white rounded-full shadow-sm absolute top-0.5 transition-all", settings.soundEffects ? "left-[22px]" : "left-0.5")} />
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 className="text-sm font-bold text-gray-900 mb-3 uppercase tracking-wider">{t.dataPrivacy}</h3>
+                        <div className="space-y-3">
+                            <label className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
+                                <div>
+                                    <div className="font-medium text-gray-900">{t.trainingData}</div>
+                                    <div className="text-xs text-gray-500">{t.trainingDesc}</div>
+                                </div>
+                                <div className={clsx("w-11 h-6 bg-gray-200 rounded-full relative transition-colors", settings.allowTraining && "bg-green-500")}>
+                                    <input 
+                                        type="checkbox" 
+                                        className="hidden" 
+                                        checked={settings.allowTraining} 
+                                        onChange={(e) => updateSettings({ allowTraining: e.target.checked })}
+                                    />
+                                    <div className={clsx("w-5 h-5 bg-white rounded-full shadow-sm absolute top-0.5 transition-all", settings.allowTraining ? "left-[22px]" : "left-0.5")} />
+                                </div>
+                            </label>
+                            
+                            <button 
+                                onClick={clearData}
+                                className="w-full flex items-center justify-between p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                            >
+                                <span className="font-medium">{t.clearData}</span>
+                                <Icons.Trash className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </ModalContent>
+        )}
+
+        {activeModal === 'help' && (
+            <ModalContent title={t.getHelp} icon={Icons.Help}>
+                <div className="space-y-6">
+                    <div className="bg-blue-50 p-4 rounded-xl flex items-start gap-3">
+                        <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                            <Icons.Chat className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-blue-900">{t.needHelpTitle}</h4>
+                            <p className="text-sm text-blue-700 mt-1">{t.needHelpDesc}</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <h3 className="font-bold text-gray-900">FAQ</h3>
+                        <div className="space-y-2">
+                             <div className="border border-gray-200 rounded-lg p-3">
+                                <h5 className="font-medium text-gray-900 text-sm">{t.faq1Title}</h5>
+                                <p className="text-xs text-gray-500 mt-1">{t.faq1Desc}</p>
+                             </div>
+                             <div className="border border-gray-200 rounded-lg p-3">
+                                <h5 className="font-medium text-gray-900 text-sm">{t.faq2Title}</h5>
+                                <p className="text-xs text-gray-500 mt-1">{t.faq2Desc}</p>
+                             </div>
+                             <div className="border border-gray-200 rounded-lg p-3">
+                                <h5 className="font-medium text-gray-900 text-sm">{t.faq3Title}</h5>
+                                <p className="text-xs text-gray-500 mt-1">{t.faq3Desc}</p>
+                             </div>
+                        </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-100">
+                        <h3 className="font-bold text-gray-900 mb-3">{t.contactSupport}</h3>
+                        <div className="flex gap-2">
+                            <input type="text" placeholder={t.describeIssue} className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-black outline-none" />
+                            <button className="px-4 py-2 bg-black text-white font-bold rounded-lg text-sm hover:bg-gray-800 transition-colors">
+                                {t.sendMessage}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </ModalContent>
+        )}
+      </ModalBackdrop>
     </AnimatePresence>
   );
 };
