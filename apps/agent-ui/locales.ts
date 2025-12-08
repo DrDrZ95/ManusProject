@@ -46,17 +46,25 @@ export const translations = {
     settings: "Settings",
     signOut: "Sign Out",
 
-    // Input Modes - Dropdown Descriptions
+    // Input Modes
     modeGeneral: "General",
     modeBrainstorm: "Brainstorming",
     modeOAWork: "OA / Work Assistant",
     modeCompany: "Company Info",
+    modeAgent: "Agent Mode", // Added
+
+    // Agent Mode Confirm
+    agentModeConfirmTitle: "Enter Agent Mode?",
+    agentModeConfirmDesc: "You are about to enter Agent mode. You cannot choose the model independently. Do you confirm to continue?",
+    confirm: "Confirm",
+    cancel: "Cancel",
 
     // Placeholders
     placeholderGeneral: "Ask anything, or start coding...",
     placeholderBrainstorm: "Enter topic to generate ideas...",
     placeholderOAWork: "Type your request (e.g., 'Draft email to team')...",
     placeholderCompany: "Ask about policies or structure...",
+    placeholderAgent: "Agent Mode Active. Describing task...",
 
     // Login
     welcomeBack: "Welcome back",
@@ -94,6 +102,8 @@ export const translations = {
     itemsSelected: "Selected",
     deleteSelected: "Delete Selected",
     confirmBatchDelete: "Are you sure you want to delete these files? This action cannot be undone.",
+    mySpaceFiles: "Files",
+    mySpaceSolutions: "Solutions",
 
     // Terminal
     terminalWelcomeMsg: `\x1b[38;2;224;224;224mAgent-OS Terminal\x1b[0m v1.0.0
@@ -205,17 +215,25 @@ Type "help" for available commands.
     settings: "设置",
     signOut: "退出登录",
 
-    // Input Modes - Dropdown Descriptions
+    // Input Modes
     modeGeneral: "通用模式",
     modeBrainstorm: "头脑风暴",
     modeOAWork: "OA / 工作助理",
     modeCompany: "企业信息",
+    modeAgent: "Agent 模式", // Added
+
+    // Agent Mode Confirm
+    agentModeConfirmTitle: "进入 Agent 模式？",
+    agentModeConfirmDesc: "您即将进入 Agent 模式。您将无法自主选择模型。确认继续吗？",
+    confirm: "确认",
+    cancel: "取消",
 
     // Placeholders
     placeholderGeneral: "随便问点什么，或者开始写代码...",
     placeholderBrainstorm: "输入主题以生成创意...",
     placeholderOAWork: "输入您的请求（例如：“起草发给团队的邮件”）...",
     placeholderCompany: "询问关于政策或架构...",
+    placeholderAgent: "Agent 模式已激活。请描述任务...",
 
     // Login
     welcomeBack: "欢迎回来",
@@ -253,6 +271,8 @@ Type "help" for available commands.
     itemsSelected: "项已选择",
     deleteSelected: "删除所选",
     confirmBatchDelete: "确定要删除这些文件吗？此操作无法撤销。",
+    mySpaceFiles: "文件",
+    mySpaceSolutions: "解决方案",
 
     // Terminal
     terminalWelcomeMsg: `\x1b[38;2;224;224;224mAgent-OS 终端\x1b[0m v1.0.0

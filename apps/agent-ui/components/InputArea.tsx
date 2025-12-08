@@ -30,9 +30,12 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
   const removeAttachment = useStore(s => s.removeAttachment);
   const inputMode = useStore(s => s.inputMode);
   const setInputMode = useStore(s => s.setInputMode);
+  const isAgentMode = useStore(s => s.isAgentMode);
+  const setAgentMode = useStore(s => s.setAgentMode);
   
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [showAgentConfirm, setShowAgentConfirm] = useState(false);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,6 +44,7 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
 
   // Determine placeholder based on mode
   const getPlaceholder = () => {
+    if (isAgentMode) return t.placeholderAgent;
     switch (inputMode) {
         case 'brainstorm': return t.placeholderBrainstorm;
         case 'oa_work': return t.placeholderOAWork;
@@ -110,12 +114,24 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
     }, 800); // 800ms simulated recording time
   };
 
+  const handleAgentModeSelect = () => {
+      setShowAgentConfirm(true);
+  };
+
+  const confirmAgentMode = () => {
+      setAgentMode(true);
+      setInputMode('agent'); // Force update internal input mode
+      setShowAgentConfirm(false);
+  };
+
   return (
-    <div className="w-full max-w-[95%] lg:max-w-5xl mx-auto">
+    <>
+    <div className="w-full max-w-[95%] lg:max-w-5xl mx-auto relative">
       <div className={clsx(
         "relative group bg-white rounded-[26px] border transition-all duration-300 ease-out",
-        "focus-within:border-gray-400 focus-within:shadow-lg shadow-sm",
-        "border-gray-200"
+        isAgentMode 
+            ? "border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.2)]" 
+            : "border-gray-200 focus-within:border-gray-400 focus-within:shadow-lg shadow-sm"
       )}>
         
         <AnimatePresence mode="wait">
@@ -144,7 +160,7 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
               {/* Main Input Container - Flex Row Layout */}
               <div className="flex w-full items-start px-4 py-4 gap-2">
                   {/* Mode Chip Block (Inline) */}
-                  {inputMode !== 'general' && (
+                  {inputMode !== 'general' && inputMode !== 'agent' && (
                      <motion.div 
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
@@ -159,6 +175,18 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
                             >
                                 <Icons.Close className="w-3 h-3" />
                             </button>
+                        </span>
+                     </motion.div>
+                  )}
+                  {isAgentMode && (
+                      <motion.div 
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="flex-shrink-0 pt-0.5"
+                     >
+                        <span className="inline-flex items-center gap-1.5 bg-blue-600 text-white px-2.5 py-1 rounded-md text-sm font-bold select-none shadow-md">
+                            <Icons.Cpu className="w-3 h-3" />
+                            AGENT
                         </span>
                      </motion.div>
                   )}
@@ -179,11 +207,13 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
               {/* Actions Bar */}
               <div className="flex items-center justify-between px-2 pb-2">
                 <div className="flex items-center gap-2">
-                  <ModelSelector />
-                  
-                  <div className="w-px h-4 bg-gray-200 mx-1" />
-                  
-                  <InputModeSelector />
+                  {!isAgentMode && (
+                      <>
+                        <ModelSelector />
+                        <div className="w-px h-4 bg-gray-200 mx-1" />
+                        <InputModeSelector onSelectAgentMode={handleAgentModeSelect} />
+                      </>
+                  )}
 
                   <input 
                     type="file" 
@@ -218,7 +248,7 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
                     className={clsx(
                       "flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 shadow-sm",
                       (input.trim() || attachments.length > 0) || isLoading 
-                        ? "bg-black text-white hover:bg-gray-800 hover:scale-105" 
+                        ? (isAgentMode ? "bg-blue-600 hover:bg-blue-700" : "bg-black hover:bg-gray-800") + " text-white hover:scale-105"
                         : "bg-gray-200 text-gray-400 cursor-not-allowed"
                     )}
                    >
@@ -283,5 +313,49 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
         {t.disclaimer}
       </div>
     </div>
+
+    {/* Agent Confirmation Modal */}
+    <AnimatePresence>
+        {showAgentConfirm && (
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+                onClick={() => setShowAgentConfirm(false)}
+            >
+                <motion.div 
+                    initial={{ scale: 0.9, y: 20 }}
+                    animate={{ scale: 1, y: 0 }}
+                    exit={{ scale: 0.9, y: 20 }}
+                    className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-gray-200"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 mx-auto">
+                        <Icons.Cpu className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-xl font-bold text-center text-gray-900 mb-2">{t.agentModeConfirmTitle}</h3>
+                    <p className="text-center text-gray-500 text-sm mb-6 leading-relaxed">
+                        {t.agentModeConfirmDesc}
+                    </p>
+                    <div className="flex gap-3">
+                        <button 
+                            onClick={() => setShowAgentConfirm(false)}
+                            className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
+                        >
+                            {t.cancel}
+                        </button>
+                        <button 
+                            onClick={confirmAgentMode}
+                            className="flex-1 px-4 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
+                        >
+                            {t.confirm}
+                        </button>
+                    </div>
+                </motion.div>
+            </motion.div>
+        )}
+    </AnimatePresence>
+    </>
   );
 };

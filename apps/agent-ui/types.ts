@@ -50,7 +50,7 @@ export interface NewsItem {
 
 export type ModelType = 'kimi' | 'deepseek' | 'gpt-oss';
 export type ModalType = 'upgrade' | 'account' | 'help' | 'settings' | null;
-export type InputMode = 'general' | 'brainstorm' | 'oa_work' | 'company';
+export type InputMode = 'general' | 'brainstorm' | 'oa_work' | 'company' | 'agent';
 
 // API Types
 export interface User {
@@ -91,6 +91,7 @@ export interface AppState {
   selectedModel: ModelType;
   language: Language;
   inputMode: InputMode;
+  isAgentMode: boolean; // New state for Agent Mode
   
   // News State
   news: NewsItem[];
@@ -138,4 +139,5 @@ export interface AppState {
   setLanguage: (lang: Language) => void;
   setActiveModal: (modal: ModalType) => void;
   setInputMode: (mode: InputMode) => void;
+  setAgentMode: (enabled: boolean) => void;
 }

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
@@ -51,6 +52,14 @@ const ANIME_AVATARS = [
   `https://api.dicebear.com/9.x/lorelei/svg?seed=Sasha${AVATAR_PARAMS}`,
   `https://api.dicebear.com/9.x/lorelei/svg?seed=Felix${AVATAR_PARAMS}`,
   `https://api.dicebear.com/9.x/lorelei/svg?seed=Jazz${AVATAR_PARAMS}`,
+];
+
+// Simple / Notion-like Avatars (Micah style from DiceBear)
+const SIMPLE_AVATARS = [
+    `https://api.dicebear.com/9.x/micah/svg?seed=Nala`,
+    `https://api.dicebear.com/9.x/micah/svg?seed=Oliver`,
+    `https://api.dicebear.com/9.x/micah/svg?seed=Bella`,
+    `https://api.dicebear.com/9.x/micah/svg?seed=Leo`,
 ];
 
 export const UserModals: React.FC = () => {
@@ -136,24 +145,52 @@ export const UserModals: React.FC = () => {
                 {/* Avatar Section */}
                 <div>
                     <label className="block text-sm font-bold text-gray-700 mb-3">{t.changeAvatar}</label>
-                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                        {ANIME_AVATARS.map((url, idx) => (
-                            <button 
-                                key={idx}
-                                onClick={() => updateUser({ avatar: url })}
-                                className={clsx(
-                                    "relative w-16 h-16 rounded-full border-2 transition-all flex-shrink-0 overflow-hidden",
-                                    user?.avatar === url ? "border-black ring-2 ring-black/20" : "border-transparent hover:border-gray-300"
-                                )}
-                            >
-                                <img src={url} alt={`Avatar ${idx}`} className="w-full h-full object-cover" />
-                                {user?.avatar === url && (
-                                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                                        <Icons.Check className="w-6 h-6 text-white drop-shadow-md" />
-                                    </div>
-                                )}
-                            </button>
-                        ))}
+                    <div className="space-y-4">
+                        <div>
+                             <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">{t.styleAnime}</span>
+                             <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                                {ANIME_AVATARS.map((url, idx) => (
+                                    <button 
+                                        key={idx}
+                                        onClick={() => updateUser({ avatar: url })}
+                                        className={clsx(
+                                            "relative w-16 h-16 rounded-full border-2 transition-all flex-shrink-0 overflow-hidden",
+                                            user?.avatar === url ? "border-black ring-2 ring-black/20" : "border-transparent hover:border-gray-300"
+                                        )}
+                                    >
+                                        <img src={url} alt={`Anime ${idx}`} className="w-full h-full object-cover" />
+                                        {user?.avatar === url && (
+                                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                                <Icons.Check className="w-6 h-6 text-white drop-shadow-md" />
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                             <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block">{t.styleSimple}</span>
+                             <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                                {SIMPLE_AVATARS.map((url, idx) => (
+                                    <button 
+                                        key={idx}
+                                        onClick={() => updateUser({ avatar: url })}
+                                        className={clsx(
+                                            "relative w-16 h-16 rounded-full border-2 transition-all flex-shrink-0 overflow-hidden",
+                                            user?.avatar === url ? "border-black ring-2 ring-black/20" : "border-transparent hover:border-gray-300"
+                                        )}
+                                    >
+                                        <img src={url} alt={`Simple ${idx}`} className="w-full h-full object-cover" />
+                                        {user?.avatar === url && (
+                                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                                <Icons.Check className="w-6 h-6 text-white drop-shadow-md" />
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
 

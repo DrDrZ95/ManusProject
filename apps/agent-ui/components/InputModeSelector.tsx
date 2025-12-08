@@ -6,7 +6,11 @@ import { InputMode } from '../types';
 import { translations } from '../locales';
 import clsx from 'clsx';
 
-export const InputModeSelector: React.FC = () => {
+interface InputModeSelectorProps {
+    onSelectAgentMode?: () => void;
+}
+
+export const InputModeSelector: React.FC<InputModeSelectorProps> = ({ onSelectAgentMode }) => {
   const [isOpen, setIsOpen] = useState(false);
   const inputMode = useStore(s => s.inputMode);
   const setInputMode = useStore(s => s.setInputMode);
@@ -20,6 +24,7 @@ export const InputModeSelector: React.FC = () => {
     { id: 'brainstorm', label: t.modeBrainstorm, icon: Icons.Lightbulb },
     { id: 'oa_work', label: t.modeOAWork, icon: Icons.Briefcase },
     { id: 'company', label: t.modeCompany, icon: Icons.Building2 },
+    { id: 'agent', label: t.modeAgent, icon: Icons.Cpu },
   ];
 
   const activeMode = modes.find(m => m.id === inputMode) || modes[0];
@@ -51,7 +56,11 @@ export const InputModeSelector: React.FC = () => {
             <button
               key={mode.id}
               onClick={() => {
-                setInputMode(mode.id);
+                if (mode.id === 'agent') {
+                    onSelectAgentMode?.();
+                } else {
+                    setInputMode(mode.id);
+                }
                 setIsOpen(false);
               }}
               className={clsx(

@@ -15,15 +15,23 @@ const MOCK_FILES = [
   { id: '5', name: 'avatar_draft.jpg', type: 'image', size: '1.2 MB', date: '2025-05-01', content: 'https://picsum.photos/seed/anime/400/400' },
 ];
 
+const MOCK_SOLUTIONS = [
+  { id: 's1', name: 'Auto-Scaling Infrastructure', type: 'doc', size: 'Solution', date: '2025-05-14', content: 'Implements K8s HPA.' },
+  { id: 's2', name: 'Auth0 Integration Flow', type: 'code', size: 'Solution', date: '2025-05-13', content: 'Redirect to /callback...' },
+  { id: 's3', name: 'Database Migration Strategy', type: 'doc', size: 'Solution', date: '2025-05-11', content: 'Blue/Green deployment strategy.' },
+];
+
 export const MySpacePanel: React.FC = () => {
   const isTerminalOpen = useStore((s) => s.isTerminalOpen);
   const toggleTerminal = useStore((s) => s.toggleTerminal);
   const language = useStore(s => s.language);
   const t = translations[language];
 
+  const [activeTab, setActiveTab] = useState<'files' | 'solutions'>('files');
   const [previewFile, setPreviewFile] = useState<typeof MOCK_FILES[0] | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [files, setFiles] = useState(MOCK_FILES);
+  const [solutions, setSolutions] = useState(MOCK_SOLUTIONS);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   if (!isTerminalOpen) return null;
@@ -66,7 +74,11 @@ export const MySpacePanel: React.FC = () => {
   };
 
   const confirmDelete = () => {
-    setFiles(prev => prev.filter(f => !selectedIds.includes(f.id)));
+    if (activeTab === 'files') {
+        setFiles(prev => prev.filter(f => !selectedIds.includes(f.id)));
+    } else {
+        setSolutions(prev => prev.filter(f => !selectedIds.includes(f.id)));
+    }
     setSelectedIds([]);
     setShowDeleteConfirm(false);
   };
@@ -82,6 +94,8 @@ export const MySpacePanel: React.FC = () => {
       default: return <Icons.FileText className="w-5 h-5 text-gray-500" />;
     }
   };
+
+  const currentList = activeTab === 'files' ? files : solutions;
 
   return (
     <div className="h-full w-full flex flex-col bg-white relative overflow-hidden border-l border-gray-200 shadow-xl">
@@ -116,7 +130,7 @@ export const MySpacePanel: React.FC = () => {
       {/* File List */}
       <div className="flex-1 overflow-y-auto p-2 bg-white custom-scrollbar relative pb-16">
          <div className="space-y-1">
-            {files.map((file) => {
+            {currentList.map((file) => {
               const isSelected = selectedIds.includes(file.id);
               return (
                 <motion.div 
@@ -177,12 +191,34 @@ export const MySpacePanel: React.FC = () => {
                 </motion.div>
               );
             })}
-            {files.length === 0 && (
+            {currentList.length === 0 && (
               <div className="text-center text-gray-400 text-sm mt-10">
-                No files available.
+                No items available.
               </div>
             )}
          </div>
+      </div>
+      
+      {/* Tabs Bottom */}
+      <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50 p-1 flex">
+         <button 
+            onClick={() => { setActiveTab('files'); setSelectedIds([]); }}
+            className={clsx(
+                "flex-1 py-2.5 text-xs font-bold uppercase tracking-wider text-center rounded-lg transition-all",
+                activeTab === 'files' ? "bg-white text-black shadow-sm" : "text-gray-500 hover:bg-gray-200 hover:text-black"
+            )}
+         >
+            {t.mySpaceFiles}
+         </button>
+         <button 
+            onClick={() => { setActiveTab('solutions'); setSelectedIds([]); }}
+            className={clsx(
+                "flex-1 py-2.5 text-xs font-bold uppercase tracking-wider text-center rounded-lg transition-all",
+                activeTab === 'solutions' ? "bg-white text-black shadow-sm" : "text-gray-500 hover:bg-gray-200 hover:text-black"
+            )}
+         >
+            {t.mySpaceSolutions}
+         </button>
       </div>
 
       {/* Batch Actions Bar */}
@@ -192,7 +228,7 @@ export const MySpacePanel: React.FC = () => {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="absolute bottom-4 left-4 right-4 bg-white border border-gray-200 shadow-2xl rounded-xl p-3 z-40 flex items-center justify-between"
+            className="absolute bottom-16 left-4 right-4 bg-white border border-gray-200 shadow-2xl rounded-xl p-3 z-40 flex items-center justify-between"
           >
              <div className="flex items-center gap-2 px-2">
                 <span className="bg-black text-white text-xs font-bold px-2 py-0.5 rounded-md">{selectedIds.length}</span>

@@ -51,6 +51,7 @@ export const useStore = create<AppState>((set, get) => {
     language: 'en',
     activeModal: null,
     inputMode: 'general',
+    isAgentMode: false,
     
     news: [],
     lastNewsFetch: 0,
@@ -165,7 +166,8 @@ export const useStore = create<AppState>((set, get) => {
         sessions: [newSession, ...state.sessions],
         currentSessionId: newSession.id,
         input: '', 
-        attachments: []
+        attachments: [],
+        isAgentMode: false // Reset Agent mode on new session
       };
     }),
 
@@ -182,7 +184,8 @@ export const useStore = create<AppState>((set, get) => {
         sessions: [newSession, ...state.sessions],
         currentSessionId: newSession.id,
         input: '', 
-        attachments: []
+        attachments: [],
+        isAgentMode: false
       };
     }),
 
@@ -243,7 +246,6 @@ export const useStore = create<AppState>((set, get) => {
     setLanguage: (lang) => set({ language: lang }),
     setActiveModal: (modal) => set({ activeModal: modal }),
     setInputMode: (mode) => set({ inputMode: mode }),
+    setAgentMode: (enabled) => set({ isAgentMode: enabled }),
   };
 });
-
-// No subscription to localStorage to ensure clear on refresh
