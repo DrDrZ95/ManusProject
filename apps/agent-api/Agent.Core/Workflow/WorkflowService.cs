@@ -1,11 +1,9 @@
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Agent.Core.Workflow.Models;
 
-namespace Agent.Core.Services.Workflow;
-
-using Agent.Core.Services.Workflow.Options;
+namespace Agent.Core.Workflow;
 
 /// <summary>
 /// Workflow service implementation
@@ -201,7 +199,10 @@ public class WorkflowService : IWorkflowService
                         // 如果步骤未开始，标记为进行中 - If step not started, mark as in progress
                         if (step.Status == PlanStepStatus.NotStarted)
                         {
-                            UpdateStepStatusAsync(planId, i, PlanStepStatus.InProgress, cancellationToken);
+                            // Note: This is a synchronous call within a lock, which is generally bad practice.
+                            // In a real application, this should be handled by an external state machine or event.
+                            // For now, we'll call the synchronous part of the update logic.
+                            UpdateStepStatusSync(planId, i, PlanStepStatus.InProgress);
                         }
                         
                         plan.CurrentStepIndex = i;
@@ -281,7 +282,8 @@ public class WorkflowService : IWorkflowService
 
             if (!string.IsNullOrEmpty(plan.Description))
             {
-                todoContent.Add($"**描述**: {plan.Description}");
+                todoContent.Add($"## 描述 (Description)");
+                todoContent.Add(plan.Description);
                 todoContent.Add("");
             }
 
@@ -536,6 +538,51 @@ public class WorkflowService : IWorkflowService
     #region Private Helper Methods
 
     /// <summary>
+    /// Synchronous part of UpdateStepStatusAsync, used internally.
+    /// </summary>
+    private bool UpdateStepStatusSync(string planId, int stepIndex, PlanStepStatus status)
+    {
+        try
+        {
+            lock (_lockObject)
+            {
+                if (!_plans.TryGetValue(planId, out var plan))
+                {
+                    return false;
+                }
+
+                if (stepIndex < 0 || stepIndex >= plan.Steps.Count)
+                {
+                    return false;
+                }
+
+                // 更新步骤状态 - Update step status
+                plan.Steps[stepIndex].Status = status;
+                plan.StepStatuses[stepIndex] = status;
+                plan.UpdatedAt = DateTime.UtcNow;
+
+                // 更新时间戳 - Update timestamps
+                var step = plan.Steps[stepIndex];
+                switch (status)
+                {
+                    case PlanStepStatus.InProgress:
+                        step.StartedAt = DateTime.UtcNow;
+                        break;
+                    case PlanStepStatus.Completed:
+                        step.CompletedAt = DateTime.UtcNow;
+                        break;
+                }
+                
+                return true;
+            }
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Extract step type from step text
     /// 从步骤文本中提取步骤类型
     /// 
@@ -567,41 +614,3 @@ public class WorkflowService : IWorkflowService
 
     #endregion
 }
-
-/// <summary>
-/// Workflow service configuration options
-/// 工作流服务配置选项
-/// </summary>
-public class WorkflowOptions
-{
-    /// <summary>
-    /// Default todo list file directory
-    /// 默认待办事项列表文件目录
-    /// </summary>
-    public string DefaultToDoDirectory { get; set; } = "todo_lists";
-
-    /// <summary>
-    /// Enable file auto-save
-    /// 启用文件自动保存
-    /// </summary>
-    public bool EnableAutoSave { get; set; } = true;
-
-    /// <summary>
-    /// Auto-save interval in minutes
-    /// 自动保存间隔（分钟）
-    /// </summary>
-    public int AutoSaveIntervalMinutes { get; set; } = 5;
-
-    /// <summary>
-    /// Maximum number of plans to keep in memory
-    /// 内存中保留的最大计划数
-    /// </summary>
-    public int MaxPlansInMemory { get; set; } = 100;
-
-    /// <summary>
-    /// Enable detailed logging
-    /// 启用详细日志记录
-    /// </summary>
-    public bool EnableDetailedLogging { get; set; } = true;
-}
-
