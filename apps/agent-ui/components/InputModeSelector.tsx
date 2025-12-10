@@ -14,6 +14,7 @@ export const InputModeSelector: React.FC<InputModeSelectorProps> = ({ onSelectAg
   const [isOpen, setIsOpen] = useState(false);
   const inputMode = useStore(s => s.inputMode);
   const setInputMode = useStore(s => s.setInputMode);
+  const setAgentMode = useStore(s => s.setAgentMode);
   const language = useStore(s => s.language);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
@@ -60,6 +61,8 @@ export const InputModeSelector: React.FC<InputModeSelectorProps> = ({ onSelectAg
                     onSelectAgentMode?.();
                 } else {
                     setInputMode(mode.id);
+                    // Force exit agent mode if another mode is selected, restoring default behavior
+                    setAgentMode(false);
                 }
                 setIsOpen(false);
               }}

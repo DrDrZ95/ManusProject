@@ -52,6 +52,10 @@ const ANIME_AVATARS = [
   `https://api.dicebear.com/9.x/lorelei/svg?seed=Sasha${AVATAR_PARAMS}`,
   `https://api.dicebear.com/9.x/lorelei/svg?seed=Felix${AVATAR_PARAMS}`,
   `https://api.dicebear.com/9.x/lorelei/svg?seed=Jazz${AVATAR_PARAMS}`,
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Luna${AVATAR_PARAMS}`,
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Leo${AVATAR_PARAMS}`,
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Bella${AVATAR_PARAMS}`,
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=Zoe${AVATAR_PARAMS}`,
 ];
 
 // Simple / Notion-like Avatars (Micah style from DiceBear)
@@ -60,6 +64,10 @@ const SIMPLE_AVATARS = [
     `https://api.dicebear.com/9.x/micah/svg?seed=Oliver`,
     `https://api.dicebear.com/9.x/micah/svg?seed=Bella`,
     `https://api.dicebear.com/9.x/micah/svg?seed=Leo`,
+    `https://api.dicebear.com/9.x/micah/svg?seed=Max`,
+    `https://api.dicebear.com/9.x/micah/svg?seed=Ruby`,
+    `https://api.dicebear.com/9.x/micah/svg?seed=Charlie`,
+    `https://api.dicebear.com/9.x/micah/svg?seed=Mia`,
 ];
 
 export const UserModals: React.FC = () => {

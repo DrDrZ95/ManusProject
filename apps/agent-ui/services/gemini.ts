@@ -216,6 +216,86 @@ The company provides a stipend of $1,000 for home office setup every 2 years.`,
 *   SDR Team`
 ];
 
+// Richer Agent Mode Simulations with "Steps"
+const AGENT_RESPONSES = [
+  `> **Initializing Agent Workflow...**
+
+**Step 1: Information Retrieval**
+*   📡 Searching web for "latest frontend frameworks 2025"...
+*   🔍 Found 3 relevant sources.
+*   *Source A: TechCrunch - "The Rise of Qwik and SolidJS"*
+*   *Source B: GitHub Trends - "React 19 Adoption Rates"*
+
+**Step 2: Planning & Construction**
+*   🧠 Analyzing requirements...
+*   📐 Drafting architecture diagram...
+*   🔨 Generating code modules for *Dashboard Component*...
+
+\`\`\`typescript
+interface DashboardProps {
+  user: User;
+  stats: Statistic[];
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ user, stats }) => {
+  return (
+    <div className="grid grid-cols-3 gap-4">
+       {stats.map(s => <StatCard key={s.id} data={s} />)}
+    </div>
+  )
+}
+\`\`\`
+
+**Step 3: Execution**
+*   🧪 Running unit tests... [PASS]
+*   🛡️ Verifying integrity... [PASS]
+
+**Final Summary**
+Task completed successfully. The dashboard architecture has been updated to support the new metrics. I have also cached the results in Redis to improve load times by 40%.`,
+
+  `> **Initializing Agent Workflow...**
+
+**Step 1: Deep Search**
+*   🗄️ Querying internal knowledge base...
+*   📄 *Found document: "Q3_Financial_Report.pdf"*
+*   📄 *Found document: "Project_Titan_Specs.docx"*
+
+**Step 2: Data Synthesis**
+*   📊 Extracting key metrics...
+*   📉 Comparing Q2 vs Q3 growth...
+*   ⚠️ Identifying discrepancies in budget allocation...
+
+**Step 3: Report Generation**
+*   📝 Compiling tables...
+*   ✍️ Drafting executive summary...
+
+**Final Output**
+Based on the analysis, the project is currently **under budget** by 15%. However, the timeline is at risk due to supply chain delays identified in the Q3 report.
+
+*Recommendation*: Reallocate surplus budget to expedite shipping logistics.`,
+
+  `> **Initializing Agent Workflow...**
+
+**Step 1: Environment Setup**
+*   ⚙️ Checking system dependencies...
+*   ✅ *Detected Node.js v20.1.0*
+*   ✅ *Detected Docker v24.0.5*
+
+**Step 2: Task Execution**
+*   🚀 Running build script \`npm run build\`...
+*   > [Webpack] Compiling...
+*   > [Webpack] 98% emitted
+*   > [Webpack] Compiled successfully.
+
+**Step 3: Deployment**
+*   🐳 Pushing image to registry...
+*   ☸️ Updating Kubernetes manifest...
+*   🔄 Rolling restart of pods triggered.
+
+**Final Summary**
+Deployment to **staging** is complete. You can verify the changes at \`staging.internal.app\`. No regression issues were detected during the smoke test.`
+];
+
 export const streamGeminiResponse = async (
   apiKey: string,
   modelType: ModelType,
@@ -233,7 +313,8 @@ export const streamGeminiResponse = async (
   try {
     // Pick response based on input mode
     let responseSet = GENERAL_RESPONSES;
-    if (inputMode === 'oa_work') responseSet = OA_WORK_RESPONSES;
+    if (inputMode === 'agent') responseSet = AGENT_RESPONSES;
+    else if (inputMode === 'oa_work') responseSet = OA_WORK_RESPONSES;
     else if (inputMode === 'brainstorm') responseSet = BRAINSTORM_RESPONSES;
     else if (inputMode === 'company') responseSet = COMPANY_RESPONSES;
 
@@ -247,8 +328,8 @@ export const streamGeminiResponse = async (
     fullText += responseTemplate;
 
     let currentText = "";
-    const chunkSize = 2; // Characters per chunk
-    const delay = 15;    // Milliseconds per chunk (typing speed)
+    const chunkSize = 4; // Characters per chunk
+    const delay = 10;    // Milliseconds per chunk (typing speed)
 
     // Stream the response
     for (let i = 0; i < fullText.length; i += chunkSize) {

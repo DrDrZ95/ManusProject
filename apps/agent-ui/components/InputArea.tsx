@@ -55,13 +55,16 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
 
   // Unified Simplified Slash Commands (Language Agnostic)
   const getModeLabel = () => {
+     if (isAgentMode) return "Agent";
      switch (inputMode) {
-        case 'brainstorm': return `/Brainstorm`;
-        case 'oa_work': return `/OA_Work`;
-        case 'company': return `/Company`;
-        default: return '';
+        case 'brainstorm': return "Brainstorm";
+        case 'oa_work': return "OA_Work";
+        case 'company': return "Company";
+        default: return null;
      }
   };
+
+  const modeLabel = getModeLabel();
 
   // Auto-resize textarea
   useEffect(() => {
@@ -79,8 +82,9 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
       }
     }
     // Handle deleting the mode block on backspace if input is empty
-    if (e.key === 'Backspace' && input === '' && inputMode !== 'general') {
+    if (e.key === 'Backspace' && input === '' && (inputMode !== 'general' || isAgentMode)) {
         setInputMode('general');
+        setAgentMode(false); 
     }
   };
 
@@ -111,7 +115,7 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
       // Select random simulation text
       const randomText = VOICE_SIMULATIONS[Math.floor(Math.random() * VOICE_SIMULATIONS.length)];
       setInput(randomText);
-    }, 800); // 800ms simulated recording time
+    }, 1500); // Slightly longer simulation
   };
 
   const handleAgentModeSelect = () => {
@@ -157,41 +161,39 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
                 </div>
               )}
 
-              {/* Main Input Container - Flex Row Layout */}
-              <div className="flex w-full items-start px-4 py-4 gap-2">
+              {/* Main Input Container */}
+              <div className="flex w-full items-end px-4 py-4 gap-2">
                   {/* Mode Chip Block (Inline) */}
-                  {inputMode !== 'general' && inputMode !== 'agent' && (
+                  {modeLabel && (
                      <motion.div 
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="flex-shrink-0 pt-0.5"
+                        className={clsx(
+                          "flex-shrink-0 mb-1",
+                          isAgentMode ? "text-blue-600" : "text-gray-600"
+                        )}
                      >
-                        <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 px-2.5 py-1 rounded-md text-sm font-mono font-medium select-none border border-blue-100 cursor-default">
-                            {getModeLabel()}
+                        <div className={clsx(
+                          "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide border select-none",
+                          isAgentMode 
+                            ? "bg-blue-50 border-blue-200" 
+                            : "bg-gray-100 border-gray-200"
+                        )}>
+                            {isAgentMode ? <Icons.Cpu className="w-3.5 h-3.5" /> : <Icons.Zap className="w-3.5 h-3.5" />}
+                            <span>{modeLabel}</span>
                             <button 
-                                onClick={() => setInputMode('general')}
-                                className="text-blue-400 hover:text-blue-700 rounded-full transition-colors flex items-center justify-center"
-                                title="Clear mode"
+                              onClick={() => {
+                                setInputMode('general');
+                                setAgentMode(false);
+                              }}
+                              className={clsx("ml-1 hover:text-black", isAgentMode ? "hover:bg-blue-100" : "hover:bg-gray-200", "rounded-full p-0.5")}
                             >
                                 <Icons.Close className="w-3 h-3" />
                             </button>
-                        </span>
-                     </motion.div>
-                  )}
-                  {isAgentMode && (
-                      <motion.div 
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="flex-shrink-0 pt-0.5"
-                     >
-                        <span className="inline-flex items-center gap-1.5 bg-blue-600 text-white px-2.5 py-1 rounded-md text-sm font-bold select-none shadow-md">
-                            <Icons.Cpu className="w-3 h-3" />
-                            AGENT
-                        </span>
+                        </div>
                      </motion.div>
                   )}
 
-                  {/* Text Area */}
                   <textarea
                     ref={textareaRef}
                     value={input}
@@ -199,163 +201,162 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
                     onKeyDown={handleKeyDown}
                     placeholder={getPlaceholder()}
                     rows={1}
-                    className="flex-1 min-w-0 bg-transparent text-gray-900 placeholder-gray-400 text-[16px] resize-none outline-none overflow-y-auto scrollbar-hide py-1 leading-relaxed"
-                    style={{ minHeight: '32px', maxHeight: '200px' }}
+                    className="flex-1 max-h-[200px] resize-none bg-transparent outline-none text-gray-900 placeholder-gray-400 leading-relaxed font-normal min-h-[24px] py-1"
                   />
+                  
+                  {/* Action Buttons: Voice and Send */}
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <button 
+                      onClick={() => setIsVoiceMode(true)}
+                      className="p-2 text-gray-400 hover:text-black transition-colors rounded-full hover:bg-gray-100"
+                      title="Voice Input"
+                    >
+                      <Icons.Mic className="w-6 h-6" />
+                    </button>
+
+                    <button
+                      onClick={onSend}
+                      disabled={(!input.trim() && attachments.length === 0) || isLoading}
+                      className={clsx(
+                        "w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200",
+                        (input.trim() || attachments.length > 0) && !isLoading
+                          ? isAgentMode ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md" : "bg-black hover:bg-gray-800 text-white shadow-md"
+                          : "bg-gray-100 text-gray-300 cursor-not-allowed"
+                      )}
+                    >
+                      {isLoading ? (
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <Icons.Send className="w-4 h-4 ml-0.5" />
+                      )}
+                    </button>
+                  </div>
               </div>
 
-              {/* Actions Bar */}
-              <div className="flex items-center justify-between px-2 pb-2">
-                <div className="flex items-center gap-2">
-                  {!isAgentMode && (
-                      <>
-                        <ModelSelector />
-                        <div className="w-px h-4 bg-gray-200 mx-1" />
-                        <InputModeSelector onSelectAgentMode={handleAgentModeSelect} />
-                      </>
-                  )}
+              {/* Toolbar */}
+              <div className="flex items-center justify-between px-3 pb-3 pt-0">
+                <div className="flex items-center gap-1">
+                  {/* Model Selector First */}
+                  <ModelSelector />
 
-                  <input 
-                    type="file" 
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept=".pdf,.doc,.docx,.md,.txt"
-                    onChange={handleFileSelect}
-                  />
+                  <div className="w-px h-4 bg-gray-200 mx-1" />
+
+                  {/* Input Mode Selector Second */}
+                  <InputModeSelector onSelectAgentMode={handleAgentModeSelect} />
+                  
+                  <div className="w-px h-4 bg-gray-200 mx-1" />
+
                   <button 
                     onClick={() => fileInputRef.current?.click()}
                     className="p-2 text-gray-400 hover:text-black transition-colors rounded-full hover:bg-gray-100"
-                    title="Attach file (PDF, Word, MD)"
+                    title="Attach File"
                   >
                     <Icons.Attach className="w-5 h-5" />
                   </button>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    onChange={handleFileSelect}
+                    accept=".pdf,.doc,.docx,.md,.txt"
+                  />
                 </div>
-
-                <div className="flex items-center gap-2">
-                   {/* Voice Input Button */}
-                   <button
-                    onClick={() => setIsVoiceMode(true)}
-                    className="p-2 text-gray-400 hover:text-black transition-colors rounded-full hover:bg-gray-100"
-                    title="Voice Input"
-                   >
-                     <Icons.Mic className="w-5 h-5" />
-                   </button>
-
-                   {/* Send Button */}
-                   <button
-                    onClick={onSend}
-                    disabled={(!input.trim() && attachments.length === 0) && !isLoading}
-                    className={clsx(
-                      "flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 shadow-sm",
-                      (input.trim() || attachments.length > 0) || isLoading 
-                        ? (isAgentMode ? "bg-blue-600 hover:bg-blue-700" : "bg-black hover:bg-gray-800") + " text-white hover:scale-105"
-                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    )}
-                   >
-                    {isLoading ? (
-                      <div className="w-3 h-3 bg-white rounded-sm animate-spin" />
-                    ) : (
-                      <Icons.Send className="w-4 h-4 ml-0.5" />
-                    )}
-                   </button>
+                
+                <div className="flex items-center gap-3 text-xs text-gray-400 pr-2">
+                   {isAgentMode && (
+                       <span className="flex items-center gap-1 text-blue-500 font-medium animate-pulse">
+                           <Icons.Cpu className="w-3 h-3" />
+                           Agent Active
+                       </span>
+                   )}
                 </div>
               </div>
             </motion.div>
           ) : (
+            /* Voice Mode UI */
             <motion.div
-              key="voice-mode"
-              initial={{ opacity: 0, height: 56 }}
-              animate={{ opacity: 1, height: 200 }}
-              exit={{ opacity: 0, height: 56 }}
-              className="flex flex-col items-center justify-center h-[200px] relative bg-gradient-to-b from-white to-gray-50 rounded-[25px] overflow-hidden"
+               key="voice-mode"
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
+               exit={{ opacity: 0, scale: 0.95 }}
+               className="h-[180px] flex flex-col items-center justify-center relative bg-gradient-to-b from-gray-50 to-white rounded-[26px]"
             >
                <button 
-                 onClick={() => setIsVoiceMode(false)}
-                 className="absolute top-3 right-3 p-2 text-gray-400 hover:text-black hover:bg-gray-200 rounded-full transition-colors z-20"
+                  onClick={() => setIsVoiceMode(false)}
+                  className="absolute top-4 right-4 p-2 text-gray-400 hover:text-black rounded-full hover:bg-gray-100"
                >
-                 <Icons.Close className="w-5 h-5" />
+                  <Icons.Close className="w-5 h-5" />
                </button>
 
-               <div className="relative">
-                 {/* Pulsing Rings */}
-                 <motion.div 
-                    animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
-                    transition={{ repeat: Infinity, duration: 2 }}
-                    className="absolute inset-0 bg-red-100 rounded-full z-0"
-                 />
-                 {isRecording && (
-                   <motion.div 
-                      animate={{ scale: [1.5, 2, 1.5], opacity: [0.3, 0, 0.3] }}
-                      transition={{ repeat: Infinity, duration: 2, delay: 0.5 }}
-                      className="absolute inset-0 bg-red-100 rounded-full z-0"
-                   />
-                 )}
-                 
-                 <motion.button
-                   whileHover={{ scale: 1.05 }}
-                   whileTap={{ scale: 0.95 }}
-                   onMouseDown={handleVoiceInteraction}
-                   onClick={handleVoiceInteraction}
-                   className="relative z-10 w-24 h-24 bg-red-500 text-white rounded-full flex items-center justify-center shadow-xl hover:bg-red-600 transition-colors"
-                 >
-                   <Icons.Mic className="w-10 h-10" />
-                 </motion.button>
+               <div className="text-center w-full flex flex-col items-center">
+                  <div className="mb-4 relative">
+                     <button 
+                        onClick={handleVoiceInteraction}
+                        className={clsx(
+                           "w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl border-4",
+                           isRecording 
+                            ? "bg-red-500 border-red-100 scale-110 shadow-red-200" 
+                            : "bg-black border-gray-100 hover:bg-gray-800 hover:scale-105"
+                        )}
+                     >
+                        <Icons.Mic className="w-8 h-8 text-white" />
+                     </button>
+                     {isRecording && (
+                        <div className="absolute inset-0 rounded-full border-4 border-red-200 animate-ping opacity-75"></div>
+                     )}
+                  </div>
+                  <p className="text-sm font-medium text-gray-600 text-center">
+                     {isRecording ? t.listening : t.tapToSpeak}
+                  </p>
                </div>
-               
-               <p className="mt-6 text-gray-500 font-medium text-sm z-10">
-                 {isRecording ? t.listening : t.tapToSpeak}
-               </p>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-      <div className="text-center mt-2 text-xs text-gray-400 font-medium">
-        {t.disclaimer}
-      </div>
-    </div>
-
-    {/* Agent Confirmation Modal */}
-    <AnimatePresence>
+      
+      {/* Agent Mode Confirmation Modal */}
+      <AnimatePresence>
         {showAgentConfirm && (
-            <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-                onClick={() => setShowAgentConfirm(false)}
-            >
-                <motion.div 
-                    initial={{ scale: 0.9, y: 20 }}
-                    animate={{ scale: 1, y: 0 }}
-                    exit={{ scale: 0.9, y: 20 }}
-                    className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-gray-200"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 mx-auto">
-                        <Icons.Cpu className="w-6 h-6" />
-                    </div>
-                    <h3 className="text-xl font-bold text-center text-gray-900 mb-2">{t.agentModeConfirmTitle}</h3>
-                    <p className="text-center text-gray-500 text-sm mb-6 leading-relaxed">
-                        {t.agentModeConfirmDesc}
-                    </p>
-                    <div className="flex gap-3">
-                        <button 
-                            onClick={() => setShowAgentConfirm(false)}
-                            className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
-                        >
-                            {t.cancel}
-                        </button>
-                        <button 
-                            onClick={confirmAgentMode}
-                            className="flex-1 px-4 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
-                        >
-                            {t.confirm}
-                        </button>
-                    </div>
-                </motion.div>
-            </motion.div>
+           <motion.div
+             initial={{ opacity: 0 }}
+             animate={{ opacity: 1 }}
+             exit={{ opacity: 0 }}
+             className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4"
+             onClick={() => setShowAgentConfirm(false)}
+           >
+              <motion.div 
+                 initial={{ scale: 0.9, y: 20 }}
+                 animate={{ scale: 1, y: 0 }}
+                 exit={{ scale: 0.9, y: 20 }}
+                 className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-gray-100"
+                 onClick={e => e.stopPropagation()}
+              >
+                  <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+                      <Icons.Cpu className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-center text-gray-900 mb-2">{t.agentModeConfirmTitle}</h3>
+                  <p className="text-center text-gray-500 mb-6 text-sm">
+                      {t.agentModeConfirmDesc}
+                  </p>
+                  <div className="flex gap-3">
+                      <button 
+                          onClick={() => setShowAgentConfirm(false)}
+                          className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
+                      >
+                          {t.cancel}
+                      </button>
+                      <button 
+                          onClick={confirmAgentMode}
+                          className="flex-1 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
+                      >
+                          {t.confirm}
+                      </button>
+                  </div>
+              </motion.div>
+           </motion.div>
         )}
-    </AnimatePresence>
+      </AnimatePresence>
+    </div>
     </>
   );
 };

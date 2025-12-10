@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '../store';
 import { Icons } from './icons';
@@ -9,6 +10,7 @@ export const ModelSelector: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const selectedModel = useStore(s => s.selectedModel);
   const setModel = useStore(s => s.setModel);
+  const isAgentMode = useStore(s => s.isAgentMode);
   const language = useStore(s => s.language);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
@@ -31,6 +33,16 @@ export const ModelSelector: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // In Agent Mode, we force a specific "Auto" state display and disable interaction
+  if (isAgentMode) {
+      return (
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 text-sm font-medium text-gray-400 cursor-not-allowed select-none" title="Model selection managed by Agent">
+            <Icons.Cpu className="w-4 h-4" />
+            <span>Agent Auto</span>
+        </div>
+      );
+  }
 
   return (
     <div className="relative" ref={dropdownRef}>
