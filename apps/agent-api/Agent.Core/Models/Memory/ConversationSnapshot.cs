@@ -26,15 +26,13 @@ public class ConversationSnapshot
     /// <summary>
     /// Summary for fast restoration / 会话摘要用于快速恢复
     /// </summary>
-    [Column("summary")]
-    [Column(TypeName = "text")]
+    [Column("summary", TypeName = "text")]
     public string? Summary { get; set; }
 
     /// <summary>
     /// Memory elements or state / AI 对话记忆与状态
     /// </summary>
-    [Column("memory")]
-    [Column(TypeName = "text")]
+    [Column("memory", TypeName = "text")]
     public string? Memory { get; set; }
 
     /// <summary>

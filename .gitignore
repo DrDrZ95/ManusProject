@@ -92,3 +92,29 @@ npm-debug.log*
 *.bak
 *.tmp
 
+# TypeScript
+*.tsbuildinfo
+
+# general with react
+dist/
+build/
+out/
+
+# Vite
+.vite/
+
+# Next.js
+.next/
+out/
+
+coverage/
+
+# ESLint / Prettier 
+.eslintcache
+
+# Storybook
+.storybook/
+storybook-static/
+
+# log
+debug.log

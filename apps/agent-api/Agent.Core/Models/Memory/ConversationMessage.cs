@@ -33,8 +33,7 @@ public class ConversationMessage
     /// <summary>
     /// Message Content / 消息内容
     /// </summary>
-    [Column("content")]
-    [Column(TypeName = "text")] // LONGTEXT in MySQL maps to text in PostgreSQL/EF Core
+    [Column("content", TypeName = "text")] // LONGTEXT in MySQL maps to text in PostgreSQL/EF Core
     public string? Content { get; set; }
 
     /// <summary>

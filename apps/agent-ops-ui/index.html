@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpsNexus - MLOps Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            },
+            colors: {
+              nexus: {
+                900: '#0f172a', // Dark Background
+                800: '#1e293b', // Dark Surface
+                700: '#334155', // Dark Border
+                600: '#475569',
+                500: '#64748b',
+                400: '#94a3b8',
+                300: '#cbd5e1',
+                200: '#e2e8f0',
+                100: '#f1f5f9',
+                50: '#f8fafc',
+                accent: '#3b82f6', // Blue
+                success: '#10b981', // Emerald
+                warning: '#f59e0b', // Amber
+                danger: '#ef4444', // Red
+                terminal: '#0d1117',
+              },
+              light: {
+                bg: '#f8fafc',      // Slate 50
+                surface: '#ffffff',  // White
+                border: '#e2e8f0',   // Slate 200
+                text: '#0f172a',     // Slate 900
+                textSec: '#64748b',  // Slate 500
+              }
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-out',
+              'slide-up': 'slideUp 0.3s ease-out',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              slideUp: {
+                '0%': { transform: 'translateY(10px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      /* Custom scrollbar for terminal and lists */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+      .dark ::-webkit-scrollbar-track {
+        background: #1e293b;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #475569;
+      }
+      
+      /* React Flow simulated lines */
+      .connection-line {
+        stroke-dasharray: 5;
+        animation: dash 1s linear infinite;
+      }
+      @keyframes dash {
+        to {
+          stroke-dashoffset: -10;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "recharts": "https://esm.sh/recharts@^3.5.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.560.0",
+    "clsx": "https://esm.sh/clsx@^2.1.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-light-bg text-light-text dark:bg-nexus-900 dark:text-nexus-100 antialiased overflow-hidden transition-colors duration-300">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

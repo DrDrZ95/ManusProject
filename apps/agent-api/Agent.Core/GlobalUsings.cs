@@ -25,7 +25,7 @@ global using Agent.Core.Services.SemanticKernel.Planner;
 global using Agent.Core.Services.Telemetry;
 global using Agent.Core.Services.UserInput;
 global using Agent.Core.Services.VectorDatabase;
-global using Agent.Core.Services.Workflow;
+global using Agent.Core.Workflow;
 
 global using HealthChecks.NpgSql;
 

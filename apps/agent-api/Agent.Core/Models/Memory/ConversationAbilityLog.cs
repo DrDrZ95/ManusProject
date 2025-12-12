@@ -39,15 +39,13 @@ public class ConversationAbilityLog
     /// <summary>
     /// Arguments for call / 调用参数
     /// </summary>
-    [Column("request_payload")]
-    [Column(TypeName = "text")]
+    [Column("request_payload", TypeName = "text")]
     public string? RequestPayload { get; set; }
 
     /// <summary>
     /// Execution result / 执行结果
     /// </summary>
-    [Column("response_payload")]
-    [Column(TypeName = "text")]
+    [Column("response_payload",TypeName = "text")]
     public string? ResponsePayload { get; set; }
 
     /// <summary>

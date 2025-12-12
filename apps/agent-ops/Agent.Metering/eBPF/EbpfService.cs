@@ -27,13 +27,12 @@ public interface IEbpfService
 public class EbpfService : IEbpfService 
 { 
     private readonly ILogger<EbpfService> _logger; 
-    private readonly IPostgreSqlService _postgreSqlService; // PostgreSQL服务实例 
+    //private readonly IPostgreSqlService _postgreSqlService; // PostgreSQL服务实例 
     private static readonly ActivitySource ActivitySource = new ActivitySource("Agent.Metering.eBPF"); // OpenTelemetry活动源 
 
-    public EbpfService(ILogger<EbpfService> logger, IPostgreSqlService postgreSqlService) 
+    public EbpfService(ILogger<EbpfService> logger) 
     { 
         _logger = logger; 
-        _postgreSqlService = postgreSqlService; 
     } 
 
     /// <summary> 
@@ -77,14 +76,14 @@ public class EbpfService : IEbpfService
             _logger.LogInformation("Simulating OpenTelemetry data collection for metric {MetricName}: {Value}", metricName, simulatedValue); 
 
             // 5. 存储到PostgreSQL ORM模块 
-            var metricEntry = new MetricEntry 
-            { 
-                MetricName = metricName, 
-                Value = simulatedValue, 
-                Timestamp = DateTime.UtcNow 
-            }; 
+            // var metricEntry = new MetricEntry 
+            // { 
+            //     MetricName = metricName, 
+            //     Value = simulatedValue, 
+            //     Timestamp = DateTime.UtcNow 
+            // }; 
 
-            await _postgreSqlService.AddMetricEntryAsync(metricEntry); // 调用PostgreSQL服务存储数据 
+            // await _postgreSqlService.AddMetricEntryAsync(metricEntry); // 调用PostgreSQL服务存储数据 
             _logger.LogInformation("Metric {MetricName} with value {Value} stored in PostgreSQL.", metricName, simulatedValue); 
 
             return simulatedValue; 
