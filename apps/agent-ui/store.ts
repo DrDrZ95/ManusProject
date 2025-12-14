@@ -5,8 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { generateNews, shouldFetchNews } from './services/news';
 import { MOCK_SESSIONS } from './data/mockData';
 import { authApi } from './services/api';
-
-// Removed STORAGE_KEY to prevent persistence
+import { tokenManager } from './services/tokenManager';
 
 const createInitialSession = (): ChatSession => ({
   id: uuidv4(),
@@ -15,24 +14,27 @@ const createInitialSession = (): ChatSession => ({
   updatedAt: Date.now(),
 });
 
-// Default initial state without loading from localStorage
+// Initial auth check
+const hasExistingToken = tokenManager.hasToken();
+
 const initialState = {
   sessions: MOCK_SESSIONS,
   currentSessionId: MOCK_SESSIONS[0].id,
-  isAuthenticated: true // Default to true for simulation
+  // Check local storage for persistence on load
+  isAuthenticated: hasExistingToken
 };
 
 export const useStore = create<AppState>((set, get) => {
   return {
     isAuthenticated: initialState.isAuthenticated,
-    user: {
+    // If we have a token, we pretend we have a user until profile fetch (simulated)
+    user: hasExistingToken ? {
       id: 'user-123',
       name: 'Agent User',
       email: 'user@example.com',
-      avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=Felix',
-      role: 'admin',
-      bio: ''
-    },
+      avatar: 'https://api.dicebear.com/9.x/micah/svg?seed=Felix',
+      role: 'admin'
+    } : null,
     settings: {
       streamResponses: true,
       soundEffects: true,
@@ -58,12 +60,12 @@ export const useStore = create<AppState>((set, get) => {
 
     login: async (credentials: LoginRequest) => {
       try {
+        // Use the new API Client which handles token storage automatically
         const user = await authApi.login(credentials);
-        // Preserve existing user settings/avatar if re-logging in within session
-        const existingUser = get().user;
+        
         set({ 
           isAuthenticated: true, 
-          user: { ...user, ...existingUser, ...user } // merge but prioritize API response initially, realistically
+          user: user
         });
       } catch (error) {
         console.error("Login failed", error);
@@ -73,6 +75,7 @@ export const useStore = create<AppState>((set, get) => {
     
     logout: async () => {
       await authApi.logout();
+      // Tokens are cleared in authApi.logout via tokenManager
       set({ isAuthenticated: false, user: null });
     },
 
@@ -167,7 +170,7 @@ export const useStore = create<AppState>((set, get) => {
         currentSessionId: newSession.id,
         input: '', 
         attachments: [],
-        isAgentMode: false // Reset Agent mode on new session
+        isAgentMode: false 
       };
     }),
 

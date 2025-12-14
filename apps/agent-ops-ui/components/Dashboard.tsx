@@ -1,24 +1,25 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Activity, Server, Database, GitBranch, 
-  Play, RefreshCw, AlertTriangle, CheckCircle, XCircle 
+  Play, RefreshCw, AlertTriangle, Wifi
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 import { MOCK_PROJECTS, MOCK_TIMELINE_DATA, TRANSLATIONS } from '../constants';
 import { ProjectStatus, Language } from '../types';
+import { wsService } from '../services/websocket'; // 引入 WS Service
 
 interface DashboardProps {
   lang: Language;
 }
 
-const StatusCard = ({ title, value, subtext, icon: Icon, color }: any) => (
+const StatusCard = ({ title, value, subtext, icon: Icon, color, animate }: any) => (
   <div className="bg-light-surface dark:bg-nexus-800 border border-light-border dark:border-nexus-700 rounded-lg p-5 shadow-sm hover:shadow-md transition-all group">
     <div className="flex justify-between items-start mb-4">
       <div>
         <h3 className="text-light-textSec dark:text-nexus-400 text-xs font-semibold uppercase tracking-wider">{title}</h3>
-        <p className="text-2xl font-bold text-light-text dark:text-white mt-1 group-hover:text-nexus-accent transition-colors">{value}</p>
+        <p className={`text-2xl font-bold text-light-text dark:text-white mt-1 group-hover:text-nexus-accent transition-colors ${animate ? 'animate-pulse' : ''}`}>{value}</p>
       </div>
       <div className={`p-2 rounded-md bg-opacity-20 ${color} text-white`}>
         <Icon size={20} />
@@ -62,25 +63,66 @@ const ProjectRow: React.FC<{ project: ProjectStatus, t: any }> = ({ project, t }
 
 const Dashboard: React.FC<DashboardProps> = ({ lang }) => {
   const t = TRANSLATIONS[lang];
+  const [wsConnected, setWsConnected] = useState(false);
+  
+  // Real-time states powered by WebSocket
+  const [healthMetric, setHealthMetric] = useState({ value: "98.2%", status: "healthy" });
+  const [activePods, setActivePods] = useState(248);
+
+  useEffect(() => {
+    // 1. Connect to WebSocket
+    wsService.connect();
+    setWsConnected(true);
+
+    // 2. Subscribe to System Health updates (Observer Pattern)
+    const unsubscribeHealth = wsService.subscribe('system_health', (data: any) => {
+      // Update UI with real-time data
+      const overallHealth = 100 - (data.cpu * 0.2 + data.memory * 0.1); // Fake calculation
+      setHealthMetric({
+        value: overallHealth.toFixed(1) + "%",
+        status: data.status
+      });
+      setActivePods(data.activePods);
+    });
+
+    // 3. Cleanup on unmount
+    return () => {
+      unsubscribeHealth();
+      wsService.disconnect();
+      setWsConnected(false);
+    };
+  }, []);
 
   return (
     <div className="space-y-6 animate-fade-in pb-20">
       
+      {/* WS Status Indicator */}
+      <div className="flex justify-end items-center mb-2">
+         <div className={`flex items-center text-xs font-mono px-2 py-1 rounded border ${
+           wsConnected ? 'bg-green-500/10 border-green-500/30 text-green-500' : 'bg-red-500/10 border-red-500/30 text-red-500'
+         }`}>
+           <Wifi size={12} className="mr-2" />
+           WS: {wsConnected ? 'CONNECTED (MOCK STREAM)' : 'DISCONNECTED'}
+         </div>
+      </div>
+
       {/* Quick Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatusCard 
           title={t.systemHealth} 
-          value="98.2%" 
-          subtext="3 services degraded" 
+          value={healthMetric.value} 
+          subtext={healthMetric.status === 'healthy' ? "All systems operational" : "Minor degradation detected"} 
           icon={Activity} 
-          color="bg-green-500" 
+          color={healthMetric.status === 'healthy' ? "bg-green-500" : "bg-yellow-500"}
+          animate={true} // Visual feedback for real-time update
         />
         <StatusCard 
           title={t.activeClusters} 
           value="12" 
-          subtext="248 pods running" 
+          subtext={`${activePods} pods running`} 
           icon={Server} 
           color="bg-purple-500" 
+          animate={true}
         />
         <StatusCard 
           title="Data Pipelines" 

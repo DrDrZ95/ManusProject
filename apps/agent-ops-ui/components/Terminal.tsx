@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Terminal as TerminalIcon, X, Maximize2, Minimize2, ChevronDown, Server } from 'lucide-react';
+import { Terminal as TerminalIcon, X, Maximize2, Minimize2, ChevronDown, Server, Cpu } from 'lucide-react';
 import { TerminalLine, ServerContext } from '../types';
 import { analyzeCommand } from '../services/geminiService';
+import { mcpClient } from '../services/mcp'; // 引入 MCP Client
+import { api } from '../services/api'; // 引入 API Client 演示
 import { TRANSLATIONS } from '../constants';
 
 interface TerminalProps {
@@ -12,7 +14,7 @@ interface TerminalProps {
 const Terminal: React.FC<TerminalProps> = ({ isOpen, onToggle }) => {
   const [lines, setLines] = useState<TerminalLine[]>([
     { id: 'init', type: 'system', content: 'OpsNexus CLI v1.0.4 initialized...', timestamp: Date.now() },
-    { id: 'init3', type: 'system', content: 'Type "help" for available commands.', timestamp: Date.now() },
+    { id: 'init3', type: 'system', content: 'Type "help" or "mcp status" to test.', timestamp: Date.now() },
   ]);
   const [input, setInput] = useState('');
   const [isMaximized, setIsMaximized] = useState(false);
@@ -59,16 +61,39 @@ const Terminal: React.FC<TerminalProps> = ({ isOpen, onToggle }) => {
     setInput('');
     setIsProcessing(true);
 
-    // Mock local command handling
     let responseContent = '';
     const lowerCmd = cmd.toLowerCase().trim();
 
-    if (lowerCmd === 'clear') {
-      setLines([]);
-      setIsProcessing(false);
-      return;
-    } else {
-        responseContent = await analyzeCommand(cmd, `Context: ${activeContext}`);
+    try {
+      if (lowerCmd === 'clear') {
+        setLines([]);
+        setIsProcessing(false);
+        return;
+      } 
+      // --- MCP 协议演示 ---
+      else if (lowerCmd.startsWith('mcp')) {
+        const query = lowerCmd.replace('mcp', '').trim();
+        if (query) {
+          responseContent = await mcpClient.simulateAgentExecution(query);
+        } else {
+          const tools = mcpClient.listTools();
+          responseContent = `Available MCP Tools:\n${tools.map(t => `- ${t.name}: ${t.description}`).join('\n')}`;
+        }
+      }
+      // --- API Service 演示 ---
+      else if (lowerCmd === 'api test') {
+        // 模拟调用 api.get('/system/health')
+        const data = await api.get('/system/health', { 
+          mockData: { status: 'ok', latency: 12, region: 'us-west-2' } 
+        });
+        responseContent = `API Response:\n${JSON.stringify(data, null, 2)}`;
+      }
+      // --- 默认 AI 处理 ---
+      else {
+          responseContent = await analyzeCommand(cmd, `Context: ${activeContext}`);
+      }
+    } catch (err: any) {
+      responseContent = `Error: ${err.message}`;
     }
 
     setLines(prev => [...prev, {
@@ -138,6 +163,12 @@ const Terminal: React.FC<TerminalProps> = ({ isOpen, onToggle }) => {
         </div>
 
         <div className="flex items-center space-x-3">
+          {/* MCP Indicator */}
+          <div className="hidden md:flex items-center space-x-1 px-2 py-0.5 rounded bg-nexus-700/50 text-[10px] text-nexus-400">
+             <Cpu size={10} />
+             <span>MCP Active</span>
+          </div>
+
           <button onClick={() => setIsMaximized(!isMaximized)} className="text-nexus-400 hover:text-white">
             {isMaximized ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
           </button>

@@ -1,24 +1,43 @@
 
 /**
- * WebSocket Service
- * WebSocket 服务类
+ * Enterprise WebSocket Service
+ * 企业级 WebSocket 服务
  * 
- * Handles real-time communication for terminal and chat events.
- * 处理终端和聊天事件的实时通信。
+ * Features:
+ * 1. Singleton Pattern for global access.
+ * 2. Automatic Reconnection (Exponential Backoff).
+ * 3. Heartbeat Mechanism (Ping/Pong) to detect dead connections.
+ * 4. Event-based subscription system.
+ * 
+ * 特性：
+ * 1. 全局访问的单例模式。
+ * 2. 自动重连（指数退避算法）。
+ * 3. 心跳机制（Ping/Pong）检测死链接。
+ * 4. 基于事件的订阅系统。
  */
+
+type WebSocketEventHandler = (payload: any) => void;
+
 class WebSocketService {
   private static instance: WebSocketService;
   private socket: WebSocket | null = null;
   private url: string = 'ws://localhost:8080/ws';
-  private listeners: Map<string, ((data: any) => void)[]> = new Map();
-  private connected: boolean = false;
+  
+  // State
+  private isConnected: boolean = false;
+  private reconnectAttempts: number = 0;
+  private maxReconnectAttempts: number = 5;
+  private reconnectTimeoutId: any = null;
+  
+  // Heartbeat
+  private heartbeatInterval: any = null;
+  private readonly HEARTBEAT_RATE = 30000; // 30s
+
+  // Event Listeners
+  private listeners: Map<string, WebSocketEventHandler[]> = new Map();
 
   private constructor() {}
 
-  /**
-   * Get Singleton Instance
-   * 获取单例实例
-   */
   public static getInstance(): WebSocketService {
     if (!WebSocketService.instance) {
       WebSocketService.instance = new WebSocketService();
@@ -27,74 +46,52 @@ class WebSocketService {
   }
 
   /**
-   * Connect to WebSocket Server
-   * 连接到 WebSocket 服务器
-   * 
-   * @param url Optional URL override / 可选的 URL 覆盖
+   * Initiate Connection
+   * 初始化连接
    */
   public connect(url?: string): void {
+    if (this.isConnected) return;
     if (url) this.url = url;
-    
-    if (this.connected) {
-      console.warn('[WS] Already connected');
-      return;
-    }
 
     console.log(`[WS] Connecting to ${this.url}...`);
-    
-    // Simulation of connection for demo purposes
-    // 演示目的的连接模拟
-    setTimeout(() => {
-      this.connected = true;
-      this.onOpen(new Event('open'));
-    }, 500);
 
-    // Real implementation would be:
-    // 真实实现如下:
-    // this.socket = new WebSocket(this.url);
-    // this.socket.onopen = this.onOpen.bind(this);
-    // this.socket.onmessage = this.onMessage.bind(this);
-    // this.socket.onclose = this.onClose.bind(this);
-    // this.socket.onerror = this.onError.bind(this);
+    // In a real environment, use: this.socket = new WebSocket(this.url);
+    // For this simulation, we mock the object.
+    // 真实环境中应使用 new WebSocket(this.url)。此处为模拟。
+    this.mockConnectionProcess();
   }
 
   /**
-   * Disconnect from WebSocket Server
-   * 断开 WebSocket 连接
+   * Disconnect manually
+   * 手动断开
    */
   public disconnect(): void {
-    if (this.socket) {
-      this.socket.close();
-      this.socket = null;
-    }
-    this.connected = false;
-    console.log('[WS] Disconnected manually');
+    if (this.reconnectTimeoutId) clearTimeout(this.reconnectTimeoutId);
+    this.stopHeartbeat();
+    this.isConnected = false;
+    this.socket = null;
+    console.log('[WS] Disconnected by user.');
   }
 
   /**
-   * Send Message
+   * Send Message to Server
    * 发送消息
-   * 
-   * @param event Event Name / 事件名称
-   * @param payload Data Payload / 数据载荷
    */
   public send(event: string, payload: any): void {
-    if (this.connected) {
-      console.log(`[WS] Sending: ${event}`, payload);
-      // if (this.socket) this.socket.send(JSON.stringify({ event, payload }));
-    } else {
-      console.warn('[WS] Socket not connected, message queued or ignored:', event);
+    if (!this.isConnected) {
+      console.warn('[WS] Cannot send message: disconnected.', event);
+      return;
     }
+    const message = JSON.stringify({ event, payload });
+    console.log(`[WS] >>> Sending: ${message}`);
+    // this.socket.send(message);
   }
 
   /**
-   * Subscribe to Event
+   * Subscribe to event
    * 订阅事件
-   * 
-   * @param event Event Name / 事件名称
-   * @param callback Callback Function / 回调函数
    */
-  public on(event: string, callback: (data: any) => void): void {
+  public on(event: string, callback: WebSocketEventHandler): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, []);
     }
@@ -102,52 +99,76 @@ class WebSocketService {
   }
 
   /**
-   * Unsubscribe from Event
-   * 取消订阅事件
-   * 
-   * @param event Event Name / 事件名称
-   * @param callback Callback Function / 回调函数
+   * Unsubscribe
+   * 取消订阅
    */
-  public off(event: string, callback: (data: any) => void): void {
-    if (!this.listeners.has(event)) return;
-    const filtered = this.listeners.get(event)?.filter(cb => cb !== callback) || [];
-    this.listeners.set(event, filtered);
-  }
-
-  /**
-   * Check Connection Status
-   * 检查连接状态
-   */
-  public isConnected(): boolean {
-    return this.connected;
-  }
-
-  // Private Handlers
-
-  private onOpen(event: Event) {
-    console.log('[WS] Connection Established');
-  }
-
-  private onMessage(event: MessageEvent) {
-    try {
-      const data = JSON.parse(event.data);
-      const { event: eventName, payload } = data;
-      
-      if (this.listeners.has(eventName)) {
-        this.listeners.get(eventName)?.forEach(cb => cb(payload));
-      }
-    } catch (e) {
-      console.error('[WS] Failed to parse message', e);
+  public off(event: string, callback: WebSocketEventHandler): void {
+    const callbacks = this.listeners.get(event);
+    if (callbacks) {
+      this.listeners.set(event, callbacks.filter(cb => cb !== callback));
     }
   }
 
-  private onClose(event: CloseEvent) {
-    console.log('[WS] Disconnected', event.code);
-    this.connected = false;
+  // --- Private Implementation Details ---
+
+  private mockConnectionProcess() {
+    // Simulate async connection time
+    setTimeout(() => {
+      // Random connection success/failure for realism
+      const success = Math.random() > 0.1; 
+      
+      if (success) {
+        this.isConnected = true;
+        this.reconnectAttempts = 0;
+        console.log('[WS] Connection Established successfully.');
+        this.startHeartbeat();
+        this.dispatch('open', {});
+      } else {
+        console.error('[WS] Connection Failed.');
+        this.handleReconnect();
+      }
+    }, 1000);
   }
 
-  private onError(event: Event) {
-    console.error('[WS] Error', event);
+  private handleReconnect() {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.error('[WS] Max reconnect attempts reached. Giving up.');
+      return;
+    }
+
+    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
+    this.reconnectAttempts++;
+    
+    console.log(`[WS] Attempting reconnect in ${delay}ms (Attempt ${this.reconnectAttempts})...`);
+    
+    this.reconnectTimeoutId = setTimeout(() => {
+      this.mockConnectionProcess();
+    }, delay);
+  }
+
+  private startHeartbeat() {
+    this.stopHeartbeat();
+    this.heartbeatInterval = setInterval(() => {
+      if (this.isConnected) {
+        // Send Ping
+        console.log('[WS] ❤️ Ping');
+        // this.socket.send('ping');
+      }
+    }, this.HEARTBEAT_RATE);
+  }
+
+  private stopHeartbeat() {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+  }
+
+  private dispatch(event: string, payload: any) {
+    const callbacks = this.listeners.get(event);
+    if (callbacks) {
+      callbacks.forEach(cb => cb(payload));
+    }
   }
 }
 

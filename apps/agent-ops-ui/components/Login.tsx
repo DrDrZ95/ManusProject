@@ -1,7 +1,8 @@
-import React from 'react';
-import { Globe, ShieldCheck, Lock, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { Globe, ShieldCheck, Lock, User, Loader, AlertCircle } from 'lucide-react';
 import { TRANSLATIONS } from '../constants';
 import { Language } from '../types';
+import { authService } from '../services/auth';
 
 interface LoginProps {
   onLogin: () => void;
@@ -10,6 +11,26 @@ interface LoginProps {
 
 const Login: React.FC<LoginProps> = ({ onLogin, lang }) => {
   const t = TRANSLATIONS[lang];
+  const [username, setUsername] = useState('admin');
+  const [password, setPassword] = useState('password');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // 使用独立的 Auth Service 进行登录
+      await authService.login(username, password);
+      onLogin(); // 通知 App 组件更新状态
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex h-screen w-full bg-nexus-900 text-white font-sans overflow-hidden">
@@ -57,7 +78,14 @@ const Login: React.FC<LoginProps> = ({ onLogin, lang }) => {
                <p className="text-nexus-400 text-sm">{t.loginSubtitle}</p>
             </div>
 
-            <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); onLogin(); }}>
+            {error && (
+               <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 flex items-center text-red-400 text-sm">
+                  <AlertCircle size={16} className="mr-2" />
+                  {error}
+               </div>
+            )}
+
+            <form className="space-y-6" onSubmit={handleSubmit}>
                <div className="space-y-4">
                   <div>
                      <label className="block text-xs font-medium text-nexus-300 uppercase mb-2 ml-1">{t.username}</label>
@@ -67,7 +95,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, lang }) => {
                           type="text" 
                           className="w-full bg-nexus-900 border border-nexus-600 rounded-lg py-3 pl-10 pr-4 text-white placeholder-nexus-600 focus:outline-none focus:border-nexus-accent focus:ring-1 focus:ring-nexus-accent transition-all"
                           placeholder="admin@opsnexus.io"
-                          defaultValue="admin"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
                         />
                      </div>
                   </div>
@@ -79,7 +108,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, lang }) => {
                           type="password" 
                           className="w-full bg-nexus-900 border border-nexus-600 rounded-lg py-3 pl-10 pr-4 text-white placeholder-nexus-600 focus:outline-none focus:border-nexus-accent focus:ring-1 focus:ring-nexus-accent transition-all"
                           placeholder="••••••••"
-                          defaultValue="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
                         />
                      </div>
                   </div>
@@ -95,9 +125,10 @@ const Login: React.FC<LoginProps> = ({ onLogin, lang }) => {
 
                <button 
                  type="submit"
-                 className="w-full bg-nexus-accent hover:bg-blue-600 text-white font-bold py-3 rounded-lg shadow-lg shadow-blue-500/20 transition-all transform hover:scale-[1.02]"
+                 disabled={isLoading}
+                 className="w-full bg-nexus-accent hover:bg-blue-600 text-white font-bold py-3 rounded-lg shadow-lg shadow-blue-500/20 transition-all transform hover:scale-[1.02] flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed"
                >
-                 {t.login}
+                 {isLoading ? <Loader size={20} className="animate-spin" /> : t.login}
                </button>
             </form>
 

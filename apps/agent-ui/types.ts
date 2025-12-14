@@ -13,7 +13,7 @@ export interface Message {
   timestamp: number;
   isStreaming?: boolean;
   attachments?: Attachment[];
-  mode?: InputMode; // Added for simulation of work-mode data
+  mode?: InputMode;
 }
 
 export interface ChatSession {
@@ -52,7 +52,8 @@ export type ModelType = 'kimi' | 'deepseek' | 'gpt-oss';
 export type ModalType = 'upgrade' | 'account' | 'help' | 'settings' | null;
 export type InputMode = 'general' | 'brainstorm' | 'oa_work' | 'company' | 'agent';
 
-// API Types
+// --- Auth & API Types ---
+
 export interface User {
   id: string;
   name: string;
@@ -68,6 +69,44 @@ export interface LoginRequest {
   password?: string;
   provider?: 'google' | 'outlook' | 'credentials';
 }
+
+export interface AuthResponse {
+  user: User;
+  token: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+// --- MCP (Model Context Protocol) Types ---
+
+export interface McpTool {
+  name: string;
+  description: string;
+  inputSchema: Record<string, any>;
+}
+
+export interface McpResource {
+  uri: string;
+  name: string;
+  mimeType: string;
+}
+
+export interface McpToolCallRequest {
+  name: string;
+  arguments: Record<string, any>;
+}
+
+export interface McpToolCallResponse {
+  content: Array<{
+    type: 'text' | 'image' | 'resource';
+    text?: string;
+    data?: string;
+    mimeType?: string;
+  }>;
+  isError?: boolean;
+}
+
+// --- State Types ---
 
 export interface Settings {
   streamResponses: boolean;
@@ -91,7 +130,7 @@ export interface AppState {
   selectedModel: ModelType;
   language: Language;
   inputMode: InputMode;
-  isAgentMode: boolean; // New state for Agent Mode
+  isAgentMode: boolean;
   
   // News State
   news: NewsItem[];
