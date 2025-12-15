@@ -1,0 +1,7 @@
+# RAG Module Dependencies
+langchain
+langchain-community
+langchain-openai
+chromadb
+pypdf
+regex
