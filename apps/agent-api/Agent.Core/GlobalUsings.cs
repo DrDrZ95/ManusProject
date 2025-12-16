@@ -41,8 +41,11 @@ global using Microsoft.AspNetCore.Http;
 global using Microsoft.Data.SqlClient;
 global using System.Collections.Generic;
 global using System;
+global using System.Text.Json;
 global using System.Threading.Tasks;
 global using System.Net.Http.Json;
+global using System.ComponentModel.DataAnnotations;
+global using System.ComponentModel.DataAnnotations.Schema;
 
 global using ChromaDB.Client;
 global using ChromaDB.Client.Models;

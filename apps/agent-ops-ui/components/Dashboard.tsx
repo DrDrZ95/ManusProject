@@ -6,9 +6,10 @@ import {
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
-import { MOCK_PROJECTS, MOCK_TIMELINE_DATA, TRANSLATIONS } from '../constants';
+import { MOCK_TIMELINE_DATA, TRANSLATIONS } from '../constants';
 import { ProjectStatus, Language } from '../types';
-import { wsService } from '../services/websocket'; // 引入 WS Service
+import { wsService } from '../services/websocket'; 
+import { projectService } from '../services/project'; // 使用 Service 层
 
 interface DashboardProps {
   lang: Language;
@@ -65,19 +66,33 @@ const Dashboard: React.FC<DashboardProps> = ({ lang }) => {
   const t = TRANSLATIONS[lang];
   const [wsConnected, setWsConnected] = useState(false);
   
+  // State from Services
+  const [projects, setProjects] = useState<ProjectStatus[]>([]);
+  
   // Real-time states powered by WebSocket
   const [healthMetric, setHealthMetric] = useState({ value: "98.2%", status: "healthy" });
   const [activePods, setActivePods] = useState(248);
 
   useEffect(() => {
-    // 1. Connect to WebSocket
+    // 1. Initial Data Fetch (via REST Service)
+    const fetchData = async () => {
+      try {
+        const data = await projectService.getProjects();
+        setProjects(data);
+      } catch (e) {
+        console.error("Failed to fetch projects", e);
+      }
+    };
+    fetchData();
+
+    // 2. Connect to WebSocket
     wsService.connect();
     setWsConnected(true);
 
-    // 2. Subscribe to System Health updates (Observer Pattern)
+    // 3. Subscribe to System Health updates (Observer Pattern)
     const unsubscribeHealth = wsService.subscribe('system_health', (data: any) => {
       // Update UI with real-time data
-      const overallHealth = 100 - (data.cpu * 0.2 + data.memory * 0.1); // Fake calculation
+      const overallHealth = 100 - (data.cpu * 0.2 + data.memory * 0.1); 
       setHealthMetric({
         value: overallHealth.toFixed(1) + "%",
         status: data.status
@@ -85,7 +100,7 @@ const Dashboard: React.FC<DashboardProps> = ({ lang }) => {
       setActivePods(data.activePods);
     });
 
-    // 3. Cleanup on unmount
+    // 4. Cleanup on unmount
     return () => {
       unsubscribeHealth();
       wsService.disconnect();
@@ -223,10 +238,10 @@ const Dashboard: React.FC<DashboardProps> = ({ lang }) => {
       <div className="bg-light-surface dark:bg-nexus-800 border border-light-border dark:border-nexus-700 rounded-lg overflow-hidden shadow-sm">
         <div className="p-4 border-b border-light-border dark:border-nexus-700 flex justify-between items-center bg-nexus-50/80 dark:bg-nexus-800/80 backdrop-blur">
           <h3 className="text-lg font-semibold text-light-text dark:text-white">Project Status Overview</h3>
-          <span className="px-2 py-1 bg-nexus-200 dark:bg-nexus-700 rounded text-xs text-nexus-600 dark:text-nexus-300">{MOCK_PROJECTS.length} Projects</span>
+          <span className="px-2 py-1 bg-nexus-200 dark:bg-nexus-700 rounded text-xs text-nexus-600 dark:text-nexus-300">{projects.length > 0 ? projects.length : 'Loading...'} Projects</span>
         </div>
         <div>
-          {MOCK_PROJECTS.map(project => (
+          {projects.map(project => (
             <ProjectRow key={project.id} project={project} t={t} />
           ))}
         </div>

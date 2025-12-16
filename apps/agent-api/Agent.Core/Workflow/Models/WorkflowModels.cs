@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace Agent.Core.Workflow.Models;
 
 // --------------------------------------------------------------------------------
@@ -13,21 +15,25 @@ public enum PlanStepStatus
     /// <summary>
     /// Not started - 未开始
     /// </summary>
+    [Description("NotStarted")]
     NotStarted,
 
     /// <summary>
     /// In progress - 进行中
     /// </summary>
+    [Description("InProgress")]
     InProgress,
 
     /// <summary>
     /// Completed - 已完成
     /// </summary>
+    [Description("Completed")]
     Completed,
 
     /// <summary>
     /// Blocked - 已阻塞
     /// </summary>
+    [Description("Blocked")]
     Blocked
 }
 
@@ -40,7 +46,7 @@ public class WorkflowPlan
     /// <summary>
     /// Plan ID - 计划ID
     /// </summary>
-    public string Id { get; set; } = string.Empty;
+    public Guid Id { get; set; }
 
     /// <summary>
     /// Plan title - 计划标题
@@ -86,6 +92,11 @@ public class WorkflowPlan
     /// Executor agent keys - 执行器代理键
     /// </summary>
     public List<string> ExecutorKeys { get; set; } = new();
+
+    /// <summary>
+    /// 状态
+    /// </summary>
+    public PlanStatus Status { get; set; }
 }
 
 /// <summary>

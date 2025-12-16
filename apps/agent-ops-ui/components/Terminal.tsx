@@ -13,7 +13,7 @@ interface TerminalProps {
 
 const Terminal: React.FC<TerminalProps> = ({ isOpen, onToggle }) => {
   const [lines, setLines] = useState<TerminalLine[]>([
-    { id: 'init', type: 'system', content: 'OpsNexus CLI v1.0.4 initialized...', timestamp: Date.now() },
+    { id: 'init', type: 'system', content: 'ManusProject CLI v1.0.5 initialized...', timestamp: Date.now() },
     { id: 'init3', type: 'system', content: 'Type "help" or "mcp status" to test.', timestamp: Date.now() },
   ]);
   const [input, setInput] = useState('');
@@ -132,7 +132,7 @@ const Terminal: React.FC<TerminalProps> = ({ isOpen, onToggle }) => {
         <div className="flex items-center space-x-4">
            <div className="flex items-center space-x-2 text-nexus-300">
              <TerminalIcon size={16} />
-             <span className="text-xs font-mono font-bold tracking-wide">OPSNEXUS_CLI</span>
+             <span className="text-xs font-mono font-bold tracking-wide">MANUS_CLI</span>
            </div>
            
            {/* Context Selector */}

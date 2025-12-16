@@ -22,7 +22,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, lang }) => {
     setError(null);
 
     try {
-      // 使用独立的 Auth Service 进行登录
+      // 使用独立的 Auth Service 进行登录 (包含 RSA 加密)
       await authService.login(username, password);
       onLogin(); // 通知 App 组件更新状态
     } catch (err: any) {
@@ -52,7 +52,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, lang }) => {
                <Globe size={64} className="text-nexus-accent" />
             </div>
             <h1 className="text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-               OpsNexus Control Plane
+               ManusProject Control Plane
             </h1>
             <p className="text-lg text-nexus-300 font-light leading-relaxed">
                Next-generation unified management for MLOps pipelines, Kubernetes clusters, and distributed data systems. 
@@ -94,7 +94,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, lang }) => {
                         <input 
                           type="text" 
                           className="w-full bg-nexus-900 border border-nexus-600 rounded-lg py-3 pl-10 pr-4 text-white placeholder-nexus-600 focus:outline-none focus:border-nexus-accent focus:ring-1 focus:ring-nexus-accent transition-all"
-                          placeholder="admin@opsnexus.io"
+                          placeholder="admin@manusproject.io"
                           value={username}
                           onChange={(e) => setUsername(e.target.value)}
                         />
@@ -133,7 +133,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, lang }) => {
             </form>
 
             <div className="text-center text-xs text-nexus-500 mt-8">
-               &copy; 2024 OpsNexus Inc. All rights reserved.
+               &copy; 2024 ManusProject Inc. All rights reserved.
             </div>
          </div>
       </div>

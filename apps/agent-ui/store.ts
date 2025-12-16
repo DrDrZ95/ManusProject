@@ -2,10 +2,11 @@
 import { create } from 'zustand';
 import { AppState, Message, Role, ChatSession, Attachment, LoginRequest } from './types';
 import { v4 as uuidv4 } from 'uuid';
-import { generateNews, shouldFetchNews } from './services/news';
-import { MOCK_SESSIONS } from './data/mockData';
-import { authApi } from './services/api';
+import { api } from './services/api'; // Use the new API Facade
 import { tokenManager } from './services/tokenManager';
+
+// Mock initial data still used for bootstrapping UI state if API returns empty in demo
+import { MOCK_SESSIONS } from './data/mockData';
 
 const createInitialSession = (): ChatSession => ({
   id: uuidv4(),
@@ -17,32 +18,18 @@ const createInitialSession = (): ChatSession => ({
 // Initial auth check
 const hasExistingToken = tokenManager.hasToken();
 
-const initialState = {
-  sessions: MOCK_SESSIONS,
-  currentSessionId: MOCK_SESSIONS[0].id,
-  // Check local storage for persistence on load
-  isAuthenticated: hasExistingToken
-};
-
 export const useStore = create<AppState>((set, get) => {
   return {
-    isAuthenticated: initialState.isAuthenticated,
-    // If we have a token, we pretend we have a user until profile fetch (simulated)
-    user: hasExistingToken ? {
-      id: 'user-123',
-      name: 'Agent User',
-      email: 'user@example.com',
-      avatar: 'https://api.dicebear.com/9.x/micah/svg?seed=Felix',
-      role: 'admin'
-    } : null,
+    isAuthenticated: hasExistingToken,
+    user: null, // User is fetched after login/hydration
     settings: {
       streamResponses: true,
       soundEffects: true,
       allowTraining: false
     },
-    sessions: initialState.sessions,
+    sessions: MOCK_SESSIONS,
     groups: [],
-    currentSessionId: initialState.currentSessionId,
+    currentSessionId: MOCK_SESSIONS[0].id,
     input: '',
     attachments: [],
     isLoading: false,
@@ -58,15 +45,20 @@ export const useStore = create<AppState>((set, get) => {
     news: [],
     lastNewsFetch: 0,
 
+    // --- Actions using Service Layer ---
+
     login: async (credentials: LoginRequest) => {
       try {
-        // Use the new API Client which handles token storage automatically
-        const user = await authApi.login(credentials);
+        // Call Auth Service
+        const user = await api.auth.login(credentials);
         
         set({ 
           isAuthenticated: true, 
           user: user
         });
+
+        // Fetch User Profile & Initial Data
+        // get().fetchNews(); // Triggered in App.tsx effects usually, but can be here
       } catch (error) {
         console.error("Login failed", error);
         throw error; 
@@ -74,8 +66,7 @@ export const useStore = create<AppState>((set, get) => {
     },
     
     logout: async () => {
-      await authApi.logout();
-      // Tokens are cleared in authApi.logout via tokenManager
+      await api.auth.logout();
       set({ isAuthenticated: false, user: null });
     },
 
@@ -90,26 +81,14 @@ export const useStore = create<AppState>((set, get) => {
     setInput: (input) => set({ input }),
 
     addAttachment: async (file: File) => {
-      return new Promise<void>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const base64String = reader.result as string;
-          const base64Data = base64String.split(',')[1];
-          
-          const newAttachment: Attachment = {
-            id: uuidv4(),
-            name: file.name,
-            type: 'file',
-            mimeType: file.type,
-            data: base64Data
-          };
-          
-          set(state => ({ attachments: [...state.attachments, newAttachment] }));
-          resolve();
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      try {
+        // Use File Service
+        const attachment = await api.file.upload(file);
+        set(state => ({ attachments: [...state.attachments, attachment] }));
+      } catch (e) {
+        console.error("Upload failed", e);
+        alert("Upload failed");
+      }
     },
 
     removeAttachment: (id) => set(state => ({
@@ -163,16 +142,19 @@ export const useStore = create<AppState>((set, get) => {
       return { sessions: updatedSessions };
     }),
 
-    createNewSession: () => set((state) => {
+    createNewSession: async () => {
+      // Use Chat Service
+      // const newSession = await api.chat.createSession('New Chat'); 
+      // For instant UI feedback we usually do optimistic updates or synchronous mock creation
       const newSession = createInitialSession();
-      return {
+      set((state) => ({
         sessions: [newSession, ...state.sessions],
         currentSessionId: newSession.id,
         input: '', 
         attachments: [],
         isAgentMode: false 
-      };
-    }),
+      }));
+    },
 
     selectSession: (id) => set({ currentSessionId: id, attachments: [] }),
 
@@ -181,7 +163,6 @@ export const useStore = create<AppState>((set, get) => {
       if (firstSession && firstSession.messages.length === 0) {
         return { currentSessionId: firstSession.id, input: '', attachments: [] };
       }
-
       const newSession = createInitialSession();
       return {
         sessions: [newSession, ...state.sessions],
@@ -216,30 +197,35 @@ export const useStore = create<AppState>((set, get) => {
       sessions: state.sessions.map(s => s.id === sessionId ? { ...s, title: newTitle } : s)
     })),
 
-    deleteSession: (sessionId) => set((state) => {
-      const newSessions = state.sessions.filter(s => s.id !== sessionId);
-      let nextSessionId = state.currentSessionId;
-      if (state.currentSessionId === sessionId) {
-        nextSessionId = newSessions.length > 0 ? newSessions[0].id : null;
-      }
-      
-      if (newSessions.length === 0) {
-         const freshSession = createInitialSession();
-         return { sessions: [freshSession], currentSessionId: freshSession.id };
-      }
+    deleteSession: async (sessionId) => {
+      // await api.chat.deleteSession(sessionId); // Async call to server
+      set((state) => {
+        const newSessions = state.sessions.filter(s => s.id !== sessionId);
+        let nextSessionId = state.currentSessionId;
+        if (state.currentSessionId === sessionId) {
+          nextSessionId = newSessions.length > 0 ? newSessions[0].id : null;
+        }
+        
+        if (newSessions.length === 0) {
+           const freshSession = createInitialSession();
+           return { sessions: [freshSession], currentSessionId: freshSession.id };
+        }
+        return { sessions: newSessions, currentSessionId: nextSessionId };
+      });
+    },
 
-      return { sessions: newSessions, currentSessionId: nextSessionId };
-    }),
-
-    fetchNews: () => set((state) => {
-      if (shouldFetchNews(state.lastNewsFetch) || state.news.length === 0) {
-        return {
-          news: generateNews(),
-          lastNewsFetch: Date.now()
-        };
+    fetchNews: async () => {
+      const state = get();
+      // Simple cache check
+      if (Date.now() - state.lastNewsFetch > 3600 * 1000 * 6 || state.news.length === 0) {
+        try {
+            const news = await api.news.fetchLatest();
+            set({ news, lastNewsFetch: Date.now() });
+        } catch (e) {
+            console.warn("Failed to fetch news", e);
+        }
       }
-      return {};
-    }),
+    },
 
     toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
     toggleTerminal: () => set((state) => ({ isTerminalOpen: !state.isTerminalOpen })),

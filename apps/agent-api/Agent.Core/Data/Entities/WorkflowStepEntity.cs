@@ -66,6 +66,9 @@ public class WorkflowStepEntity
     /// 存储步骤执行后的输出或总结
     /// </summary>
     public string? Result { get; set; }
+    
+    [Column(TypeName = "jsonb")]
+    public string? Metadata { get; set; }
 
     // 导航属性 (Navigation Property)
     /// <summary>

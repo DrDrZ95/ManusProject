@@ -1,40 +1,37 @@
 
 /**
+ * WebSocket Event Types
+ * WebSocket 事件类型定义
+ */
+export type WSEvent = 'open' | 'close' | 'error' | 'message' | 'notification' | 'typing';
+
+type WSEventHandler<T = any> = (payload: T) => void;
+
+/**
  * Enterprise WebSocket Service
- * 企业级 WebSocket 服务
+ * 企业级 WebSocket 服务封装
  * 
  * Features:
- * 1. Singleton Pattern for global access.
- * 2. Automatic Reconnection (Exponential Backoff).
- * 3. Heartbeat Mechanism (Ping/Pong) to detect dead connections.
- * 4. Event-based subscription system.
- * 
- * 特性：
- * 1. 全局访问的单例模式。
- * 2. 自动重连（指数退避算法）。
- * 3. 心跳机制（Ping/Pong）检测死链接。
- * 4. 基于事件的订阅系统。
+ * 1. Automatic Reconnection (Exponential Backoff) / 自动重连（指数退避）
+ * 2. Heartbeat (Ping/Pong) / 心跳保活
+ * 3. Type-safe Event Subscription / 类型安全的事件订阅
  */
-
-type WebSocketEventHandler = (payload: any) => void;
-
 class WebSocketService {
   private static instance: WebSocketService;
-  private socket: WebSocket | null = null;
-  private url: string = 'ws://localhost:8080/ws';
+  private url: string = 'ws://localhost:8080/ws'; // Mock URL
   
-  // State
+  // Connection State
   private isConnected: boolean = false;
   private reconnectAttempts: number = 0;
-  private maxReconnectAttempts: number = 5;
-  private reconnectTimeoutId: any = null;
+  private readonly MAX_RECONNECT_ATTEMPTS = 5;
+  private reconnectTimer: any = null;
   
   // Heartbeat
   private heartbeatInterval: any = null;
   private readonly HEARTBEAT_RATE = 30000; // 30s
 
   // Event Listeners
-  private listeners: Map<string, WebSocketEventHandler[]> = new Map();
+  private listeners: Map<string, WSEventHandler[]> = new Map();
 
   private constructor() {}
 
@@ -46,52 +43,47 @@ class WebSocketService {
   }
 
   /**
-   * Initiate Connection
-   * 初始化连接
+   * Connect to WebSocket Server
+   * 连接服务器
    */
   public connect(url?: string): void {
     if (this.isConnected) return;
     if (url) this.url = url;
 
     console.log(`[WS] Connecting to ${this.url}...`);
-
-    // In a real environment, use: this.socket = new WebSocket(this.url);
-    // For this simulation, we mock the object.
-    // 真实环境中应使用 new WebSocket(this.url)。此处为模拟。
     this.mockConnectionProcess();
   }
 
   /**
-   * Disconnect manually
-   * 手动断开
+   * Disconnect
+   * 断开连接
    */
   public disconnect(): void {
-    if (this.reconnectTimeoutId) clearTimeout(this.reconnectTimeoutId);
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     this.stopHeartbeat();
     this.isConnected = false;
-    this.socket = null;
-    console.log('[WS] Disconnected by user.');
+    this.dispatch('close', {});
+    console.log('[WS] Disconnected.');
   }
 
   /**
-   * Send Message to Server
+   * Send Message
    * 发送消息
    */
   public send(event: string, payload: any): void {
     if (!this.isConnected) {
-      console.warn('[WS] Cannot send message: disconnected.', event);
+      console.warn('[WS] Send failed: Disconnected.');
       return;
     }
-    const message = JSON.stringify({ event, payload });
-    console.log(`[WS] >>> Sending: ${message}`);
-    // this.socket.send(message);
+    console.log(`[WS] >>> ${event}`, payload);
+    // this.socket.send(JSON.stringify({ event, payload }));
   }
 
   /**
-   * Subscribe to event
+   * Subscribe to Event
    * 订阅事件
    */
-  public on(event: string, callback: WebSocketEventHandler): void {
+  public on<T = any>(event: WSEvent, callback: WSEventHandler<T>): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, []);
     }
@@ -102,55 +94,64 @@ class WebSocketService {
    * Unsubscribe
    * 取消订阅
    */
-  public off(event: string, callback: WebSocketEventHandler): void {
+  public off<T = any>(event: WSEvent, callback: WSEventHandler<T>): void {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
       this.listeners.set(event, callbacks.filter(cb => cb !== callback));
     }
   }
 
-  // --- Private Implementation Details ---
+  // --- Internals ---
+
+  private dispatch(event: WSEvent, payload: any) {
+    const callbacks = this.listeners.get(event);
+    if (callbacks) {
+      callbacks.forEach(cb => cb(payload));
+    }
+  }
 
   private mockConnectionProcess() {
-    // Simulate async connection time
     setTimeout(() => {
-      // Random connection success/failure for realism
+      // Simulate 90% success rate
       const success = Math.random() > 0.1; 
       
       if (success) {
         this.isConnected = true;
         this.reconnectAttempts = 0;
-        console.log('[WS] Connection Established successfully.');
+        console.log('[WS] Connected.');
         this.startHeartbeat();
         this.dispatch('open', {});
+        
+        // Simulate a welcome message
+        setTimeout(() => {
+            this.dispatch('notification', { title: 'System', message: 'Connected to Agent realtime gateway.' });
+        }, 500);
+
       } else {
-        console.error('[WS] Connection Failed.');
+        console.error('[WS] Connection failed.');
         this.handleReconnect();
       }
-    }, 1000);
+    }, 800);
   }
 
   private handleReconnect() {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('[WS] Max reconnect attempts reached. Giving up.');
+    if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
+      console.error('[WS] Max reconnect attempts reached.');
+      this.dispatch('error', { message: 'Connection failed' });
       return;
     }
 
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
     this.reconnectAttempts++;
     
-    console.log(`[WS] Attempting reconnect in ${delay}ms (Attempt ${this.reconnectAttempts})...`);
-    
-    this.reconnectTimeoutId = setTimeout(() => {
-      this.mockConnectionProcess();
-    }, delay);
+    console.log(`[WS] Reconnecting in ${delay}ms...`);
+    this.reconnectTimer = setTimeout(() => this.mockConnectionProcess(), delay);
   }
 
   private startHeartbeat() {
     this.stopHeartbeat();
     this.heartbeatInterval = setInterval(() => {
       if (this.isConnected) {
-        // Send Ping
         console.log('[WS] ❤️ Ping');
         // this.socket.send('ping');
       }
@@ -161,13 +162,6 @@ class WebSocketService {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
-    }
-  }
-
-  private dispatch(event: string, payload: any) {
-    const callbacks = this.listeners.get(event);
-    if (callbacks) {
-      callbacks.forEach(cb => cb(payload));
     }
   }
 }

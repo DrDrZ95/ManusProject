@@ -1,14 +1,10 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Agent.Core.Workflow.Models;
-
 namespace Agent.Core.Data.Entities;
 
 /// <summary>
 /// 工作流计划实体 (Workflow Plan Entity)
 /// 对应一个完整的任务计划，包含多个步骤。
 /// </summary>
-[Table("WorkflowPlans")]
+[Table("workflow_plans")]
 public class WorkflowPlanEntity
 {
     /// <summary>
@@ -42,7 +38,10 @@ public class WorkflowPlanEntity
     /// 存储额外的JSON格式数据，例如执行器键、用户ID等
     /// </summary>
     public string Metadata { get; set; } = "{}"; // 存储为JSON字符串
-
+    
+    [Column(TypeName = "jsonb")]
+    public string? ExecutorKeys { get; set; }
+    
     /// <summary>
     /// 创建时间 (Created At)
     /// </summary>

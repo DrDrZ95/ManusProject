@@ -79,7 +79,7 @@ const Settings: React.FC<SettingsProps> = ({ lang, activeTab: initialTab }) => {
                    <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 border-4 border-white dark:border-nexus-700 shadow-lg mr-6"></div>
                    <div>
                       <h3 className="text-2xl font-bold text-light-text dark:text-white">Admin User</h3>
-                      <p className="text-light-textSec dark:text-nexus-400">admin@opsnexus.io</p>
+                      <p className="text-light-textSec dark:text-nexus-400">admin@manusproject.io</p>
                       <button className="mt-2 text-sm text-nexus-accent hover:text-blue-400 font-medium">Change Avatar</button>
                    </div>
                 </div>
@@ -106,7 +106,7 @@ const Settings: React.FC<SettingsProps> = ({ lang, activeTab: initialTab }) => {
                       <label className="block text-sm font-medium text-light-text dark:text-nexus-300 mb-1">{t.bio}</label>
                       <textarea 
                          rows={4}
-                         defaultValue="Lead DevOps Engineer managing the OpsNexus infrastructure."
+                         defaultValue="Lead DevOps Engineer managing the ManusProject infrastructure."
                          className="w-full bg-white dark:bg-nexus-900 border border-light-border dark:border-nexus-600 rounded-lg p-2.5 text-sm text-light-text dark:text-white focus:border-nexus-accent outline-none"
                       />
                    </div>
@@ -114,7 +114,7 @@ const Settings: React.FC<SettingsProps> = ({ lang, activeTab: initialTab }) => {
                       <label className="block text-sm font-medium text-light-text dark:text-nexus-300 mb-1">{t.email}</label>
                       <input 
                          type="email" 
-                         defaultValue="admin@opsnexus.io"
+                         defaultValue="admin@manusproject.io"
                          className="w-full bg-white dark:bg-nexus-900 border border-light-border dark:border-nexus-600 rounded-lg p-2.5 text-sm text-light-text dark:text-white focus:border-nexus-accent outline-none"
                       />
                    </div>

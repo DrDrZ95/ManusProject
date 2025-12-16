@@ -1,13 +1,16 @@
 /**
- * MCP (Model Context Protocol) Implementation
+ * MCP Client - Model Context Protocol 实现 (Simulation)
  * 
- * 这是一个简化的 MCP 协议客户端实现。
- * MCP 允许 AI 模型（如 Gemini）发现并调用本地或远程工具，读取资源，并管理上下文。
+ * 设计模式: Command Pattern (命令模式) & Interpreter Pattern (解释器模式)
  * 
- * 核心概念：
- * 1. Tools: 可执行的函数 (e.g., deploy_k8s_pod)
- * 2. Resources: 可读取的数据上下文 (e.g., k8s://logs/pod-1)
- * 3. Prompts: 预定义的提示词模板
+ * 作用:
+ * MCP 是一个新兴协议，允许 AI 代理 (Agent) 标准化地调用外部工具。
+ * 本模块模拟了 MCP 的客户端，用于发现工具 (List Tools) 和 执行工具 (Call Tool)。
+ * 
+ * 流程:
+ * 1. AI 分析用户意图。
+ * 2. 匹配到本地注册的 Tool。
+ * 3. 执行 Tool 并返回标准化的 MCPToolResult。
  */
 
 export interface MCPTool {
@@ -90,6 +93,10 @@ class MCPClient {
 
   /**
    * 注册新工具
+   * @param name 工具名称
+   * @param description 描述
+   * @param schema 参数 Schema (JSON Schema)
+   * @param handler 执行逻辑
    */
   public registerTool(
     name: string, 

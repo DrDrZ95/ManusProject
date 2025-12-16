@@ -305,7 +305,7 @@ public class WorkflowService : IWorkflowService
 
             foreach (var step in plan.Steps)
             {
-                var statusChar = step.Status.ToMarkdownStatusChar();
+                var statusChar = step.Status.ToString();
                 var resultLine = string.IsNullOrEmpty(step.Result) ? "" : $" (结果: {step.Result})";
                 todoContent.Add($"- [{statusChar}] {step.Text}{resultLine}");
             }
@@ -317,6 +317,31 @@ public class WorkflowService : IWorkflowService
             _logger.LogError(ex, "Error generating todo list for plan: {PlanId}", planId);
             throw;
         }
+    }
+
+    public Task<bool> SaveToDoListToFileAsync(string planId, string filePath, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<string?> LoadToDoListFromFileAsync(string filePath, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<bool> DeletePlanAsync(string planId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<WorkflowProgress> GetProgressAsync(string planId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<string> CreateWorkflowAsync(string llmResponse)
+    {
+        throw new NotImplementedException();
     }
 
     /// <summary>

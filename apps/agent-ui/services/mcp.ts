@@ -5,18 +5,19 @@ import { McpTool, McpResource, McpToolCallRequest, McpToolCallResponse } from '.
  * Model Context Protocol (MCP) Client
  * 模型上下文协议客户端
  * 
- * Concept:
- * MCP is a standard for connecting AI models to external data and tools.
- * This class simulates a client that connects to an MCP Server (e.g., a local agent runtime).
+ * Protocol Overview:
+ * MCP allows AI models to "discover" and "execute" local or remote capabilities.
+ * It is structured into:
+ * 1. Handshake (negotiate version)
+ * 2. Discovery (Tools, Resources, Prompts)
+ * 3. Execution (Call Tool, Read Resource)
  * 
- * 概念：
- * MCP 是连接 AI 模型与外部数据/工具的标准协议。
- * 此类模拟连接到 MCP 服务器（例如本地 Agent 运行时）的客户端。
- * 
- * Protocol Flow:
- * 1. Handshake (Initialize)
- * 2. Discovery (List Tools/Resources)
- * 3. Execution (Call Tool)
+ * 协议概述：
+ * MCP 允许 AI 模型“发现”并“执行”本地或远程能力。
+ * 结构分为：
+ * 1. 握手（版本协商）
+ * 2. 发现（工具、资源、提示词）
+ * 3. 执行（调用工具、读取资源）
  */
 class McpClient {
   private static instance: McpClient;
@@ -33,60 +34,57 @@ class McpClient {
   }
 
   /**
-   * Initialize MCP Connection
-   * 初始化 MCP 连接 (握手)
+   * Connect to MCP Server
+   * 连接到 MCP 服务器
    */
   public async connect(): Promise<boolean> {
-    console.log(`[MCP] 🔌 Connecting to ${this.serverName}...`);
+    if (this.isConnected) return true;
+
+    console.log(`[MCP] 🔌 Handshaking with ${this.serverName}...`);
+    // Simulate handshake latency
     await new Promise(resolve => setTimeout(resolve, 500));
+    
     this.isConnected = true;
     console.log(`[MCP] ✅ Connected to server version 1.0.2`);
     return true;
   }
 
   /**
-   * List Available Tools
-   * 列出可用工具
+   * Discover available tools
+   * 发现可用工具
    */
   public async listTools(): Promise<McpTool[]> {
     this.ensureConnection();
-    console.log('[MCP] 🔍 Discovering tools...');
+    console.log('[MCP] 🔍 Requesting tool list...');
     
     await new Promise(resolve => setTimeout(resolve, 300));
 
-    // Mock Tools defined by the local environment
+    // Define tools exposed by the environment
     return [
       {
-        name: 'read_file',
+        name: 'fs_read',
         description: 'Read contents of a file from the allowed workspace.',
         inputSchema: {
           type: 'object',
-          properties: {
-            path: { type: 'string' }
-          },
+          properties: { path: { type: 'string' } },
           required: ['path']
         }
       },
       {
-        name: 'execute_command',
-        description: 'Run a shell command in the sandbox.',
+        name: 'shell_exec',
+        description: 'Run a safe subset of shell commands.',
         inputSchema: {
           type: 'object',
-          properties: {
-            command: { type: 'string' }
-          },
+          properties: { command: { type: 'string' } },
           required: ['command']
         }
       },
       {
-        name: 'search_knowledge_base',
-        description: 'Semantic search over internal documents.',
+        name: 'kb_search',
+        description: 'Semantic search over internal knowledge base.',
         inputSchema: {
           type: 'object',
-          properties: {
-            query: { type: 'string' },
-            limit: { type: 'number' }
-          },
+          properties: { query: { type: 'string' } },
           required: ['query']
         }
       }
@@ -94,12 +92,11 @@ class McpClient {
   }
 
   /**
-   * List Available Resources
-   * 列出可用资源
+   * Discover available resources
+   * 发现可用资源 (Passive data sources)
    */
   public async listResources(): Promise<McpResource[]> {
     this.ensureConnection();
-    // Mock Resources
     return [
       { uri: 'file:///workspace/readme.md', name: 'Project Readme', mimeType: 'text/markdown' },
       { uri: 'postgres://db/users/schema', name: 'User Database Schema', mimeType: 'application/sql' }
@@ -107,42 +104,42 @@ class McpClient {
   }
 
   /**
-   * Call a Tool
-   * 调用工具
+   * Execute a tool
+   * 执行工具
    */
   public async callTool(request: McpToolCallRequest): Promise<McpToolCallResponse> {
     this.ensureConnection();
-    console.log(`[MCP] 🛠️ Calling tool: ${request.name}`, request.arguments);
+    console.log(`[MCP] 🛠️ Executing: ${request.name}`, request.arguments);
 
-    await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate execution time
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Mock Responses based on tool name
+    // Mock Execution Logic
     switch (request.name) {
-      case 'read_file':
+      case 'fs_read':
         return {
           content: [{ 
             type: 'text', 
-            text: '# Project Config\nport=8080\nenv=production' 
+            text: '# Config\nENV=PRODUCTION\nPORT=8080' 
           }]
         };
-      case 'execute_command':
+      case 'shell_exec':
         return {
           content: [{
             type: 'text',
-            text: 'stdout: Package installed successfully.\nstderr: 0 vulnerabilities found.'
+            text: 'stdout: 14 packages updated.\nstderr: 0 errors.'
           }]
         };
-      case 'search_knowledge_base':
+      case 'kb_search':
         return {
           content: [{
             type: 'text',
-            text: 'Found 2 relevant docs:\n1. Deployment Guide (Score: 0.92)\n2. API Spec (Score: 0.88)'
+            text: `[Result 1] Deployment Policy (Score: 0.95)\n[Result 2] API Stylesheet (Score: 0.82)`
           }]
         };
       default:
         return {
           isError: true,
-          content: [{ type: 'text', text: `Tool ${request.name} not found.` }]
+          content: [{ type: 'text', text: `Tool ${request.name} not found or permission denied.` }]
         };
     }
   }

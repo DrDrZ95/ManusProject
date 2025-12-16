@@ -10,7 +10,8 @@ import { NewsGrid } from './components/NewsGrid';
 import { UserModals } from './components/UserModals';
 import { LoginPage } from './components/LoginPage';
 import { Icons } from './components/icons';
-import { streamGeminiResponse } from './services/gemini';
+// Import new AI service
+import { aiService } from './services/ai';
 import { Role, Attachment } from './types';
 import { socketService } from './services/socket';
 import clsx from 'clsx';
@@ -30,7 +31,7 @@ const App: React.FC = () => {
   const terminalWidth = useStore(s => s.terminalWidth);
   const language = useStore(s => s.language);
   const news = useStore(s => s.news);
-  const inputMode = useStore(s => s.inputMode); // Get inputMode from store
+  const inputMode = useStore(s => s.inputMode); 
   
   const setInput = useStore(s => s.setInput);
   const addMessage = useStore(s => s.addMessage);
@@ -136,54 +137,56 @@ const App: React.FC = () => {
       isStreaming: true
     });
 
-    const apiKey = process.env.API_KEY || '';
-    
+    // Use the new AIService
     const history = messages.map(m => ({
         role: m.role === Role.USER ? 'user' : 'model',
         parts: [{ text: m.content }]
     }));
 
-    await streamGeminiResponse(
-      apiKey,
-      selectedModel,
-      history,
-      userMsgContent,
-      currentAttachments,
-      (text) => {
-        updateLastMessage(currentSessionId, text);
+    await aiService.streamResponse(
+      {
+        model: selectedModel,
+        history,
+        prompt: userMsgContent,
+        attachments: currentAttachments,
+        inputMode
       },
-      () => {
-        setLoading(false);
-        useStore.setState((state) => {
-           const sessionIndex = state.sessions.findIndex(s => s.id === currentSessionId);
-           if (sessionIndex === -1) return state;
-           const updatedSessions = [...state.sessions];
-           const msgs = [...updatedSessions[sessionIndex].messages];
-           const lastMsg = msgs[msgs.length - 1];
-           if (lastMsg.role === Role.MODEL) {
-               msgs[msgs.length - 1] = { ...lastMsg, isStreaming: false };
-           }
-           updatedSessions[sessionIndex] = { ...updatedSessions[sessionIndex], messages: msgs };
-           return { sessions: updatedSessions };
-        });
-      },
-      (err) => {
-        setLoading(false);
-        updateLastMessage(currentSessionId, "Error: Could not connect to Agent services. Please try again.");
-        useStore.setState((state) => {
-          const sessionIndex = state.sessions.findIndex(s => s.id === currentSessionId);
-          if (sessionIndex === -1) return state;
-          const updatedSessions = [...state.sessions];
-          const msgs = [...updatedSessions[sessionIndex].messages];
-          const lastMsg = msgs[msgs.length - 1];
-          if (lastMsg.role === Role.MODEL) {
-              msgs[msgs.length - 1] = { ...lastMsg, isStreaming: false };
-          }
-          updatedSessions[sessionIndex] = { ...updatedSessions[sessionIndex], messages: msgs };
-          return { sessions: updatedSessions };
-       });
-      },
-      inputMode // Pass the current input mode
+      {
+        onChunk: (text) => {
+          updateLastMessage(currentSessionId, text);
+        },
+        onFinish: () => {
+          setLoading(false);
+          useStore.setState((state) => {
+             const sessionIndex = state.sessions.findIndex(s => s.id === currentSessionId);
+             if (sessionIndex === -1) return state;
+             const updatedSessions = [...state.sessions];
+             const msgs = [...updatedSessions[sessionIndex].messages];
+             const lastMsg = msgs[msgs.length - 1];
+             if (lastMsg.role === Role.MODEL) {
+                 msgs[msgs.length - 1] = { ...lastMsg, isStreaming: false };
+             }
+             updatedSessions[sessionIndex] = { ...updatedSessions[sessionIndex], messages: msgs };
+             return { sessions: updatedSessions };
+          });
+        },
+        onError: (err) => {
+          setLoading(false);
+          updateLastMessage(currentSessionId, "Error: Could not connect to Agent services. Please try again.");
+          useStore.setState((state) => {
+            const sessionIndex = state.sessions.findIndex(s => s.id === currentSessionId);
+            if (sessionIndex === -1) return state;
+            const updatedSessions = [...state.sessions];
+            const msgs = [...updatedSessions[sessionIndex].messages];
+            const lastMsg = msgs[msgs.length - 1];
+            if (lastMsg.role === Role.MODEL) {
+                msgs[msgs.length - 1] = { ...lastMsg, isStreaming: false };
+            }
+            updatedSessions[sessionIndex] = { ...updatedSessions[sessionIndex], messages: msgs };
+            return { sessions: updatedSessions };
+         });
+        }
+      }
     );
   };
 

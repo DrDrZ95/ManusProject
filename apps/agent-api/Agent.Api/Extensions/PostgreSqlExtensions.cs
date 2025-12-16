@@ -178,12 +178,11 @@ public static class PostgreSqlExtensions
                 // 创建示例工作流计划 - Create sample workflow plan
                 var samplePlan = new WorkflowPlanEntity
                 {
-                    Id = "sample_plan_001",
+                    Id = new Guid(),
                     Title = "AI-Agent 示例工作流",
                     Description = "这是一个示例工作流计划，展示AI-Agent系统的基本功能",
                     Metadata = """{"priority": "medium", "category": "sample"}""",
                     ExecutorKeys = """["system", "user"]""",
-                    CurrentStepIndex = 0,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -196,39 +195,30 @@ public static class PostgreSqlExtensions
                     new WorkflowStepEntity
                     {
                         PlanId = samplePlan.Id,
-                        StepIndex = 0,
                         Text = "初始化AI-Agent系统",
                         Type = "setup",
-                        Status = 2, // Completed
+                        Status = PlanStepStatus.Completed, // Completed
                         Result = "系统初始化完成",
                         StartedAt = DateTime.UtcNow.AddMinutes(-30),
                         CompletedAt = DateTime.UtcNow.AddMinutes(-25),
-                        Metadata = """{"duration": "5 minutes"}""",
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
+                        Metadata = """{"duration": "5 minutes"}"""
                     },
                     new WorkflowStepEntity
                     {
                         PlanId = samplePlan.Id,
-                        StepIndex = 1,
                         Text = "配置数据库连接",
                         Type = "config",
-                        Status = 1, // InProgress
+                        Status = PlanStepStatus.InProgress, // InProgress
                         StartedAt = DateTime.UtcNow.AddMinutes(-25),
-                        Metadata = """{"database": "postgresql"}""",
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
+                        Metadata = """{"database": "postgresql"}"""
                     },
                     new WorkflowStepEntity
                     {
                         PlanId = samplePlan.Id,
-                        StepIndex = 2,
                         Text = "测试API端点",
                         Type = "test",
-                        Status = 0, // NotStarted
+                        Status = PlanStepStatus.NotStarted, // NotStarted
                         Metadata = """{"endpoints": ["workflow", "rag", "semantic-kernel"]}""",
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
                     }
                 };
 

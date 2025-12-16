@@ -15,13 +15,13 @@ public static class WorkflowMapper
     {
         var model = new WorkflowPlan
         {
-            Id = entity.Id.ToString(),
+            Id = entity.Id,
             Title = entity.Title,
             Description = entity.Description,
             // ExecutorKeys 和 Metadata 假设在 Entity 中是 string，需要反序列化，这里简化处理
             // In a real app, Metadata/ExecutorKeys would need JSON deserialization
             ExecutorKeys = new List<string>(), 
-            Metadata = entity.Metadata,
+            Metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(entity.Metadata),
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             Status = entity.Status,
@@ -52,11 +52,11 @@ public static class WorkflowMapper
     {
         var entity = new WorkflowPlanEntity
         {
-            Id = Guid.TryParse(model.Id, out var id) ? id : Guid.Empty,
+            Id = model.Id,
             Title = model.Title,
             Description = model.Description,
             // ExecutorKeys 和 Metadata 假设在 Entity 中是 string，需要序列化，这里简化处理
-            Metadata = model.Metadata,
+            Metadata = JsonSerializer.Serialize(model.Metadata),
             CreatedAt = model.CreatedAt,
             UpdatedAt = model.UpdatedAt,
             Status = model.Status,

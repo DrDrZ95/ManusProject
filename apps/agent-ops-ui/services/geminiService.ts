@@ -9,7 +9,7 @@ if (apiKey) {
 
 export const analyzeCommand = async (command: string, context: string): Promise<string> => {
   if (!aiClient) {
-    return "OpsNexus AI: API Key not configured. Using offline mode.";
+    return "ManusProject AI: API Key not configured. Using offline mode.";
   }
 
   try {
@@ -17,7 +17,7 @@ export const analyzeCommand = async (command: string, context: string): Promise<
     const response = await aiClient.models.generateContent({
       model,
       contents: `
-        You are an intelligent MLOps terminal assistant for OpsNexus.
+        You are an intelligent MLOps terminal assistant for ManusProject.
         The user typed: "${command}".
         Current Context: ${context}.
         
@@ -29,6 +29,6 @@ export const analyzeCommand = async (command: string, context: string): Promise<
     return response.text || "No output generated.";
   } catch (error) {
     console.error("Gemini API Error:", error);
-    return "Error communicating with OpsNexus Intelligence Core.";
+    return "Error communicating with ManusProject Intelligence Core.";
   }
 };

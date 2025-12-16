@@ -157,7 +157,7 @@ const Filesystem: React.FC<FilesystemProps> = ({ lang }) => {
                 <div className="bg-nexus-800 px-4 py-2 border-b border-nexus-700 flex justify-between items-center text-nexus-400 text-xs">
                    <div className="flex items-center">
                       <TerminalIcon size={14} className="mr-2" /> 
-                      root@opsnexus:{selectedNode.mountPoint || selectedNode.name}
+                      root@manusproject:{selectedNode.mountPoint || selectedNode.name}
                    </div>
                    <div>{selectedNode.permissions} | {selectedNode.size}</div>
                 </div>

@@ -1,155 +1,213 @@
 
-import { LoginRequest, User, AuthResponse } from '../types';
+import { httpClient } from './http';
 import { tokenManager } from './tokenManager';
+import { securityService } from './security';
+import { LoginRequest, User, AuthResponse, ChatSession, NewsItem, Attachment } from '../types';
+import { v4 as uuidv4 } from 'uuid';
+import { generateNews } from './news'; 
+import { MOCK_SESSIONS } from '../data/mockData';
 
-/**
- * Generic API Response Interface
- * 通用 API 响应接口
- */
-interface ApiResponse<T> {
-  code: number;
-  message: string;
-  data: T;
-}
-
-/**
- * API Client Configuration
- * API 客户端配置
- */
-interface RequestConfig extends RequestInit {
-  requiresAuth?: boolean; // Default true
-}
-
-/**
- * API Service Class
- * API 服务类
- * 
- * Design Pattern: Singleton & Facade
- * Features:
- * 1. Automatic JWT injection (Interceptor simulation).
- * 2. Centralized error handling.
- * 3. Mock data handling for demonstration.
- * 
- * 特性：
- * 1. 自动注入 JWT (模拟拦截器)。
- * 2. 集中式错误处理。
- * 3. 用于演示的 Mock 数据处理。
- */
-class ApiClient {
-  private static instance: ApiClient;
-  private baseUrl: string = '/api/v1'; // Virtual base URL
-
-  private constructor() {}
-
-  public static getInstance(): ApiClient {
-    if (!ApiClient.instance) {
-      ApiClient.instance = new ApiClient();
-    }
-    return ApiClient.instance;
-  }
-
+// =============================================================================
+// Auth Service (认证服务)
+// Handles login, logout, and token refresh.
+// 处理登录、登出和 Token 刷新。
+// =============================================================================
+export const authService = {
   /**
-   * Core Request Method (Simulates Fetch/Axios)
-   * 核心请求方法 (模拟 Fetch/Axios)
+   * User Login
+   * 用户登录
+   * 
+   * Process:
+   * 1. Encrypt password using RSA Public Key (via SecurityService).
+   * 2. Send encrypted credentials to backend.
+   * 3. Store returned JWT tokens.
+   * 
+   * 流程：
+   * 1. 使用 RSA 公钥加密密码（通过 SecurityService）。
+   * 2. 发送加密凭证至后端。
+   * 3. 存储返回的 JWT 令牌。
+   * 
+   * @param data Login credentials
    */
-  private async request<T>(endpoint: string, config: RequestConfig = {}, mockData?: T): Promise<T> {
-    const { requiresAuth = true, headers, ...rest } = config;
-
-    // 1. Request Interceptor: Inject Token
-    // 请求拦截器：注入 Token
-    const authHeaders: Record<string, string> = {};
-    if (requiresAuth) {
-      const token = tokenManager.getAccessToken();
-      if (token) {
-        authHeaders['Authorization'] = `Bearer ${token}`;
-      } else {
-        console.warn(`[ApiClient] Request to ${endpoint} requires auth but no token found.`);
-        // In a real app, you might throw unauthorized error here immediately
-      }
+  login: async (data: LoginRequest): Promise<User> => {
+    console.group('[AuthService] Login Process');
+    
+    // 1. Encryption Step (RSA)
+    // 加密步骤
+    if (data.password && data.provider === 'credentials') {
+       console.log('🔒 Encrypting sensitive credentials...');
+       const encryptedPassword = securityService.encrypt(data.password);
+       // Replace plain password with encrypted one for the payload
+       data = { ...data, password: encryptedPassword };
+       console.log('📦 Payload prepared with encrypted data.');
     }
 
-    // Combine headers
-    const finalHeaders = {
-      'Content-Type': 'application/json',
-      ...authHeaders,
-      ...headers,
+    // Mock Response
+    const mockUser: User = {
+      id: 'user-123',
+      name: 'Agent User',
+      email: data.email || 'user@example.com',
+      avatar: 'https://api.dicebear.com/9.x/micah/svg?seed=Felix',
+      role: 'admin',
+      bio: 'Full Stack Engineer @ Agent Corp'
     };
 
-    console.log(`[ApiClient] Requesting: ${config.method || 'GET'} ${this.baseUrl}${endpoint}`, {
-      headers: finalHeaders,
-      body: rest.body ? JSON.parse(rest.body as string) : undefined
-    });
-
-    // 2. Simulate Network Latency
-    // 模拟网络延迟
-    await new Promise(resolve => setTimeout(resolve, 600));
-
-    // 3. Response Interceptor: Error Handling & Mocking
-    // 响应拦截器：错误处理与 Mock
-    
-    // Simulate 401 if requires auth but no token (Demo logic)
-    if (requiresAuth && !tokenManager.getAccessToken()) {
-      throw new Error('401 Unauthorized');
-    }
-
-    // Return mock data if provided
-    if (mockData) {
-      console.log(`[ApiClient] Response from ${endpoint}:`, mockData);
-      return mockData;
-    }
-
-    throw new Error(`Endpoint ${endpoint} not mocked.`);
-  }
-
-  // --- Auth Endpoints ---
-
-  public async login(credentials: LoginRequest): Promise<User> {
-    // Mock Validation
-    if (credentials.email?.includes('error')) {
-      throw new Error('Invalid credentials simulation');
-    }
-
-    const mockResponse: AuthResponse = {
-      user: {
-        id: 'user-123',
-        name: 'Agent User',
-        email: credentials.email || 'user@example.com',
-        avatar: 'https://api.dicebear.com/9.x/micah/svg?seed=Felix',
-        role: 'admin',
-        bio: 'Full Stack Engineer @ Agent Corp'
-      },
-      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock-token-payload',
-      refreshToken: 'mock-refresh-token',
+    const mockAuthResponse: AuthResponse = {
+      user: mockUser,
+      token: 'mock-jwt-token-' + Date.now(),
+      refreshToken: 'mock-refresh-token-' + Date.now(),
       expiresIn: 3600
     };
 
-    const data = await this.request<AuthResponse>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-      requiresAuth: false
-    }, mockResponse);
+    // 2. Network Request
+    // 网络请求 (Simulated latency in httpClient)
+    console.log('📡 Sending request to /auth/login...');
+    await httpClient.post('/auth/login', data, { requiresAuth: false });
+    
+    // 3. Token Storage
+    // 令牌存储
+    tokenManager.setTokens(mockAuthResponse.token, mockAuthResponse.refreshToken);
+    
+    console.log('✅ Login successful. Session established.');
+    console.groupEnd();
+    
+    return mockUser;
+  },
 
-    // Side Effect: Save Tokens
-    tokenManager.setTokens(data.token, data.refreshToken);
-
-    return data.user;
-  }
-
-  public async logout(): Promise<void> {
-    await this.request<void>('/auth/logout', { method: 'POST' }, undefined);
+  /**
+   * User Logout
+   * 用户登出
+   */
+  logout: async (): Promise<void> => {
+    await httpClient.post('/auth/logout');
     tokenManager.clearTokens();
-  }
+  },
 
-  public async getProfile(): Promise<User> {
-    const mockUser = {
+  /**
+   * Get Current User Profile
+   * 获取当前用户信息
+   */
+  getProfile: async (): Promise<User> => {
+    const mockUser: User = {
       id: 'user-123',
       name: 'Agent User',
       email: 'user@example.com',
       avatar: 'https://api.dicebear.com/9.x/micah/svg?seed=Felix',
       role: 'admin'
     };
-    return this.request<User>('/users/me', { method: 'GET' }, mockUser);
+    await httpClient.get('/users/me');
+    return mockUser;
   }
-}
+};
 
-export const authApi = ApiClient.getInstance();
+// =============================================================================
+// Chat Service (聊天服务)
+// Manages chat sessions, history, and group organization.
+// 管理聊天会话、历史记录和分组。
+// =============================================================================
+export const chatService = {
+  /**
+   * Fetch all chat sessions
+   * 获取所有会话列表
+   */
+  getSessions: async (): Promise<ChatSession[]> => {
+    // In a real app, this returns the list from DB
+    await httpClient.get('/chats'); 
+    return MOCK_SESSIONS;
+  },
+
+  /**
+   * Create a new session
+   * 创建新会话
+   */
+  createSession: async (title: string): Promise<ChatSession> => {
+    const newSession: ChatSession = {
+      id: uuidv4(),
+      title,
+      messages: [],
+      updatedAt: Date.now()
+    };
+    await httpClient.post('/chats', { title });
+    return newSession;
+  },
+
+  /**
+   * Delete a session
+   * 删除会话
+   */
+  deleteSession: async (id: string): Promise<void> => {
+    await httpClient.delete(`/chats/${id}`);
+  }
+};
+
+// =============================================================================
+// File Service (文件服务)
+// Handles file uploads, downloads, and "My Space" management.
+// 处理文件上传、下载和“我的空间”管理。
+// =============================================================================
+export const fileService = {
+  /**
+   * Upload an attachment
+   * 上传附件
+   */
+  upload: async (file: File): Promise<Attachment> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Simulate upload delay
+    await httpClient.post('/storage/upload', formData, { 
+      headers: { 'Content-Type': 'multipart/form-data' } // Browser sets boundary automatically
+    });
+
+    // Mock return
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = reader.result as string;
+        resolve({
+          id: uuidv4(),
+          name: file.name,
+          type: 'file',
+          mimeType: file.type,
+          data: base64String.split(',')[1]
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  },
+
+  /**
+   * List files in My Space
+   * 列出我的空间文件
+   */
+  listFiles: async (): Promise<any[]> => {
+    await httpClient.get('/storage/files');
+    return []; // Mock data handled in UI component for now
+  }
+};
+
+// =============================================================================
+// News Service (新闻服务)
+// Fetches external news data.
+// 获取外部新闻数据。
+// =============================================================================
+export const newsService = {
+  /**
+   * Fetch latest news
+   * 获取最新新闻
+   */
+  fetchLatest: async (): Promise<NewsItem[]> => {
+    await httpClient.get('/news/latest');
+    // Using the deterministic generator from previous implementation
+    return generateNews();
+  }
+};
+
+// Export a unified API object (Facade)
+// 导出统一 API 对象 (外观模式)
+export const api = {
+  auth: authService,
+  chat: chatService,
+  file: fileService,
+  news: newsService
+};
