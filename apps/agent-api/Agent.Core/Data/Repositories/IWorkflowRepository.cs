@@ -1,0 +1,73 @@
+using Agent.Core.Data.Entities;
+using Agent.Core.Workflow.Models;
+
+namespace Agent.Core.Data.Repositories;
+
+/// <summary>
+/// 工作流数据仓储接口 (Workflow Data Repository Interface)
+/// 负责工作流计划和步骤的持久化操作。
+/// </summary>
+public interface IWorkflowRepository
+{
+    // --- CRUD Operations (增删改查操作) ---
+
+    /// <summary>
+    /// 添加新的工作流计划 (Add a new workflow plan)
+    /// </summary>
+    Task<WorkflowPlanEntity> AddPlanAsync(WorkflowPlanEntity plan, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 根据ID获取工作流计划 (Get a workflow plan by ID)
+    /// </summary>
+    Task<WorkflowPlanEntity?> GetPlanByIdAsync(Guid planId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 更新工作流计划 (Update a workflow plan)
+    /// </summary>
+    Task UpdatePlanAsync(WorkflowPlanEntity plan, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 删除工作流计划 (Delete a workflow plan)
+    /// </summary>
+    Task DeletePlanAsync(Guid planId, CancellationToken cancellationToken = default);
+
+    // --- Complex Queries (复杂查询) ---
+
+    /// <summary>
+    /// 获取所有工作流计划 (Get all workflow plans)
+    /// </summary>
+    Task<List<WorkflowPlanEntity>> GetAllPlansAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 根据状态过滤并分页获取工作流计划 (Get workflow plans filtered by status and with pagination)
+    /// </summary>
+    Task<List<WorkflowPlanEntity>> GetPlansByStatusAsync(
+        PlanStatus status, 
+        int pageNumber, 
+        int pageSize, 
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 获取计划中的所有步骤 (Get all steps for a plan)
+    /// </summary>
+    Task<List<WorkflowStepEntity>> GetStepsByPlanIdAsync(Guid planId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 根据计划ID和步骤索引获取特定步骤 (Get a specific step by plan ID and step index)
+    /// </summary>
+    Task<WorkflowStepEntity?> GetStepByPlanIdAndIndexAsync(
+        Guid planId, 
+        int stepIndex, 
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 更新单个步骤的状态和结果 (Update the status and result of a single step)
+    /// </summary>
+    Task UpdateStepStatusAndResultAsync(
+        Guid stepId, 
+        PlanStepStatus status, 
+        string? result, 
+        DateTime? startedAt, 
+        DateTime? completedAt,
+        CancellationToken cancellationToken = default);
+}

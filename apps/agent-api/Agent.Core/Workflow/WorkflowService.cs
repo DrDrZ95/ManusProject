@@ -1,7 +1,13 @@
-using System.Text.RegularExpressions;
+using Agent.Core.Data.Repositories;
+using Agent.Core.Data.Mappers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Agent.Core.Workflow.Models;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using System;
+using System.Linq;
 
 namespace Agent.Core.Workflow;
 
@@ -16,18 +22,16 @@ public class WorkflowService : IWorkflowService
 {
     private readonly ILogger<WorkflowService> _logger;
     private readonly WorkflowOptions _options;
-    
-    // 内存存储计划数据（生产环境中应使用数据库）
-    // In-memory storage for plan data (should use database in production)
-    private readonly Dictionary<string, WorkflowPlan> _plans = new();
-    private readonly object _lockObject = new();
+    private readonly IWorkflowRepository _repository;
 
     public WorkflowService(
         ILogger<WorkflowService> logger,
-        IOptions<WorkflowOptions> options)
+        IOptions<WorkflowOptions> options,
+        IWorkflowRepository repository)
     {
         _logger = logger;
         _options = options.Value;
+        _repository = repository;
     }
 
     /// <summary>
@@ -41,20 +45,20 @@ public class WorkflowService : IWorkflowService
     {
         try
         {
-            var planId = $"plan_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
-            
+            // 1. 创建业务模型 (Create business model)
             var plan = new WorkflowPlan
             {
-                Id = planId,
+                // ID将在Repository中生成
                 Title = request.Title,
                 Description = request.Description,
                 ExecutorKeys = request.ExecutorKeys,
                 Metadata = request.Metadata,
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = DateTime.UtcNow,
+                Status = PlanStatus.InProgress // 默认创建后即为进行中
             };
 
-            // 创建步骤对象 - Create step objects
+            // 2. 创建步骤对象 - Create step objects
             for (int i = 0; i < request.Steps.Count; i++)
             {
                 var stepText = request.Steps[i];
@@ -67,23 +71,18 @@ public class WorkflowService : IWorkflowService
                 };
                 
                 plan.Steps.Add(step);
-                plan.StepStatuses.Add(PlanStepStatus.NotStarted);
             }
-
-            // 设置第一个步骤为当前步骤 - Set first step as current
-            if (plan.Steps.Count > 0)
-            {
-                plan.CurrentStepIndex = 0;
-            }
-
-            lock (_lockObject)
-            {
-                _plans[planId] = plan;
-            }
-
-            _logger.LogInformation("Created workflow plan with ID: {PlanId}, Title: {Title}", planId, request.Title);
             
-            return plan;
+            // 3. 转换为实体并持久化 (Convert to entity and persist)
+            var planEntity = plan.ToEntity();
+            var addedEntity = await _repository.AddPlanAsync(planEntity, cancellationToken);
+
+            // 4. 转换回业务模型并返回 (Convert back to business model and return)
+            var resultPlan = addedEntity.ToModel();
+            
+            _logger.LogInformation("Created workflow plan with ID: {PlanId}, Title: {Title}", resultPlan.Id, request.Title);
+            
+            return resultPlan;
         }
         catch (Exception ex)
         {
@@ -98,10 +97,15 @@ public class WorkflowService : IWorkflowService
     /// </summary>
     public async Task<WorkflowPlan?> GetPlanAsync(string planId, CancellationToken cancellationToken = default)
     {
-        lock (_lockObject)
+        if (!Guid.TryParse(planId, out var id))
         {
-            return _plans.TryGetValue(planId, out var plan) ? plan : null;
+            _logger.LogWarning("Invalid Plan ID format: {PlanId}", planId);
+            return null;
         }
+        
+        var entity = await _repository.GetPlanByIdAsync(id, cancellationToken);
+        
+        return entity?.ToModel();
     }
 
     /// <summary>
@@ -110,10 +114,9 @@ public class WorkflowService : IWorkflowService
     /// </summary>
     public async Task<List<WorkflowPlan>> GetAllPlansAsync(CancellationToken cancellationToken = default)
     {
-        lock (_lockObject)
-        {
-            return _plans.Values.ToList();
-        }
+        var entities = await _repository.GetAllPlansAsync(cancellationToken);
+        
+        return entities.Select(e => e.ToModel()).ToList();
     }
 
     /// <summary>
@@ -127,42 +130,51 @@ public class WorkflowService : IWorkflowService
     {
         try
         {
-            lock (_lockObject)
+            if (!Guid.TryParse(planId, out var id))
             {
-                if (!_plans.TryGetValue(planId, out var plan))
-                {
-                    _logger.LogWarning("Plan not found: {PlanId}", planId);
-                    return false;
-                }
-
-                if (stepIndex < 0 || stepIndex >= plan.Steps.Count)
-                {
-                    _logger.LogWarning("Invalid step index: {StepIndex} for plan: {PlanId}", stepIndex, planId);
-                    return false;
-                }
-
-                // 更新步骤状态 - Update step status
-                plan.Steps[stepIndex].Status = status;
-                plan.StepStatuses[stepIndex] = status;
-                plan.UpdatedAt = DateTime.UtcNow;
-
-                // 更新时间戳 - Update timestamps
-                var step = plan.Steps[stepIndex];
-                switch (status)
-                {
-                    case PlanStepStatus.InProgress:
-                        step.StartedAt = DateTime.UtcNow;
-                        break;
-                    case PlanStepStatus.Completed:
-                        step.CompletedAt = DateTime.UtcNow;
-                        break;
-                }
-
-                _logger.LogDebug("Updated step {StepIndex} status to {Status} for plan {PlanId}", 
-                    stepIndex, status, planId);
-                
-                return true;
+                _logger.LogWarning("Invalid Plan ID format: {PlanId}", planId);
+                return false;
             }
+
+            var planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
+            if (planEntity == null)
+            {
+                _logger.LogWarning("Plan not found: {PlanId}", planId);
+                return false;
+            }
+
+            var stepEntity = planEntity.Steps.FirstOrDefault(s => s.Index == stepIndex);
+            if (stepEntity == null)
+            {
+                _logger.LogWarning("Invalid step index: {StepIndex} for plan: {PlanId}", stepIndex, planId);
+                return false;
+            }
+
+            // 更新时间戳 - Update timestamps
+            DateTime? startedAt = null;
+            DateTime? completedAt = null;
+            if (status == PlanStepStatus.InProgress)
+            {
+                startedAt = DateTime.UtcNow;
+            }
+            else if (status == PlanStepStatus.Completed)
+            {
+                completedAt = DateTime.UtcNow;
+            }
+
+            // 使用 Repository 的专用方法更新状态 (Use Repository's dedicated method to update status)
+            await _repository.UpdateStepStatusAndResultAsync(
+                stepEntity.Id, 
+                status, 
+                stepEntity.Result, // 保持 Result 不变
+                startedAt, 
+                completedAt,
+                cancellationToken);
+
+            _logger.LogDebug("Updated step {StepIndex} status to {Status} for plan {PlanId}", 
+                stepIndex, status, planId);
+            
+            return true;
         }
         catch (Exception ex)
         {
@@ -180,46 +192,41 @@ public class WorkflowService : IWorkflowService
     /// </summary>
     public async Task<WorkflowStep?> GetCurrentStepAsync(string planId, CancellationToken cancellationToken = default)
     {
-        try
+        if (!Guid.TryParse(planId, out var id))
         {
-            lock (_lockObject)
-            {
-                if (!_plans.TryGetValue(planId, out var plan))
-                {
-                    _logger.LogWarning("Plan not found: {PlanId}", planId);
-                    return null;
-                }
-
-                // 查找第一个活动步骤 - Find first active step
-                for (int i = 0; i < plan.Steps.Count; i++)
-                {
-                    var step = plan.Steps[i];
-                    if (step.Status.IsActive())
-                    {
-                        // 如果步骤未开始，标记为进行中 - If step not started, mark as in progress
-                        if (step.Status == PlanStepStatus.NotStarted)
-                        {
-                            // Note: This is a synchronous call within a lock, which is generally bad practice.
-                            // In a real application, this should be handled by an external state machine or event.
-                            // For now, we'll call the synchronous part of the update logic.
-                            UpdateStepStatusSync(planId, i, PlanStepStatus.InProgress);
-                        }
-                        
-                        plan.CurrentStepIndex = i;
-                        return step;
-                    }
-                }
-
-                // 没有找到活动步骤 - No active step found
-                plan.CurrentStepIndex = null;
-                return null;
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting current step for plan: {PlanId}", planId);
+            _logger.LogWarning("Invalid Plan ID format: {PlanId}", planId);
             return null;
         }
+
+        var planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
+        if (planEntity == null)
+        {
+            _logger.LogWarning("Plan not found: {PlanId}", planId);
+            return null;
+        }
+
+        // 查找第一个活动步骤 - Find first active step
+        var activeStepEntity = planEntity.Steps
+            .OrderBy(s => s.Index)
+            .FirstOrDefault(s => s.Status.IsActive());
+
+        if (activeStepEntity != null)
+        {
+            // 如果步骤未开始，标记为进行中 - If step not started, mark as in progress
+            if (activeStepEntity.Status == PlanStepStatus.NotStarted)
+            {
+                // 自动将状态更新为 InProgress
+                await UpdateStepStatusAsync(planId, activeStepEntity.Index, PlanStepStatus.InProgress, cancellationToken);
+                // 重新获取更新后的实体 (Re-fetch the updated entity)
+                planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
+                activeStepEntity = planEntity?.Steps.FirstOrDefault(s => s.Index == activeStepEntity.Index);
+            }
+            
+            return activeStepEntity?.ToModel();
+        }
+
+        // 没有找到活动步骤 - No active step found
+        return null;
     }
 
     /// <summary>
@@ -230,16 +237,31 @@ public class WorkflowService : IWorkflowService
     {
         try
         {
+            // 1. 更新状态为 Completed (Update status to Completed)
             var success = await UpdateStepStatusAsync(planId, stepIndex, PlanStepStatus.Completed, cancellationToken);
             
+            // 2. 如果成功且有结果，则更新结果 (If successful and result exists, update result)
             if (success && !string.IsNullOrEmpty(result))
             {
-                lock (_lockObject)
+                if (!Guid.TryParse(planId, out var id))
                 {
-                    if (_plans.TryGetValue(planId, out var plan) && stepIndex < plan.Steps.Count)
-                    {
-                        plan.Steps[stepIndex].Result = result;
-                    }
+                    _logger.LogWarning("Invalid Plan ID format: {PlanId}", planId);
+                    return false;
+                }
+
+                var planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
+                var stepEntity = planEntity?.Steps.FirstOrDefault(s => s.Index == stepIndex);
+
+                if (stepEntity != null)
+                {
+                    // 使用 Repository 的专用方法更新结果 (Use Repository's dedicated method to update result)
+                    await _repository.UpdateStepStatusAndResultAsync(
+                        stepEntity.Id, 
+                        PlanStepStatus.Completed, // 确保状态是 Completed
+                        result, 
+                        null, 
+                        DateTime.UtcNow,
+                        cancellationToken);
                 }
             }
 
@@ -275,92 +297,18 @@ public class WorkflowService : IWorkflowService
                 $"# {plan.Title}",
                 "",
                 $"**计划ID**: {plan.Id}",
-                $"**创建时间**: {plan.CreatedAt:yyyy-MM-dd HH:mm:ss}",
-                $"**最后更新**: {plan.UpdatedAt:yyyy-MM-dd HH:mm:ss}",
+                $"**描述**: {plan.Description}",
+                "",
+                "## 步骤列表 (Steps List)",
                 ""
             };
 
-            if (!string.IsNullOrEmpty(plan.Description))
+            foreach (var step in plan.Steps)
             {
-                todoContent.Add($"## 描述 (Description)");
-                todoContent.Add(plan.Description);
-                todoContent.Add("");
+                var statusChar = step.Status.ToMarkdownStatusChar();
+                var resultLine = string.IsNullOrEmpty(step.Result) ? "" : $" (结果: {step.Result})";
+                todoContent.Add($"- [{statusChar}] {step.Text}{resultLine}");
             }
-
-            // 添加进度信息 - Add progress information
-            var progress = await GetProgressAsync(planId, cancellationToken);
-            todoContent.Add("## 进度概览 (Progress Overview)");
-            todoContent.Add("");
-            todoContent.Add($"- **总步骤数**: {progress.TotalSteps}");
-            todoContent.Add($"- **已完成**: {progress.CompletedSteps}");
-            todoContent.Add($"- **进行中**: {progress.InProgressSteps}");
-            todoContent.Add($"- **已阻塞**: {progress.BlockedSteps}");
-            todoContent.Add($"- **完成度**: {progress.ProgressPercentage:F1}%");
-            todoContent.Add("");
-
-            // 添加任务列表 - Add task list
-            todoContent.Add("## 任务列表 (Task List)");
-            todoContent.Add("");
-
-            for (int i = 0; i < plan.Steps.Count; i++)
-            {
-                var step = plan.Steps[i];
-                var marker = step.Status.GetMarker();
-                var stepLine = $"{marker} **步骤 {i + 1}**: {step.Text}";
-                
-                // 添加步骤类型标识 - Add step type identifier
-                if (!string.IsNullOrEmpty(step.Type))
-                {
-                    stepLine += $" `[{step.Type.ToUpper()}]`";
-                }
-
-                todoContent.Add(stepLine);
-
-                // 添加步骤详细信息 - Add step details
-                if (step.Status == PlanStepStatus.InProgress && step.StartedAt.HasValue)
-                {
-                    todoContent.Add($"  - *开始时间*: {step.StartedAt.Value:yyyy-MM-dd HH:mm:ss}");
-                }
-                else if (step.Status == PlanStepStatus.Completed && step.CompletedAt.HasValue)
-                {
-                    todoContent.Add($"  - *完成时间*: {step.CompletedAt.Value:yyyy-MM-dd HH:mm:ss}");
-                    if (!string.IsNullOrEmpty(step.Result))
-                    {
-                        todoContent.Add($"  - *执行结果*: {step.Result}");
-                    }
-                }
-                else if (step.Status == PlanStepStatus.Blocked)
-                {
-                    todoContent.Add($"  - *状态*: 已阻塞，需要处理");
-                }
-
-                todoContent.Add("");
-            }
-
-            // 添加状态说明 - Add status legend
-            todoContent.Add("## 状态说明 (Status Legend)");
-            todoContent.Add("");
-            todoContent.Add("- `[ ]` 未开始 (Not Started)");
-            todoContent.Add("- `[→]` 进行中 (In Progress)");
-            todoContent.Add("- `[✓]` 已完成 (Completed)");
-            todoContent.Add("- `[!]` 已阻塞 (Blocked)");
-            todoContent.Add("");
-
-            // 添加元数据 - Add metadata
-            if (plan.Metadata.Count > 0)
-            {
-                todoContent.Add("## 元数据 (Metadata)");
-                todoContent.Add("");
-                foreach (var kvp in plan.Metadata)
-                {
-                    todoContent.Add($"- **{kvp.Key}**: {kvp.Value}");
-                }
-                todoContent.Add("");
-            }
-
-            // 添加生成时间戳 - Add generation timestamp
-            todoContent.Add("---");
-            todoContent.Add($"*生成时间: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC*");
 
             return string.Join(Environment.NewLine, todoContent);
         }
@@ -372,245 +320,12 @@ public class WorkflowService : IWorkflowService
     }
 
     /// <summary>
-    /// Save todo list to file
-    /// 将待办事项列表保存到文件
+    /// Helper method to extract step type from text (e.g., [CODE], [SEARCH])
+    /// 辅助方法：从文本中提取步骤类型
     /// </summary>
-    public async Task<bool> SaveToDoListToFileAsync(string planId, string filePath, CancellationToken cancellationToken = default)
+    private string? ExtractStepType(string stepText)
     {
-        try
-        {
-            var todoContent = await GenerateToDoListAsync(planId, cancellationToken);
-            
-            // 确保目录存在 - Ensure directory exists
-            var directory = Path.GetDirectoryName(filePath);
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            await File.WriteAllTextAsync(filePath, todoContent, cancellationToken);
-            
-            _logger.LogInformation("Saved todo list for plan {PlanId} to file: {FilePath}", planId, filePath);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error saving todo list to file for plan: {PlanId}, file: {FilePath}", planId, filePath);
-            return false;
-        }
+        var match = System.Text.RegularExpressions.Regex.Match(stepText, @"^\[(\w+)\]");
+        return match.Success ? match.Groups[1].Value.ToUpperInvariant() : null;
     }
-
-    /// <summary>
-    /// Load todo list from file and update plan status
-    /// 从文件加载待办事项列表并更新计划状态
-    /// 
-    /// 这个功能允许从markdown文件中解析任务状态并更新计划
-    /// This feature allows parsing task status from markdown files and updating plans
-    /// </summary>
-    public async Task<string?> LoadToDoListFromFileAsync(string filePath, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            if (!File.Exists(filePath))
-            {
-                _logger.LogWarning("Todo list file not found: {FilePath}", filePath);
-                return null;
-            }
-
-            var content = await File.ReadAllTextAsync(filePath, cancellationToken);
-            
-            // 解析计划ID - Parse plan ID
-            var planIdMatch = Regex.Match(content, @"\*\*计划ID\*\*:\s*(.+)");
-            if (!planIdMatch.Success)
-            {
-                _logger.LogWarning("Could not find plan ID in todo list file: {FilePath}", filePath);
-                return null;
-            }
-
-            var planId = planIdMatch.Groups[1].Value.Trim();
-            
-            lock (_lockObject)
-            {
-                if (!_plans.TryGetValue(planId, out var plan))
-                {
-                    _logger.LogWarning("Plan not found for ID from file: {PlanId}", planId);
-                    return null;
-                }
-
-                // 解析任务状态 - Parse task statuses
-                var taskMatches = Regex.Matches(content, @"(\[[ →✓!]\])\s*\*\*步骤\s*(\d+)\*\*:\s*(.+)");
-                
-                foreach (Match match in taskMatches)
-                {
-                    var statusMarker = match.Groups[1].Value;
-                    var stepNumber = int.Parse(match.Groups[2].Value);
-                    var stepIndex = stepNumber - 1; // 转换为0基索引 - Convert to 0-based index
-
-                    if (stepIndex >= 0 && stepIndex < plan.Steps.Count)
-                    {
-                        var status = ParseStatusFromMarker(statusMarker);
-                        plan.Steps[stepIndex].Status = status;
-                        plan.StepStatuses[stepIndex] = status;
-                    }
-                }
-
-                plan.UpdatedAt = DateTime.UtcNow;
-            }
-
-            _logger.LogInformation("Loaded todo list from file and updated plan: {PlanId}", planId);
-            return planId;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error loading todo list from file: {FilePath}", filePath);
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// Delete a workflow plan
-    /// 删除工作流计划
-    /// </summary>
-    public async Task<bool> DeletePlanAsync(string planId, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            lock (_lockObject)
-            {
-                var removed = _plans.Remove(planId);
-                if (removed)
-                {
-                    _logger.LogInformation("Deleted workflow plan: {PlanId}", planId);
-                }
-                return removed;
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deleting workflow plan: {PlanId}", planId);
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Get plan execution progress
-    /// 获取计划执行进度
-    /// </summary>
-    public async Task<WorkflowProgress> GetProgressAsync(string planId, CancellationToken cancellationToken = default)
-    {
-        var plan = await GetPlanAsync(planId, cancellationToken);
-        if (plan == null)
-        {
-            return new WorkflowProgress { PlanId = planId };
-        }
-
-        var progress = new WorkflowProgress
-        {
-            PlanId = planId,
-            TotalSteps = plan.Steps.Count,
-            CurrentStepIndex = plan.CurrentStepIndex
-        };
-
-        foreach (var status in plan.StepStatuses)
-        {
-            switch (status)
-            {
-                case PlanStepStatus.Completed:
-                    progress.CompletedSteps++;
-                    break;
-                case PlanStepStatus.InProgress:
-                    progress.InProgressSteps++;
-                    break;
-                case PlanStepStatus.Blocked:
-                    progress.BlockedSteps++;
-                    break;
-            }
-        }
-
-        return progress;
-    }
-
-    public Task<string> CreateWorkflowAsync(string llmResponse)
-    {
-        throw new NotImplementedException();
-    }
-
-    #region Private Helper Methods
-
-    /// <summary>
-    /// Synchronous part of UpdateStepStatusAsync, used internally.
-    /// </summary>
-    private bool UpdateStepStatusSync(string planId, int stepIndex, PlanStepStatus status)
-    {
-        try
-        {
-            lock (_lockObject)
-            {
-                if (!_plans.TryGetValue(planId, out var plan))
-                {
-                    return false;
-                }
-
-                if (stepIndex < 0 || stepIndex >= plan.Steps.Count)
-                {
-                    return false;
-                }
-
-                // 更新步骤状态 - Update step status
-                plan.Steps[stepIndex].Status = status;
-                plan.StepStatuses[stepIndex] = status;
-                plan.UpdatedAt = DateTime.UtcNow;
-
-                // 更新时间戳 - Update timestamps
-                var step = plan.Steps[stepIndex];
-                switch (status)
-                {
-                    case PlanStepStatus.InProgress:
-                        step.StartedAt = DateTime.UtcNow;
-                        break;
-                    case PlanStepStatus.Completed:
-                        step.CompletedAt = DateTime.UtcNow;
-                        break;
-                }
-                
-                return true;
-            }
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Extract step type from step text
-    /// 从步骤文本中提取步骤类型
-    /// 
-    /// 对应AI-Agent中的类型提取逻辑
-    /// Corresponds to type extraction logic in AI-Agent
-    /// </summary>
-    private static string? ExtractStepType(string stepText)
-    {
-        // 查找类似 [SEARCH] 或 [CODE] 的模式 - Look for patterns like [SEARCH] or [CODE]
-        var match = Regex.Match(stepText, @"\[([A-Z_]+)\]");
-        return match.Success ? match.Groups[1].Value.ToLowerInvariant() : null;
-    }
-
-    /// <summary>
-    /// Parse status from marker symbol
-    /// 从标记符号解析状态
-    /// </summary>
-    private static PlanStepStatus ParseStatusFromMarker(string marker)
-    {
-        return marker switch
-        {
-            "[ ]" => PlanStepStatus.NotStarted,
-            "[→]" => PlanStepStatus.InProgress,
-            "[✓]" => PlanStepStatus.Completed,
-            "[!]" => PlanStepStatus.Blocked,
-            _ => PlanStepStatus.NotStarted
-        };
-    }
-
-    #endregion
 }
