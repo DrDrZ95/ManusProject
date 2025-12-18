@@ -8,6 +8,7 @@ import {
   Mic,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
   PanelRightClose,
   PanelLeftClose,
   PanelLeftOpen,
@@ -53,6 +54,7 @@ import {
   Image
 } from 'lucide-react';
 
+// Unified icon collection for the application
 export const Icons = {
   NewChat: SquarePen,
   Sidebar: LayoutTemplate,
@@ -62,6 +64,7 @@ export const Icons = {
   Mic: Mic,
   ChevronDown: ChevronDown,
   ChevronRight: ChevronRight,
+  ChevronLeft: ChevronLeft,
   ClosePanelRight: PanelRightClose,
   ClosePanelLeft: PanelLeftClose,
   OpenPanelLeft: PanelLeftOpen,

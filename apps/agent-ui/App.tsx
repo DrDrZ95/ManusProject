@@ -10,13 +10,48 @@ import { NewsGrid } from './components/NewsGrid';
 import { UserModals } from './components/UserModals';
 import { LoginPage } from './components/LoginPage';
 import { Icons } from './components/icons';
-// Import new AI service
 import { aiService } from './services/ai';
 import { Role, Attachment } from './types';
 import { socketService } from './services/socket';
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
 import { translations } from './locales';
+
+const Toast: React.FC = () => {
+    const toast = useStore(s => s.toast);
+    const setToast = useStore(s => s.setToast);
+
+    useEffect(() => {
+        if (toast) {
+            const timer = setTimeout(() => setToast(null), 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast, setToast]);
+
+    return (
+        <AnimatePresence>
+            {toast && (
+                <motion.div 
+                    initial={{ y: 50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 50, opacity: 0 }}
+                    className="fixed bottom-24 right-6 z-[100] flex items-center gap-3 bg-black text-white px-5 py-3 rounded-2xl shadow-2xl border border-white/10"
+                >
+                    <div className={clsx(
+                        "p-1.5 rounded-full",
+                        toast.type === 'info' ? "bg-blue-500" : toast.type === 'success' ? "bg-green-500" : "bg-amber-500"
+                    )}>
+                        <Icons.Check className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-xs font-black tracking-tight">{toast.message}</span>
+                    <button onClick={() => setToast(null)} className="ml-4 p-1 hover:bg-white/10 rounded-full transition-colors">
+                        <Icons.Close className="w-3.5 h-3.5" />
+                    </button>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+}
 
 const App: React.FC = () => {
   const isAuthenticated = useStore(s => s.isAuthenticated);
@@ -45,7 +80,6 @@ const App: React.FC = () => {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   
-  // Dragging State
   const [isDragging, setIsDragging] = useState(false);
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(0);
@@ -58,20 +92,14 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated) {
         fetchNews();
-        
-        // Connect to WebSocket when authenticated
         socketService.connect();
-
-        const interval = setInterval(() => {
-          fetchNews();
-        }, 6 * 60 * 60 * 1000); // Check every 6 hours
-        
+        const interval = setInterval(() => fetchNews(), 6 * 60 * 60 * 1000);
         return () => {
           clearInterval(interval);
           socketService.disconnect();
         };
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchNews]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -114,7 +142,6 @@ const App: React.FC = () => {
     clearAttachments();
     setLoading(true);
 
-    // Construct display content for user message
     let displayContent = userMsgContent;
     if (currentAttachments.length > 0) {
         displayContent += `\n\n` + currentAttachments.map(a => `📎 [${a.name}]`).join('\n');
@@ -137,7 +164,6 @@ const App: React.FC = () => {
       isStreaming: true
     });
 
-    // Use the new AIService
     const history = messages.map(m => ({
         role: m.role === Role.USER ? 'user' : 'model',
         parts: [{ text: m.content }]
@@ -196,25 +222,12 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#F3F4F6] text-gray-900 font-sans selection:bg-gray-300 selection:text-black">
+      <Toast />
       <UserModals />
+      
       <Sidebar />
       
-      <AnimatePresence>
-      {!isSidebarOpen && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed top-4 left-4 z-50 md:block hidden"
-        >
-           <button onClick={toggleSidebar} className="p-2 bg-white shadow-md rounded-lg hover:bg-gray-50 transition-colors text-gray-500 hover:text-black border border-gray-200">
-             <Icons.OpenPanelLeft className="w-5 h-5" />
-           </button>
-        </motion.div>
-      )}
-      </AnimatePresence>
-      
+      {/* MOBILE HEADER */}
        <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-[#F3F4F6]/80 backdrop-blur border-b border-gray-200 flex items-center justify-between px-4 z-40">
           <button onClick={toggleSidebar} className="text-gray-600">
              <Icons.Sidebar className="w-6 h-6" />
@@ -224,7 +237,6 @@ const App: React.FC = () => {
             <span className="font-bold text-lg tracking-tight text-black">Agent</span>
           </div>
           <button onClick={toggleTerminal} className={clsx("text-gray-600", isTerminalOpen && "text-black")}>
-             {/* Updated to Folder icon for My Space */}
              <Icons.Folder className="w-5 h-5" />
           </button>
        </div>
@@ -241,7 +253,6 @@ const App: React.FC = () => {
                     <p className="text-gray-500 mb-8 px-4">
                       {t.grokIntroDesc}
                     </p>
-                    
                     <NewsGrid news={news} />
                 </div>
              </div>
@@ -304,7 +315,6 @@ const App: React.FC = () => {
                onClick={toggleTerminal}
                className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-500 hover:text-black hover:border-gray-400 transition-all shadow-sm"
              >
-               {/* Use Folder icon for My Space button */}
                <Icons.Folder className="w-4 h-4" />
                <span>{t.mySpace}</span>
              </button>

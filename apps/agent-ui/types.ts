@@ -22,12 +22,16 @@ export interface ChatSession {
   messages: Message[];
   updatedAt: number;
   groupId?: string;
+  isDeleted?: boolean; // Added for Soft Delete
 }
 
 export interface Group {
   id: string;
   title: string;
   collapsed: boolean;
+  marker: string; // One character or icon name
+  color: string;  // Tailwind color class (e.g., 'bg-blue-500')
+  isDeleted?: boolean; // Added for Soft Delete
 }
 
 export interface Attachment {
@@ -49,10 +53,8 @@ export interface NewsItem {
 }
 
 export type ModelType = 'kimi' | 'deepseek' | 'gpt-oss';
-export type ModalType = 'upgrade' | 'account' | 'help' | 'settings' | null;
+export type ModalType = 'upgrade' | 'account' | 'help' | 'settings' | 'project_edit' | 'quota_limit' | null;
 export type InputMode = 'general' | 'brainstorm' | 'oa_work' | 'company' | 'agent';
-
-// --- Auth & API Types ---
 
 export interface User {
   id: string;
@@ -77,12 +79,24 @@ export interface AuthResponse {
   expiresIn: number;
 }
 
-// --- MCP (Model Context Protocol) Types ---
+export interface Settings {
+  streamResponses: boolean;
+  soundEffects: boolean;
+  allowTraining: boolean;
+}
 
+/**
+ * Model Context Protocol (MCP) Interfaces
+ * These interfaces were missing and causing compilation errors in services/mcp.ts
+ */
 export interface McpTool {
   name: string;
   description: string;
-  inputSchema: Record<string, any>;
+  inputSchema: {
+    type: string;
+    properties: Record<string, any>;
+    required?: string[];
+  };
 }
 
 export interface McpResource {
@@ -98,29 +112,16 @@ export interface McpToolCallRequest {
 
 export interface McpToolCallResponse {
   content: Array<{
-    type: 'text' | 'image' | 'resource';
-    text?: string;
-    data?: string;
-    mimeType?: string;
+    type: string;
+    text: string;
   }>;
   isError?: boolean;
 }
 
-// --- State Types ---
-
-export interface Settings {
-  streamResponses: boolean;
-  soundEffects: boolean;
-  allowTraining: boolean;
-}
-
 export interface AppState {
-  // Auth State
   isAuthenticated: boolean;
   user: User | null;
   settings: Settings;
-
-  // Chat State
   sessions: ChatSession[];
   groups: Group[];
   currentSessionId: string | null;
@@ -131,45 +132,35 @@ export interface AppState {
   language: Language;
   inputMode: InputMode;
   isAgentMode: boolean;
-  
-  // News State
   news: NewsItem[];
   lastNewsFetch: number;
-
-  // UI State
   isSidebarOpen: boolean;
   isTerminalOpen: boolean;
   terminalWidth: number;
   activeModal: ModalType;
+  editingProjectId: string | null;
+  toast: { message: string; type: 'info' | 'success' | 'warning' } | null; // Toast state
   
-  // Actions
   login: (credentials: LoginRequest) => Promise<void>;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
   updateSettings: (updates: Partial<Settings>) => void;
-
   setInput: (input: string) => void;
   addAttachment: (file: File) => Promise<void>;
   removeAttachment: (id: string) => void;
   clearAttachments: () => void;
-  
   addMessage: (sessionId: string, message: Message) => void;
   updateLastMessage: (sessionId: string, content: string) => void;
   createNewSession: () => void;
   selectSession: (id: string) => void;
   navigateToHome: () => void;
-  
-  // Group & Session Management Actions
-  createGroup: (id: string, title: string) => void;
+  createGroup: (id: string, title: string, marker?: string, color?: string) => void;
   updateGroup: (id: string, updates: Partial<Group>) => void;
   deleteGroup: (id: string) => void;
   moveSession: (sessionId: string, groupId: string | undefined) => void;
   renameSession: (sessionId: string, newTitle: string) => void;
   deleteSession: (sessionId: string) => void;
-
-  // News Actions
   fetchNews: () => void;
-
   toggleSidebar: () => void;
   toggleTerminal: () => void;
   setTerminalWidth: (width: number) => void;
@@ -177,6 +168,8 @@ export interface AppState {
   setLoading: (loading: boolean) => void;
   setLanguage: (lang: Language) => void;
   setActiveModal: (modal: ModalType) => void;
+  setEditingProject: (id: string | null) => void;
   setInputMode: (mode: InputMode) => void;
   setAgentMode: (enabled: boolean) => void;
+  setToast: (toast: { message: string; type: 'info' | 'success' | 'warning' } | null) => void;
 }

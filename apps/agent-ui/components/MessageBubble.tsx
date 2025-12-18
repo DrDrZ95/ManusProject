@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -6,7 +7,7 @@ import { vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Message, Role } from '../types';
 import { Icons } from './icons';
 import clsx from 'clsx';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
 import { translations } from '../locales';
 
@@ -58,14 +59,25 @@ const CodeBlock = ({ language, children }: { language: string, children?: React.
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast }) => {
   const isUser = message.role === Role.USER;
+  const userAvatar = useStore(s => s.user?.avatar);
+  const [isHovered, setIsHovered] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyMessage = () => {
+    navigator.clipboard.writeText(message.content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   
   return (
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className={clsx(
-        "flex w-full mb-6",
+        "flex w-full mb-6 relative group",
         isUser ? "justify-end" : "justify-start"
       )}
     >
@@ -75,11 +87,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast })
       )}>
         {/* Avatar */}
         <div className={clsx(
-          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-1 shadow-sm",
+          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-1 shadow-sm overflow-hidden",
           isUser ? "bg-gray-200 ml-3" : "bg-black text-white mr-3"
         )}>
           {isUser ? (
-             <div className="w-full h-full rounded-full bg-gradient-to-br from-gray-100 to-gray-300" />
+             userAvatar ? (
+               <img src={userAvatar} className="w-full h-full object-cover filter grayscale" />
+             ) : (
+               <div className="w-full h-full rounded-full bg-gradient-to-br from-gray-100 to-gray-300" />
+             )
           ) : (
              <Icons.Zap className="w-4 h-4" fill="currentColor" />
           )}
@@ -137,12 +153,39 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast })
              )}
           </div>
           
-          {/* Timestamp */}
+          {/* Timestamp & Actions */}
           <div className={clsx(
-             "text-[10px] text-gray-400 mt-1 px-1",
-             isUser ? "text-right" : "text-left"
+             "flex items-center gap-3 mt-1 px-1",
+             isUser ? "flex-row-reverse" : "flex-row"
           )}>
-             {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+             <span className="text-[10px] text-gray-400">
+                {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+             </span>
+
+             <AnimatePresence>
+                {isHovered && !message.isStreaming && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        className="flex items-center gap-1.5"
+                    >
+                        <button 
+                            onClick={handleCopyMessage}
+                            title="Copy message"
+                            className="p-1 text-gray-400 hover:text-black hover:bg-gray-200 rounded-md transition-all"
+                        >
+                            {copied ? <Icons.Check className="w-3 h-3 text-green-600" /> : <Icons.Copy className="w-3 h-3" />}
+                        </button>
+                        <button 
+                            title="Share"
+                            className="p-1 text-gray-400 hover:text-black hover:bg-gray-200 rounded-md transition-all"
+                        >
+                            <Icons.Mail className="w-3 h-3" />
+                        </button>
+                    </motion.div>
+                )}
+             </AnimatePresence>
           </div>
         </div>
       </div>

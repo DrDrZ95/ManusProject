@@ -3,7 +3,7 @@ export const translations = {
   en: {
     newChat: "New chat",
     newGroup: "New Project",
-    recent: "Chats",
+    recent: "Recent",
     groups: "Projects",
     user: "User",
     proPlan: "Pro Plan",
@@ -51,7 +51,7 @@ export const translations = {
     modeBrainstorm: "Brainstorming",
     modeOAWork: "OA / Work Assistant",
     modeCompany: "Company Info",
-    modeAgent: "Agent Mode", // Added
+    modeAgent: "Agent Mode",
 
     // Agent Mode Confirm
     agentModeConfirmTitle: "Enter Agent Mode?",
@@ -72,7 +72,7 @@ export const translations = {
     emailOrId: "Email or Employee ID",
     password: "Password",
     phoneNumber: "Phone Number",
-    continue: "Continue",
+    loginAction: "Login",
     orContinueWith: "Or continue with",
     signInWithGoogle: "Sign in with Google",
     signInWithOutlook: "Sign in with Outlook",
@@ -167,12 +167,17 @@ Type "help" for available commands.
     trainingData: "Training Data",
     trainingDesc: "Allow conversations to be used for training",
     clearData: "Clear All Data",
-    done: "Done"
+    done: "Done",
+
+    // Quota
+    quotaTitle: "Project Quota Reached",
+    quotaDesc: "You have reached the maximum limit of 10 projects. To create more, please delete an existing project or upgrade your plan.",
+    understood: "Understood"
   },
   zh: {
     newChat: "新对话",
     newGroup: "新建项目",
-    recent: "对话列表",
+    recent: "最近",
     groups: "项目",
     user: "用户",
     proPlan: "专业版",
@@ -220,7 +225,7 @@ Type "help" for available commands.
     modeBrainstorm: "头脑风暴",
     modeOAWork: "OA / 工作助理",
     modeCompany: "企业信息",
-    modeAgent: "Agent 模式", // Added
+    modeAgent: "Agent 模式",
 
     // Agent Mode Confirm
     agentModeConfirmTitle: "进入 Agent 模式？",
@@ -241,7 +246,7 @@ Type "help" for available commands.
     emailOrId: "邮箱或员工 ID",
     password: "密码",
     phoneNumber: "手机号码",
-    continue: "继续",
+    loginAction: "登录",
     orContinueWith: "或其他方式",
     signInWithGoogle: "使用 Google 登录",
     signInWithOutlook: "使用 Outlook 登录",
@@ -336,7 +341,12 @@ Linux 内核 6.8.0-generic x86_64
     trainingData: "训练数据",
     trainingDesc: "允许使用对话进行训练",
     clearData: "清除所有数据",
-    done: "完成"
+    done: "完成",
+
+    // Quota
+    quotaTitle: "项目数量已达上限",
+    quotaDesc: "您已达到最大限制（10个项目）。要创建新项目，请删除现有项目或升级您的计划。",
+    understood: "知道了"
   }
 };
 

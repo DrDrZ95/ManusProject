@@ -84,7 +84,7 @@ class WebSocketService {
    * 订阅事件
    */
   public on<T = any>(event: WSEvent, callback: WSEventHandler<T>): void {
-    if (!this.listeners.has(event)) {
+    if (!this.listeners.get(event)) {
       this.listeners.set(event, []);
     }
     this.listeners.get(event)?.push(callback);
@@ -111,27 +111,19 @@ class WebSocketService {
   }
 
   private mockConnectionProcess() {
+    // Ensuring reliable connection for the UI demo
     setTimeout(() => {
-      // Simulate 90% success rate
-      const success = Math.random() > 0.1; 
+      this.isConnected = true;
+      this.reconnectAttempts = 0;
+      console.log('[WS] Connected successfully.');
+      this.startHeartbeat();
+      this.dispatch('open', {});
       
-      if (success) {
-        this.isConnected = true;
-        this.reconnectAttempts = 0;
-        console.log('[WS] Connected.');
-        this.startHeartbeat();
-        this.dispatch('open', {});
-        
-        // Simulate a welcome message
-        setTimeout(() => {
-            this.dispatch('notification', { title: 'System', message: 'Connected to Agent realtime gateway.' });
-        }, 500);
-
-      } else {
-        console.error('[WS] Connection failed.');
-        this.handleReconnect();
-      }
-    }, 800);
+      // Send a system greeting
+      setTimeout(() => {
+          this.dispatch('notification', { title: 'System', message: 'Connected to Agent realtime gateway.' });
+      }, 300);
+    }, 500);
   }
 
   private handleReconnect() {

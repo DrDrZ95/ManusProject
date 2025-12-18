@@ -1,63 +1,53 @@
+
 import React, { useEffect, useState } from 'react';
 import { 
   Activity, Server, Database, GitBranch, 
-  Play, RefreshCw, AlertTriangle, Wifi
+  Play, RefreshCw, AlertTriangle, Wifi, BrainCircuit, TrendingUp, ShieldCheck, Zap, BarChart3, Globe
 } from 'lucide-react';
 import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell
 } from 'recharts';
 import { MOCK_TIMELINE_DATA, TRANSLATIONS } from '../constants';
 import { ProjectStatus, Language } from '../types';
 import { wsService } from '../services/websocket'; 
-import { projectService } from '../services/project'; // 使用 Service 层
+import { projectService } from '../services/project'; 
 
 interface DashboardProps {
   lang: Language;
 }
 
-const StatusCard = ({ title, value, subtext, icon: Icon, color, animate }: any) => (
-  <div className="bg-light-surface dark:bg-nexus-800 border border-light-border dark:border-nexus-700 rounded-lg p-5 shadow-sm hover:shadow-md transition-all group">
-    <div className="flex justify-between items-start mb-4">
-      <div>
-        <h3 className="text-light-textSec dark:text-nexus-400 text-xs font-semibold uppercase tracking-wider">{title}</h3>
-        <p className={`text-2xl font-bold text-light-text dark:text-white mt-1 group-hover:text-nexus-accent transition-colors ${animate ? 'animate-pulse' : ''}`}>{value}</p>
-      </div>
-      <div className={`p-2 rounded-md bg-opacity-20 ${color} text-white`}>
-        <Icon size={20} />
-      </div>
-    </div>
-    <p className="text-light-textSec dark:text-nexus-500 text-xs font-mono">{subtext}</p>
+const Sparkline = ({ data, color }: { data: any[], color: string }) => (
+  <div className="h-8 w-16 opacity-30 group-hover:opacity-100 transition-opacity duration-500">
+    <ResponsiveContainer width="100%" height="100%">
+      <AreaChart data={data.slice(-10)}>
+        <Area type="monotone" dataKey="value" stroke={color} fill={color} fillOpacity={0.1} strokeWidth={1.5} />
+      </AreaChart>
+    </ResponsiveContainer>
   </div>
 );
 
-const ProjectRow: React.FC<{ project: ProjectStatus, t: any }> = ({ project, t }) => (
-  <div className="flex items-center justify-between p-4 bg-light-bg/50 dark:bg-nexus-800/50 border-b border-light-border dark:border-nexus-700 last:border-0 hover:bg-white dark:hover:bg-nexus-700/50 transition-colors">
-    <div className="flex items-center space-x-4">
-      <div className={`w-2 h-2 rounded-full ${
-        project.status === 'healthy' ? 'bg-green-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 
-        project.status === 'warning' ? 'bg-yellow-500' :
-        project.status === 'deploying' ? 'bg-blue-500 animate-pulse' : 'bg-red-500'
-      }`} />
-      <div>
-        <h4 className="font-semibold text-sm text-light-text dark:text-white">{project.name}</h4>
-        <div className="flex items-center text-xs text-light-textSec dark:text-nexus-400 space-x-2">
-          <GitBranch size={10} />
-          <span>{project.repo}</span>
-        </div>
+const StatusCard = ({ title, value, subtext, icon: Icon, color, animate, trend, chartData }: any) => (
+  <div className="bg-white/80 dark:bg-nexus-800/60 backdrop-blur-md border border-slate-200 dark:border-nexus-700/50 rounded-3xl p-6 shadow-sm hover:shadow-2xl hover:border-nexus-accent/50 transition-all duration-500 group relative overflow-hidden">
+    <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-[0.03] group-hover:opacity-[0.08] transition-opacity bg-current ${color.replace('bg-', 'text-')}`}></div>
+    
+    <div className="flex justify-between items-start mb-6 relative z-10">
+      <div className={`p-3 rounded-2xl ${color} bg-opacity-10 text-white shadow-inner border border-white/10 group-hover:scale-110 transition-transform`}>
+        <Icon size={20} className={color.replace('bg-', 'text-')} />
       </div>
+      {chartData && <Sparkline data={chartData} color={color.includes('blue') ? '#3b82f6' : color.includes('green') ? '#10b981' : '#a855f7'} />}
     </div>
-    <div className="flex items-center space-x-6 text-sm">
-      <div className="text-right">
-        <div className="text-light-textSec dark:text-nexus-400 text-xs">{t.uptime}</div>
-        <div className="font-mono text-nexus-600 dark:text-nexus-200">{project.uptime}</div>
+
+    <div className="relative z-10">
+      <h3 className="text-slate-400 dark:text-nexus-500 text-[9px] font-black uppercase tracking-[0.25em]">{title}</h3>
+      <div className="flex items-baseline space-x-2 mt-1.5">
+        <p className={`text-3xl font-black text-slate-900 dark:text-white group-hover:text-nexus-accent transition-colors tracking-tight ${animate ? 'animate-pulse' : ''}`}>{value}</p>
+        {trend && (
+          <span className={`text-[10px] font-black tracking-widest px-1.5 py-0.5 rounded-lg ${trend > 0 ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+            {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
+          </span>
+        )}
       </div>
-      <div className="text-right hidden sm:block">
-        <div className="text-light-textSec dark:text-nexus-400 text-xs">{t.lastDeploy}</div>
-        <div className="font-mono text-nexus-600 dark:text-nexus-200">{project.lastDeployment}</div>
-      </div>
-      <button className="p-2 hover:bg-nexus-200 dark:hover:bg-nexus-600 rounded text-nexus-500 dark:text-nexus-300 hover:text-nexus-accent dark:hover:text-white transition-colors">
-        <RefreshCw size={14} />
-      </button>
+      <p className="text-slate-500 dark:text-nexus-400 text-[11px] font-bold mt-2 truncate uppercase tracking-tight">{subtext}</p>
     </div>
   </div>
 );
@@ -65,16 +55,19 @@ const ProjectRow: React.FC<{ project: ProjectStatus, t: any }> = ({ project, t }
 const Dashboard: React.FC<DashboardProps> = ({ lang }) => {
   const t = TRANSLATIONS[lang];
   const [wsConnected, setWsConnected] = useState(false);
-  
-  // State from Services
   const [projects, setProjects] = useState<ProjectStatus[]>([]);
-  
-  // Real-time states powered by WebSocket
   const [healthMetric, setHealthMetric] = useState({ value: "98.2%", status: "healthy" });
   const [activePods, setActivePods] = useState(248);
 
+  const resourceData = [
+    { name: 'Cluster A', usage: 65, color: '#3b82f6' },
+    { name: 'Cluster B', usage: 82, color: '#a855f7' },
+    { name: 'Cluster C', usage: 45, color: '#10b981' },
+    { name: 'Cluster D', usage: 91, color: '#ef4444' },
+    { name: 'Cluster E', usage: 30, color: '#6366f1' },
+  ];
+
   useEffect(() => {
-    // 1. Initial Data Fetch (via REST Service)
     const fetchData = async () => {
       try {
         const data = await projectService.getProjects();
@@ -84,14 +77,10 @@ const Dashboard: React.FC<DashboardProps> = ({ lang }) => {
       }
     };
     fetchData();
-
-    // 2. Connect to WebSocket
     wsService.connect();
     setWsConnected(true);
 
-    // 3. Subscribe to System Health updates (Observer Pattern)
     const unsubscribeHealth = wsService.subscribe('system_health', (data: any) => {
-      // Update UI with real-time data
       const overallHealth = 100 - (data.cpu * 0.2 + data.memory * 0.1); 
       setHealthMetric({
         value: overallHealth.toFixed(1) + "%",
@@ -100,7 +89,6 @@ const Dashboard: React.FC<DashboardProps> = ({ lang }) => {
       setActivePods(data.activePods);
     });
 
-    // 4. Cleanup on unmount
     return () => {
       unsubscribeHealth();
       wsService.disconnect();
@@ -109,142 +97,193 @@ const Dashboard: React.FC<DashboardProps> = ({ lang }) => {
   }, []);
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20">
+    <div className="space-y-10 animate-fade-in pb-20">
       
-      {/* WS Status Indicator */}
-      <div className="flex justify-end items-center mb-2">
-         <div className={`flex items-center text-xs font-mono px-2 py-1 rounded border ${
-           wsConnected ? 'bg-green-500/10 border-green-500/30 text-green-500' : 'bg-red-500/10 border-red-500/30 text-red-500'
-         }`}>
-           <Wifi size={12} className="mr-2" />
-           WS: {wsConnected ? 'CONNECTED (MOCK STREAM)' : 'DISCONNECTED'}
+      {/* Dynamic Header */}
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-end space-y-6 lg:space-y-0">
+         <div className="relative">
+            <div className="absolute -left-6 top-1 bottom-1 w-1.5 bg-nexus-accent rounded-full hidden md:block opacity-50"></div>
+            <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter flex items-center">
+              Nexus <span className="text-nexus-accent font-light mx-2">OS</span> 
+              <span className="text-slate-200 dark:text-nexus-800 mx-4 font-thin">/</span> 
+              <span className="text-slate-400 dark:text-nexus-500 font-bold text-xl uppercase tracking-[0.3em]">Intelligence Hub</span>
+            </h2>
+            <div className="flex items-center mt-3 space-x-6">
+              <p className="text-slate-500 dark:text-nexus-500 text-[10px] font-black uppercase tracking-widest flex items-center">
+                <span className="w-2 h-2 rounded-full bg-nexus-accent mr-3 animate-ping"></span>
+                Session ID: <span className="text-slate-900 dark:text-white ml-2 font-mono">X-7742-ALPHA</span>
+              </p>
+              <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-nexus-800"></div>
+              <p className="text-slate-500 dark:text-nexus-500 text-[10px] font-black uppercase tracking-widest">Operator: <span className="text-slate-900 dark:text-white ml-2">ADMIN.SECURE</span></p>
+            </div>
+         </div>
+         <div className="flex items-center space-x-4">
+            <div className={`flex items-center px-6 py-3 rounded-2xl border backdrop-blur-sm transition-all duration-700 shadow-sm ${
+              wsConnected ? 'bg-green-500/5 border-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/5 border-red-500/20 text-red-500'
+            }`}>
+              <div className={`w-2.5 h-2.5 rounded-full mr-4 ${wsConnected ? 'bg-green-500 shadow-[0_0_10px_#10b981]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'}`}></div>
+              <span className="text-[10px] font-black uppercase tracking-[0.25em]">Telemetry Stream: {wsConnected ? 'ACTIVE' : 'STANDBY'}</span>
+            </div>
+            <button className="flex items-center space-x-3 px-6 py-3 bg-nexus-900 dark:bg-nexus-accent text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.25em] hover:scale-105 transition-all shadow-2xl active:scale-95 border border-white/10">
+               <TrendingUp size={16} />
+               <span>Analytics Forge</span>
+            </button>
          </div>
       </div>
 
-      {/* Quick Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Main Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         <StatusCard 
           title={t.systemHealth} 
           value={healthMetric.value} 
-          subtext={healthMetric.status === 'healthy' ? "All systems operational" : "Minor degradation detected"} 
-          icon={Activity} 
-          color={healthMetric.status === 'healthy' ? "bg-green-500" : "bg-yellow-500"}
-          animate={true} // Visual feedback for real-time update
+          subtext={healthMetric.status === 'healthy' ? "CORE STABILITY NOMINAL" : "NODE LATENCY DETECTED"} 
+          icon={ShieldCheck} 
+          color="bg-green-500"
+          animate={healthMetric.status !== 'healthy'}
+          trend={1.2}
+          chartData={MOCK_TIMELINE_DATA}
         />
         <StatusCard 
-          title={t.activeClusters} 
-          value="12" 
-          subtext={`${activePods} pods running`} 
+          title="Cluster Efficiency" 
+          value="84.2%" 
+          subtext={`${activePods} ACTIVE MODEL PODS`} 
           icon={Server} 
           color="bg-purple-500" 
-          animate={true}
+          trend={-2.4}
+          chartData={MOCK_TIMELINE_DATA}
         />
         <StatusCard 
-          title="Data Pipelines" 
-          value="8 Active" 
-          subtext="1.2TB processed / hr" 
-          icon={Database} 
+          title="Neural Throughput" 
+          value="142.8 GB/s" 
+          subtext="AGGREGATE PACKET RATE" 
+          icon={BrainCircuit} 
           color="bg-blue-500" 
+          trend={8.5}
+          chartData={MOCK_TIMELINE_DATA}
         />
         <StatusCard 
-          title="Pending Jobs" 
-          value="3" 
-          subtext="ML Training Queue" 
-          icon={Play} 
+          title="Orchestration" 
+          value="07" 
+          subtext="PENDING AUTOMATION JOBS" 
+          icon={Zap} 
           color="bg-orange-500" 
+          animate={true}
+          chartData={MOCK_TIMELINE_DATA}
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* Main Chart Section */}
-        <div className="lg:col-span-8 bg-light-surface dark:bg-nexus-800 border border-light-border dark:border-nexus-700 rounded-lg p-5 shadow-sm">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-light-text dark:text-white">{t.opsTimeline}</h3>
-            <div className="flex space-x-2">
-               <span className="text-xs text-light-textSec dark:text-nexus-400 flex items-center"><span className="w-2 h-2 bg-nexus-accent rounded-full mr-1"></span> Ops</span>
+        {/* Network Throughput Area Chart */}
+        <div className="lg:col-span-8 bg-white/80 dark:bg-nexus-800/60 backdrop-blur-md border border-slate-200 dark:border-nexus-700/50 rounded-[2.5rem] p-10 shadow-sm group">
+          <div className="flex justify-between items-center mb-12">
+            <div>
+               <h3 className="text-xs font-black uppercase tracking-[0.25em] text-slate-800 dark:text-white flex items-center">
+                  <Activity size={16} className="mr-4 text-nexus-accent" />
+                  {t.opsTimeline}
+               </h3>
+               <p className="text-[10px] text-slate-400 dark:text-nexus-500 font-bold uppercase mt-2 tracking-[0.2em]">Global Telemetry Signal Processing</p>
+            </div>
+            <div className="flex bg-slate-100 dark:bg-nexus-900 p-1.5 rounded-2xl shadow-inner border border-slate-200/50 dark:border-nexus-800">
+               <button className="px-5 py-2 text-[10px] font-black uppercase tracking-widest text-nexus-accent bg-white dark:bg-nexus-800 rounded-xl shadow-lg border border-slate-100 dark:border-nexus-700">24H</button>
+               <button className="px-5 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-nexus-accent transition-colors">7D</button>
             </div>
           </div>
-          <div className="h-64 w-full">
+          <div className="h-96 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={MOCK_TIMELINE_DATA}>
                 <defs>
-                  <linearGradient id="colorOps" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                  <linearGradient id="colorUsage" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25}/>
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" opacity={0.3} vertical={false} />
-                <XAxis dataKey="time" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                <CartesianGrid strokeDasharray="6 6" stroke="#94a3b8" opacity={0.08} vertical={false} />
+                <XAxis dataKey="time" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} dy={15} tick={{fontWeight: 700}} />
+                <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `${val}%`} tick={{fontWeight: 700}} />
                 <Tooltip 
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ color: '#64748b' }}
+                  cursor={{ stroke: '#3b82f6', strokeWidth: 2, strokeDasharray: '4 4' }}
+                  contentStyle={{ backgroundColor: '#0f172a', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.7)', fontSize: '12px', color: '#fff', padding: '20px' }}
                 />
-                <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorOps)" />
+                <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorUsage)" animationDuration={3000} strokeLinecap="round" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Quick Actions Panel */}
-        <div className="lg:col-span-4 bg-light-surface dark:bg-nexus-800 border border-light-border dark:border-nexus-700 rounded-lg p-5 shadow-sm flex flex-col">
-          <h3 className="text-lg font-semibold text-light-text dark:text-white mb-4">{t.quickActions}</h3>
-          <div className="space-y-3 flex-1 overflow-y-auto pr-1 custom-scrollbar">
-            <button className="w-full text-left p-3 rounded bg-nexus-50 dark:bg-nexus-700/30 border border-light-border dark:border-nexus-600 hover:bg-nexus-100 dark:hover:bg-nexus-700 hover:border-nexus-300 dark:hover:border-nexus-500 transition-all flex items-center group">
-              <div className="p-2 bg-blue-500/10 dark:bg-blue-500/20 rounded-md text-blue-500 dark:text-blue-400 mr-3 group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                <Play size={18} />
-              </div>
-              <div>
-                <div className="text-sm font-medium text-light-text dark:text-white">{t.deployAll}</div>
-                <div className="text-xs text-light-textSec dark:text-nexus-400">Updates 3 services</div>
-              </div>
-            </button>
-            
-            <button className="w-full text-left p-3 rounded bg-nexus-50 dark:bg-nexus-700/30 border border-light-border dark:border-nexus-600 hover:bg-nexus-100 dark:hover:bg-nexus-700 hover:border-nexus-300 dark:hover:border-nexus-500 transition-all flex items-center group">
-              <div className="p-2 bg-purple-500/10 dark:bg-purple-500/20 rounded-md text-purple-500 dark:text-purple-400 mr-3 group-hover:bg-purple-500 group-hover:text-white transition-colors">
-                <RefreshCw size={18} />
-              </div>
-              <div>
-                <div className="text-sm font-medium text-light-text dark:text-white">{t.retrain}</div>
-                <div className="text-xs text-light-textSec dark:text-nexus-400">Last run: 2d ago</div>
-              </div>
-            </button>
-
-            <button className="w-full text-left p-3 rounded bg-nexus-50 dark:bg-nexus-700/30 border border-light-border dark:border-nexus-600 hover:bg-nexus-100 dark:hover:bg-nexus-700 hover:border-nexus-300 dark:hover:border-nexus-500 transition-all flex items-center group">
-              <div className="p-2 bg-orange-500/10 dark:bg-orange-500/20 rounded-md text-orange-500 dark:text-orange-400 mr-3 group-hover:bg-orange-500 group-hover:text-white transition-colors">
-                <Database size={18} />
-              </div>
-              <div>
-                <div className="text-sm font-medium text-light-text dark:text-white">{t.flushCache}</div>
-                <div className="text-xs text-light-textSec dark:text-nexus-400">Node: Redis-Primary</div>
-              </div>
-            </button>
-
-            <button className="w-full text-left p-3 rounded bg-nexus-50 dark:bg-nexus-700/30 border border-light-border dark:border-nexus-600 hover:bg-nexus-100 dark:hover:bg-nexus-700 hover:border-nexus-300 dark:hover:border-nexus-500 transition-all flex items-center group">
-              <div className="p-2 bg-red-500/10 dark:bg-red-500/20 rounded-md text-red-500 dark:text-red-400 mr-3 group-hover:bg-red-500 group-hover:text-white transition-colors">
-                <AlertTriangle size={18} />
-              </div>
-              <div>
-                <div className="text-sm font-medium text-light-text dark:text-white">{t.emergencyStop}</div>
-                <div className="text-xs text-light-textSec dark:text-nexus-400">Halts all training jobs</div>
-              </div>
-            </button>
+        {/* Resource Distribution Chart */}
+        <div className="lg:col-span-4 bg-white/80 dark:bg-nexus-800/60 backdrop-blur-md border border-slate-200 dark:border-nexus-700/50 rounded-[2.5rem] p-10 shadow-sm flex flex-col">
+          <h3 className="text-xs font-black uppercase tracking-[0.25em] text-slate-800 dark:text-white mb-10 flex items-center">
+            <BarChart3 size={16} className="mr-4 text-purple-500" />
+            Load Optimization
+          </h3>
+          <div className="flex-1 min-h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={resourceData} layout="vertical" margin={{ left: -20 }}>
+                <XAxis type="number" hide />
+                <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={10} axisLine={false} tickLine={false} tick={{fontWeight: 700}} />
+                <Tooltip 
+                  cursor={{ fill: 'transparent' }}
+                  contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}
+                />
+                <Bar dataKey="usage" radius={[0, 8, 8, 0]} barSize={16}>
+                  {resourceData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-8 pt-8 border-t border-slate-100 dark:border-nexus-700/50">
+             <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 dark:text-nexus-500 mb-5">
+                <span className="flex items-center"><Globe size={14} className="mr-3 text-nexus-accent" /> Regional Matrix</span>
+                <span className="text-nexus-accent px-2 py-1 bg-nexus-accent/10 rounded-lg">SYNCHRONIZED</span>
+             </div>
+             <div className="space-y-4">
+                <div className="flex justify-between text-[11px] text-slate-400 dark:text-nexus-400 font-black uppercase tracking-widest">
+                   <span>APAC REGION</span>
+                   <span className="text-nexus-accent">85% LOAD</span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-nexus-900 rounded-full h-2 shadow-inner">
+                   <div className="bg-nexus-accent h-full w-[85%] rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all duration-1000"></div>
+                </div>
+             </div>
           </div>
         </div>
       </div>
 
-      {/* Project Status List */}
-      <div className="bg-light-surface dark:bg-nexus-800 border border-light-border dark:border-nexus-700 rounded-lg overflow-hidden shadow-sm">
-        <div className="p-4 border-b border-light-border dark:border-nexus-700 flex justify-between items-center bg-nexus-50/80 dark:bg-nexus-800/80 backdrop-blur">
-          <h3 className="text-lg font-semibold text-light-text dark:text-white">Project Status Overview</h3>
-          <span className="px-2 py-1 bg-nexus-200 dark:bg-nexus-700 rounded text-xs text-nexus-600 dark:text-nexus-300">{projects.length > 0 ? projects.length : 'Loading...'} Projects</span>
-        </div>
-        <div>
-          {projects.map(project => (
-            <ProjectRow key={project.id} project={project} t={t} />
-          ))}
-        </div>
+      {/* Quick Action Dock */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+         <button className="flex items-center p-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-[2.5rem] text-white shadow-2xl shadow-blue-500/30 hover:scale-[1.03] transition-all duration-500 group text-left relative overflow-hidden border border-white/10">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 -mr-20 -mt-20 rounded-full blur-[60px] group-hover:scale-150 transition-transform"></div>
+            <div className="bg-white/20 p-5 rounded-[2rem] mr-6 backdrop-blur-xl border border-white/20 shadow-xl group-hover:rotate-12 transition-transform">
+               <Zap size={28} className="fill-current" />
+            </div>
+            <div>
+               <h4 className="font-black text-sm uppercase tracking-[0.3em]">{t.deployAll}</h4>
+               <p className="text-white/60 text-[10px] mt-2 font-black uppercase tracking-widest leading-relaxed">INSTANT GLOBAL CLUSTER SYNC</p>
+            </div>
+         </button>
+
+         <button className="flex items-center p-8 bg-white dark:bg-nexus-800/40 backdrop-blur-md border border-slate-200 dark:border-nexus-700/50 rounded-[2.5rem] shadow-sm hover:shadow-2xl hover:border-purple-500/50 transition-all duration-500 group text-left">
+            <div className="bg-purple-500/10 p-5 rounded-[2rem] mr-6 group-hover:bg-purple-500 group-hover:text-white transition-all shadow-inner border border-purple-500/10 group-hover:rotate-12">
+               <BrainCircuit size={28} className="text-purple-500 group-hover:text-white" />
+            </div>
+            <div>
+               <h4 className="font-black text-sm uppercase tracking-[0.3em] text-slate-900 dark:text-white">{t.retrain}</h4>
+               <p className="text-slate-400 dark:text-nexus-500 text-[10px] mt-2 font-black uppercase tracking-widest leading-relaxed">RE-ALIGN NEURAL PARAMETERS</p>
+            </div>
+         </button>
+
+         <button className="flex items-center p-8 bg-white dark:bg-nexus-800/40 backdrop-blur-md border border-slate-200 dark:border-nexus-700/50 rounded-[2.5rem] shadow-sm hover:shadow-2xl hover:border-red-500/50 transition-all duration-500 group text-left">
+            <div className="bg-red-500/10 p-5 rounded-[2rem] mr-6 group-hover:bg-red-500 transition-all shadow-inner border border-red-500/10 group-hover:rotate-12">
+               <AlertTriangle size={28} className="text-red-500 group-hover:text-white" />
+            </div>
+            <div>
+               <h4 className="font-black text-sm uppercase tracking-[0.3em] text-slate-900 dark:text-white">{t.emergencyStop}</h4>
+               <p className="text-red-500 text-[10px] mt-2 font-black uppercase tracking-widest leading-relaxed">HARD FREEZE ALL PIPELINES</p>
+            </div>
+         </button>
       </div>
     </div>
   );

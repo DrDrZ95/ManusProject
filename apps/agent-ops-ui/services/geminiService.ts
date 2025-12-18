@@ -1,20 +1,26 @@
+
 import { GoogleGenAI } from "@google/genai";
 
-const apiKey = process.env.API_KEY || ''; // In a real app, ensure this is set safely
-let aiClient: GoogleGenAI | null = null;
-
-if (apiKey) {
-  aiClient = new GoogleGenAI({ apiKey });
-}
-
+/**
+ * analyzeCommand - Uses Gemini to process terminal commands
+ * Follows @google/genai coding guidelines:
+ * - Initializes new instance per call
+ * - Uses gemini-3-flash-preview for basic text tasks
+ * - Directly accesses .text property
+ */
 export const analyzeCommand = async (command: string, context: string): Promise<string> => {
-  if (!aiClient) {
+  // Ensure the API key is available
+  if (!process.env.API_KEY) {
     return "ManusProject AI: API Key not configured. Using offline mode.";
   }
 
+  // Always initialize right before making an API call
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
   try {
-    const model = 'gemini-2.5-flash';
-    const response = await aiClient.models.generateContent({
+    // Basic Text Tasks: 'gemini-3-flash-preview'
+    const model = 'gemini-3-flash-preview';
+    const response = await ai.models.generateContent({
       model,
       contents: `
         You are an intelligent MLOps terminal assistant for ManusProject.
@@ -26,6 +32,8 @@ export const analyzeCommand = async (command: string, context: string): Promise<
         If it's a known kubernetes/docker command, mock the output realistically.
       `,
     });
+    
+    // The GenerateContentResponse features a text property (not a method)
     return response.text || "No output generated.";
   } catch (error) {
     console.error("Gemini API Error:", error);

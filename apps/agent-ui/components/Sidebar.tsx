@@ -8,604 +8,518 @@ import { translations } from '../locales';
 import { ChatSession, Group } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
-// --- Components for Sidebar Items ---
-
-const ContextMenu = ({ 
-  x, 
-  y, 
-  onClose, 
-  actions 
-}: { 
-  x: number; 
-  y: number; 
-  onClose: () => void; 
-  actions: { label: string; icon?: any; onClick?: () => void; danger?: boolean; separator?: boolean; subMenu?: any[] }[] 
-}) => {
+const ContextMenu = ({ x, y, onClose, actions }: any) => {
   const menuRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        onClose();
-      }
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) onClose();
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onClose]);
 
-  // Adjust position to keep in viewport
-  const style: React.CSSProperties = {
-    top: y,
-    left: x,
-  };
-
-  // Simple viewport check
-  if (y + 300 > window.innerHeight) style.top = y - 200;
-
   return (
     <div 
       ref={menuRef}
-      className="fixed z-50 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-1 text-sm animate-fadeIn select-none"
-      style={style}
+      className="fixed z-[100] w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/50 py-2 text-sm animate-fadeIn"
+      style={{ top: Math.min(y, window.innerHeight - 300), left: Math.min(x, window.innerWidth - 240) }}
     >
-      {actions.map((action, idx) => (
-        <React.Fragment key={idx}>
-          {action.separator && <div className="h-px bg-gray-100 my-1" />}
-          {action.subMenu ? (
-              <div className="relative group/submenu">
-                 <button className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-gray-50 text-gray-700">
-                    {action.icon && <action.icon className="w-4 h-4 text-gray-400" />}
-                    <span className="flex-1">{action.label}</span>
-                    <Icons.ChevronRight className="w-3 h-3 text-gray-400" />
-                 </button>
-                 <div className="absolute left-full top-0 ml-1 w-40 bg-white rounded-lg shadow-xl border border-gray-200 py-1 hidden group-hover/submenu:block max-h-64 overflow-y-auto">
-                     {action.subMenu.map((sub, subIdx) => (
-                         <button
-                            key={subIdx}
-                            onClick={() => { sub.onClick(); onClose(); }}
-                            className="w-full px-3 py-2 text-left hover:bg-gray-50 text-gray-700 text-xs truncate"
-                         >
-                             {sub.label}
-                         </button>
-                     ))}
-                     {action.subMenu.length === 0 && (
-                        <div className="px-3 py-2 text-xs text-gray-400 italic">No options</div>
-                     )}
-                 </div>
+      {actions.filter(Boolean).map((action: any, idx: number) => {
+        if (action.separator) {
+          return <div key={idx} className="h-px bg-gray-100 my-1.5 mx-2" />;
+        }
+
+        if (action.subMenu) {
+          return (
+            <div key={idx} className="relative group/submenu">
+              <button className="w-full px-4 py-2.5 text-left flex items-center gap-3 hover:bg-gray-50 text-gray-700 font-bold transition-colors">
+                {action.icon && <action.icon className="w-4 h-4 text-gray-400" />}
+                <span className="flex-1">{action.label}</span>
+                <Icons.ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+              </button>
+              <div className="absolute left-full top-0 -ml-1 w-48 bg-white rounded-2xl shadow-2xl border border-gray-200 py-1.5 hidden group-hover/submenu:block">
+                {action.subMenu.filter(Boolean).map((sub: any, sidx: number) => (
+                  <button 
+                    key={sidx} 
+                    onClick={() => { sub.onClick(); onClose(); }} 
+                    className="w-full px-4 py-2 text-left hover:bg-gray-50 text-[11px] font-black truncate text-gray-500 hover:text-black transition-colors"
+                  >
+                    {sub.label || "Untitled"}
+                  </button>
+                ))}
               </div>
-          ) : (
-              action.label ? (
-                <button
-                    onClick={() => { action.onClick?.(); onClose(); }}
-                    className={clsx(
-                    "w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-gray-50",
-                    action.danger ? "text-red-600 hover:bg-red-50" : "text-gray-700"
-                    )}
-                >
-                    {action.icon && <action.icon className={clsx("w-4 h-4", action.danger ? "text-red-500" : "text-gray-400")} />}
-                    <span>{action.label}</span>
-                </button>
-              ) : null
-          )}
-        </React.Fragment>
-      ))}
-    </div>
-  );
-};
-
-interface SessionItemProps {
-  session: ChatSession;
-  isActive: boolean;
-  onSelect: () => void;
-  onContextMenu: (e: React.MouseEvent, session: ChatSession) => void;
-  isEditing: boolean;
-  editValue: string;
-  setEditValue: (v: string) => void;
-  onEditSubmit: () => void;
-}
-
-const SessionItem: React.FC<SessionItemProps> = ({ 
-  session, 
-  isActive, 
-  onSelect, 
-  onContextMenu,
-  isEditing,
-  editValue,
-  setEditValue,
-  onEditSubmit
-}) => {
-  return (
-    <div className="group relative pl-2">
-        {isEditing ? (
-            <div className="px-2 py-1">
-                 <input
-                    autoFocus
-                    type="text"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    onBlur={onEditSubmit}
-                    onKeyDown={(e) => e.key === 'Enter' && onEditSubmit()}
-                    className="w-full px-2 py-1.5 text-sm border border-blue-500 rounded bg-white shadow-sm text-black focus:outline-none"
-                />
             </div>
-        ) : (
-            <>
-                <button
-                    onClick={onSelect}
-                    className={clsx(
-                    "w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 relative overflow-hidden",
-                    isActive 
-                        ? "bg-white text-black shadow-sm border border-gray-200 font-medium" 
-                        : "text-gray-600 hover:bg-gray-100 hover:text-black"
-                    )}
-                    onContextMenu={(e) => onContextMenu(e, session)}
-                >
-                    <div className="flex items-center gap-2 relative z-10">
-                    <span className="truncate flex-1 pr-4">{session.title}</span>
-                    </div>
-                    {isActive && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-black rounded-r-full" />
-                    )}
-                </button>
-                {/* More Button (visible on hover) */}
-                <button 
-                    onClick={(e) => onContextMenu(e, session)}
-                    className={clsx(
-                        "absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-black hover:bg-gray-200 transition-opacity z-20",
-                        isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                    )}
-                >
-                    <Icons.More className="w-3.5 h-3.5" />
-                </button>
-            </>
-        )}
+          );
+        }
+
+        if (!action.label) return null;
+
+        return (
+          <button 
+            key={idx} 
+            onClick={() => { action.onClick?.(); onClose(); }} 
+            className={clsx(
+              "w-full px-4 py-2.5 text-left flex items-center gap-3 font-bold transition-colors", 
+              action.danger ? "text-red-600 hover:bg-red-50" : "text-gray-700 hover:bg-gray-50"
+            )}
+          >
+            {action.icon && <action.icon className={clsx("w-4 h-4", action.danger ? "text-red-500" : "text-gray-400")} />}
+            <span>{action.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 };
 
-interface GroupItemProps {
-  group: Group;
-  sessions: ChatSession[];
-  currentSessionId: string | null;
-  onSelectSession: (id: string) => void;
-  onToggleCollapse: (id: string) => void;
-  onContextMenuSession: (e: React.MouseEvent, session: ChatSession) => void;
-  onContextMenuGroup: (e: React.MouseEvent, group: Group) => void;
-  editingId: string | null;
-  editValue: string;
-  setEditValue: (v: string) => void;
-  onEditSubmit: () => void;
-}
+const ProjectMarker = ({ group, isSlim }: { group: Group, isSlim?: boolean }) => (
+  <div className={clsx(
+    "flex-shrink-0 rounded-lg flex items-center justify-center font-black text-white shadow-sm ring-1 ring-black/5 transition-transform group-hover/item:scale-105",
+    isSlim ? "w-8 h-8 text-xs" : "w-6 h-6 text-[10px]",
+    group.color
+  )}>
+    {group.marker.charAt(0)}
+  </div>
+);
 
-const GroupItem: React.FC<GroupItemProps> = ({
-  group,
-  sessions,
-  currentSessionId,
-  onSelectSession,
-  onToggleCollapse,
-  onContextMenuSession,
-  onContextMenuGroup,
-  editingId,
-  editValue,
-  setEditValue,
-  onEditSubmit
-}) => {
-    const isEditingGroup = editingId === group.id;
-
-    return (
-        <div className="mb-1">
-            {isEditingGroup ? (
-                <div className="px-2 py-1">
-                    <input
-                        autoFocus
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onBlur={onEditSubmit}
-                        onKeyDown={(e) => e.key === 'Enter' && onEditSubmit()}
-                        className="w-full px-2 py-1.5 text-xs border border-blue-500 rounded bg-white shadow-sm text-black focus:outline-none font-semibold"
-                    />
-                </div>
-            ) : (
-                <div 
-                    className="flex items-center justify-between px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-black group cursor-pointer select-none"
-                    onContextMenu={(e) => onContextMenuGroup(e, group)}
-                >
-                    <div className="flex items-center gap-1.5 flex-1" onClick={() => onToggleCollapse(group.id)}>
-                        {group.collapsed ? <Icons.ChevronRight className="w-3 h-3" /> : <Icons.ChevronDown className="w-3 h-3" />}
-                        <Icons.Folder className={clsx("w-3.5 h-3.5", sessions.length > 0 ? "text-gray-600" : "text-gray-400")} />
-                        <span className="truncate">{group.title}</span>
-                        <span className="text-gray-400 font-normal ml-1">({sessions.length})</span>
-                    </div>
-                    <button 
-                        onClick={(e) => onContextMenuGroup(e, group)}
-                        className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-gray-200 rounded text-gray-400 hover:text-black"
-                    >
-                        <Icons.More className="w-3 h-3" />
-                    </button>
-                </div>
-            )}
-            
-            {!group.collapsed && (
-                // Removed border-l border-gray-200 here to remove guiding lines for Projects
-                <div className="space-y-0.5 ml-[1.15rem]">
-                    {sessions.map(session => (
-                         <SessionItem 
-                            key={session.id}
-                            session={session}
-                            isActive={session.id === currentSessionId}
-                            onSelect={() => onSelectSession(session.id)}
-                            onContextMenu={onContextMenuSession}
-                            isEditing={editingId === session.id}
-                            editValue={editValue}
-                            setEditValue={setEditValue}
-                            onEditSubmit={onEditSubmit}
-                         />
-                    ))}
-                    {sessions.length === 0 && (
-                        <div className="px-3 py-2 text-xs text-gray-400 italic ml-2">Empty</div>
-                    )}
-                </div>
-            )}
+const NavItem = ({ isActive, isEditing, editValue, onEditChange, onEditSubmit, onClick, onContextMenu, onActionClick, children, icon: Icon, group, isSlim, isSubItem }: any) => (
+  <div className={clsx("relative group/item mb-0.5", isSlim ? "px-2" : isSubItem ? "pr-2" : "px-4")}>
+    <button
+      onClick={onClick}
+      onContextMenu={onContextMenu}
+      title={isSlim ? children : undefined}
+      className={clsx(
+        "w-full h-10 flex items-center rounded-xl transition-all duration-200 relative",
+        isSlim ? "justify-center px-0" : "px-2 gap-3",
+        isActive ? "bg-gray-200/50 text-black font-black" : "text-gray-600 hover:bg-gray-200/30",
+        isSubItem && !isSlim && "h-9"
+      )}
+    >
+      {group ? (
+        <ProjectMarker group={group} isSlim={isSlim} />
+      ) : Icon ? (
+        <Icon className={clsx(isSlim ? "w-5 h-5" : "w-4 h-4", "shrink-0", isActive ? "text-black" : "text-gray-400 group-hover:text-black")} />
+      ) : (
+        isSlim ? (
+          <div className={clsx("w-8 h-8 rounded-lg flex items-center justify-center transition-colors", isActive ? "bg-black text-white" : "bg-gray-100 text-gray-400")}>
+            <Icons.Chat className="w-4 h-4" />
+          </div>
+        ) : null
+      )}
+      
+      {!isSlim && (
+        <div className="flex-1 min-w-0 pr-4">
+          {isEditing ? (
+            <input 
+              autoFocus 
+              className="w-full bg-transparent outline-none text-sm font-black border-b-2 border-black/10 focus:border-black py-0.5"
+              value={editValue}
+              onChange={(e) => onEditChange(e.target.value)}
+              onBlur={() => onEditSubmit()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') onEditSubmit();
+                if (e.key === 'Escape') onEditSubmit(true);
+              }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <span className={clsx("block truncate text-[13px] tracking-tight transition-opacity text-left", isActive ? "opacity-100" : "opacity-80 font-bold")}>
+                {children || "Untitled"}
+            </span>
+          )}
         </div>
-    );
-};
+      )}
 
-// --- Main Sidebar Component ---
+      {isActive && !isEditing && (
+        <div className={clsx(
+          "absolute top-1/2 -translate-y-1/2 w-1 h-4 bg-black rounded-r-full shadow-sm shadow-black/20",
+          isSlim ? "left-0" : isSubItem ? "-left-[1px]" : "left-0"
+        )} />
+      )}
+    </button>
+    
+    {!isEditing && !isSlim && (
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          onActionClick?.(e);
+        }}
+        className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-black opacity-0 group-hover/item:opacity-100 transition-opacity rounded-md hover:bg-white"
+      >
+        <Icons.MoreVertical className="w-3.5 h-3.5" />
+      </button>
+    )}
+  </div>
+);
 
 export const Sidebar: React.FC = () => {
   const store = useStore();
   const t = translations[store.language];
-  const setActiveModal = useStore(s => s.setActiveModal);
-  const logout = useStore(s => s.logout);
-
-  const [contextMenu, setContextMenu] = useState<{
-    type: 'session' | 'group';
-    item: ChatSession | Group;
-    x: number;
-    y: number;
-  } | null>(null);
-
+  const isSlim = !store.isSidebarOpen;
+  const sidebarWidth = store.sidebarWidth;
+  
+  const [contextMenu, setContextMenu] = useState<any>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
-  const [isChatsCollapsed, setIsChatsCollapsed] = useState(false);
-  const sidebarRef = useRef<HTMLDivElement>(null);
-  
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  
+  const [isProjectsCollapsed, setIsProjectsCollapsed] = useState(false);
+  const [isRecentCollapsed, setIsRecentCollapsed] = useState(false);
+  
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // Group logic
-  const groupedSessions = store.groups.map(group => ({
-      group,
-      sessions: store.sessions.filter(s => s.groupId === group.id)
-  }));
-  const ungroupedSessions = store.sessions.filter(s => !s.groupId);
+  const activeGroups = store.groups.filter(g => !g.isDeleted);
+  const activeSessions = store.sessions.filter(s => !s.isDeleted);
 
-  // Handlers
-  const handleCreateGroup = () => {
-      if (store.groups.length >= 10) {
-          alert(t.groupLimitReached);
-          return;
-      }
-      const newId = uuidv4();
-      store.createGroup(newId, t.untitledGroup);
-      
-      // Immediately enter rename mode
-      setEditingId(newId);
-      setEditValue(t.untitledGroup);
-  };
+  const groupedSessions = activeGroups.map(g => ({ group: g, sessions: activeSessions.filter(s => s.groupId === g.id) }));
+  const ungrouped = activeSessions.filter(s => !s.groupId);
 
-  const handleContextMenuSession = (e: React.MouseEvent, session: ChatSession) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setContextMenu({ type: 'session', item: session, x: e.clientX, y: e.clientY });
-  };
-
-  const handleContextMenuGroup = (e: React.MouseEvent, group: Group) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setContextMenu({ type: 'group', item: group, x: e.clientX, y: e.clientY });
-  };
-
-  const handleRenameStart = (id: string, currentTitle: string) => {
-      setEditingId(id);
-      setEditValue(currentTitle);
-  };
-
-  const handleRenameSubmit = () => {
-      if (!editingId) return;
-      if (editValue.trim()) {
-          // Check if it's a group or session
-          const isGroup = store.groups.some(g => g.id === editingId);
-          if (isGroup) {
-              store.updateGroup(editingId, { title: editValue.trim() });
-          } else {
-              store.renameSession(editingId, editValue.trim());
-          }
-      }
-      setEditingId(null);
-  };
-
-  const handleEmailSession = (session: ChatSession) => {
-      const body = session.messages.map(m => `[${m.role}]: ${m.content}`).join('\n\n');
-      const subject = `Agent Chat: ${session.title}`;
-      const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      window.open(mailtoLink, '_blank');
-  };
-
-  const handleSignOut = () => {
-    setShowUserMenu(false);
-    logout();
-  };
-
-  // Close context menu on global click
   useEffect(() => {
-      const closeMenu = () => setContextMenu(null);
-      const closeUserMenu = (e: MouseEvent) => {
-        if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
-          setShowUserMenu(false);
-        }
-      };
-      window.addEventListener('click', closeMenu);
-      window.addEventListener('mousedown', closeUserMenu);
-      return () => {
-        window.removeEventListener('click', closeMenu);
-        window.removeEventListener('mousedown', closeUserMenu);
-      };
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setShowUserMenu(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Ensure we have a selected session if none
   useEffect(() => {
-    if (!store.currentSessionId && store.sessions.length > 0) {
-      store.selectSession(store.sessions[0].id);
-    }
-  }, [store.currentSessionId, store.sessions, store.selectSession]);
-
-  // Build Actions for Context Menu
-  const getContextMenuActions = () => {
-      if (!contextMenu) return [];
-      
-      if (contextMenu.type === 'session') {
-          const session = contextMenu.item as ChatSession;
-          
-          // Submenu for Move To Group
-          const moveSubMenu = [
-              { 
-                  label: t.ungrouped, 
-                  onClick: () => store.moveSession(session.id, undefined) 
-              },
-              ...store.groups.map(g => ({
-                  label: g.title,
-                  onClick: () => store.moveSession(session.id, g.id)
-              }))
-          ];
-
-          return [
-              { label: t.rename, icon: Icons.Edit, onClick: () => handleRenameStart(session.id, session.title) },
-              { label: t.emailChat, icon: Icons.Mail, onClick: () => handleEmailSession(session) },
-              { label: t.moveToGroup, icon: Icons.MoveTo, subMenu: moveSubMenu },
-              { separator: true, label: '', onClick: () => {} },
-              { label: t.delete, icon: Icons.Trash, onClick: () => store.deleteSession(session.id), danger: true }
-          ];
-      } else {
-          const group = contextMenu.item as Group;
-          return [
-              { label: t.rename, icon: Icons.Edit, onClick: () => handleRenameStart(group.id, group.title) },
-              { separator: true, label: '', onClick: () => {} },
-              { label: t.delete, icon: Icons.Trash, onClick: () => store.deleteGroup(group.id), danger: true }
-          ];
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isResizing) {
+        const newWidth = Math.max(220, Math.min(500, e.clientX));
+        store.setSidebarWidth(newWidth);
       }
+    };
+    const handleMouseUp = () => setIsResizing(false);
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
+  const handleRenameSubmit = (cancel = false) => {
+    if (!editingId || cancel) {
+      setEditingId(null);
+      return;
+    }
+    if (editValue.trim()) {
+      const group = store.groups.find(g => g.id === editingId);
+      if (group) store.updateGroup(editingId, { title: editValue });
+      else store.renameSession(editingId, editValue);
+    }
+    setEditingId(null);
+  };
+
+  const startRename = (id: string, initialValue: string) => {
+    setEditingId(id);
+    setEditValue(initialValue);
+  };
+
+  const onContextMenuGroup = (e: any, g: Group) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, actions: [
+      { label: t.rename, icon: Icons.Edit, onClick: () => startRename(g.id, g.title) },
+      { label: t.settings, icon: Icons.Settings, onClick: () => { store.setEditingProject(g.id); store.setActiveModal('project_edit'); } },
+      { separator: true },
+      { label: t.delete, icon: Icons.Trash, onClick: () => store.deleteGroup(g.id), danger: true }
+    ]});
+  };
+
+  const onContextMenuSession = (e: any, s: ChatSession) => {
+    e.preventDefault();
+    const moveSubMenu = [
+      { label: t.ungrouped, onClick: () => store.moveSession(s.id, undefined) },
+      ...activeGroups.map(g => ({ label: g.title || t.untitledGroup, onClick: () => store.moveSession(s.id, g.id) }))
+    ];
+
+    setContextMenu({ x: e.clientX, y: e.clientY, actions: [
+      { label: t.rename, icon: Icons.Edit, onClick: () => startRename(s.id, s.title) },
+      { label: t.emailChat, icon: Icons.Mail, onClick: () => alert(`${t.emailChat} to ${store.user?.email || 'user@example.com'}`) },
+      { label: t.moveToGroup, icon: Icons.MoveTo, subMenu: moveSubMenu },
+      { separator: true },
+      { label: t.delete, icon: Icons.Trash, onClick: () => store.deleteSession(s.id), danger: true }
+    ]});
   };
 
   return (
-    <>
-    <AnimatePresence>
-      {store.isSidebarOpen && (
-        <motion.div 
-          initial={{ width: 0, opacity: 0 }}
-          animate={{ width: 280, opacity: 1 }}
-          exit={{ width: 0, opacity: 0 }}
-          transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-          className="hidden md:flex flex-col bg-[#F9FAFB] border-r border-gray-200 h-full shrink-0 overflow-hidden whitespace-nowrap select-none relative"
-          ref={sidebarRef}
-        >
-          {/* App Logo & Header */}
-          <div className="px-4 pt-4 pb-2">
-              <div className="flex items-center justify-between mb-4">
-                <button 
-                    onClick={store.navigateToHome} 
-                    className="flex items-center gap-2 group text-left outline-none"
-                >
-                    <div className="w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center shadow-sm group-hover:bg-gray-800 transition-colors">
-                        <Icons.Zap className="w-5 h-5" fill="currentColor" />
-                    </div>
-                    <span className="text-xl font-bold text-gray-900 tracking-tight">Agent</span>
-                </button>
-                <button 
-                    onClick={store.toggleSidebar}
-                    className="p-1.5 text-gray-400 hover:text-black transition-colors rounded-md hover:bg-gray-100"
-                    title="Collapse Sidebar"
-                >
-                    <Icons.ClosePanelLeft className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Prominent New Chat Button */}
-              <button 
-                onClick={store.createNewSession}
-                className="w-full flex items-center justify-center gap-2 bg-black hover:bg-gray-800 text-white py-2.5 rounded-lg shadow-md transition-all duration-200 font-medium text-sm mb-2 transform hover:scale-[1.02]"
-              >
-                <Icons.NewChat className="w-4 h-4" />
-                <span>{t.newChat}</span>
-              </button>
-          </div>
-
-          {/* Secondary Actions Header */}
-          <div className="flex items-center justify-between px-4 py-1 min-w-[280px] mb-2">
-             <div className="flex gap-2 w-full">
-                <button 
-                    onClick={handleCreateGroup}
-                    className="flex-1 flex items-center justify-center gap-2 text-xs font-medium text-gray-600 hover:text-black transition-colors bg-white border border-gray-200 px-3 py-1.5 rounded-md shadow-sm hover:shadow group"
-                    title={t.createGroup}
-                >
-                    <Icons.NewGroup className="w-3 h-3 text-gray-400 group-hover:text-black" />
-                    <span>{t.createGroup}</span>
-                </button>
-             </div>
-          </div>
-
-          {/* Main List */}
-          <div className="flex-1 overflow-y-auto px-3 min-w-[280px] pb-4 custom-scrollbar">
-             
-             {/* PROJECTS Section */}
-             <div className="mb-4">
-                 <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-3 mb-2 flex justify-between items-center">
-                    <span>{t.groups}</span>
-                    <span className="bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full text-[9px]">{store.groups.length}/10</span>
-                 </div>
-                 {/* Projects Vertical Line Container */}
-                 <div className="ml-3 pl-1"> 
-                     {/* Removed border-l-2 border-gray-100 from here to remove the line */}
-                     {groupedSessions.map(({ group, sessions }) => (
-                         <GroupItem
-                            key={group.id}
-                            group={group}
-                            sessions={sessions}
-                            currentSessionId={store.currentSessionId}
-                            onSelectSession={store.selectSession}
-                            onToggleCollapse={(id) => store.updateGroup(id, { collapsed: !group.collapsed })}
-                            onContextMenuSession={handleContextMenuSession}
-                            onContextMenuGroup={handleContextMenuGroup}
-                            editingId={editingId}
-                            editValue={editValue}
-                            setEditValue={setEditValue}
-                            onEditSubmit={handleRenameSubmit}
-                         />
-                     ))}
-                 </div>
-             </div>
-
-             {/* CHATS Section (Collapsible) */}
-             <div>
-                <div 
-                    className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-3 mb-2 flex items-center justify-between cursor-pointer hover:text-gray-600"
-                    onClick={() => setIsChatsCollapsed(!isChatsCollapsed)}
-                >
-                    <span>{t.recent}</span>
-                    {isChatsCollapsed ? <Icons.ChevronRight className="w-3 h-3" /> : <Icons.ChevronDown className="w-3 h-3" />}
-                </div>
-                
-                {!isChatsCollapsed && (
-                    /* Chats Vertical Line Container (kept for chats as requested, only removed for projects) */
-                    <div className="border-l-2 border-gray-100 ml-3 pl-1 space-y-0.5">
-                        {ungroupedSessions.map(session => (
-                            <SessionItem
-                                key={session.id}
-                                session={session}
-                                isActive={session.id === store.currentSessionId}
-                                onSelect={() => store.selectSession(session.id)}
-                                onContextMenu={handleContextMenuSession}
-                                isEditing={editingId === session.id}
-                                editValue={editValue}
-                                setEditValue={setEditValue}
-                                onEditSubmit={handleRenameSubmit}
-                            />
-                        ))}
-                        {ungroupedSessions.length === 0 && groupedSessions.length === 0 && (
-                             <div className="px-3 py-4 text-center text-sm text-gray-400">
-                                No chats yet.
-                             </div>
-                        )}
-                    </div>
-                )}
-             </div>
-          </div>
-
-          {/* Footer */}
-          <div className="p-4 border-t border-gray-200 min-w-[280px] bg-[#F9FAFB] relative" ref={userMenuRef}>
-            
-            {/* User Menu Popup */}
-            {showUserMenu && (
-                <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute bottom-[110%] left-4 right-4 bg-white rounded-xl shadow-2xl border border-gray-200 py-1.5 z-50 flex flex-col"
-                >
-                    <button onClick={() => { setShowUserMenu(false); setActiveModal('upgrade'); }} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
-                        <Icons.CreditCard className="w-4 h-4 text-black" />
-                        <span className="font-medium text-black">{t.upgradeSubscription}</span>
-                    </button>
-                    <button onClick={() => { setShowUserMenu(false); setActiveModal('account'); }} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
-                        <Icons.User className="w-4 h-4 text-gray-500" />
-                        <span>{t.account}</span>
-                    </button>
-                    <button onClick={() => { setShowUserMenu(false); setActiveModal('help'); }} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
-                        <Icons.Help className="w-4 h-4 text-gray-500" />
-                        <span>{t.getHelp}</span>
-                    </button>
-                    <button onClick={() => { setShowUserMenu(false); setActiveModal('settings'); }} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
-                        <Icons.Settings className="w-4 h-4 text-gray-500" />
-                        <span>{t.settings}</span>
-                    </button>
-                    <div className="h-px bg-gray-100 my-1" />
-                    <button onClick={handleSignOut} className="flex items-center gap-3 px-3 py-2 hover:bg-red-50 text-sm text-red-600 transition-colors">
-                        <Icons.LogOut className="w-4 h-4" />
-                        <span>{t.signOut}</span>
-                    </button>
-                </motion.div>
+    <motion.aside 
+      layout
+      animate={{ width: isSlim ? 72 : sidebarWidth }}
+      transition={{ duration: isResizing ? 0 : 0.35, ease: [0.4, 0, 0.2, 1] }}
+      className="flex flex-col bg-[#F9FAFB] border-r border-gray-200 h-full select-none z-10 relative shrink-0"
+    >
+      {/* Header */}
+      <div className="h-16 flex items-center justify-between px-5 shrink-0 overflow-hidden">
+        {!isSlim && (
+          <motion.div 
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3 flex-1 overflow-hidden"
+          >
+            <div className="w-8 h-8 bg-black text-white rounded-xl flex items-center justify-center shadow-lg shrink-0">
+              <Icons.Zap className="w-5 h-5" fill="currentColor" />
+            </div>
+            <span className="font-black text-xl tracking-tighter text-black uppercase truncate">Agent</span>
+          </motion.div>
+        )}
+        
+        <button 
+            onClick={(e) => { e.stopPropagation(); store.toggleSidebar(); }}
+            className={clsx(
+              "w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center shadow-lg hover:bg-gray-800 transition-all hover:scale-105 active:scale-95 shrink-0",
+              isSlim ? "mx-auto" : ""
             )}
+        >
+            <motion.div
+              animate={{ rotate: isSlim ? 180 : 0 }}
+              transition={{ type: "spring", stiffness: 200 }}
+            >
+              <Icons.ChevronLeft className="w-5 h-5" strokeWidth={3} />
+            </motion.div>
+        </button>
+      </div>
 
-            {/* Language Toggle */}
-             <div className="flex bg-gray-200 rounded-lg p-1 mb-3 relative">
-                 <div 
-                    className="absolute top-1 bottom-1 bg-white rounded-md shadow-sm transition-all duration-200 ease-out z-0"
-                    style={{
-                        left: store.language === 'en' ? '4px' : '50%',
-                        width: 'calc(50% - 4px)'
-                    }}
-                 />
-                 <button 
-                    onClick={() => store.setLanguage('en')}
-                    className={clsx("flex-1 text-xs font-medium text-center py-1.5 relative z-10 transition-colors", store.language === 'en' ? "text-black" : "text-gray-500")}
-                 >
-                    English
-                 </button>
-                 <button 
-                    onClick={() => store.setLanguage('zh')}
-                    className={clsx("flex-1 text-xs font-medium text-center py-1.5 relative z-10 transition-colors", store.language === 'zh' ? "text-black" : "text-gray-500")}
-                 >
-                    中文
-                 </button>
-             </div>
+      {/* New Chat Button */}
+      <div className={clsx("mb-4 transition-all shrink-0", isSlim ? "px-2" : "px-5")}>
+        <button 
+          onClick={store.createNewSession} 
+          className={clsx(
+            "bg-black text-white flex items-center justify-center transition-all hover:bg-gray-800 rounded-xl shadow-xl active:scale-[0.98] border border-white/5",
+            isSlim ? "w-11 h-11 mx-auto" : "w-full h-11 gap-2"
+          )}
+          title={isSlim ? t.newChat : undefined}
+        >
+          <Icons.Plus className="w-5 h-5" strokeWidth={3} />
+          {!isSlim && <span className="text-[11px] font-black tracking-[0.1em] uppercase">{t.newChat}</span>}
+        </button>
+      </div>
 
-             <div 
-                className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors group select-none"
-                onClick={() => setShowUserMenu(!showUserMenu)}
-             >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 flex items-center justify-center text-gray-600 group-hover:text-black">
-                   <Icons.Sparkles className="w-4 h-4" />
+      {/* Navigation Content */}
+      <div className="flex-1 overflow-hidden relative">
+        <AnimatePresence mode="popLayout">
+          {!isSlim ? (
+            <motion.div 
+              key="full-rail"
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="h-full overflow-y-auto custom-scrollbar space-y-4 pt-2"
+            >
+                {/* Expanded Projects */}
+                <div>
+                   <div 
+                      onClick={() => setIsProjectsCollapsed(!isProjectsCollapsed)}
+                      className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-4 mb-2 flex justify-between items-center opacity-60 hover:opacity-100 transition-opacity cursor-pointer group/header"
+                   >
+                      <div className="flex items-center gap-2">
+                         <Icons.ChevronDown className={clsx("w-3.5 h-3.5 transition-transform", isProjectsCollapsed ? "-rotate-90" : "rotate-0")} />
+                         <span>{t.groups}</span> 
+                      </div>
+                      <button 
+                         onClick={(e) => { e.stopPropagation(); store.createGroup(uuidv4(), t.untitledGroup); }} 
+                         className="hover:text-black transition-all p-1 hover:bg-gray-200 rounded-md"
+                      >
+                          <Icons.Plus className="w-3.5 h-3.5" />
+                      </button>
+                   </div>
+                   <motion.div 
+                      initial={false}
+                      animate={{ height: isProjectsCollapsed ? 0 : 'auto', opacity: isProjectsCollapsed ? 0 : 1 }}
+                      className="overflow-hidden space-y-0.5"
+                   >
+                      {groupedSessions.map(({ group, sessions }) => (
+                        <div key={group.id}>
+                            <NavItem 
+                              group={group}
+                              isEditing={editingId === group.id}
+                              editValue={editValue}
+                              onEditChange={setEditValue}
+                              onEditSubmit={handleRenameSubmit}
+                              onContextMenu={(e: any) => onContextMenuGroup(e, group)}
+                              onActionClick={(e: any) => onContextMenuGroup(e, group)}
+                              onClick={() => store.updateGroup(group.id, { collapsed: !group.collapsed })}
+                            >
+                              {group.title || t.untitledGroup}
+                            </NavItem>
+                            {!group.collapsed && (
+                               <div className="ml-[20px] border-l-2 border-gray-200 mt-1 pl-3 space-y-0.5 mb-5 pr-1 relative">
+                                  {sessions.map(s => (
+                                    <NavItem 
+                                      key={s.id} 
+                                      isSubItem
+                                      isActive={s.id === store.currentSessionId} 
+                                      isEditing={editingId === s.id}
+                                      editValue={editValue}
+                                      onEditChange={setEditValue}
+                                      onEditSubmit={handleRenameSubmit}
+                                      onClick={() => store.selectSession(s.id)} 
+                                      onContextMenu={(e: any) => onContextMenuSession(e, s)}
+                                      onActionClick={(e: any) => onContextMenuSession(e, s)}
+                                    >
+                                       {s.title || "Untitled Chat"}
+                                    </NavItem>
+                                  ))}
+                               </div>
+                            )}
+                        </div>
+                      ))}
+                   </motion.div>
                 </div>
-                <div className="flex-1">
-                   <div className="text-sm font-medium text-gray-900">Agent User</div>
-                   <div className="text-xs text-gray-500">{t.proPlan}</div>
-                </div>
-                <Icons.MoreVertical className="w-4 h-4 text-gray-400 group-hover:text-black" />
-             </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
 
-    {/* Context Menu Portal */}
-    {contextMenu && (
-        <ContextMenu 
-            x={contextMenu.x} 
-            y={contextMenu.y} 
-            onClose={() => setContextMenu(null)} 
-            actions={getContextMenuActions()} 
+                {/* Expanded Recent */}
+                <div>
+                   <div 
+                      onClick={() => setIsRecentCollapsed(!isRecentCollapsed)}
+                      className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-4 mb-2 flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+                   >
+                      <Icons.ChevronDown className={clsx("w-3.5 h-3.5 transition-transform", isRecentCollapsed ? "-rotate-90" : "rotate-0")} />
+                      <span>{t.recent}</span>
+                   </div>
+                   <motion.div 
+                      initial={false}
+                      animate={{ height: isRecentCollapsed ? 0 : 'auto', opacity: isRecentCollapsed ? 0 : 1 }}
+                      className="overflow-hidden space-y-0.5 relative"
+                   >
+                      <div className="ml-[20px] border-l-2 border-gray-200 mt-1 pl-3 space-y-0.5 mb-5 pr-1 relative">
+                        {ungrouped.map(s => (
+                          <NavItem 
+                            key={s.id} 
+                            isSubItem
+                            isActive={s.id === store.currentSessionId} 
+                            isEditing={editingId === s.id}
+                            editValue={editValue}
+                            onEditChange={setEditValue}
+                            onEditSubmit={handleRenameSubmit}
+                            onClick={() => store.selectSession(s.id)} 
+                            onContextMenu={(e: any) => onContextMenuSession(e, s)}
+                            onActionClick={(e: any) => onContextMenuSession(e, s)}
+                          >
+                             {s.title || "Untitled Chat"}
+                          </NavItem>
+                        ))}
+                      </div>
+                   </motion.div>
+                </div>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="slim-rail"
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="h-full flex flex-col items-center gap-4 pt-4 overflow-y-auto custom-scrollbar"
+            >
+              {/* Projects in Slim Mode - Only show markers */}
+              <div className="flex flex-col items-center gap-3">
+                 {activeGroups.map(g => (
+                    <button 
+                      key={g.id} 
+                      onClick={() => store.toggleSidebar()} 
+                      title={g.title}
+                      className="transition-transform hover:scale-110 active:scale-95"
+                    >
+                       <ProjectMarker group={g} isSlim />
+                    </button>
+                 ))}
+              </div>
+              
+              {activeGroups.length > 0 && <div className="w-10 h-px bg-gray-200 my-1" />}
+
+              {/* Chat session list removed in slim mode as requested */}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* User Section */}
+      <div className="p-2 border-t border-gray-200 bg-[#F9FAFB] shrink-0 relative" ref={userMenuRef}>
+         <AnimatePresence>
+         {showUserMenu && (
+           <motion.div 
+             initial={{ opacity: 0, x: isSlim ? 10 : 0, y: 10, scale: 0.95 }} 
+             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }} 
+             exit={{ opacity: 0, x: isSlim ? 10 : 0, y: 10, scale: 0.95 }}
+             className={clsx(
+                "absolute bottom-full bg-white rounded-[22px] shadow-[0_15px_45px_-12px_rgba(0,0,0,0.15)] border border-gray-200 py-1.5 mb-3 z-[100] text-[13px] overflow-hidden whitespace-nowrap",
+                isSlim ? "left-14 w-52" : "left-2.5 right-2.5"
+             )}
+           >
+              <div className="px-4 py-2 mb-1 border-b border-gray-50 bg-gray-50/50">
+                  <div className="font-black text-black text-xs truncate">{store.user?.name}</div>
+                  <div className="text-[10px] text-gray-400 font-bold truncate mt-0.5">{store.user?.email}</div>
+              </div>
+              <button onClick={() => { setShowUserMenu(false); store.setActiveModal('account'); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2.5 font-bold text-gray-700 transition-colors">
+                <Icons.User className="w-3.5 h-3.5 text-gray-400" /> 
+                <span>{t.account}</span>
+              </button>
+              <button onClick={() => { setShowUserMenu(false); store.setActiveModal('settings'); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2.5 font-bold text-gray-700 transition-colors">
+                <Icons.Settings className="w-3.5 h-3.5 text-gray-400" /> 
+                <span>{t.settings}</span>
+              </button>
+              <button onClick={() => { setShowUserMenu(false); store.setActiveModal('help'); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2.5 font-bold text-gray-700 transition-colors">
+                <Icons.Help className="w-3.5 h-3.5 text-gray-400" /> 
+                <span>{t.getHelp}</span>
+              </button>
+              <div className="h-px bg-gray-100 my-1 mx-4" />
+              <button onClick={() => { setShowUserMenu(false); store.setActiveModal('upgrade'); }} className="w-full px-4 py-2 text-left hover:bg-yellow-50 flex items-center gap-2.5 font-bold text-yellow-700 transition-colors">
+                <Icons.CreditCard className="w-3.5 h-3.5 text-yellow-500" /> 
+                <span>{t.upgradeSubscription}</span>
+              </button>
+              <div className="h-px bg-gray-100 my-1 mx-4" />
+              <button onClick={() => { setShowUserMenu(false); store.logout(); }} className="w-full px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center gap-2.5 font-bold transition-colors">
+                <Icons.LogOut className="w-3.5 h-3.5" /> 
+                <span>{t.signOut}</span>
+              </button>
+           </motion.div>
+         )}
+         </AnimatePresence>
+         
+         <button 
+           onClick={(e) => {
+              e.stopPropagation();
+              setShowUserMenu(!showUserMenu);
+           }} 
+           className={clsx(
+             "flex items-center gap-2.5 p-1.5 rounded-xl transition-all hover:bg-gray-200/50 w-full active:scale-[0.98]",
+             isSlim ? "justify-center" : ""
+           )}
+         >
+            <div className="w-11 h-11 md:w-8 md:h-8 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 flex items-center justify-center text-gray-600 shadow-sm border-2 border-white shrink-0 relative overflow-hidden transition-all">
+              {store.user?.avatar ? (
+                  <img src={store.user.avatar} className="w-full h-full object-cover filter grayscale" />
+              ) : (
+                  <Icons.User className="w-4.5 h-4.5" />
+              )}
+            </div>
+            {!isSlim && (
+              <div className="flex-1 text-left overflow-hidden">
+                <div className="text-[12px] font-bold text-black truncate leading-tight">{store.user?.name || "Agent 用户"}</div>
+                <div className="text-[9px] text-gray-400 font-bold truncate leading-none mt-0.5">{store.user?.email}</div>
+              </div>
+            )}
+         </button>
+      </div>
+
+      {/* Resizing Handle */}
+      {!isSlim && (
+        <div 
+          onMouseDown={() => setIsResizing(true)}
+          className="absolute right-0 top-0 bottom-0 w-1 hover:w-1.5 bg-transparent hover:bg-black/10 transition-all cursor-col-resize z-20"
         />
-    )}
-    </>
+      )}
+
+      {contextMenu && <ContextMenu {...contextMenu} onClose={() => setContextMenu(null)} />}
+    </motion.aside>
   );
 };
