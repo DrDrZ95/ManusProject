@@ -1,5 +1,6 @@
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Agent.Core.Cache;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.Extensions.Logging;
@@ -25,6 +26,7 @@ public class SemanticKernelService : ISemanticKernelService
     private readonly IIstioPlanner _istioPlanner;
     private readonly IPostgreSQLPlanner _postgreSqlPlanner;
     private readonly IClickHousePlanner _clickHousePlanner;
+    private readonly IAgentCacheService _cacheService;
 
     public SemanticKernelService(
         Kernel kernel,
@@ -33,6 +35,7 @@ public class SemanticKernelService : ISemanticKernelService
         IVectorDatabaseService vectorDatabase,
         SemanticKernelOptions options,
         ILogger<SemanticKernelService> logger,
+        IAgentCacheService cacheService,
         IKubernetesPlanner kubernetesPlanner,
         IIstioPlanner istioPlanner,
         IPostgreSQLPlanner postgreSqlPlanner,
@@ -44,6 +47,7 @@ public class SemanticKernelService : ISemanticKernelService
         _vectorDatabase = vectorDatabase ?? throw new ArgumentNullException(nameof(vectorDatabase));
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
         _kubernetesPlanner = kubernetesPlanner ?? throw new ArgumentNullException(nameof(kubernetesPlanner));
         _istioPlanner = istioPlanner ?? throw new ArgumentNullException(nameof(istioPlanner));
         _postgreSqlPlanner = postgreSqlPlanner ?? throw new ArgumentNullException(nameof(postgreSqlPlanner));
@@ -187,20 +191,23 @@ public class SemanticKernelService : ISemanticKernelService
     /// </summary>
     public async Task<float[]> GenerateEmbeddingAsync(string text)
     {
-        try
-        {
-            _logger.LogInformation("Generating embedding for text length: {TextLength}", text.Length);
+        // 缓存键基于文本内容的哈希值 (Cache key based on text content hash)
+        var cacheKey = $"embedding:{text.GetHashCode()}";
+        
+        // 使用 GetOrCreateAsync 尝试从缓存获取，否则生成并缓存 (Use GetOrCreateAsync to try cache, otherwise generate and cache)
+        var embeddingArray = await _cacheService.GetOrCreateAsync<float[]>(
+            cacheKey,
+            async () =>
+            {
+                _logger.LogInformation("Cache Miss: Generating embedding for text length: {TextLength}", text.Length);
+                var embedding = await _embeddingService.GenerateEmbeddingAsync(text);
+                _logger.LogInformation("Embedding generated successfully, dimension: {Dimension}", embedding.Length);
+                return embedding.ToArray();
+            },
+            memoryTtl: _options.EmbeddingResultsTtl // 使用配置的 TTL (Use configured TTL)
+        );
 
-            var embedding = await _embeddingService.GenerateEmbeddingAsync(text);
-            
-            _logger.LogInformation("Embedding generated successfully, dimension: {Dimension}", embedding.Length);
-            return embedding.ToArray();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to generate embedding");
-            throw;
-        }
+        return embeddingArray;
     }
 
     /// <summary>
