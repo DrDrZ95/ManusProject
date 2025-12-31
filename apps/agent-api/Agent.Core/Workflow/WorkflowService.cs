@@ -319,24 +319,141 @@ public class WorkflowService : IWorkflowService
         }
     }
 
-    public Task<bool> SaveToDoListToFileAsync(string planId, string filePath, CancellationToken cancellationToken = default)
+        /// <summary>
+    /// Save the workflow plan as a Markdown todo list to a specified file path
+    /// 将工作流计划作为Markdown待办事项列表保存到指定文件路径
+    /// </summary>
+    public async Task<bool> SaveToDoListToFileAsync(string planId, string filePath, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var todoContent = await GenerateToDoListAsync(planId, cancellationToken);
+            await System.IO.File.WriteAllTextAsync(filePath, todoContent, cancellationToken);
+            _logger.LogInformation("Successfully saved todo list for plan {PlanId} to {FilePath}", planId, filePath);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving todo list for plan {PlanId} to {FilePath}", planId, filePath);
+            return false;
+        }
     }
 
-    public Task<string?> LoadToDoListFromFileAsync(string filePath, CancellationToken cancellationToken = default)
+        /// <summary>
+    /// Load a workflow plan from a Markdown todo list file
+    /// 从Markdown待办事项列表文件加载工作流计划
+    /// </summary>
+    public async Task<string?> LoadToDoListFromFileAsync(string filePath, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        try
+        {
+            if (!System.IO.File.Exists(filePath))
+            {
+                _logger.LogError("Todo list file not found at {FilePath}", filePath);
+                return null;
+            }
+
+            var lines = await System.IO.File.ReadAllLinesAsync(filePath, cancellationToken);
+            
+            var title = lines.FirstOrDefault(l => l.StartsWith("# "))?.Substring(2).Trim() ?? "Loaded Plan";
+            var description = lines.FirstOrDefault(l => l.StartsWith("**描述**: "))?.Substring(8).Trim() ?? "Loaded from file";
+            
+            var steps = lines.Where(l => l.StartsWith("- [")).Select(l => {
+                var match = System.Text.RegularExpressions.Regex.Match(l, @"- \[.\] (.*?)( \(结果: .*\))?$");
+                return match.Success ? match.Groups[1].Value.Trim() : string.Empty;
+            }).Where(s => !string.IsNullOrEmpty(s)).ToList();
+
+            var createRequest = new CreatePlanRequest
+            {
+                Title = title,
+                Description = description,
+                Steps = steps
+            };
+
+            var plan = await CreatePlanAsync(createRequest, cancellationToken);
+            _logger.LogInformation("Successfully loaded plan {PlanId} from {FilePath}", plan.Id, filePath);
+            return plan.Id;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading todo list from {FilePath}", filePath);
+            return null;
+        }
     }
 
-    public Task<bool> DeletePlanAsync(string planId, CancellationToken cancellationToken = default)
+        /// <summary>
+    /// Soft delete a workflow plan by marking its status as Deleted
+    /// 通过将工作流计划的状态标记为“已删除”来软删除它
+    /// </summary>
+    public async Task<bool> DeletePlanAsync(string planId, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        try
+        {
+            if (!Guid.TryParse(planId, out var id))
+            {
+                _logger.LogWarning("Invalid Plan ID format: {PlanId}", planId);
+                return false;
+            }
+
+            var success = await _repository.UpdatePlanStatusAsync(id, PlanStatus.Deleted, cancellationToken);
+            if (success)
+            {
+                _logger.LogInformation("Soft deleted workflow plan with ID: {PlanId}", planId);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to soft delete workflow plan with ID: {PlanId}", planId);
+            }
+            return success;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error soft deleting workflow plan: {PlanId}", planId);
+            return false;
+        }
     }
 
-    public Task<WorkflowProgress> GetProgressAsync(string planId, CancellationToken cancellationToken = default)
+        /// <summary>
+    /// Get the progress of a workflow plan, including percentage and estimated time remaining
+    /// 获取工作流计划的进度，包括百分比和预计剩余时间
+    /// </summary>
+    public async Task<WorkflowProgress> GetProgressAsync(string planId, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var plan = await GetPlanAsync(planId, cancellationToken);
+        if (plan == null)
+        {
+            throw new ArgumentException($"Plan not found: {planId}");
+        }
+
+        var completedSteps = plan.Steps.Count(s => s.Status == PlanStepStatus.Completed);
+        var totalSteps = plan.Steps.Count;
+
+        if (totalSteps == 0)
+        {
+            return new WorkflowProgress { Percentage = 0, EstimatedTimeRemaining = TimeSpan.Zero };
+        }
+
+        var percentage = (double)completedSteps / totalSteps * 100;
+
+        // 估算剩余时间 (Estimate remaining time)
+        TimeSpan estimatedTimeRemaining = TimeSpan.Zero;
+        if (completedSteps > 0)
+        {
+            var averageTimePerStep = plan.Steps
+                .Where(s => s.Status == PlanStepStatus.Completed && s.StartedAt.HasValue && s.CompletedAt.HasValue)
+                .Select(s => s.CompletedAt.Value - s.StartedAt.Value)
+                .DefaultIfEmpty(TimeSpan.Zero)
+                .Average(t => t.TotalSeconds);
+
+            var remainingSteps = totalSteps - completedSteps;
+            estimatedTimeRemaining = TimeSpan.FromSeconds(averageTimePerStep * remainingSteps);
+        }
+
+        return new WorkflowProgress
+        {
+            Percentage = Math.Round(percentage, 2),
+            EstimatedTimeRemaining = estimatedTimeRemaining
+        };
     }
 
     public Task<string> CreateWorkflowAsync(string llmResponse)
