@@ -516,7 +516,7 @@ public class FinetuneController : ControllerBase
                     AvailableModels = models,
                     SupportedFeatures = new List<string>
                     {
-                        "Qwen3 model fine-tuning",
+                        "llama model fine-tuning",
                         "Custom dataset support", 
                         "GPU acceleration",
                         "Progress tracking",
@@ -526,7 +526,7 @@ public class FinetuneController : ControllerBase
                     },
                     DefaultConfiguration = new FinetuneRequest
                     {
-                        BaseModel = "Qwen/Qwen3-4B-Instruct",
+                        BaseModel = "meta-llama/Llama-3.1-8B-Instruct",
                         Epochs = 3,
                         LearningRate = 2e-5,
                         BatchSize = 4,

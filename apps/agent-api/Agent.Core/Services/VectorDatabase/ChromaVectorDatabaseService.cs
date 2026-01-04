@@ -1,13 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using ChromaDB.Client;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Agent.Core.Cache;
-
 namespace Agent.Core.Services.VectorDatabase;
 
 /// <summary>
@@ -16,7 +6,7 @@ namespace Agent.Core.Services.VectorDatabase;
 /// </summary>
 public class ChromaVectorDatabaseService : IVectorDatabaseService
 {
-    private readonly ChromaClient _client;
+    private readonly IChromaClient _client;
     private readonly ILogger<ChromaVectorDatabaseService> _logger;
     private readonly IImageEmbeddingService _imageEmbeddingService;
     private readonly IAudioEmbeddingService _audioEmbeddingService;
@@ -25,7 +15,7 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
     private readonly VectorDatabaseOptions _options;
 
     public ChromaVectorDatabaseService(
-        ChromaClient client,
+        IChromaClient client,
         ILogger<ChromaVectorDatabaseService> logger,
         IImageEmbeddingService imageEmbeddingService,
         IAudioEmbeddingService audioEmbeddingService,
@@ -44,11 +34,11 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
 
     #region Collection Management - 集合管理
 
-    public async Task<VectorCollection> CreateCollectionAsync(string name, VectorCollectionConfig? config = null)
+    public async Task<VectorCollection> CreateCollectionAsync(string name, VectorCollectionOptions? config = null)
     {
-        var chromaCollection = await _client.CreateCollection(name);
-        await _cacheService.RemoveAsync($"vector:collections");
-        return new VectorCollection { Name = chromaCollection.Name };
+        await _client.CreateCollectionAsync(name);
+        await _cacheService.RemoveAsync($"vector:collections:{name}");
+        return new VectorCollection { Name = name };
     }
 
     public async Task<VectorCollection> GetCollectionAsync(string name)
@@ -57,11 +47,19 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
         return await _cacheService.GetOrCreateAsync(cacheKey, async () =>
         {
             _logger.LogInformation("Cache Miss: Getting vector collection: {CollectionName}", name);
-            var chromaCollection = await _client.GetCollection(name);
-            var count = await chromaCollection.Count();
+            
+            var zeroEmbedding = new ReadOnlyMemory<float>(Enumerable.Repeat(0f, 0).ToArray());
+            var queryResult = await _client.QueryEmbeddingsAsync(
+                collectionId: name,
+                queryEmbeddings: new[] { zeroEmbedding },  // 单查询向量
+                nResults: 100000,  // 设大值，确保覆盖集合（可根据你的集合规模调整）
+                include: Array.Empty<string>()  // 不返回 documents/metadatas/embeddings/distances，减少数据量
+            );
+            
+            int count = queryResult.Ids?[0]?.Count ?? 0;
             return new VectorCollection
             {
-                Name = chromaCollection.Name,
+                Name = name,
                 DocumentCount = count,
                 CreatedAt = DateTime.UtcNow, // Placeholder
                 UpdatedAt = DateTime.UtcNow  // Placeholder
@@ -71,7 +69,7 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
 
     public async Task<bool> DeleteCollectionAsync(string name)
     {
-        await _client.DeleteCollection(name);
+        await _client.DeleteCollectionAsync(name);
         await _cacheService.RemoveAsync($"vector:collection:{name}");
         await _cacheService.RemoveAsync($"vector:collections");
         return true;
@@ -83,8 +81,10 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
         return await _cacheService.GetOrCreateAsync(cacheKey, async () =>
         {
             _logger.LogInformation("Cache Miss: Listing all vector collections.");
-            var collections = await _client.ListCollections();
-            return collections.Select(c => new VectorCollection { Name = c.Name });
+            var collections = _client.ListCollectionsAsync();
+            // 不推荐
+            return await collections.Select(c => new VectorCollection { Name = c.ToString() }).ToListAsync();
+
         }, distributedTtl: _options.DocumentVectorMetadataTtl);
     }
 
@@ -94,35 +94,40 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
 
     public async Task AddDocumentsAsync(string collectionName, IEnumerable<VectorDocument> documents)
     {
-        var collection = await _client.GetCollection(collectionName);
+        var collection = await _client.GetCollectionAsync(collectionName);
         var docs = documents.ToList();
         var ids = docs.Select(d => d.Id).ToArray();
-        var embeddings = docs.Select(d => d.Embedding).ToArray();
+        ReadOnlyMemory<float>[] embeddings = docs
+            .Select(d => (ReadOnlyMemory<float>)d.Embedding)
+            .ToArray();
         var metadatas = docs.Select(d => d.Metadata).ToArray();
-        await collection.Add(ids, embeddings, metadatas);
+        await _client.UpsertEmbeddingsAsync(collectionName, ids, embeddings, metadatas);
     }
 
-    public async Task<IEnumerable<VectorDocument>> GetDocumentsAsync(string collectionName, IEnumerable<string>? ids = null, VectorFilter? filter = null)
+    public async Task<IEnumerable<VectorDocument>> GetDocumentsAsync(string collectionId, IEnumerable<string>? ids = null, VectorFilter? filter = null)
     {
-        var collection = await _client.GetCollection(collectionName);
-        var results = await collection.Get(ids?.ToArray(), filter?.ToDictionary());
-        return results.Select(r => new VectorDocument { Id = r.Id, Metadata = r.Metadata, Embedding = r.Embedding });
+        var collection = await _client.GetCollectionAsync(collectionId);
+        //var results = await _client.QueryEmbeddingsAsync(collectionId, ids?.ToArray());
+        //return results.Select(r => new VectorDocument { Id = r.Id, Metadata = r.Metadata, Embedding = r.Embedding });
+        return null;
     }
 
     public async Task UpdateDocumentsAsync(string collectionName, IEnumerable<VectorDocument> documents)
     {
-        var collection = await _client.GetCollection(collectionName);
+        var collection = await _client.GetCollectionAsync(collectionName);
         var docs = documents.ToList();
         var ids = docs.Select(d => d.Id).ToArray();
-        var embeddings = docs.Select(d => d.Embedding).ToArray();
+        ReadOnlyMemory<float>[] embeddings = docs
+            .Select(d => (ReadOnlyMemory<float>)d.Embedding)
+            .ToArray();
         var metadatas = docs.Select(d => d.Metadata).ToArray();
-        await collection.Update(ids, embeddings, metadatas);
+        await _client.UpsertEmbeddingsAsync(collectionName, ids, embeddings, metadatas);
     }
 
-    public async Task DeleteDocumentsAsync(string collectionName, IEnumerable<string>? ids = null, VectorFilter? filter = null)
+    public async Task DeleteDocumentsAsync(string collectionId, IEnumerable<string> ids, VectorFilter? filter = null)
     {
-        var collection = await _client.GetCollection(collectionName);
-        await collection.Delete(ids?.ToArray(), filter?.ToDictionary());
+        var collection = await _client.GetCollectionAsync(collectionId);
+        await _client.DeleteEmbeddingsAsync(collectionId, ids.ToArray());
     }
 
     #endregion
@@ -131,11 +136,11 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
 
     public async Task<VectorSearchResult> SearchAsync(string collectionName, VectorSearchRequest request)
     {
-        var collection = await _client.GetCollection(collectionName);
-        var results = await collection.Query(request.Embeddings, request.Options.Limit, request.Filter?.ToDictionary());
+        var collection = await _client.GetCollectionAsync(collectionName);
+        //var results = await _client.QueryEmbeddingsAsync(request.Embeddings, request.Options.Limit, request.Filter?.ToDictionary());
         return new VectorSearchResult
         {
-            Results = results.SelectMany(r => r.Select(i => new VectorDocument { Id = i.Id, Metadata = i.Metadata, Embedding = i.Embedding }))
+            //Results = results.SelectMany(r => r.Select(i => new VectorDocument { Id = i.Id, Metadata = i.Metadata, Embedding = i.Embedding }))
         };
     }
 
@@ -148,23 +153,23 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
 
     public async Task<VectorSearchResult> SearchByEmbeddingAsync(string collectionName, float[] embedding, VectorSearchOptions? options = null)
     {
-        var collection = await _client.GetCollection(collectionName);
-        var results = await collection.Query(new[] { embedding }, options?.Limit ?? 10, options?.Filter?.ToDictionary());
+        var collection = await _client.GetCollectionAsync(collectionName);
+        //var results = await _client.QueryEmbeddingsAsync(collectionName, options?.Limit ?? 10, options?.Filter?.ToDictionary());
         return new VectorSearchResult
         {
-            Results = results.SelectMany(r => r.Select(i => new VectorDocument { Id = i.Id, Metadata = i.Metadata, Embedding = i.Embedding }))
+            //Results = results.SelectMany(r => r.Select(i => new VectorDocument { Id = i.Id, Metadata = i.Metadata, Embedding = i.Embedding }))
         };
     }
 
     public async Task<VectorSearchResult> SearchByImageAsync(string collectionName, string imagePath, VectorSearchOptions? options = null)
     {
-        var embedding = await _imageEmbeddingService.GenerateEmbeddingAsync(imagePath);
+        var embedding = await _imageEmbeddingService.GenerateImageEmbeddingAsync(imagePath);
         return await SearchByEmbeddingAsync(collectionName, embedding, options);
     }
 
     public async Task<VectorSearchResult> SearchByAudioAsync(string collectionName, string audioPath, VectorSearchOptions? options = null)
     {
-        var embedding = await _audioEmbeddingService.GenerateEmbeddingAsync(audioPath);
+        var embedding = await _audioEmbeddingService.GenerateAudioEmbeddingAsync(audioPath);
         return await SearchByEmbeddingAsync(collectionName, embedding, options);
     }
 

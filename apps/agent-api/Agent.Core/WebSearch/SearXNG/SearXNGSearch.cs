@@ -1,8 +1,3 @@
-using System.Threading.Tasks;
-using Flurl;
-using Flurl.Http;
-using Microsoft.SemanticKernel.Plugins.Web;
-
 namespace Agent.Core.WebSearch.SearXNG
 {
     public class SearXNGSearch

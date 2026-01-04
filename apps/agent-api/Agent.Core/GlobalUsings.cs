@@ -1,8 +1,8 @@
 global using Agent.Core.Authorization;
+global using Agent.Core.Cache;
 global using Agent.Core.Data;
 global using Agent.Core.Data.Repositories;
 global using Agent.Core.Data.Entities;
-global using Agent.Core.Domain;
 global using Agent.Core.eBPF;
 global using Agent.Core.Gateway;
 global using Agent.Core.Hubs;
@@ -17,7 +17,6 @@ global using Agent.Core.Services.Hdfs;
 global using Agent.Core.Services.Multimodal;
 global using Agent.Core.Services.Prometheus;
 global using Agent.Core.Services.Prompts;
-// global using Agent.Core.Services.Qwen; // Removed Qwen legacy code
 global using Agent.Core.Services.RAG;
 global using Agent.Core.Services.Sandbox;
 global using Agent.Core.Services.SemanticKernel;
@@ -33,6 +32,7 @@ global using Microsoft.AspNetCore.Builder;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Options;
 global using Microsoft.SemanticKernel;
+global using Microsoft.SemanticKernel.Connectors.Chroma;
 global using System.Diagnostics;
 
 global using Microsoft.Extensions.Logging;
@@ -47,8 +47,10 @@ global using System.Net.Http.Json;
 global using System.ComponentModel.DataAnnotations;
 global using System.ComponentModel.DataAnnotations.Schema;
 
-global using ChromaDB.Client;
-global using ChromaDB.Client.Models;
+//可能存在功能不完善,不使用但保留
+//global using ChromaDB.Client;
+//global using ChromaDB.Client.Models;
+
 global using ModelContextProtocol;
 global using ModelContextProtocol.Protocol;
 global using ModelContextProtocol.Server;
@@ -61,6 +63,9 @@ global using Yarp.ReverseProxy.LoadBalancing;
 global using Yarp.ReverseProxy.Health;
 global using Yarp.ReverseProxy.SessionAffinity;
 
+global using Flurl;
+global using Flurl.Http;
+
 global using Polly;
 global using Polly.Retry;
 
@@ -69,7 +74,7 @@ global using Prometheus;
 global using PromCounter   = Prometheus.Counter;
 global using PromHistogram = Prometheus.Histogram;
 
-namespace Agent.Core.Domain;
+namespace Agent.Core;
 
 /// <summary>
 /// Chat message for conversation history

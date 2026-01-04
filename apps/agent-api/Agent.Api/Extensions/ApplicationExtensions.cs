@@ -19,10 +19,6 @@ public static class ApplicationExtensions
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
 
-        // Register HttpClient for QwenServiceClient for external API calls
-        // 注册QwenServiceClient的HttpClient，用于外部API调用
-        services.AddHttpClient<IQwenServiceClient, QwenServiceClient>();
-
         // Add MCP Server and register tools from the current assembly
         // 添加MCP服务器并从当前程序集注册工具
         services.AddMcpServer()

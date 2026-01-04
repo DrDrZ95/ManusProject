@@ -1,8 +1,9 @@
 global using Agent.Api;
 global using Agent.Api.Controllers;
 global using Agent.Api.Extensions;
+
+global using Agent.Core;
 global using Agent.Core.Authorization;
-global using Agent.Core.Domain;
 global using Agent.Core.Data;
 global using Agent.Core.Data.Entities;
 global using Agent.Core.Data.Repositories;
@@ -19,7 +20,6 @@ global using Agent.Core.Services.FileUpload;
 global using Agent.Core.Services.Hdfs;
 global using Agent.Core.Services.Prometheus;
 global using Agent.Core.Services.Prompts;
-global using Agent.Core.Services.Qwen;
 global using Agent.Core.Services.RAG;
 global using Agent.Core.Services.Sandbox;
 global using Agent.Core.Services.SemanticKernel;

@@ -1,6 +1,3 @@
-using ChromaDB.Client;
-using ChromaDB.Client.Models;
-
 namespace Agent.Core.Services;
 
 /// <summary>
@@ -9,10 +6,10 @@ namespace Agent.Core.Services;
 /// </summary>
 public interface IChromaDbService
 {
-    Task<ChromaCollection> CreateCollectionAsync(string name, Dictionary<string, object>? metadata = null);
-    Task<ChromaCollection> GetCollectionAsync(string name);
+    Task<VectorCollection> CreateCollectionAsync(string name, Dictionary<string, object>? metadata = null);
+    Task<VectorCollection> GetCollectionAsync(string name);
     Task<bool> DeleteCollectionAsync(string name);
-    Task<IEnumerable<ChromaCollection>> ListCollectionsAsync();
+    Task<IEnumerable<VectorCollection>> ListCollectionsAsync();
     Task AddDocumentsAsync(string collectionName, IEnumerable<VectorDocument> documents, IEnumerable<string>? ids = null, IEnumerable<Dictionary<string, object>>? metadatas = null);
     Task<QueryResponse> QueryAsync(string collectionName, IEnumerable<string> queryTexts, int nResults = 10, Dictionary<string, object>? where = null);
     Task<GetResponse> GetDocumentsAsync(string collectionName, IEnumerable<string>? ids = null, Dictionary<string, object>? where = null);
@@ -26,10 +23,10 @@ public interface IChromaDbService
 /// </summary>
 public class ChromaDbService : IChromaDbService
 {
-    private readonly ChromaClient _client;
+    private readonly IVectorDatabaseService _client;
     private readonly ILogger<ChromaDbService> _logger;
 
-    public ChromaDbService(ChromaClient client, ILogger<ChromaDbService> logger)
+    public ChromaDbService(IVectorDatabaseService client, ILogger<ChromaDbService> logger)
     {
         _client = client ?? throw new ArgumentNullException(nameof(client));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -39,13 +36,13 @@ public class ChromaDbService : IChromaDbService
     /// Create a new collection
     /// 创建新集合
     /// </summary>
-    public async Task<ChromaCollection> CreateCollectionAsync(string name, Dictionary<string, object>? metadata = null)
+    public async Task<VectorCollection> CreateCollectionAsync(string name, Dictionary<string, object>? metadata = null)
     {
         try
         {
             _logger.LogInformation("Creating collection: {CollectionName}", name);
             
-            var collection = await _client.GetOrCreateCollection(name, metadata);
+            var collection = await _client.CreateCollectionAsync(name); // metadata
             
             _logger.LogInformation("Successfully created collection: {CollectionName}", name);
             return collection;
@@ -61,13 +58,13 @@ public class ChromaDbService : IChromaDbService
     /// Get an existing collection
     /// 获取现有集合
     /// </summary>
-    public async Task<ChromaCollection> GetCollectionAsync(string name)
+    public async Task<VectorCollection> GetCollectionAsync(string name)
     {
         try
         {
             _logger.LogInformation("Getting collection: {CollectionName}", name);
             
-            var collection = await _client.GetOrCreateCollection(name);
+            var collection = await _client.GetCollectionAsync(name);
             
             _logger.LogInformation("Successfully retrieved collection: {CollectionName}", name);
             return collection;
@@ -89,7 +86,7 @@ public class ChromaDbService : IChromaDbService
         {
             _logger.LogInformation("Deleting collection: {CollectionName}", name);
             
-            await _client.DeleteCollection(name);
+            await _client.DeleteCollectionAsync(name);
             
             _logger.LogInformation("Successfully deleted collection: {CollectionName}", name);
             return true;
@@ -105,13 +102,13 @@ public class ChromaDbService : IChromaDbService
     /// List all collections
     /// 列出所有集合
     /// </summary>
-    public async Task<IEnumerable<ChromaCollection>> ListCollectionsAsync()
+    public async Task<IEnumerable<VectorCollection>> ListCollectionsAsync()
     {
         try
         {
             _logger.LogInformation("Listing all collections");
             
-            var collections = await _client.ListCollections();
+            var collections = await _client.ListCollectionsAsync();
             
             _logger.LogInformation("Successfully listed {Count} collections", collections.Count());
             return collections;

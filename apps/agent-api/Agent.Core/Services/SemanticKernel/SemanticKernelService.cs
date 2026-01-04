@@ -461,7 +461,7 @@ public class SemanticKernelService : ISemanticKernelService
             catch
             {
                 // Create collection if it doesn't exist - 如果集合不存在则创建
-                await _vectorDatabase.CreateCollectionAsync(collectionName, new VectorCollectionConfig
+                await _vectorDatabase.CreateCollectionAsync(collectionName, new VectorCollectionOptions
                 {
                     EmbeddingDimension = embedding.Length,
                     DistanceMetric = DistanceMetric.Cosine,

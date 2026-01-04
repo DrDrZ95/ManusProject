@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <NoWarn>$(NoWarn);SKEXP0020</NoWarn> <!--取消实验性提醒,后期注意-->
   </PropertyGroup>
 
   <ItemGroup>
@@ -45,16 +46,17 @@
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="8.0.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" />
     
-    <!-- ChromaDB SDK -->
+    <!-- ChromaDB SDK * 可能存在功能不完善,不使用但保留 -->
     <PackageReference Include="ChromaDB.Client" Version="1.0.0" />
     
     <!-- SQL Server -->
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.0" />
 
     <!-- Microsoft Semantic Kernel -->
-    <PackageReference Include="Microsoft.SemanticKernel" Version="1.57.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.57.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Plugins.Memory" Version="1.57.0-alpha" />
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.68.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.Chroma" Version="1.68.0-alpha" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.68.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Plugins.Memory" Version="1.68.0-alpha" />
     
     <!-- OpenTelemetry SDK -->
     <PackageReference Include="OpenTelemetry" Version="1.7.0" />
@@ -76,6 +78,5 @@
     <PackageReference Include="prometheus-net" Version="8.2.1" />
     <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
   </ItemGroup>
-
 </Project>
 

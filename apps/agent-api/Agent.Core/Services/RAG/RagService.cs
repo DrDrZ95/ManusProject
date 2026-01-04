@@ -938,7 +938,7 @@ public class RagService : IRagService
         {
             _logger.LogInformation("Creating knowledge base: {Name}", name);
 
-            var vectorConfig = new VectorCollectionConfig
+            var vectorConfig = new VectorCollectionOptions
             {
                 EmbeddingDimension = 1536, // Default for OpenAI embeddings
                 DistanceMetric = DistanceMetric.Cosine,

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>MCP Qwen Dialogue Test</title>
+    <title>MCP Llama Dialogue Test</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
         #chatContainer { max-width: 600px; margin: auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
@@ -16,7 +16,7 @@
 </head>
 <body>
     <div id="chatContainer">
-        <h2>MCP Qwen Dialogue Test</h2>
+        <h2>MCP Llama Dialogue Test</h2>
         <div id="messages"></div>
         <div>
             <input type="text" id="promptInput" placeholder="Enter your message..." />
@@ -73,11 +73,11 @@
         }
 
         function handleMcpEvent(mcpEvent) {
-            if (mcpEvent.EventType === "ToolResult" && mcpEvent.ToolName === "QwenDialogue") {
+            if (mcpEvent.EventType === "ToolResult" && mcpEvent.ToolName === "LlamaDialogue") {
                 if (mcpEvent.IsSuccessful && mcpEvent.Results && mcpEvent.Results.response) {
-                    appendMessage("Qwen: " + mcpEvent.Results.response, 'ai-message');
+                    appendMessage("Llama: " + mcpEvent.Results.response, 'ai-message');
                 } else {
-                    appendMessage("Qwen Error: " + (mcpEvent.ErrorMessage || "Unknown error from tool."), 'ai-message');
+                    appendMessage("Llama Error: " + (mcpEvent.ErrorMessage || "Unknown error from tool."), 'ai-message');
                 }
             }
             // Can handle other event types like ToolCall, ToolError etc. if needed
@@ -127,7 +127,7 @@
             // To make this interactive without a POST endpoint yet, we can try a simple GET request
             // to a test endpoint on the server that then invokes the tool. This is a workaround.
             // This is NOT standard MCP practice but for quick demo.
-            fetch(`/dev/test-qwen-dialogue?prompt=${encodeURIComponent(promptText)}`)
+            fetch(`/dev/test-llama-dialogue?prompt=${encodeURIComponent(promptText)}`)
                 .then(response => response.json())
                 .then(data => {
                     logSseEvent("Test endpoint response: " + JSON.stringify(data));
