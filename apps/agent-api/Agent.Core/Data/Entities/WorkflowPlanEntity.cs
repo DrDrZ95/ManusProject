@@ -66,6 +66,7 @@ public enum PlanStatus
 {
     NotStarted,
     InProgress,
+    Deleted,
     Completed,
     Failed
 }

@@ -212,6 +212,11 @@ public class WorkflowProgress
     /// <summary>
     /// Progress percentage (0-100) - 进度百分比（0-100）
     /// </summary>
+    public double Percentage { get; set; }
+
+/// <summary>
+    /// Progress percentage (0-100) - 进度百分比（0-100）
+    /// </summary>
     public double ProgressPercentage => TotalSteps > 0 ? (double)CompletedSteps / TotalSteps * 100 : 0;
 
     /// <summary>
@@ -228,4 +233,9 @@ public class WorkflowProgress
     /// Has blocked steps - 是否有阻塞步骤
     /// </summary>
     public bool HasBlockedSteps => BlockedSteps > 0;
+    
+    /// <summary>
+    /// Estimated time remaining - 预计剩余时间
+    /// </summary>
+    public TimeSpan? EstimatedTimeRemaining { get; set; }
 }

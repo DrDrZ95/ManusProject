@@ -25,6 +25,11 @@ public interface IWorkflowRepository
     /// 更新工作流计划 (Update a workflow plan)
     /// </summary>
     Task UpdatePlanAsync(WorkflowPlanEntity plan, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// 更新工作流计划的状态 (Update a status of workflow plan)
+    /// </summary>
+    Task<bool> UpdatePlanStatusAsync(Guid planId, PlanStatus status, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 删除工作流计划 (Delete a workflow plan)

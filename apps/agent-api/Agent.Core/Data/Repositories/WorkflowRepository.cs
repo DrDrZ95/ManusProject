@@ -57,7 +57,7 @@ public class WorkflowRepository : IWorkflowRepository
     /// <summary>
     /// 更新工作流计划 (Update a workflow plan)
     /// </summary>
-    public Task UpdatePlanAsync(WorkflowPlanEntity plan, CancellationToken cancellationToken = default)
+    public async Task UpdatePlanAsync(WorkflowPlanEntity plan, CancellationToken cancellationToken = default)
     {
         // 实际EF Core实现: _context.WorkflowPlans.Update(plan); await _context.SaveChangesAsync();
         if (_plans.ContainsKey(plan.Id))
@@ -65,7 +65,21 @@ public class WorkflowRepository : IWorkflowRepository
             plan.UpdatedAt = DateTime.UtcNow;
             _plans[plan.Id] = plan;
         }
-        return Task.CompletedTask;
+        await Task.CompletedTask;
+    }
+    
+    /// <summary>
+    /// 更新工作流计划的状态 (Update a status of workflow plan)
+    /// </summary>
+    public async Task<bool> UpdatePlanStatusAsync(Guid planId, PlanStatus status, CancellationToken cancellationToken = default)
+    {
+        if (_plans.ContainsKey(planId))
+        {
+            WorkflowPlanEntity plan = _plans[planId];
+            plan.Status = status;
+            return true;
+        }
+        return false;
     }
 
     /// <summary>

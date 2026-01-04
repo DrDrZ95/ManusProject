@@ -120,5 +120,50 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
         throw new NotImplementedException("Existing implementation assumed to be here.");
     }
 
+    public Task AddDocumentsAsync(string collectionName, IEnumerable<VectorDocument> documents)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<IEnumerable<VectorDocument>> GetDocumentsAsync(string collectionName, IEnumerable<string>? ids = null, VectorFilter? filter = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task UpdateDocumentsAsync(string collectionName, IEnumerable<VectorDocument> documents)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task DeleteDocumentsAsync(string collectionName, IEnumerable<string>? ids = null, VectorFilter? filter = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<VectorSearchResult> SearchAsync(string collectionName, VectorSearchRequest request)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<VectorSearchResult> SearchByTextAsync(string collectionName, string text, VectorSearchOptions? options = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<VectorSearchResult> SearchByEmbeddingAsync(string collectionName, float[] embedding, VectorSearchOptions? options = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<VectorSearchResult> SearchByImageAsync(string collectionName, string imagePath, VectorSearchOptions? options = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<VectorSearchResult> SearchByAudioAsync(string collectionName, string audioPath, VectorSearchOptions? options = null)
+    {
+        throw new NotImplementedException();
+    }
+
     #endregion
 }

@@ -1,13 +1,5 @@
-using Agent.Core.Data.Repositories;
 using Agent.Core.Data.Mappers;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Agent.Core.Workflow.Models;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using System;
-using System.Linq;
 
 namespace Agent.Core.Workflow;
 
@@ -372,7 +364,7 @@ public class WorkflowService : IWorkflowService
 
             var plan = await CreatePlanAsync(createRequest, cancellationToken);
             _logger.LogInformation("Successfully loaded plan {PlanId} from {FilePath}", plan.Id, filePath);
-            return plan.Id;
+            return plan.Id.ToString();
         }
         catch (Exception ex)
         {
