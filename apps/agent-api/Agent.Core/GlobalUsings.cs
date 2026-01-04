@@ -17,7 +17,7 @@ global using Agent.Core.Services.Hdfs;
 global using Agent.Core.Services.Multimodal;
 global using Agent.Core.Services.Prometheus;
 global using Agent.Core.Services.Prompts;
-global using Agent.Core.Services.Qwen;
+// global using Agent.Core.Services.Qwen; // Removed Qwen legacy code
 global using Agent.Core.Services.RAG;
 global using Agent.Core.Services.Sandbox;
 global using Agent.Core.Services.SemanticKernel;

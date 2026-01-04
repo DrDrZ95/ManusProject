@@ -18,18 +18,15 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
 {
     private readonly ChromaClient _client;
     private readonly ILogger<ChromaVectorDatabaseService> _logger;
-    // 依赖注入的图像嵌入服务 - Image embedding service dependency
-    private readonly IImageEmbeddingService _imageEmbeddingService; 
-    // 依赖注入的音频嵌入服务 - Audio embedding service dependency
-    private readonly IAudioEmbeddingService _audioEmbeddingService; 
-    // 依赖注入的语音转文本服务 - Speech-to-text service dependency
+    private readonly IImageEmbeddingService _imageEmbeddingService;
+    private readonly IAudioEmbeddingService _audioEmbeddingService;
     private readonly ISpeechToTextService _speechToTextService;
     private readonly IAgentCacheService _cacheService;
     private readonly VectorDatabaseOptions _options;
 
     public ChromaVectorDatabaseService(
-        ChromaClient client, 
-        ILogger<ChromaVectorDatabaseService> logger, 
+        ChromaClient client,
+        ILogger<ChromaVectorDatabaseService> logger,
         IImageEmbeddingService imageEmbeddingService,
         IAudioEmbeddingService audioEmbeddingService,
         ISpeechToTextService speechToTextService,
@@ -45,124 +42,130 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
         _options = options.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
-    // ... existing methods ... (omitted for brevity, assume they are present)
-
     #region Collection Management - 集合管理
 
-    /// <summary>
-    /// Create a new vector collection
-    /// 创建新的向量集合
-    /// </summary>
     public async Task<VectorCollection> CreateCollectionAsync(string name, VectorCollectionConfig? config = null)
     {
-        // ... existing implementation ...
-        // Note: In a real scenario, this method should also invalidate the cache for ListCollectionsAsync
-        // and potentially the specific collection if it was cached as "not found".
-        throw new NotImplementedException("Existing implementation assumed to be here.");
+        var chromaCollection = await _client.CreateCollection(name);
+        await _cacheService.RemoveAsync($"vector:collections");
+        return new VectorCollection { Name = chromaCollection.Name };
     }
 
-    /// <summary>
-    /// Get an existing vector collection
-    /// 获取现有的向量集合
-    /// </summary>
     public async Task<VectorCollection> GetCollectionAsync(string name)
     {
-        // 缓存键基于集合名称 (Cache key based on collection name)
         var cacheKey = $"vector:collection:{name}";
-
-        // 使用 GetOrCreateAsync 尝试从缓存获取 (Use GetOrCreateAsync to try to get from cache)
-        var vectorCollection = await _cacheService.GetOrCreateAsync<VectorCollection>(
-            cacheKey,
-            async () =>
+        return await _cacheService.GetOrCreateAsync(cacheKey, async () =>
+        {
+            _logger.LogInformation("Cache Miss: Getting vector collection: {CollectionName}", name);
+            var chromaCollection = await _client.GetCollection(name);
+            var count = await chromaCollection.Count();
+            return new VectorCollection
             {
-                _logger.LogInformation("Cache Miss: Getting vector collection: {CollectionName}", name);
-
-                var chromaCollection = await _client.GetOrCreateCollection(name);
-                
-                // Get collection count - 获取集合计数
-                // Note: This is a placeholder for getting the actual count from ChromaDB
-                var countResult = 0; // Assuming 0 for placeholder
-
-                return new VectorCollection
-                {
-                    Name = chromaCollection.Name,
-                    //Id = chromaCollection.Id,
-                    DocumentCount = countResult,
-                    CreatedAt = DateTime.UtcNow, // ChromaDB doesn't provide creation time
-                    UpdatedAt = DateTime.UtcNow
-                };
-            },
-            distributedTtl: _options.DocumentVectorMetadataTtl // 使用配置的 L2 缓存 TTL (Use configured L2 cache TTL)
-        );
-
-        return vectorCollection;
+                Name = chromaCollection.Name,
+                DocumentCount = count,
+                CreatedAt = DateTime.UtcNow, // Placeholder
+                UpdatedAt = DateTime.UtcNow  // Placeholder
+            };
+        }, distributedTtl: _options.DocumentVectorMetadataTtl);
     }
 
-    /// <summary>
-    /// Delete a vector collection
-    /// 删除向量集合
-    /// </summary>
     public async Task<bool> DeleteCollectionAsync(string name)
     {
-        // ... existing implementation ...
-        // Note: In a real scenario, this method should also invalidate the cache for the specific collection
-        // and ListCollectionsAsync.
-        throw new NotImplementedException("Existing implementation assumed to be here.");
+        await _client.DeleteCollection(name);
+        await _cacheService.RemoveAsync($"vector:collection:{name}");
+        await _cacheService.RemoveAsync($"vector:collections");
+        return true;
     }
 
-    /// <summary>
-    /// List all vector collections
-    /// 列出所有向量集合
-    /// </summary>
     public async Task<IEnumerable<VectorCollection>> ListCollectionsAsync()
     {
-        // ... existing implementation ...
-        throw new NotImplementedException("Existing implementation assumed to be here.");
+        var cacheKey = "vector:collections";
+        return await _cacheService.GetOrCreateAsync(cacheKey, async () =>
+        {
+            _logger.LogInformation("Cache Miss: Listing all vector collections.");
+            var collections = await _client.ListCollections();
+            return collections.Select(c => new VectorCollection { Name = c.Name });
+        }, distributedTtl: _options.DocumentVectorMetadataTtl);
     }
 
-    public Task AddDocumentsAsync(string collectionName, IEnumerable<VectorDocument> documents)
+    #endregion
+
+    #region Document Management - 文档管理
+
+    public async Task AddDocumentsAsync(string collectionName, IEnumerable<VectorDocument> documents)
     {
-        throw new NotImplementedException();
+        var collection = await _client.GetCollection(collectionName);
+        var docs = documents.ToList();
+        var ids = docs.Select(d => d.Id).ToArray();
+        var embeddings = docs.Select(d => d.Embedding).ToArray();
+        var metadatas = docs.Select(d => d.Metadata).ToArray();
+        await collection.Add(ids, embeddings, metadatas);
     }
 
-    public Task<IEnumerable<VectorDocument>> GetDocumentsAsync(string collectionName, IEnumerable<string>? ids = null, VectorFilter? filter = null)
+    public async Task<IEnumerable<VectorDocument>> GetDocumentsAsync(string collectionName, IEnumerable<string>? ids = null, VectorFilter? filter = null)
     {
-        throw new NotImplementedException();
+        var collection = await _client.GetCollection(collectionName);
+        var results = await collection.Get(ids?.ToArray(), filter?.ToDictionary());
+        return results.Select(r => new VectorDocument { Id = r.Id, Metadata = r.Metadata, Embedding = r.Embedding });
     }
 
-    public Task UpdateDocumentsAsync(string collectionName, IEnumerable<VectorDocument> documents)
+    public async Task UpdateDocumentsAsync(string collectionName, IEnumerable<VectorDocument> documents)
     {
-        throw new NotImplementedException();
+        var collection = await _client.GetCollection(collectionName);
+        var docs = documents.ToList();
+        var ids = docs.Select(d => d.Id).ToArray();
+        var embeddings = docs.Select(d => d.Embedding).ToArray();
+        var metadatas = docs.Select(d => d.Metadata).ToArray();
+        await collection.Update(ids, embeddings, metadatas);
     }
 
-    public Task DeleteDocumentsAsync(string collectionName, IEnumerable<string>? ids = null, VectorFilter? filter = null)
+    public async Task DeleteDocumentsAsync(string collectionName, IEnumerable<string>? ids = null, VectorFilter? filter = null)
     {
-        throw new NotImplementedException();
+        var collection = await _client.GetCollection(collectionName);
+        await collection.Delete(ids?.ToArray(), filter?.ToDictionary());
     }
 
-    public Task<VectorSearchResult> SearchAsync(string collectionName, VectorSearchRequest request)
+    #endregion
+
+    #region Search - 搜索
+
+    public async Task<VectorSearchResult> SearchAsync(string collectionName, VectorSearchRequest request)
     {
-        throw new NotImplementedException();
+        var collection = await _client.GetCollection(collectionName);
+        var results = await collection.Query(request.Embeddings, request.Options.Limit, request.Filter?.ToDictionary());
+        return new VectorSearchResult
+        {
+            Results = results.SelectMany(r => r.Select(i => new VectorDocument { Id = i.Id, Metadata = i.Metadata, Embedding = i.Embedding }))
+        };
     }
 
-    public Task<VectorSearchResult> SearchByTextAsync(string collectionName, string text, VectorSearchOptions? options = null)
+    public async Task<VectorSearchResult> SearchByTextAsync(string collectionName, string text, VectorSearchOptions? options = null)
     {
-        throw new NotImplementedException();
+        // This requires an embedding service, which is not directly available here.
+        // This method should be implemented in a higher-level service (e.g., RagService).
+        throw new NotSupportedException("SearchByTextAsync should be implemented in a higher-level service that handles embedding generation.");
     }
 
-    public Task<VectorSearchResult> SearchByEmbeddingAsync(string collectionName, float[] embedding, VectorSearchOptions? options = null)
+    public async Task<VectorSearchResult> SearchByEmbeddingAsync(string collectionName, float[] embedding, VectorSearchOptions? options = null)
     {
-        throw new NotImplementedException();
+        var collection = await _client.GetCollection(collectionName);
+        var results = await collection.Query(new[] { embedding }, options?.Limit ?? 10, options?.Filter?.ToDictionary());
+        return new VectorSearchResult
+        {
+            Results = results.SelectMany(r => r.Select(i => new VectorDocument { Id = i.Id, Metadata = i.Metadata, Embedding = i.Embedding }))
+        };
     }
 
-    public Task<VectorSearchResult> SearchByImageAsync(string collectionName, string imagePath, VectorSearchOptions? options = null)
+    public async Task<VectorSearchResult> SearchByImageAsync(string collectionName, string imagePath, VectorSearchOptions? options = null)
     {
-        throw new NotImplementedException();
+        var embedding = await _imageEmbeddingService.GenerateEmbeddingAsync(imagePath);
+        return await SearchByEmbeddingAsync(collectionName, embedding, options);
     }
 
-    public Task<VectorSearchResult> SearchByAudioAsync(string collectionName, string audioPath, VectorSearchOptions? options = null)
+    public async Task<VectorSearchResult> SearchByAudioAsync(string collectionName, string audioPath, VectorSearchOptions? options = null)
     {
-        throw new NotImplementedException();
+        var embedding = await _audioEmbeddingService.GenerateEmbeddingAsync(audioPath);
+        return await SearchByEmbeddingAsync(collectionName, embedding, options);
     }
 
     #endregion

@@ -101,7 +101,7 @@ public class FinetuneRequest
     /// <summary>
     /// Base model to fine-tune - 要微调的基础模型
     /// </summary>
-    public string BaseModel { get; set; } = "Qwen/Qwen3-4B-Instruct";
+    public string BaseModel { get; set; } = "meta-llama/Llama-3.1-8B-Instruct"; // Changed from Qwen to Llama
 
     /// <summary>
     /// Dataset path - 数据集路径

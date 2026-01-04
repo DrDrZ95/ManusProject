@@ -589,9 +589,9 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
 
         var models = new List<string>
         {
-            "Qwen/Qwen3-4B-Instruct",
-            "Qwen/Qwen3-7B-Instruct", 
-            "Qwen/Qwen3-14B-Instruct",
+            "meta-llama/Llama-3.1-8B-Instruct", // Replaced Qwen models with Llama
+            "meta-llama/Llama-2-7b-chat-hf", 
+            "meta-llama/Llama-2-13b-chat-hf",
             "microsoft/DialoGPT-medium",
             "microsoft/DialoGPT-large",
             "facebook/blenderbot-400M-distill",
