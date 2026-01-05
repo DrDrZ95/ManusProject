@@ -1,0 +1,23 @@
+pipeline {
+    agent any
+
+    stages {
+        stage("Install Dependencies") {
+            steps {
+                sh "cd ../../../apps/agent-ui && pnpm install"
+            }
+        }
+        stage("Build") {
+            steps {
+                sh "cd ../../../apps/agent-ui && pnpm run build"
+            }
+        }
+        stage("Build Docker Image") {
+            steps {
+                script {
+                    def appImage = docker.build("agent-ui:${env.BUILD_NUMBER}", "-f ../../../infra/docker/Dockerfile.react ../../../apps/agent-ui")
+                }
+            }
+        }
+    }
+}

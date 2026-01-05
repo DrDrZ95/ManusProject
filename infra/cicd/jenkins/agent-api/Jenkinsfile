@@ -1,0 +1,28 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build') {
+            steps {
+                sh 'dotnet build ../../../apps/agent-api/Agent.Api/Agent.Api.csproj'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'dotnet test ../../../test/Agent.Api.Tests/Agent.Api.Tests.csproj'
+            }
+        }
+        stage('Publish') {
+            steps {
+                sh 'dotnet publish ../../../apps/agent-api/Agent.Api/Agent.Api.csproj -c Release -o ./publish'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    def appImage = docker.build("agent-api:${env.BUILD_NUMBER}", "-f ../../../infra/docker/Dockerfile.webapi .")
+                }
+            }
+        }
+    }
+}
