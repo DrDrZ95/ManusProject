@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
-
 namespace Agent.Api.Controllers;
 
 /// <summary>

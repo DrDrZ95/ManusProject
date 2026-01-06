@@ -1,6 +1,3 @@
-using Agent.Core.eBPF.Detective;
-using Microsoft.AspNetCore.Mvc;
-
 namespace Agent.Api.Controllers;
 
 /// <summary>

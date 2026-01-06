@@ -1,8 +1,4 @@
-using Microsoft.EntityFrameworkCore;
-using Agent.Core.Data;
-using Agent.Core.Models.Identity;
-
-namespace Agent.Application.Services.Authorization;
+namespace Agent.Core.Authorization;
 
 /// <summary>
 /// Permission service implementation for managing user and role permissions

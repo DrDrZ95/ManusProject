@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <ItemGroup>
     <ProjectReference Include="..\Agent.Core\Agent.Core.csproj" />
   </ItemGroup>
@@ -8,6 +7,8 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <NoWarn>$(NoWarn);SKEXP0020</NoWarn> <!--取消实验性提醒,后期注意-->
   </PropertyGroup>
 
 </Project>

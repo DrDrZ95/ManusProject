@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
-
 namespace Agent.Api.Controllers;
 
 /// <summary>

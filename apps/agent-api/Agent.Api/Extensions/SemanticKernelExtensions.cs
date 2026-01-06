@@ -1,11 +1,3 @@
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
-using Microsoft.SemanticKernel.Embeddings;
-using Agent.Core.Services.SemanticKernel;
-using Agent.Core.Services.VectorDatabase;
-using Agent.Core.Services.SemanticKernel.Planner;
-
 namespace Agent.Api.Extensions;
 
 /// <summary>

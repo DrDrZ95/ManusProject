@@ -1,9 +1,3 @@
-using Microsoft.Extensions.Http.Resilience;
-using Polly;
-using Polly.CircuitBreaker;
-using Polly.Extensions.Http;
-using System.Diagnostics;
-
 namespace Agent.Core.Gateway;
 
 /// <summary>

@@ -1,7 +1,5 @@
 using Microsoft.SemanticKernel;
 using System.ComponentModel;
-using Npgsql;
-using Microsoft.Extensions.Logging;
 
 namespace Agent.Application.Services.SemanticKernel.Planner;
 

@@ -1,6 +1,3 @@
-using Agent.Core.Services.VectorDatabase;
-using Agent.Core.Services.SemanticKernel;
-
 namespace Agent.Application.Services.RAG;
 
 /// <summary>

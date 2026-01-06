@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 namespace Agent.Application.Services;
 
 /// <summary>

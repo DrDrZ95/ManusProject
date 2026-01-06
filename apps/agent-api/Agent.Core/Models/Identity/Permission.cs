@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Agent.Core.Models.Identity;
 
 /// <summary>

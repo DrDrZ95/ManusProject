@@ -1,5 +1,3 @@
-using Yarp.ReverseProxy.Configuration;
-
 namespace Agent.Core.Gateway;
 
 /// <summary>

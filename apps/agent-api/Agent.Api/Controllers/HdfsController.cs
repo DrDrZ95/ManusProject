@@ -1,7 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
-using System.Text;
-using Agent.Core.Services.FileUpload;
-
 namespace Agent.Api.Controllers;
 
 /// <summary>

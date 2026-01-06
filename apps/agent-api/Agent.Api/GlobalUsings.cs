@@ -1,5 +1,3 @@
-global using Agent.Api;
-global using Agent.Api.Controllers;
 global using Agent.Api.Extensions;
 
 global using Agent.Core;
@@ -7,14 +5,13 @@ global using Agent.Core.Authorization;
 global using Agent.Core.Data;
 global using Agent.Core.Data.Entities;
 global using Agent.Core.Data.Repositories;
-global using Agent.Core.Extensions;
 global using Agent.Core.eBPF.Detective;
 global using Agent.Core.Gateway;
-global using Agent.Core.Hubs;
 global using Agent.Core.Identity;
 global using Agent.Core.Models.Identity;
+
+global using Agent.Application.Hubs;
 global using Agent.Application.Services;
-global using Agent.Application.Services.Authorization;
 global using Agent.Application.Services.Finetune;
 global using Agent.Application.Services.FileUpload;
 global using Agent.Application.Services.Hdfs;
@@ -52,14 +49,17 @@ global using Microsoft.Extensions.Diagnostics.HealthChecks;
 global using Microsoft.Extensions.Options;
 global using Microsoft.SemanticKernel;
 global using Microsoft.SemanticKernel.ChatCompletion;
-global using Microsoft.SemanticKernel.Connectors.OpenAI;
 global using Microsoft.SemanticKernel.Embeddings;
-global using ModelContextProtocol.Protocol;
 
 
-global using System.Diagnostics;
-global using System.Reflection;
+global using System.Net;
 global using System.Text;
+global using System.Text.Json;
+global using System.Diagnostics;
+global using System.ComponentModel;
+global using System.ComponentModel.DataAnnotations;
+global using System.Reflection;
+
 
 global using Asp.Versioning;
 global using Swashbuckle.AspNetCore.SwaggerGen;

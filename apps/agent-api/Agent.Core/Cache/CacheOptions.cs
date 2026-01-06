@@ -1,5 +1,3 @@
-using System;
-
 namespace Agent.Core.Cache;
 
 /// <summary>

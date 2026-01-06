@@ -1,7 +1,3 @@
-using System.Data;
-using System.Data.Common;
-using Microsoft.Extensions.Logging;
-
 namespace Agent.Application.Services;
 
 /// <summary>

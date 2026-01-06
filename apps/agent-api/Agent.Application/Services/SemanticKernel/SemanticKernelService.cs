@@ -1,12 +1,7 @@
-using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Agent.Core.Cache;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Embeddings;
-using Microsoft.Extensions.Logging;
-using Agent.Core.Services.VectorDatabase;
 using System.Runtime.CompilerServices;
-using Agent.Core.Services.SemanticKernel.Planner;
 
 namespace Agent.Application.Services.SemanticKernel;
 

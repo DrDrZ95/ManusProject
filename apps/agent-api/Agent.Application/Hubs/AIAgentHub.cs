@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
-
 namespace Agent.Application.Hubs;
 
 /// <summary>

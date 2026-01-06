@@ -1,5 +1,3 @@
-using System;
-
 namespace Agent.Application.Services.VectorDatabase;
 
 /// <summary>

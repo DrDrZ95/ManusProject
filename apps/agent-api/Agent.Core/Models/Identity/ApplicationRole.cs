@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Identity;
-
 namespace Agent.Core.Models.Identity;
 
 /// <summary>

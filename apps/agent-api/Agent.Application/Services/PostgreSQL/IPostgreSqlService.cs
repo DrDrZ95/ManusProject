@@ -1,10 +1,6 @@
-using Agent.Core.Models;
-using System.Threading.Tasks;
+namespace Agent.Application.Services.PostgreSQL;
 
-namespace Agent.Application.Services.PostgreSQL
+public interface IPostgreSqlService
 {
-    public interface IPostgreSqlService
-    {
-        Task AddMetricEntryAsync(MetricEntry metricEntry);
-    }
+    Task AddMetricEntryAsync(MetricEntry metricEntry);
 }

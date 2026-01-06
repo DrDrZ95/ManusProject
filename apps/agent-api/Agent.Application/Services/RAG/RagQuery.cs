@@ -1,6 +1,5 @@
 namespace Agent.Application.Services.RAG;
 
-
 /// <summary>
 /// RAG query for hybrid retrieval
 /// 用于混合检索的RAG查询

@@ -1,6 +1,4 @@
-using Agent.Core.Models.Identity;
-
-namespace Agent.Application.Services.Authorization;
+namespace Agent.Core.Authorization;
 
 /// <summary>
 /// Permission service interface for managing user and role permissions

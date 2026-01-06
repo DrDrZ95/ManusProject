@@ -1,6 +1,5 @@
 namespace Agent.Application.Services.RAG;
 
-
 /// <summary>
 /// RAG document chunk for granular retrieval
 /// 用于细粒度检索的RAG文档块

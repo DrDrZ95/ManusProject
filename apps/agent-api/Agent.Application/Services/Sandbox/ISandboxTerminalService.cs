@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace Agent.Application.Services.Sandbox;
 
 /// <summary>

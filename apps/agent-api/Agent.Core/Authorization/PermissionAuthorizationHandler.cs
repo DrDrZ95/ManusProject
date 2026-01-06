@@ -1,8 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
-using Agent.Core.Authorization;
-
-namespace Agent.Application.Authorization;
+namespace Agent.Core.Authorization;
 
 /// <summary>
 /// Authorization handler for permission-based authorization

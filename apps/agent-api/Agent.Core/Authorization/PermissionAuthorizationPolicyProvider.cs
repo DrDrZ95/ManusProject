@@ -1,7 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Options;
-
-namespace Agent.Application.Authorization;
+namespace Agent.Core.Authorization;
 
 /// <summary>
 /// Custom authorization policy provider for permission-based authorization

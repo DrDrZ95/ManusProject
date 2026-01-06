@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Http;
-
 namespace Agent.Application.Services.FileUpload;
 
 /// <summary>

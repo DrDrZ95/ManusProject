@@ -1,8 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
-using Agent.Core.Services.Finetune;
-using Agent.Core.Data.Entities;
-using Agent.Core.Services.Telemetry;
-
 namespace Agent.Api.Controllers;
 
 /// <summary>

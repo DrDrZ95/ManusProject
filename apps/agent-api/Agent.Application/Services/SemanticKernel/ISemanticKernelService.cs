@@ -1,7 +1,3 @@
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Embeddings;
-
 namespace Agent.Application.Services.SemanticKernel;
 
 /// <summary>

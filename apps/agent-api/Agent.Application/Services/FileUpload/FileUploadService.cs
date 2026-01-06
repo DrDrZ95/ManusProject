@@ -1,8 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using System.Text.RegularExpressions;
-using System.IO;
-using Microsoft.Extensions.Logging;
-
 namespace Agent.Application.Services.FileUpload;
 
 /// <summary>

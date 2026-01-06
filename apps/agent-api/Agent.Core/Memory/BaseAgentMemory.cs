@@ -1,5 +1,3 @@
-using Agent.Core.Memory.Interfaces;
-
 namespace Agent.Core.Memory;
 
 /// <summary>
