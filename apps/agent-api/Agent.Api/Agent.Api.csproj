@@ -23,8 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Agent.Core\Agent.Core.csproj" />
     <ProjectReference Include="..\Agent.McpGateway\Agent.McpGateway.csproj" />
+    <ProjectReference Include="..\Agent.Application\Agent.Application.csproj" />
   </ItemGroup>
 
 </Project>

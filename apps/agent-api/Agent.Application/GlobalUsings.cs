@@ -10,8 +10,22 @@ global using Agent.Core.Identity;
 
 global using Agent.Core.Models;
 global using Agent.Core.Models.Identity;
-
 global using Agent.Core.Workflow;
+
+global using Agent.Application.Services;
+global using Agent.Application.Services.Authorization;
+global using Agent.Application.Services.Finetune;
+global using Agent.Application.Services.Hdfs;
+global using Agent.Application.Services.Multimodal;
+global using Agent.Application.Services.Prometheus;
+global using Agent.Application.Services.Prompts;
+global using Agent.Application.Services.RAG;
+global using Agent.Application.Services.Sandbox;
+global using Agent.Application.Services.SemanticKernel;
+global using Agent.Application.Services.SemanticKernel.Planner;
+global using Agent.Application.Services.Telemetry;
+global using Agent.Application.Services.UserInput;
+global using Agent.Application.Services.VectorDatabase;
 
 global using HealthChecks.NpgSql;
 
@@ -33,10 +47,6 @@ global using System.Threading.Tasks;
 global using System.Net.Http.Json;
 global using System.ComponentModel.DataAnnotations;
 global using System.ComponentModel.DataAnnotations.Schema;
-
-//可能存在功能不完善,不使用但保留
-//global using ChromaDB.Client;
-//global using ChromaDB.Client.Models;
 
 global using ModelContextProtocol;
 global using ModelContextProtocol.Protocol;
@@ -60,25 +70,3 @@ global using Prometheus;
 
 global using PromCounter   = Prometheus.Counter;
 global using PromHistogram = Prometheus.Histogram;
-
-namespace Agent.Core;
-
-/// <summary>
-/// Chat message for conversation history
-/// 对话历史的聊天消息
-/// </summary>
-public class ChatMessage
-{
-    /// <summary>
-    /// Message role (system, user, assistant) - 消息角色（系统、用户、助手）
-    /// </summary>
-    public string Role { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Message content - 消息内容
-    /// </summary>
-    public string Content { get; set; } = string.Empty;
-    
-    public Dictionary<string, object>? Metadata { get; set; }
-}
-
