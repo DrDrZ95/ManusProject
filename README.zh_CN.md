@@ -140,17 +140,11 @@ ManusProject 是一个企业级 AI 代理框架，融合了最先进的大语言
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃                        Layer 1: Presentation                          ┃
 ┃  ┌─────────────────────────────────────────────────────────────┐     ┃
-┃  │  React 18+ Application Interface                            │     ┃
+┃  │  React 18+ Application Interface (agent-ui)                  │     ┃
 ┃  │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────┐  │     ┃
 ┃  │  │  Dashboard       │  │  Workflow        │  │  Task    │  │     ┃
 ┃  │  │  - Analytics     │  │  - Editor        │  │  - Board │  │     ┃
 ┃  │  │  - Overview      │  │  - Visualizer    │  │  - Cards │  │     ┃
-┃  │  └──────────────────┘  └──────────────────┘  └──────────┘  │     ┃
-┃  │                                                               │     ┃
-┃  │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────┐  │     ┃
-┃  │  │  AI Chat         │  │  Settings        │  │  Search  │  │     ┃
-┃  │  │  - LLM Prompt    │  │  - Profile       │  │  - Query │  │     ┃
-┃  │  │  - Response      │  │  - Preferences   │  │  - Filter│  │     ┃
 ┃  │  └──────────────────┘  └──────────────────┘  └──────────┘  │     ┃
 ┃  └─────────────────────────────────────────────────────────────┘     ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -165,44 +159,124 @@ ManusProject 是一个企业级 AI 代理框架，融合了最先进的大语言
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃           业务逻辑层 (Application Layer)                      ┃
 ┃                      ASP.NET Core Backend                     ┃
+┃                                                                ┃
 ┃  ┌──────────────────────────────────────────────────────┐   ┃
-┃  │  Agent.Api (启动和配置)                              │   ┃
+┃  │  Agent.Api (启动、配置、路由)                         │   ┃
 ┃  │  ├─ Program.cs: 应用入口点和 DI 配置               │   ┃
 ┃  │  ├─ GlobalUsings.cs: 全局命名空间声明              │   ┃
-┃  │  ├─ Controllers/*: API 路由端点                    │   ┃
-┃  │  └─ Extensions/*: 模块化扩展配置                  │   ┃
+┃  │  ├─ Controllers: REST API 路由端点                │   ┃
+┃  │  └─ Extensions: 模块化服务注册和配置              │   ┃
 ┃  └──────────────────────────────────────────────────────┘   ┃
+┃                                                                ┃
 ┃  ┌──────────────────────────────────────────────────────┐   ┃
-┃  │  Agent.Core (核心业务逻辑)                          │   ┃
-┃  │  ├─ Authorization/          - 授权策略和处理器      │   ┃
-┃  │  ├─ Controllers/            - API 端点实现         │   ┃
-┃  │  ├─ Data/                   - EF Core DbContext    │   ┃
-┃  │  ├─ eBPF/                   - 系统检测模块        │   ┃
-┃  │  ├─ Extensions/             - 模块化配置扩展      │   ┃
-┃  │  ├─ Gateway/                - YARP 网关配置       │   ┃
-┃  │  ├─ Hubs/                   - SignalR 实时枢纽    │   ┃
-┃  │  └─ Identity/               - ASP.NET Core Identity│   ┃
+┃  │  Agent.Application (应用编排和业务流程)              │   ┃
+┃  │  ├─ DTOs: 请求/响应数据传输对象                   │   ┃
+┃  │  ├─ Mappers: 实体和 DTO 映射逻辑                  │   ┃
+┃  │  ├─ Validators: 业务规则验证                       │   ┃
+┃  │  ├─ Commands: CQRS 命令处理                        │   ┃
+┃  │  ├─ Queries: CQRS 查询处理                         │   ┃
+┃  │  ├─ Events: 领域事件定义                           │   ┃
+┃  │  └─ Behaviors: 管道行为和拦截                     │   ┃
 ┃  └──────────────────────────────────────────────────────┘   ┃
+┃                                                                ┃
 ┃  ┌──────────────────────────────────────────────────────┐   ┃
-┃  │  Agent.McpGateway (AI 编排引擎)                     │   ┃
-┃  │  ├─ SemanticKernelService     - LLM 集成和编排    │   ┃
-┃  │  ├─ RAGService                - 检索增强生成      │   ┃
-┃  │  ├─ WorkflowService           - 工作流编排        │   ┃
-┃  │  ├─ SandboxService            - 隔离执行         │   ┃
-┃  │  ├─ PromptService             - 提示管理         │   ┃
-┃  │  ├─ WebSearchService          - Web 搜索集成     │   ┃
-┃  │  ├─ VectorDatabaseService     - 向量库操作       │   ┃
-┃  │  ├─ FinetuneService           - 模型微调         │   ┃
-┃  │  ├─ TelemetryService          - OpenTelemetry   │   ┃
-┃  │  ├─ UserInputService          - 用户输入处理     │   ┃
-┃  │  └─ FileUploadService         - 文件上传和处理   │   ┃
+┃  │  Agent.Core (核心业务逻辑 - Domain Layer)           │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ 身份认证与授权 (Identity & Authorization)        │   ┃
+┃  │    ├─ Authorization Handlers (角色、策略、声明)      │   ┃
+┃  │    ├─ Authorization Policies (权限规则)             │   ┃
+┃  │    └─ Identity Services (用户、角色管理)            │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ 工作流与任务 (Workflow & Task Management)        │   ┃
+┃  │    ├─ WorkflowService (工作流编排)                 │   ┃
+┃  │    ├─ TaskService (任务管理)                        │   ┃
+┃  │    ├─ StateManager (状态跟踪)                       │   ┃
+┃  │    └─ ExecutionContext (执行上下文)                │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ 系统监控与检测 (System Monitoring)              │   ┃
+┃  │    ├─ eBPF Services (进程监控)                     │   ┃
+┃  │    ├─ SecurityDetector (威胁检测)                  │   ┃
+┃  │    └─ HealthChecker (健康检查)                     │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ 数据访问层 (Data Access & Persistence)          │   ┃
+┃  │    ├─ Entity Models (数据实体)                      │   ┃
+┃  │    ├─ DbContext (EF Core 上下文)                   │   ┃
+┃  │    ├─ Repositories (通用仓储模式)                  │   ┃
+┃  │    └─ Migrations (数据库迁移)                       │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ 实时通信 (Real-Time Communication)              │   ┃
+┃  │    ├─ SignalR Hubs (实时消息推送)                  │   ┃
+┃  │    ├─ NotificationService (通知服务)               │   ┃
+┃  │    └─ ConnectionManager (连接管理)                │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ 网关与路由 (Gateway & Routing)                  │   ┃
+┃  │    ├─ YARP Configuration (YARP 配置)              │   ┃
+┃  │    ├─ RouteService (路由服务)                      │   ┃
+┃  │    └─ CircuitBreaker (熔断器模式)                  │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ 异常与日志 (Exception & Logging)                │   ┃
+┃  │    ├─ Exception Handlers (异常处理)                │   ┃
+┃  │    ├─ Logging Middleware (日志中间件)              │   ┃
+┃  │    └─ Correlation ID (关联 ID)                     │   ┃
+┃  └──────────────────────────────────────────────────────┘   ┃
+┃                                                                ┃
+┃  ┌──────────────────────────────────────────────────────┐   ┃
+┃  │  Agent.McpGateway (AI 编排引擎 - AI Orchestration)  │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ LLM 集成与管理 (LLM Integration & Management)    │   ┃
+┃  │    ├─ SemanticKernelService (SK 封装)              │   ┃
+┃  │    ├─ ModelRouter (模型路由)                        │   ┃
+┃  │    ├─ PluginManager (插件管理)                      │   ┃
+┃  │    └─ PromptOptimizer (提示优化)                    │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ 知识库与 RAG (Knowledge Base & RAG)              │   ┃
+┃  │    ├─ RagService (RAG 核心服务)                    │   ┃
+┃  │    ├─ DocumentProcessor (文档处理)                 │   ┃
+┃  │    ├─ EmbeddingGenerator (向量生成)                │   ┃
+┃  │    ├─ VectorDatabaseService (向量库操作)           │   ┃
+┃  │    └─ SimilaritySearcher (相似度搜索)              │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ 工作流编排 (Workflow Orchestration)              │   ┃
+┃  │    ├─ WorkflowService (工作流引擎)                 │   ┃
+┃  │    ├─ WorkflowExecutor (执行器)                    │   ┃
+┃  │    ├─ WorkflowParser (解析器)                      │   ┃
+┃  │    └─ StateManager (状态管理)                       │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ 提示与模板 (Prompt Engineering)                 │   ┃
+┃  │    ├─ PromptService (提示管理)                     │   ┃
+┃  │    ├─ TemplateEngine (模板引擎)                    │   ┃
+┃  │    ├─ VariableResolver (变量解析)                  │   ┃
+┃  │    └─ PromptCache (提示缓存)                        │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ 沙箱与隔离执行 (Sandbox & Isolated Execution)    │   ┃
+┃  │    ├─ SandboxService (沙箱服务)                    │   ┃
+┃  │    ├─ ProcessExecutor (进程执行)                   │   ┃
+┃  │    ├─ EnvironmentManager (环境管理)                │   ┃
+┃  │    └─ SecurityManager (安全隔离)                   │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ 搜索与集成 (Search & Integration)                │   ┃
+┃  │    ├─ WebSearchService (Web 搜索)                  │   ┃
+┃  │    ├─ McpTools (MCP 工具集)                        │   ┃
+┃  │    ├─ FileUploadService (文件管理)                 │   ┃
+┃  │    └─ UserInputService (用户输入)                  │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ 模型微调 (Model Fine-Tuning)                     │   ┃
+┃  │    ├─ FinetuneService (微调服务)                   │   ┃
+┃  │    ├─ DatasetPreparer (数据集准备)                 │   ┃
+┃  │    ├─ ModelTrainer (模型训练)                      │   ┃
+┃  │    └─ MetricsCalculator (指标计算)                │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ 可观测性 (Observability)                         │   ┃
+┃  │    ├─ TelemetryService (遥测服务)                 │   ┃
+┃  │    ├─ MetricsCollector (指标收集)                 │   ┃
+┃  │    └─ TraceExporter (追踪导出)                     │   ┃
 ┃  └──────────────────────────────────────────────────────┘   ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
                                     ↕
           ┌───────────────────────┼───────────────────┐
           │                       │                   │
     ┌─────▼──────┐        ┌──────▼─────┐    ┌─────▼──────┐
-    │ PostgreSQL │        │  ChromaDB   │    │  外部服务   │
+    │ PostgreSQL │        │  ChromaDB   │    │ 外部服务   │
     │ (元数据)   │        │  (向量)     │    │            │
     │            │        │             │    │ - OpenAI   │
     │ - 用户     │        │ - 嵌入向量  │    │ - Azure AI  │
@@ -220,8 +294,8 @@ ManusProject 是一个企业级 AI 代理框架，融合了最先进的大语言
 - 每层可独立测试和维护
 
 #### 🔄 数据流向
-1. **请求流向**：表现层 → 网关 → 业务层 → 数据层 → 存储
-2. **响应流向**：存储 → 数据层 → 业务层 → 网关 → 表现层
+1. **请求流向**：表现层 → 网关 → 应用层 → 业务层 → 数据层 → 存储
+2. **响应流向**：存储 → 数据层 → 业务层 → 应用层 → 网关 → 表现层
 3. **通知流向**：SignalR Hub → 网关 → 表现层 (实时推送)
 
 #### 🛡️ 横切关注点
@@ -281,561 +355,487 @@ Redis            6.0+ (缓存加速)
 
 ## 📁 项目结构详解
 
-### 完整项目树结构
+### apps/ - 应用程序代码
 
 ```
-ManusProject/                                 # 📦 项目根目录
-│
-├─ README.md                                  # 📄 英文文档入口
-├─ README.zh_CN.md                            # 📄 中文文档入口
-├─ .gitignore                                 # 🚫 Git 忽略规则
-├─ LICENSE                                    # 📜 MIT 许可证
-├─ .editorconfig                              # 🎯 编辑器配置
-│
-├─ apps/                                      # 💼 应用程序代码
+apps/
+├─ agent-api/                              # 🔧 后端 API 服务
+│  ├─ Agent.Api/                           # 🎯 应用启动和配置
+│  │  ├─ Controllers/
+│  │  │  ├─ HealthCheckController.cs       # 健康检查
+│  │  │  ├─ WorkflowController.cs          # 工作流管理
+│  │  │  ├─ TaskController.cs              # 任务管理
+│  │  │  ├─ AIController.cs                # AI/LLM 操作
+│  │  │  ├─ SearchController.cs            # 搜索功能
+│  │  │  └─ AdminController.cs             # 管理员功能
+│  │  ├─ Extensions/
+│  │  │  ├─ ServiceCollectionExtensions.cs # DI 扩展
+│  │  │  ├─ AuthenticationExtensions.cs    # 认证配置
+│  │  │  ├─ CorsExtensions.cs              # CORS 配置
+│  │  │  └─ MiddlewareExtensions.cs        # 中间件扩展
+│  │  ├─ GlobalUsings.cs                   # 全局 using
+│  │  ├─ Program.cs                        # 启动入口
+│  │  ├─ Agent.Api.csproj
+│  │  ├─ appsettings.json
+│  │  ├─ appsettings.Development.json
+│  │  └─ appsettings.Production.json
 │  │
-│  ├─ agent-api/                              # 🔧 后端 API 服务
+│  ├─ Agent.Application/                   # 💼 应用编排和流程
+│  │  ├─ DTOs/                             # 📦 数据传输对象
+│  │  │  ├─ Request/
+│  │  │  │  ├─ CreateWorkflowDto.cs
+│  │  │  │  ├─ CreateTaskDto.cs
+│  │  │  │  └─ UpdateWorkflowDto.cs
+│  │  │  └─ Response/
+│  │  │     ├─ WorkflowDto.cs
+│  │  │     ├─ TaskDto.cs
+│  │  │     └─ ApiResponseDto.cs
 │  │  │
-│  │  ├─ Agent.Api/                           # 🎯 应用启动和配置
-│  │  │  ├─ Controllers/
-│  │  │  │  ├─ HealthCheckController.cs       # 健康检查
-│  │  │  │  ├─ WorkflowController.cs          # 工作流管理
-│  │  │  │  ├─ TaskController.cs              # 任务管理
-│  │  │  │  ├─ AIController.cs                # AI/LLM 操作
-│  │  │  │  ├─ SearchController.cs            # 搜索功能
-│  │  │  │  └─ AdminController.cs             # 管理员功能
-│  │  │  │
-│  │  │  ├─ Extensions/
-│  │  │  │  ├─ ServiceCollectionExtensions.cs # DI 扩展
-│  │  │  │  ├─ AuthenticationExtensions.cs    # 认证配置
-│  │  │  │  ├─ CorsExtensions.cs              # CORS 配置
-│  │  │  │  └─ MiddlewareExtensions.cs        # 中间件扩展
-│  │  │  │
-│  │  │  ├─ GlobalUsings.cs                   # 全局 using
-│  │  │  ├─ Program.cs                        # 启动入口
-│  │  │  ├─ Agent.Api.csproj                  # 项目文件
-│  │  │  ├─ appsettings.json                  # 默认配置
-│  │  │  ├─ appsettings.Development.json      # 开发配置
-│  │  │  └─ appsettings.Production.json       # 生产配置
+│  │  ├─ Mappers/                          # 🗺️ 实体映射
+│  │  │  ├─ WorkflowMappingProfile.cs
+│  │  │  ├─ TaskMappingProfile.cs
+│  │  │  └─ UserMappingProfile.cs
 │  │  │
-│  │  ├─ Agent.Core/                          # 💎 核心业务逻辑
-│  │  │  │
-│  │  │  ├─ Authorization/                    # 🔐 授权模块
-│  │  │  │  ├─ Handlers/
-│  │  │  │  │  ├─ RoleBasedHandler.cs         # 角色授权
-│  │  │  │  │  ├─ PolicyBasedHandler.cs       # 策略授权
-│  │  │  │  │  └─ ClaimBasedHandler.cs        # 声明授权
-│  │  │  │  ├─ Policies/
-│  │  │  │  │  ├─ AdminOnlyPolicy.cs
-│  │  │  │  │  ├─ WorkflowOwnerPolicy.cs
-│  │  │  │  │  └─ RateLimitPolicy.cs
-│  │  │  │  └─ Requirements/
-│  │  │  │     └─ CustomRequirement.cs
-│  │  │  │
-│  │  │  ├─ Controllers/                      # 📍 API 端点
-│  │  │  │  ├─ BaseController.cs              # 基类
-│  │  │  │  ├─ WorkflowController.cs
-│  │  │  │  ├─ TaskController.cs
-│  │  │  │  ├─ AIController.cs
-│  │  │  │  ├─ RAGController.cs
-│  │  │  │  ├─ SearchController.cs
-│  │  │  │  └─ AdminController.cs
-│  │  │  │
-│  │  │  ├─ Data/                             # 💾 数据访问层
-│  │  │  │  ├─ Contexts/
-│  │  │  │  │  ├─ ApplicationDbContext.cs     # 主 DbContext
-│  │  │  │  │  └─ SeedData.cs                 # 初始数据
-│  │  │  │  │
-│  │  │  │  ├─ Entities/                      # 📦 数据实体
-│  │  │  │  │  ├─ User.cs
-│  │  │  │  │  ├─ Workflow.cs
-│  │  │  │  │  ├─ Task.cs
-│  │  │  │  │  ├─ Document.cs
-│  │  │  │  │  ├─ AuditLog.cs
-│  │  │  │  │  └─ Attachment.cs
-│  │  │  │  │
-│  │  │  │  ├─ Repositories/                  # 🗂️ 仓储实现
-│  │  │  │  │  ├─ IRepository.cs              # 泛型接口
-│  │  │  │  │  ├─ Repository.cs               # 基础实现
-│  │  │  │  │  ├─ WorkflowRepository.cs
-│  │  │  │  │  ├─ TaskRepository.cs
-│  │  │  │  │  ├─ DocumentRepository.cs
-│  │  │  │  │  └─ UserRepository.cs
-│  │  │  │  │
-│  │  │  │  ├─ Migrations/                    # 📝 EF Core 迁移
-│  │  │  │  │  ├─ 20260107_InitialCreate.cs
-│  │  │  │  │  ├─ 20260110_AddWorkflowTables.cs
-│  │  │  │  │  └─ ApplicationDbContextModelSnapshot.cs
-│  │  │  │  │
-│  │  │  │  └─ Seeds/                         # 🌱 数据种子
-│  │  │  │     └─ DataSeeder.cs
-│  │  │  │
-│  │  │  ├─ eBPF/                             # 🔍 eBPF 监测
-│  │  │  │  ├─ Services/
-│  │  │  │  │  ├─ IEbpfService.cs
-│  │  │  │  │  ├─ EbpfService.cs
-│  │  │  │  │  ├─ ProcessMonitor.cs
-│  │  │  │  │  └─ SecurityDetector.cs
-│  │  │  │  │
-│  │  │  │  ├─ Controllers/
-│  │  │  │  │  └─ EbpfController.cs
-│  │  │  │  │
-│  │  │  │  └─ Scripts/
-│  │  │  │     ├─ process_monitor.c
-│  │  │  │     ├─ network_monitor.c
-│  │  │  │     └─ security_check.c
-│  │  │  │
-│  │  │  ├─ Extensions/                       # 🔧 模块扩展
-│  │  │  │  ├─ ServiceCollectionExtensions.cs
-│  │  │  │  ├─ AuthorizationExtensions.cs
-│  │  │  │  ├─ DataAccessExtensions.cs
-│  │  │  │  └─ TelemetryExtensions.cs
-│  │  │  │
-│  │  │  ├─ Gateway/                          # 🚪 网关配置
-│  │  │  │  ├─ Services/
-│  │  │  │  │  ├─ IRouteService.cs
-│  │  │  │  │  └─ RouteService.cs
-│  │  │  │  │
-│  │  │  │  └─ Configuration/
-│  │  │  │     └─ YarpConfiguration.cs
-│  │  │  │
-│  │  │  ├─ Hubs/                             # 💬 SignalR 枢纽
-│  │  │  │  ├─ IHubClient.cs
-│  │  │  │  ├─ WorkflowHub.cs
-│  │  │  │  ├─ TaskHub.cs
-│  │  │  │  └─ NotificationHub.cs
-│  │  │  │
-│  │  │  ├─ Identity/                         # 👤 身份管理
-│  │  │  │  ├─ ApplicationUser.cs
-│  │  │  │  ├─ ApplicationRole.cs
-│  │  │  │  ├─ IdentityService.cs
-│  │  │  │  ├─ TokenService.cs
-│  │  │  │  └─ JwtOptions.cs
-│  │  │  │
-│  │  │  ├─ Exceptions/                       # ⚠️ 异常处理
-│  │  │  │  ├─ ApplicationException.cs
-│  │  │  │  ├─ BusinessException.cs
-│  │  │  │  ├─ ValidationException.cs
-│  │  │  │  ├─ UnauthorizedException.cs
-│  │  │  │  └─ ResourceNotFoundException.cs
-│  │  │  │
-│  │  │  ├─ Middlewares/                      # 🔌 自定义中间件
-│  │  │  │  ├─ ErrorHandlingMiddleware.cs
-│  │  │  │  ├─ LoggingMiddleware.cs
-│  │  │  │  ├─ CorrelationIdMiddleware.cs
-│  │  │  │  └─ RequestTimingMiddleware.cs
-│  │  │  │
-│  │  │  ├─ Models/                           # 📦 DTO 模型
-│  │  │  │  ├─ Requests/
-│  │  │  │  │  ├─ CreateWorkflowRequest.cs
-│  │  │  │  │  ├─ CreateTaskRequest.cs
-│  │  │  │  │  └─ UpdateWorkflowRequest.cs
-│  │  │  │  │
-│  │  │  │  ├─ Responses/
-│  │  │  │  │  ├─ WorkflowResponse.cs
-│  │  │  │  │  ├─ TaskResponse.cs
-│  │  │  │  │  └─ ApiResponse.cs
-│  │  │  │  │
-│  │  │  │  └─ Constants/
-│  │  │  │     ├─ ErrorCodes.cs
-│  │  │  │     └─ MessageConstants.cs
-│  │  │  │
-│  │  │  ├─ Services/                         # 🛠️ 业务服务
+│  │  ├─ Validators/                       # ✅ 业务验证
+│  │  │  ├─ CreateWorkflowValidator.cs
+│  │  │  ├─ UpdateTaskValidator.cs
+│  │  │  └─ UserInputValidator.cs
+│  │  │
+│  │  ├─ Commands/                         # ⚡ CQRS 命令
+│  │  │  ├─ CreateWorkflowCommand.cs
+│  │  │  ├─ ExecuteTaskCommand.cs
+│  │  │  ├─ UpdateWorkflowCommand.cs
+│  │  │  └─ DeleteWorkflowCommand.cs
+│  │  │
+│  │  ├─ Queries/                          # 🔍 CQRS 查询
+│  │  │  ├─ GetWorkflowQuery.cs
+│  │  │  ├─ ListWorkflowsQuery.cs
+│  │  │  ├─ SearchTasksQuery.cs
+│  │  │  └─ GetUserQuery.cs
+│  │  │
+│  │  ├─ CommandHandlers/                  # 🎯 命令处理器
+│  │  │  ├─ CreateWorkflowCommandHandler.cs
+│  │  │  ├─ ExecuteTaskCommandHandler.cs
+│  │  │  └─ DeleteWorkflowCommandHandler.cs
+│  │  │
+│  │  ├─ QueryHandlers/                    # 📊 查询处理器
+│  │  │  ├─ GetWorkflowQueryHandler.cs
+│  │  │  ├─ ListWorkflowsQueryHandler.cs
+│  │  │  └─ SearchTasksQueryHandler.cs
+│  │  │
+│  │  ├─ Events/                           # 🔔 领域事件
+│  │  │  ├─ WorkflowCreatedEvent.cs
+│  │  │  ├─ TaskCompletedEvent.cs
+│  │  │  └─ WorkflowDeletedEvent.cs
+│  │  │
+│  │  ├─ EventHandlers/                    # 📡 事件处理
+│  │  │  ├─ WorkflowCreatedEventHandler.cs
+│  │  │  └─ TaskCompletedEventHandler.cs
+│  │  │
+│  │  ├─ Behaviors/                        # 🔧 管道行为
+│  │  │  ├─ ValidationBehavior.cs
+│  │  │  ├─ LoggingBehavior.cs
+│  │  │  ├─ CachingBehavior.cs
+│  │  │  └─ PerformanceBehavior.cs
+│  │  │
+│  │  ├─ Specifications/                   # 📋 查询规范
+│  │  │  ├─ WorkflowSpecification.cs
+│  │  │  ├─ TaskSpecification.cs
+│  │  │  └─ UserSpecification.cs
+│  │  │
+│  │  └─ Agent.Application.csproj
+│  │
+│  ├─ Agent.Core/                          # 💎 核心业务逻辑
+│  │  ├─ Authorization/                    # 🔐 授权模块
+│  │  │  ├─ Handlers/
+│  │  │  │  ├─ RoleBasedHandler.cs
+│  │  │  │  ├─ PolicyBasedHandler.cs
+│  │  │  │  └─ ClaimBasedHandler.cs
+│  │  │  ├─ Policies/
+│  │  │  │  ├─ AdminOnlyPolicy.cs
+│  │  │  │  ├─ WorkflowOwnerPolicy.cs
+│  │  │  │  └─ RateLimitPolicy.cs
+│  │  │  └─ Requirements/
+│  │  │     └─ CustomRequirement.cs
+│  │  │
+│  │  ├─ WorkflowAndTask/                  # ⚙️ 工作流与任务
+│  │  │  ├─ Services/
 │  │  │  │  ├─ IWorkflowService.cs
 │  │  │  │  ├─ WorkflowService.cs
 │  │  │  │  ├─ ITaskService.cs
 │  │  │  │  ├─ TaskService.cs
-│  │  │  │  ├─ INotificationService.cs
-│  │  │  │  ├─ NotificationService.cs
-│  │  │  │  └─ ICacheService.cs
-│  │  │  │
-│  │  │  ├─ Agent.Core.csproj                 # 项目文件
-│  │  │  └─ GlobalUsings.cs                   # 全局 using
+│  │  │  │  ├─ StateManager.cs
+│  │  │  │  └─ ExecutionContext.cs
+│  │  │  └─ Models/
+│  │  │     ├─ WorkflowModel.cs
+│  │  │     └─ TaskModel.cs
 │  │  │
-│  │  └─ Agent.McpGateway/                    # 🤖 AI 编排引擎
-│  │     │
-│  │     ├─ Services/                         # 🛠️ AI 核心服务
-│  │     │  │
-│  │     │  ├─ SemanticKernelService/
-│  │     │  │  ├─ ISemanticKernelService.cs
-│  │     │  │  ├─ SemanticKernelService.cs
-│  │     │  │  ├─ PluginManager.cs
-│  │     │  │  ├─ PromptOptimizer.cs
-│  │     │  │  └─ ModelRouter.cs
-│  │     │  │
-│  │     │  ├─ RAGService/
-│  │     │  │  ├─ IRagService.cs
-│  │     │  │  ├─ RagService.cs
-│  │     │  │  ├─ DocumentProcessor.cs
-│  │     │  │  ├─ EmbeddingGenerator.cs
-│  │     │  │  ├─ SimilaritySearcher.cs
-│  │     │  │  └─ ChunkingStrategy.cs
-│  │     │  │
-│  │     │  ├─ WorkflowService/
-│  │     │  │  ├─ IWorkflowService.cs
-│  │     │  │  ├─ WorkflowService.cs
-│  │     │  │  ├─ WorkflowExecutor.cs
-│  │     │  │  ├─ WorkflowParser.cs
-│  │     │  │  ├─ StateManager.cs
-│  │     │  │  └─ ExecutionContext.cs
-│  │     │  │
-│  │     │  ├─ SandboxService/
-│  │     │  │  ├─ ISandboxService.cs
-│  │     │  │  ├─ SandboxService.cs
-│  │     │  │  ├─ ProcessExecutor.cs
-│  │     │  │  ├─ EnvironmentManager.cs
-│  │     │  │  └─ SecurityManager.cs
-│  │     │  │
-│  │     │  ├─ PromptService/
-│  │     │  │  ├─ IPromptService.cs
-│  │     │  │  ├─ PromptService.cs
-│  │     │  │  ├─ TemplateEngine.cs
-│  │     │  │  ├─ VariableResolver.cs
-│  │     │  │  └─ PromptCache.cs
-│  │     │  │
-│  │     │  ├─ WebSearchService/
-│  │     │  │  ├─ IWebSearchService.cs
-│  │     │  │  ├─ WebSearchService.cs
-│  │     │  │  ├─ SearXngClient.cs
-│  │     │  │  ├─ SerpApiClient.cs
-│  │     │  │  └─ SearchResultProcessor.cs
-│  │     │  │
-│  │     │  ├─ VectorDatabaseService/
-│  │     │  │  ├─ IVectorDatabaseService.cs
-│  │     │  │  ├─ ChromaDBClient.cs
-│  │     │  │  ├─ EmbeddingCache.cs
-│  │     │  │  ├─ IndexManager.cs
-│  │     │  │  └─ VectorQueryBuilder.cs
-│  │     │  │
-│  │     │  ├─ FinetuneService/
-│  │     │  │  ├─ IFinetuneService.cs
-│  │     │  │  ├─ FinetuneService.cs
-│  │     │  │  ├─ DatasetPreparer.cs
-│  │     │  │  ├─ ModelTrainer.cs
-│  │     │  │  └─ MetricsCalculator.cs
-│  │     │  │
-│  │     │  ├─ TelemetryService/
-│  │     │  │  ├─ ITelemetryService.cs
-│  │     │  │  ├─ OpenTelemetryService.cs
-│  │     │  │  ├─ MetricsCollector.cs
-│  │     │  │  ├─ TraceExporter.cs
-│  │     │  │  └─ HealthChecker.cs
-│  │     │  │
-│  │     │  ├─ UserInputService/
-│  │     │  │  ├─ IUserInputService.cs
-│  │     │  │  ├─ UserInputService.cs
-│  │     │  │  ├─ InputValidator.cs
-│  │     │  │  ├─ ContextAnalyzer.cs
-│  │     │  │  └─ IntentClassifier.cs
-│  │     │  │
-│  │     │  └─ FileUploadService/
-│  │     │     ├─ IFileUploadService.cs
-│  │     │     ├─ FileUploadService.cs
-│  │     │     ├─ FileValidator.cs
-│  │     │     ├─ StorageManager.cs
-│  │     │     └─ VirusScanner.cs
-│  │     │
-│  │     ├─ McpTools/                         # 🔗 MCP 工具
-│  │     │  ├─ IMcpTool.cs
-│  │     │  ├─ MusicTool.cs
-│  │     │  ├─ WeatherTool.cs
-│  │     │  ├─ CustomTool.cs
-│  │     │  └─ ToolRegistry.cs
-│  │     │
-│  │     ├─ Models/                           # 📦 数据模型
-│  │     │  ├─ WorkflowModel.cs
-│  │     │  ├─ TaskModel.cs
-│  │     │  ├─ RAGQuery.cs
-│  │     │  ├─ SearchResult.cs
-│  │     │  ├─ ExecutionResult.cs
-│  │     │  └─ EmbeddingModel.cs
-│  │     │
-│  │     ├─ WebSearch/                        # 🔍 搜索模块
-│  │     │  ├─ Interfaces/
-│  │     │  │  └─ ISearchProvider.cs
-│  │     │  ├─ Providers/
-│  │     │  │  ├─ SearXngProvider.cs
-│  │     │  │  └─ SerpApiProvider.cs
-│  │     │  └─ Models/
-│  │     │     └─ SearchResult.cs
-│  │     │
-│  │     ├─ Agent.McpGateway.csproj           # 项目文件
-│  │     └─ GlobalUsings.cs
+│  │  ├─ SystemMonitoring/                 # 🔍 系统监控
+│  │  │  ├─ Services/
+│  │  │  │  ├─ IEbpfService.cs
+│  │  │  │  ├─ EbpfService.cs
+│  │  │  │  ├─ ProcessMonitor.cs
+│  │  │  │  ├─ SecurityDetector.cs
+│  │  │  │  └─ HealthChecker.cs
+│  │  │  └─ Scripts/
+│  │  │     ├─ process_monitor.c
+│  │  │     └─ security_check.c
+│  │  │
+│  │  ├─ Data/                             # 💾 数据访问
+│  │  │  ├─ Contexts/
+│  │  │  │  ├─ ApplicationDbContext.cs
+│  │  │  │  └─ SeedData.cs
+│  │  │  ├─ Entities/
+│  │  │  │  ├─ User.cs
+│  │  │  │  ├─ Workflow.cs
+│  │  │  │  ├─ Task.cs
+│  │  │  │  ├─ Document.cs
+│  │  │  │  └─ AuditLog.cs
+│  │  │  ├─ Repositories/
+│  │  │  │  ├─ IRepository.cs
+│  │  │  │  ├─ Repository.cs
+│  │  │  │  ├─ WorkflowRepository.cs
+│  │  │  │  ├─ TaskRepository.cs
+│  │  │  │  └─ DocumentRepository.cs
+│  │  │  ├─ Migrations/
+│  │  │  │  └─ [EF Core 迁移文件]
+│  │  │  └─ Seeds/
+│  │  │     └─ DataSeeder.cs
+│  │  │
+│  │  ├─ RealTimeComm/                     # ⚡ 实时通信
+│  │  │  ├─ Hubs/
+│  │  │  │  ├─ IHubClient.cs
+│  │  │  │  ├─ WorkflowHub.cs
+│  │  │  │  ├─ TaskHub.cs
+│  │  │  │  └─ NotificationHub.cs
+│  │  │  └─ Services/
+│  │  │     ├─ INotificationService.cs
+│  │  │     ├─ NotificationService.cs
+│  │  │     └─ ConnectionManager.cs
+│  │  │
+│  │  ├─ Gateway/                          # 🚪 网关与路由
+│  │  │  ├─ Services/
+│  │  │  │  ├─ IRouteService.cs
+│  │  │  │  └─ RouteService.cs
+│  │  │  └─ Configuration/
+│  │  │     ├─ YarpConfiguration.cs
+│  │  │     └─ CircuitBreakerPolicy.cs
+│  │  │
+│  │  ├─ ExceptionAndLogging/              # ⚠️ 异常与日志
+│  │  │  ├─ Handlers/
+│  │  │  │  ├─ GlobalExceptionHandler.cs
+│  │  │  │  ├─ ValidationExceptionHandler.cs
+│  │  │  │  └─ BusinessExceptionHandler.cs
+│  │  │  ├─ Exceptions/
+│  │  │  │  ├─ ApplicationException.cs
+│  │  │  │  ├─ BusinessException.cs
+│  │  │  │  ├─ ValidationException.cs
+│  │  │  │  └─ ResourceNotFoundException.cs
+│  │  │  ├─ Middlewares/
+│  │  │  │  ├─ ErrorHandlingMiddleware.cs
+│  │  │  │  ├─ LoggingMiddleware.cs
+│  │  │  │  ├─ CorrelationIdMiddleware.cs
+│  │  │  │  └─ RequestTimingMiddleware.cs
+│  │  │  └─ Logging/
+│  │  │     ├─ ILogger.cs
+│  │  │     └─ LoggerImpl.cs
+│  │  │
+│  │  ├─ Identity/                         # 👤 身份管理
+│  │  │  ├─ Entities/
+│  │  │  │  ├─ ApplicationUser.cs
+│  │  │  │  ├─ ApplicationRole.cs
+│  │  │  │  └─ ApplicationUserRole.cs
+│  │  │  ├─ Services/
+│  │  │  │  ├─ IIdentityService.cs
+│  │  │  │  ├─ IdentityService.cs
+│  │  │  │  ├─ ITokenService.cs
+│  │  │  │  └─ TokenService.cs
+│  │  │  └─ Options/
+│  │  │     ├─ JwtOptions.cs
+│  │  │     └─ IdentityOptions.cs
+│  │  │
+│  │  ├─ Extensions/
+│  │  │  ├─ ServiceCollectionExtensions.cs
+│  │  │  ├─ AuthorizationExtensions.cs
+│  │  │  ├─ DataAccessExtensions.cs
+│  │  │  └─ TelemetryExtensions.cs
+│  │  │
+│  │  └─ Agent.Core.csproj
 │  │
-│  └─ agent-ui/                               # 🎨 React 前端
+│  └─ Agent.McpGateway/                    # 🤖 AI 编排引擎
+│     ├─ LLMIntegration/                    # 🧠 LLM 集成与管理
+│     │  ├─ SemanticKernelService/
+│     │  │  ├─ ISemanticKernelService.cs
+│     │  │  ├─ SemanticKernelService.cs
+│     │  │  ├─ PluginManager.cs
+│     │  │  ├─ PromptOptimizer.cs
+│     │  │  └─ ModelRouter.cs
+│     │  └─ Models/
+│     │     └─ LLMConfig.cs
 │     │
-│     ├─ public/                              # 📊 静态资源
-│     │  ├─ index.html
-│     │  ├─ favicon.ico
-│     │  └─ manifest.json
+│     ├─ KnowledgeBase/                     # 📚 知识库与 RAG
+│     │  ├─ RagService/
+│     │  │  ├─ IRagService.cs
+│     │  │  ├─ RagService.cs
+│     │  │  ├─ DocumentProcessor.cs
+│     │  │  ├─ EmbeddingGenerator.cs
+│     │  │  ├─ SimilaritySearcher.cs
+│     │  │  └─ ChunkingStrategy.cs
+│     │  ├─ VectorDatabase/
+│     │  │  ├─ IVectorDatabaseService.cs
+│     │  │  ├─ ChromaDBClient.cs
+│     │  │  ├─ EmbeddingCache.cs
+│     │  │  ├─ IndexManager.cs
+│     │  │  └─ VectorQueryBuilder.cs
+│     │  └─ Models/
+│     │     ├─ Document.cs
+│     │     └─ Embedding.cs
 │     │
-│     ├─ src/                                 # 💻 源代码
-│     │  ├─ index.tsx                         # 应用入口
-│     │  ├─ App.tsx                           # 根组件
-│     │  ├─ App.css                           # 全局样式
-│     │  │
-│     │  ├─ components/                       # ⚛️ React 组件
-│     │  │  ├─ Layout/
-│     │  │  │  ├─ Header.tsx
-│     │  │  │  ├─ Sidebar.tsx
-│     │  │  │  ├─ Footer.tsx
-│     │  │  │  └─ LayoutWrapper.tsx
-│     │  │  │
-│     │  │  ├─ Workflow/
-│     │  │  │  ├─ WorkflowList.tsx
-│     │  │  │  ├─ WorkflowEditor.tsx
-│     │  │  │  ├─ WorkflowViewer.tsx
-│     │  │  │  └─ WorkflowNode.tsx
-│     │  │  │
-│     │  │  ├─ Task/
-│     │  │  │  ├─ TaskBoard.tsx
-│     │  │  │  ├─ TaskCard.tsx
-│     │  │  │  ├─ TaskModal.tsx
-│     │  │  │  └─ TaskForm.tsx
-│     │  │  │
-│     │  │  ├─ AI/
-│     │  │  │  ├─ ChatBox.tsx
-│     │  │  │  ├─ PromptEditor.tsx
-│     │  │  │  ├─ ResultDisplay.tsx
-│     │  │  │  └─ ModelSelector.tsx
-│     │  │  │
-│     │  │  └─ Common/
-│     │  │     ├─ Button.tsx
-│     │  │     ├─ Modal.tsx
-│     │  │     ├─ Notification.tsx
-│     │  │     ├─ Loading.tsx
-│     │  │     └─ ErrorBoundary.tsx
-│     │  │
-│     │  ├─ pages/                           # 📄 页面
-│     │  │  ├─ Dashboard.tsx
-│     │  │  ├─ Workflows.tsx
-│     │  │  ├─ Tasks.tsx
-│     │  │  ├─ AIChat.tsx
-│     │  │  ├─ Settings.tsx
-│     │  │  ├─ Search.tsx
-│     │  │  ├─ NotFound.tsx
-│     │  │  └─ Unauthorized.tsx
-│     │  │
-│     │  ├─ services/                        # 🔌 API 服务
-│     │  │  ├─ api.ts
-│     │  │  ├─ workflowApi.ts
-│     │  │  ├─ taskApi.ts
-│     │  │  ├─ aiApi.ts
-│     │  │  ├─ searchApi.ts
-│     │  │  └─ authApi.ts
-│     │  │
-│     │  ├─ hooks/                           # 🎣 自定义 Hook
-│     │  │  ├─ useWorkflows.ts
-│     │  │  ├─ useTasks.ts
-│     │  │  ├─ useAuth.ts
-│     │  │  ├─ useSignalR.ts
-│     │  │  ├─ useNotification.ts
-│     │  │  └─ useLocalStorage.ts
-│     │  │
-│     │  ├─ store/                           # 📦 状态管理
-│     │  │  ├─ slices/
-│     │  │  │  ├─ workflowSlice.ts
-│     │  │  │  ├─ taskSlice.ts
-│     │  │  │  ├─ authSlice.ts
-│     │  │  │  ├─ uiSlice.ts
-│     │  │  │  └─ notificationSlice.ts
-│     │  │  └─ store.ts
-│     │  │
-│     │  ├─ styles/                          # 🎨 样式
-│     │  │  ├─ variables.css
-│     │  │  ├─ themes.css
-│     │  │  ├─ notion-ui.css
-│     │  │  ├─ responsive.css
-│     │  │  └─ animations.css
-│     │  │
-│     │  ├─ utils/                           # 🔧 工具函数
-│     │  │  ├─ formatters.ts
-│     │  │  ├─ validators.ts
-│     │  │  ├─ constants.ts
-│     │  │  ├─ storage.ts
-│     │  │  └─ logger.ts
-│     │  │
-│     │  └─ types/                           # 📝 类型定义
-│     │     ├─ workflow.ts
-│     │     ├─ task.ts
-│     │     ├─ api.ts
-│     │     ├─ user.ts
-│     │     └─ index.ts
+│     ├─ WorkflowOrchestration/             # 🔄 工作流编排
+│     │  ├─ WorkflowService/
+│     │  │  ├─ IWorkflowService.cs
+│     │  │  ├─ WorkflowService.cs
+│     │  │  ├─ WorkflowExecutor.cs
+│     │  │  ├─ WorkflowParser.cs
+│     │  │  ├─ StateManager.cs
+│     │  │  └─ ExecutionContext.cs
+│     │  └─ Models/
+│     │     └─ WorkflowDefinition.cs
 │     │
-│     ├─ package.json                        # 📋 依赖
-│     ├─ tsconfig.json                       # ⚙️ TS 配置
-│     ├─ vite.config.ts                      # 🔨 构建配置
-│     ├─ .env.example                        # 🔑 环境变量
-│     └─ .eslintrc.json                      # 📏 Lint 配置
-│
-├─ infra/                                    # 🏗️ 基础设施
-│  │
-│  ├─ docker/                                # 🐳 Docker
-│  │  ├─ Dockerfile.webapi                   # 后端镜像
-│  │  ├─ Dockerfile.react                    # 前端镜像
-│  │  ├─ docker-compose.yml                  # 编排配置
-│  │  ├─ docker-compose.dev.yml              # 开发配置
-│  │  ├─ docker-compose.prod.yml             # 生产配置
-│  │  ├─ nginx.conf                          # 代理配置
-│  │  ├─ nginx.ssl.conf                      # SSL 配置
-│  │  ├─ .dockerignore                       # Docker 忽略
-│  │  └─ examples/
-│  │     ├─ docker-compose.dev.yml
-│  │     └─ docker-compose.prod.yml
-│  │
-│  ├─ kubernetes/                            # ☸️ K8s 清单
-│  │  ├─ namespace.yaml
-│  │  ├─ configmap.yaml
-│  │  ├─ secrets.yaml
-│  │  ├─ deployments.yaml
-│  │  ├─ services.yaml
-│  │  ├─ ingress.yaml
-│  │  ├─ persistentvolumes.yaml
-│  │  ├─ hpa.yaml
-│  │  └─ rbac.yaml
-│  │
-│  ├─ helm/                                  # 📦 Helm 图表
-│  │  └─ manus-project/
-│  │     ├─ Chart.yaml
-│  │     ├─ values.yaml
-│  │     ├─ values.dev.yaml
-│  │     ├─ values.prod.yaml
-│  │     ├─ values.staging.yaml
-│  │     └─ templates/
-│  │        ├─ deployment.yaml
-│  │        ├─ service.yaml
-│  │        ├─ ingress.yaml
-│  │        ├─ configmap.yaml
-│  │        ├─ secrets.yaml
-│  │        └─ hpa.yaml
-│  │
-│  └─ envsetup/                              # 🔧 环境脚本
-│     ├─ install_dependencies.sh
-│     ├─ download_model.sh
-│     ├─ setup_database.sh
-│     ├─ configure_ssl.sh
-│     ├─ health_check.sh
-│     └─ monitoring_setup.sh
-│
-├─ llm/                                      # 🤖 ML 组件
-│  │
-│  ├─ deploy/                                # 🚀 部署
-│  │  ├─ model_server.py
-│  │  ├─ api_examples.py
-│  │  ├─ requirements.txt
-│  │  └─ Dockerfile
-│  │
-│  └─ finetune/                              # 🎓 微调
-│     ├─ train.py
-│     ├─ evaluate.py
-│     ├─ dataset_loader.py
-│     ├─ utils.py
-│     ├─ install_dependencies.sh
-│     └─ config.yaml
-│
-├─ test/                                     # 🧪 测试
-│  │
-│  └─ Agent.Core.Tests/
-│     ├─ Unit/
-│     │  ├─ Services/
-│     │  │  ├─ WorkflowServiceTests.cs
-│     │  │  ├─ RAGServiceTests.cs
-│     │  │  └─ PromptServiceTests.cs
-│     │  ├─ Controllers/
-│     │  │  ├─ WorkflowControllerTests.cs
-│     │  │  └─ TaskControllerTests.cs
-│     │  └─ Repositories/
-│     │     └─ WorkflowRepositoryTests.cs
+│     ├─ PromptEngineering/                 # 📝 提示与模板
+│     │  ├─ PromptService/
+│     │  │  ├─ IPromptService.cs
+│     │  │  ├─ PromptService.cs
+│     │  │  ├─ TemplateEngine.cs
+│     │  │  ├─ VariableResolver.cs
+│     │  │  └─ PromptCache.cs
+│     │  └─ Templates/
+│     │     └─ PromptTemplate.cs
 │     │
-│     ├─ Integration/
-│     │  ├─ ApiIntegrationTests.cs
-│     │  ├─ DatabaseIntegrationTests.cs
-│     │  └─ WorkflowIntegrationTests.cs
+│     ├─ SandboxExecution/                  # 🔒 沙箱隔离执行
+│     │  ├─ SandboxService/
+│     │  │  ├─ ISandboxService.cs
+│     │  │  ├─ SandboxService.cs
+│     │  │  ├─ ProcessExecutor.cs
+│     │  │  ├─ EnvironmentManager.cs
+│     │  │  └─ SecurityManager.cs
+│     │  └─ Policies/
+│     │     └─ SandboxPolicy.cs
 │     │
-│     ├─ MockData/
-│     │  ├─ TestDataFactory.cs
-│     │  └─ MockServices.cs
+│     ├─ SearchAndIntegration/              # 🔍 搜索与集成
+│     │  ├─ WebSearch/
+│     │  │  ├─ IWebSearchService.cs
+│     │  │  ├─ WebSearchService.cs
+│     │  │  ├─ SearXngClient.cs
+│     │  │  ├─ SerpApiClient.cs
+│     │  │  └─ SearchResultProcessor.cs
+│     │  ├─ McpTools/
+│     │  │  ├─ IMcpTool.cs
+│     │  │  ├─ ToolRegistry.cs
+│     │  │  ├─ MusicTool.cs
+│     │  │  ├─ WeatherTool.cs
+│     │  │  └─ CustomTool.cs
+│     │  ├─ FileUpload/
+│     │  │  ├─ IFileUploadService.cs
+│     │  │  ├─ FileUploadService.cs
+│     │  │  ├─ FileValidator.cs
+│     │  │  ├─ StorageManager.cs
+│     │  │  └─ VirusScanner.cs
+│     │  └─ UserInput/
+│     │     ├─ IUserInputService.cs
+│     │     ├─ UserInputService.cs
+│     │     ├─ InputValidator.cs
+│     │     └─ ContextAnalyzer.cs
 │     │
-│     └─ Agent.Core.Tests.csproj
+│     ├─ ModelFinetuning/                   # 🎓 模型微调
+│     │  ├─ FinetuneService/
+│     │  │  ├─ IFinetuneService.cs
+│     │  │  ├─ FinetuneService.cs
+│     │  │  ├─ DatasetPreparer.cs
+│     │  │  ├─ ModelTrainer.cs
+│     │  │  └─ MetricsCalculator.cs
+│     │  └─ Models/
+│     │     └─ FinetuneConfig.cs
+│     │
+│     ├─ Observability/                     # 📊 可观测性
+│     │  ├─ TelemetryService/
+│     │  │  ├─ ITelemetryService.cs
+│     │  │  ├─ OpenTelemetryService.cs
+│     │  │  ├─ MetricsCollector.cs
+│     │  │  └─ TraceExporter.cs
+│     │  └─ Metrics/
+│     │     └─ PerformanceMetrics.cs
+│     │
+│     ├─ Common/
+│     │  ├─ Models/
+│     │  │  ├─ ExecutionResult.cs
+│     │  │  ├─ SearchResult.cs
+│     │  │  └─ EmbeddingModel.cs
+│     │  └─ Extensions/
+│     │     └─ ServiceCollectionExtensions.cs
+│     │
+│     └─ Agent.McpGateway.csproj
 │
-├─ docs/                                     # 📚 文档
-│  │
-│  ├─ README.md
-│  ├─ Architecture/
-│  │  ├─ system-architecture.md
-│  │  ├─ components-overview.md
-│  │  └─ data-flow.md
-│  │
-│  ├─ Setup/
-│  │  ├─ docker-deployment.md
-│  │  ├─ kubernetes-deployment.md
-│  │  ├─ helm-deployment.md
-│  │  └─ configuration-guide.md
-│  │
-│  ├─ Features/
-│  │  ├─ chromadb_integration.md
-│  │  ├─ ebpf_integration.md
-│  │  ├─ identity_signalr_integration.md
-│  │  ├─ mlflow_integration.md
-│  │  ├─ rag_prompt_engineering.md
-│  │  ├─ sandbox_terminal_integration.md
-│  │  ├─ semantic_kernel_examples.md
-│  │  ├─ workflow_integration.md
-│  │  └─ yarp_gateway_integration.md
-│  │
-│  ├─ API/
-│  │  ├─ workflow-api.md
-│  │  ├─ task-api.md
-│  │  ├─ ai-api.md
-│  │  └─ search-api.md
-│  │
-│  ├─ Development/
-│  │  ├─ getting-started.md
-│  │  ├─ development-setup.md
-│  │  ├─ code-structure.md
-│  │  ├─ coding-standards.md
-│  │  └─ testing-guide.md
-│  │
-│  └─ CHANGELOG.md
-│
-├─ .github/                                  # 🔄 CI/CD
-│  ├─ workflows/
-│  │  ├─ build.yml
-│  │  ├─ test.yml
-│  │  ├─ docker-build.yml
-│  │  └─ deploy.yml
-│  │
-│  ├─ ISSUE_TEMPLATE/
-│  │  ├─ bug_report.md
-│  │  ├─ feature_request.md
-│  │  └─ documentation.md
-│  │
-│  └─ PULL_REQUEST_TEMPLATE.md
-│
-└─ LICENSE                                   # 📜 MIT 许可证
+└─ agent-ui/                               # 🎨 React 前端
+   ├─ public/                              # 📊 静态资源
+   │  ├─ index.html
+   │  ├─ favicon.ico
+   │  └─ manifest.json
+   │
+   ├─ src/                                 # 💻 源代码
+   │  ├─ index.tsx
+   │  ├─ App.tsx
+   │  ├─ App.css
+   │  ├─ components/
+   │  │  ├─ Layout/ (Header, Sidebar, Footer, LayoutWrapper)
+   │  │  ├─ Workflow/ (List, Editor, Viewer, Node)
+   │  │  ├─ Task/ (Board, Card, Modal, Form)
+   │  │  ├─ AI/ (ChatBox, PromptEditor, ResultDisplay, ModelSelector)
+   │  │  └─ Common/ (Button, Modal, Notification, Loading, ErrorBoundary)
+   │  ├─ pages/ (Dashboard, Workflows, Tasks, AIChat, Settings, Search)
+   │  ├─ services/ (api, workflowApi, taskApi, aiApi, searchApi, authApi)
+   │  ├─ hooks/ (useWorkflows, useTasks, useAuth, useSignalR, useNotification)
+   │  ├─ store/ (Redux slices, store.ts)
+   │  ├─ styles/ (variables.css, themes.css, notion-ui.css, responsive.css)
+   │  ├─ utils/ (formatters, validators, constants, storage, logger)
+   │  └─ types/ (workflow, task, api, user)
+   │
+   ├─ package.json
+   ├─ tsconfig.json
+   ├─ vite.config.ts
+   ├─ .env.example
+   └─ .eslintrc.json
 ```
 
-### 项目结构关键优化点
+### docs/ - 文档
 
-#### 📌 **模块化优化**
-- ✅ 清晰的分层设计，低耦合高内聚
-- ✅ 每个模块单一职责
-- ✅ 完整的依赖注入支持
+```
+docs/
+├─ README.md                               # 📘 文档首页
+├─ Architecture/                           # 🏗️ 架构文档
+│  ├─ system-architecture.md
+│  ├─ components-overview.md
+│  └─ data-flow.md
+├─ Setup/                                  # 🔧 部署指南
+│  ├─ docker-deployment.md
+│  ├─ kubernetes-deployment.md
+│  ├─ helm-deployment.md
+│  └─ configuration-guide.md
+├─ Features/                               # ✨ 功能文档
+│  ├─ chromadb_integration.md
+│  ├─ ebpf_integration.md
+│  ├─ identity_signalr_integration.md
+│  ├─ mlflow_integration.md
+│  ├─ rag_prompt_engineering.md
+│  ├─ sandbox_terminal_integration.md
+│  ├─ semantic_kernel_examples.md
+│  ├─ workflow_integration.md
+│  └─ yarp_gateway_integration.md
+├─ API/                                    # 📡 API 文档
+│  ├─ workflow-api.md
+│  ├─ task-api.md
+│  ├─ ai-api.md
+│  └─ search-api.md
+├─ Development/                            # 👨‍💻 开发指南
+│  ├─ getting-started.md
+│  ├─ development-setup.md
+│  ├─ code-structure.md
+│  ├─ coding-standards.md
+│  └─ testing-guide.md
+└─ CHANGELOG.md                            # 📝 变更日志
+```
 
-#### 🔄 **服务解耦**
-- ✅ 接口-实现分离（IService + Service）
-- ✅ 工厂模式支持多实现
-- ✅ 异步/并发操作优化
+### infra/ - 基础设施
 
-#### 💾 **数据访问改进**
-- ✅ 通用仓储基类减少重复
-- ✅ 规范化的查询构建
-- ✅ 缓存策略集成
+```
+infra/
+├─ docker/                                 # 🐳 Docker 配置
+│  ├─ Dockerfile.webapi
+│  ├─ Dockerfile.react
+│  ├─ docker-compose.yml
+│  ├─ docker-compose.dev.yml
+│  ├─ docker-compose.prod.yml
+│  ├─ nginx.conf
+│  ├─ nginx.ssl.conf
+│  ├─ .dockerignore
+│  └─ examples/
+│     ├─ docker-compose.dev.yml
+│     └─ docker-compose.prod.yml
+├─ kubernetes/                             # ☸️ K8s 清单
+│  ├─ namespace.yaml
+│  ├─ configmap.yaml
+│  ├─ secrets.yaml
+│  ├─ deployments.yaml
+│  ├─ services.yaml
+│  ├─ ingress.yaml
+│  ├─ persistentvolumes.yaml
+│  ├─ hpa.yaml
+│  └─ rbac.yaml
+├─ helm/                                   # 📦 Helm 图表
+│  └─ manus-project/
+│     ├─ Chart.yaml
+│     ├─ values.yaml
+│     ├─ values.dev.yaml
+│     ├─ values.prod.yaml
+│     ├─ values.staging.yaml
+│     └─ templates/
+│        ├─ deployment.yaml
+│        ├─ service.yaml
+│        ├─ ingress.yaml
+│        ├─ configmap.yaml
+│        ├─ secrets.yaml
+│        └─ hpa.yaml
+└─ envsetup/                               # 🔧 环境脚本
+   ├─ install_dependencies.sh
+   ├─ download_model.sh
+   ├─ setup_database.sh
+   ├─ configure_ssl.sh
+   ├─ health_check.sh
+   └─ monitoring_setup.sh
+```
 
-#### 🔐 **安全增强**
-- ✅ 多层授权机制
-- ✅ 输入验证标准化
-- ✅ 审计日志完整记录
+### llm/ - ML 组件
+
+```
+llm/
+├─ deploy/                                 # 🚀 模型部署
+│  ├─ model_server.py
+│  ├─ api_examples.py
+│  ├─ requirements.txt
+│  └─ Dockerfile
+└─ finetune/                               # 🎓 模型微调
+   ├─ train.py
+   ├─ evaluate.py
+   ├─ dataset_loader.py
+   ├─ utils.py
+   ├─ install_dependencies.sh
+   └─ config.yaml
+```
+
+### test/ - 测试
+
+```
+test/
+└─ Agent.Core.Tests/
+   ├─ Unit/
+   │  ├─ Services/
+   │  │  ├─ WorkflowServiceTests.cs
+   │  │  ├─ RAGServiceTests.cs
+   │  │  └─ PromptServiceTests.cs
+   │  ├─ Controllers/
+   │  │  ├─ WorkflowControllerTests.cs
+   │  │  └─ TaskControllerTests.cs
+   │  └─ Repositories/
+   │     └─ WorkflowRepositoryTests.cs
+   ├─ Integration/
+   │  ├─ ApiIntegrationTests.cs
+   │  ├─ DatabaseIntegrationTests.cs
+   │  └─ WorkflowIntegrationTests.cs
+   ├─ MockData/
+   │  ├─ TestDataFactory.cs
+   │  └─ MockServices.cs
+   └─ Agent.Core.Tests.csproj
+```
 
 ---
 
@@ -1004,23 +1004,30 @@ ELASTICSEARCH_ENDPOINT=http://elasticsearch:9200 (可选)
 - **关键文件**：Program.cs, GlobalUsings.cs
 - **扩展点**：ServiceCollectionExtensions, MiddlewareExtensions
 
+### Agent.Application - 应用编排
+- **职责**：CQRS 模式实现、DTO 映射、业务流程编排
+- **关键特性**：MediatR 命令/查询处理、自动映射、验证管道
+- **扩展点**：CommandHandlers, QueryHandlers, Behaviors
+
 ### Agent.Core - 核心业务逻辑
 - **授权模块**：角色、策略、声明授权
-- **数据访问**：EF Core 仓储、数据库迁移
-- **eBPF 模块**：系统监控和安全检测
-- **SignalR**：实时通信和推送
+- **工作流与任务**：编排和执行复杂流程
+- **系统监控**：eBPF 和安全检测
+- **数据访问**：EF Core 仓储
+- **实时通信**：SignalR 集成
+- **网关与路由**：YARP 反向代理
+- **异常日志**：统一异常处理和结构化日志
 - **身份管理**：用户、角色、权限
 
 ### Agent.McpGateway - AI 编排引擎
-- **Semantic Kernel Service**：LLM 集成和抽象
-- **RAG Service**：知识库、文档处理、相似度搜索
-- **Workflow Service**：任务编排和执行
-- **Sandbox Service**：隔离命令执行
-- **Prompt Service**：提示模板和优化
-- **Web Search Service**：信息检索
-- **Vector Database Service**：嵌入存储
-- **Fine-tune Service**：模型训练
-- **Telemetry Service**：分布式追踪
+- **LLM 集成**：Semantic Kernel 封装、模型路由
+- **知识库与 RAG**：文档处理、向量数据库、相似度搜索
+- **工作流编排**：复杂任务编排和执行
+- **提示工程**：模板管理和优化
+- **沙箱执行**：隔离命令运行
+- **搜索与集成**：Web 搜索、工具集成、文件管理
+- **模型微调**：数据集准备、模型训练
+- **可观测性**：遥测和指标收集
 
 ---
 

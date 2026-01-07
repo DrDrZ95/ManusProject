@@ -140,17 +140,11 @@ ManusProject is an enterprise-grade AI agent framework that combines cutting-edg
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃                      Layer 1: Presentation                          ┃
 ┃  ┌─────────────────────────────────────────────────────────────┐   ┃
-┃  │  React 18+ Application Interface                            │   ┃
+┃  │  React 18+ Application Interface (agent-ui)                  │   ┃
 ┃  │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────┐   │   ┃
 ┃  │  │  Dashboard       │  │  Workflow        │  │  Task    │   │   ┃
 ┃  │  │  - Analytics     │  │  - Editor        │  │  - Board │   │   ┃
 ┃  │  │  - Overview      │  │  - Visualizer    │  │  - Cards │   │   ┃
-┃  │  └──────────────────┘  └──────────────────┘  └──────────┘   │   ┃
-┃  │                                                               │   ┃
-┃  │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────┐   │   ┃
-┃  │  │  AI Chat         │  │  Settings        │  │  Search  │   │   ┃
-┃  │  │  - LLM Prompt    │  │  - Profile       │  │  - Query │   │   ┃
-┃  │  │  - Response      │  │  - Preferences   │  │  - Filter│   │   ┃
 ┃  │  └──────────────────┘  └──────────────────┘  └──────────┘   │   ┃
 ┃  └─────────────────────────────────────────────────────────────┘   ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -165,37 +159,117 @@ ManusProject is an enterprise-grade AI agent framework that combines cutting-edg
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃         Business Logic Layer (Application Layer)              ┃
 ┃                    ASP.NET Core Backend                       ┃
+┃                                                                ┃
 ┃  ┌──────────────────────────────────────────────────────┐   ┃
-┃  │  Agent.Api (Startup & Configuration)                 │   ┃
-┃  │  ├─ Program.cs: Application Entry Point & DI Setup   │   ┃
-┃  │  ├─ GlobalUsings.cs: Global Namespace Declarations   │   ┃
-┃  │  ├─ Controllers/*: API Route Endpoints               │   ┃
-┃  │  └─ Extensions/*: Modular Extension Configuration    │   ┃
+┃  │  Agent.Api (Startup, Configuration, Routing)         │   ┃
+┃  │  ├─ Program.cs: App Entry Point & DI Setup           │   ┃
+┃  │  ├─ GlobalUsings.cs: Global Namespaces               │   ┃
+┃  │  ├─ Controllers: REST API Routes                     │   ┃
+┃  │  └─ Extensions: Modular Service Registration         │   ┃
 ┃  └──────────────────────────────────────────────────────┘   ┃
+┃                                                                ┃
 ┃  ┌──────────────────────────────────────────────────────┐   ┃
-┃  │  Agent.Core (Core Business Logic)                    │   ┃
-┃  │  ├─ Authorization/          - Auth Policies & Handlers│  ┃
-┃  │  ├─ Controllers/            - API Endpoint Impl       │  ┃
-┃  │  ├─ Data/                   - EF Core DbContext       │  ┃
-┃  │  ├─ eBPF/                   - System Detection Module │  ┃
-┃  │  ├─ Extensions/             - Modular Config Ext      │  ┃
-┃  │  ├─ Gateway/                - YARP Gateway Config     │  ┃
-┃  │  ├─ Hubs/                   - SignalR Real-time Hub   │  ┃
-┃  │  └─ Identity/               - ASP.NET Core Identity   │  ┃
+┃  │  Agent.Application (Application Orchestration)       │   ┃
+┃  │  ├─ DTOs: Request/Response Data Transfer Objects     │   ┃
+┃  │  ├─ Mappers: Entity-DTO Mapping Logic                │   ┃
+┃  │  ├─ Validators: Business Rule Validation             │   ┃
+┃  │  ├─ Commands: CQRS Command Handling                  │   ┃
+┃  │  ├─ Queries: CQRS Query Handling                     │   ┃
+┃  │  ├─ Events: Domain Events Definition                 │   ┃
+┃  │  └─ Behaviors: Pipeline Behaviors & Intercepting     │   ┃
 ┃  └──────────────────────────────────────────────────────┘   ┃
+┃                                                                ┃
+┃  ┌──────────────────────────────────────────────────────┐   ┃
+┃  │  Agent.Core (Core Business Logic - Domain Layer)     │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ Identity & Authorization                          │   ┃
+┃  │    ├─ Authorization Handlers (Roles/Policies/Claims) │   ┃
+┃  │    ├─ Authorization Policies (Permission Rules)      │   ┃
+┃  │    └─ Identity Services (User/Role Management)       │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ Workflow & Task Management                        │   ┃
+┃  │    ├─ WorkflowService (Workflow Orchestration)       │   ┃
+┃  │    ├─ TaskService (Task Management)                  │   ┃
+┃  │    ├─ StateManager (State Tracking)                  │   ┃
+┃  │    └─ ExecutionContext (Execution Context)           │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ System Monitoring & Detection                     │   ┃
+┃  │    ├─ eBPF Services (Process Monitoring)             │   ┃
+┃  │    ├─ SecurityDetector (Threat Detection)            │   ┃
+┃  │    └─ HealthChecker (Health Checking)                │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ Data Access & Persistence                         │   ┃
+┃  │    ├─ Entity Models (Data Entities)                  │   ┃
+┃  │    ├─ DbContext (EF Core Context)                    │   ┃
+┃  │    ├─ Repositories (Generic Repository Pattern)      │   ┃
+┃  │    └─ Migrations (Database Migrations)               │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ Real-Time Communication                           │   ┃
+┃  │    ├─ SignalR Hubs (Real-time Message Push)          │   ┃
+┃  │    ├─ NotificationService (Notification Service)     │   ┃
+┃  │    └─ ConnectionManager (Connection Management)      │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ Gateway & Routing                                 │   ┃
+┃  │    ├─ YARP Configuration (YARP Setup)                │   ┃
+┃  │    ├─ RouteService (Routing Service)                 │   ┃
+┃  │    └─ CircuitBreaker (Circuit Breaker Pattern)       │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ Exception & Logging                               │   ┃
+┃  │    ├─ Exception Handlers (Exception Handling)         │   ┃
+┃  │    ├─ Logging Middleware (Logging Middleware)        │   ┃
+┃  │    └─ Correlation ID (Correlation ID)                │   ┃
+┃  └──────────────────────────────────────────────────────┘   ┃
+┃                                                                ┃
 ┃  ┌──────────────────────────────────────────────────────┐   ┃
 ┃  │  Agent.McpGateway (AI Orchestration Engine)          │   ┃
-┃  │  ├─ SemanticKernelService     - LLM Integration      │   ┃
-┃  │  ├─ RAGService                - RAG Implementation    │   ┃
-┃  │  ├─ WorkflowService           - Workflow Orchestr     │   ┃
-┃  │  ├─ SandboxService            - Isolated Execution    │   ┃
-┃  │  ├─ PromptService             - Prompt Management     │   ┃
-┃  │  ├─ WebSearchService          - Web Search Integration│  ┃
-┃  │  ├─ VectorDatabaseService     - Vector Operations     │   ┃
-┃  │  ├─ FinetuneService           - Model Fine-tuning     │   ┃
-┃  │  ├─ TelemetryService          - OpenTelemetry        │   ┃
-┃  │  ├─ UserInputService          - User Input Processing │   ┃
-┃  │  └─ FileUploadService         - File Management       │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ LLM Integration & Management                      │   ┃
+┃  │    ├─ SemanticKernelService (SK Wrapper)             │   ┃
+┃  │    ├─ ModelRouter (Model Routing)                    │   ┃
+┃  │    ├─ PluginManager (Plugin Management)              │   ┃
+┃  │    └─ PromptOptimizer (Prompt Optimization)          │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ Knowledge Base & RAG                              │   ┃
+┃  │    ├─ RagService (RAG Core Service)                  │   ┃
+┃  │    ├─ DocumentProcessor (Document Processing)        │   ┃
+┃  │    ├─ EmbeddingGenerator (Vector Generation)         │   ┃
+┃  │    ├─ VectorDatabaseService (Vector DB Operations)   │   ┃
+┃  │    └─ SimilaritySearcher (Similarity Search)          │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ Workflow Orchestration                            │   ┃
+┃  │    ├─ WorkflowService (Workflow Engine)              │   ┃
+┃  │    ├─ WorkflowExecutor (Executor)                    │   ┃
+┃  │    ├─ WorkflowParser (Parser)                        │   ┃
+┃  │    └─ StateManager (State Management)                │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ Prompt Engineering                                │   ┃
+┃  │    ├─ PromptService (Prompt Management)              │   ┃
+┃  │    ├─ TemplateEngine (Template Engine)               │   ┃
+┃  │    ├─ VariableResolver (Variable Resolution)         │   ┃
+┃  │    └─ PromptCache (Prompt Caching)                   │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ Sandbox & Isolated Execution                      │   ┃
+┃  │    ├─ SandboxService (Sandbox Service)               │   ┃
+┃  │    ├─ ProcessExecutor (Process Execution)            │   ┃
+┃  │    ├─ EnvironmentManager (Environment Management)    │   ┃
+┃  │    └─ SecurityManager (Security Isolation)           │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ Search & Integration                              │   ┃
+┃  │    ├─ WebSearchService (Web Search)                  │   ┃
+┃  │    ├─ McpTools (MCP Tools)                           │   ┃
+┃  │    ├─ FileUploadService (File Management)            │   ┃
+┃  │    └─ UserInputService (User Input)                  │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ Model Fine-Tuning                                 │   ┃
+┃  │    ├─ FinetuneService (Fine-tuning Service)          │   ┃
+┃  │    ├─ DatasetPreparer (Dataset Preparation)          │   ┃
+┃  │    ├─ ModelTrainer (Model Training)                  │   ┃
+┃  │    └─ MetricsCalculator (Metrics Calculation)        │   ┃
+┃  │                                                       │   ┃
+┃  │  ▶ Observability                                     │   ┃
+┃  │    ├─ TelemetryService (Telemetry Service)           │   ┃
+┃  │    ├─ MetricsCollector (Metrics Collection)          │   ┃
+┃  │    └─ TraceExporter (Trace Exporting)                │   ┃
 ┃  └──────────────────────────────────────────────────────┘   ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
                                   ↕
@@ -220,8 +294,8 @@ ManusProject is an enterprise-grade AI agent framework that combines cutting-edg
 - Each layer independently testable and maintainable
 
 #### 🔄 Data Flow
-1. **Request Flow**: Presentation → Gateway → Business → Data → Storage
-2. **Response Flow**: Storage → Data → Business → Gateway → Presentation
+1. **Request Flow**: Presentation → Gateway → Application → Business → Data → Storage
+2. **Response Flow**: Storage → Data → Business → Application → Gateway → Presentation
 3. **Notification Flow**: SignalR Hub → Gateway → Presentation (Real-time Push)
 
 #### 🛡️ Cross-Cutting Concerns
@@ -281,561 +355,57 @@ Redis            6.0+ (for caching)
 
 ## 📁 Project Structure
 
-### Complete Project Tree Structure
+### apps/ - Application Code
 
 ```
-ManusProject/                                 # 📦 Project Root
-│
-├─ README.md                                  # 📄 English Documentation
-├─ README.zh_CN.md                            # 📄 Chinese Documentation
-├─ .gitignore                                 # 🚫 Git Ignore Rules
-├─ LICENSE                                    # 📜 MIT License
-├─ .editorconfig                              # 🎯 Editor Configuration
-│
-├─ apps/                                      # 💼 Application Code
-│  │
-│  ├─ agent-api/                              # 🔧 Backend API Service
-│  │  │
-│  │  ├─ Agent.Api/                           # 🎯 Startup & Configuration
-│  │  │  ├─ Controllers/
-│  │  │  │  ├─ HealthCheckController.cs       # Health Check
-│  │  │  │  ├─ WorkflowController.cs          # Workflow Management
-│  │  │  │  ├─ TaskController.cs              # Task Management
-│  │  │  │  ├─ AIController.cs                # AI/LLM Operations
-│  │  │  │  ├─ SearchController.cs            # Search Features
-│  │  │  │  └─ AdminController.cs             # Admin Functions
-│  │  │  │
-│  │  │  ├─ Extensions/
-│  │  │  │  ├─ ServiceCollectionExtensions.cs # DI Extensions
-│  │  │  │  ├─ AuthenticationExtensions.cs    # Auth Config
-│  │  │  │  ├─ CorsExtensions.cs              # CORS Config
-│  │  │  │  └─ MiddlewareExtensions.cs        # Middleware Extensions
-│  │  │  │
-│  │  │  ├─ GlobalUsings.cs                   # Global Usings
-│  │  │  ├─ Program.cs                        # Application Entry Point
-│  │  │  ├─ Agent.Api.csproj                  # Project File
-│  │  │  ├─ appsettings.json                  # Default Config
-│  │  │  ├─ appsettings.Development.json      # Development Config
-│  │  │  └─ appsettings.Production.json       # Production Config
-│  │  │
-│  │  ├─ Agent.Core/                          # 💎 Core Business Logic
-│  │  │  │
-│  │  │  ├─ Authorization/                    # 🔐 Authorization Module
-│  │  │  │  ├─ Handlers/
-│  │  │  │  │  ├─ RoleBasedHandler.cs         # Role-based Auth
-│  │  │  │  │  ├─ PolicyBasedHandler.cs       # Policy-based Auth
-│  │  │  │  │  └─ ClaimBasedHandler.cs        # Claim-based Auth
-│  │  │  │  ├─ Policies/
-│  │  │  │  │  ├─ AdminOnlyPolicy.cs
-│  │  │  │  │  ├─ WorkflowOwnerPolicy.cs
-│  │  │  │  │  └─ RateLimitPolicy.cs
-│  │  │  │  └─ Requirements/
-│  │  │  │     └─ CustomRequirement.cs
-│  │  │  │
-│  │  │  ├─ Controllers/                      # 📍 API Endpoints
-│  │  │  │  ├─ BaseController.cs              # Base Class
-│  │  │  │  ├─ WorkflowController.cs
-│  │  │  │  ├─ TaskController.cs
-│  │  │  │  ├─ AIController.cs
-│  │  │  │  ├─ RAGController.cs
-│  │  │  │  ├─ SearchController.cs
-│  │  │  │  └─ AdminController.cs
-│  │  │  │
-│  │  │  ├─ Data/                             # 💾 Data Access Layer
-│  │  │  │  ├─ Contexts/
-│  │  │  │  │  ├─ ApplicationDbContext.cs     # Main DbContext
-│  │  │  │  │  └─ SeedData.cs                 # Initial Data
-│  │  │  │  │
-│  │  │  │  ├─ Entities/                      # 📦 Data Entities
-│  │  │  │  │  ├─ User.cs
-│  │  │  │  │  ├─ Workflow.cs
-│  │  │  │  │  ├─ Task.cs
-│  │  │  │  │  ├─ Document.cs
-│  │  │  │  │  ├─ AuditLog.cs
-│  │  │  │  │  └─ Attachment.cs
-│  │  │  │  │
-│  │  │  │  ├─ Repositories/                  # 🗂️ Repository Implementation
-│  │  │  │  │  ├─ IRepository.cs              # Generic Interface
-│  │  │  │  │  ├─ Repository.cs               # Base Implementation
-│  │  │  │  │  ├─ WorkflowRepository.cs
-│  │  │  │  │  ├─ TaskRepository.cs
-│  │  │  │  │  ├─ DocumentRepository.cs
-│  │  │  │  │  └─ UserRepository.cs
-│  │  │  │  │
-│  │  │  │  ├─ Migrations/                    # 📝 EF Core Migrations
-│  │  │  │  │  ├─ 20260107_InitialCreate.cs
-│  │  │  │  │  ├─ 20260110_AddWorkflowTables.cs
-│  │  │  │  │  └─ ApplicationDbContextModelSnapshot.cs
-│  │  │  │  │
-│  │  │  │  └─ Seeds/                         # 🌱 Data Seeds
-│  │  │  │     └─ DataSeeder.cs
-│  │  │  │
-│  │  │  ├─ eBPF/                             # 🔍 eBPF Monitoring
-│  │  │  │  ├─ Services/
-│  │  │  │  │  ├─ IEbpfService.cs
-│  │  │  │  │  ├─ EbpfService.cs
-│  │  │  │  │  ├─ ProcessMonitor.cs
-│  │  │  │  │  └─ SecurityDetector.cs
-│  │  │  │  │
-│  │  │  │  ├─ Controllers/
-│  │  │  │  │  └─ EbpfController.cs
-│  │  │  │  │
-│  │  │  │  └─ Scripts/
-│  │  │  │     ├─ process_monitor.c
-│  │  │  │     ├─ network_monitor.c
-│  │  │  │     └─ security_check.c
-│  │  │  │
-│  │  │  ├─ Extensions/                       # 🔧 Module Extensions
-│  │  │  │  ├─ ServiceCollectionExtensions.cs
-│  │  │  │  ├─ AuthorizationExtensions.cs
-│  │  │  │  ├─ DataAccessExtensions.cs
-│  │  │  │  └─ TelemetryExtensions.cs
-│  │  │  │
-│  │  │  ├─ Gateway/                          # 🚪 Gateway Configuration
-│  │  │  │  ├─ Services/
-│  │  │  │  │  ├─ IRouteService.cs
-│  │  │  │  │  └─ RouteService.cs
-│  │  │  │  │
-│  │  │  │  └─ Configuration/
-│  │  │  │     └─ YarpConfiguration.cs
-│  │  │  │
-│  │  │  ├─ Hubs/                             # 💬 SignalR Hubs
-│  │  │  │  ├─ IHubClient.cs
-│  │  │  │  ├─ WorkflowHub.cs
-│  │  │  │  ├─ TaskHub.cs
-│  │  │  │  └─ NotificationHub.cs
-│  │  │  │
-│  │  │  ├─ Identity/                         # 👤 Identity Management
-│  │  │  │  ├─ ApplicationUser.cs
-│  │  │  │  ├─ ApplicationRole.cs
-│  │  │  │  ├─ IdentityService.cs
-│  │  │  │  ├─ TokenService.cs
-│  │  │  │  └─ JwtOptions.cs
-│  │  │  │
-│  │  │  ├─ Exceptions/                       # ⚠️ Exception Handling
-│  │  │  │  ├─ ApplicationException.cs
-│  │  │  │  ├─ BusinessException.cs
-│  │  │  │  ├─ ValidationException.cs
-│  │  │  │  ├─ UnauthorizedException.cs
-│  │  │  │  └─ ResourceNotFoundException.cs
-│  │  │  │
-│  │  │  ├─ Middlewares/                      # 🔌 Custom Middlewares
-│  │  │  │  ├─ ErrorHandlingMiddleware.cs
-│  │  │  │  ├─ LoggingMiddleware.cs
-│  │  │  │  ├─ CorrelationIdMiddleware.cs
-│  │  │  │  └─ RequestTimingMiddleware.cs
-│  │  │  │
-│  │  │  ├─ Models/                           # 📦 DTO Models
-│  │  │  │  ├─ Requests/
-│  │  │  │  │  ├─ CreateWorkflowRequest.cs
-│  │  │  │  │  ├─ CreateTaskRequest.cs
-│  │  │  │  │  └─ UpdateWorkflowRequest.cs
-│  │  │  │  │
-│  │  │  │  ├─ Responses/
-│  │  │  │  │  ├─ WorkflowResponse.cs
-│  │  │  │  │  ├─ TaskResponse.cs
-│  │  │  │  │  └─ ApiResponse.cs
-│  │  │  │  │
-│  │  │  │  └─ Constants/
-│  │  │  │     ├─ ErrorCodes.cs
-│  │  │  │     └─ MessageConstants.cs
-│  │  │  │
-│  │  │  ├─ Services/                         # 🛠️ Business Services
-│  │  │  │  ├─ IWorkflowService.cs
-│  │  │  │  ├─ WorkflowService.cs
-│  │  │  │  ├─ ITaskService.cs
-│  │  │  │  ├─ TaskService.cs
-│  │  │  │  ├─ INotificationService.cs
-│  │  │  │  ├─ NotificationService.cs
-│  │  │  │  └─ ICacheService.cs
-│  │  │  │
-│  │  │  ├─ Agent.Core.csproj                 # Project File
-│  │  │  └─ GlobalUsings.cs                   # Global Usings
-│  │  │
-│  │  └─ Agent.McpGateway/                    # 🤖 AI Orchestration Engine
-│  │     │
-│  │     ├─ Services/                         # 🛠️ AI Core Services
-│  │     │  │
-│  │     │  ├─ SemanticKernelService/
-│  │     │  │  ├─ ISemanticKernelService.cs
-│  │     │  │  ├─ SemanticKernelService.cs
-│  │     │  │  ├─ PluginManager.cs
-│  │     │  │  ├─ PromptOptimizer.cs
-│  │     │  │  └─ ModelRouter.cs
-│  │     │  │
-│  │     │  ├─ RAGService/
-│  │     │  │  ├─ IRagService.cs
-│  │     │  │  ├─ RagService.cs
-│  │     │  │  ├─ DocumentProcessor.cs
-│  │     │  │  ├─ EmbeddingGenerator.cs
-│  │     │  │  ├─ SimilaritySearcher.cs
-│  │     │  │  └─ ChunkingStrategy.cs
-│  │     │  │
-│  │     │  ├─ WorkflowService/
-│  │     │  │  ├─ IWorkflowService.cs
-│  │     │  │  ├─ WorkflowService.cs
-│  │     │  │  ├─ WorkflowExecutor.cs
-│  │     │  │  ├─ WorkflowParser.cs
-│  │     │  │  ├─ StateManager.cs
-│  │     │  │  └─ ExecutionContext.cs
-│  │     │  │
-│  │     │  ├─ SandboxService/
-│  │     │  │  ├─ ISandboxService.cs
-│  │     │  │  ├─ SandboxService.cs
-│  │     │  │  ├─ ProcessExecutor.cs
-│  │     │  │  ├─ EnvironmentManager.cs
-│  │     │  │  └─ SecurityManager.cs
-│  │     │  │
-│  │     │  ├─ PromptService/
-│  │     │  │  ├─ IPromptService.cs
-│  │     │  │  ├─ PromptService.cs
-│  │     │  │  ├─ TemplateEngine.cs
-│  │     │  │  ├─ VariableResolver.cs
-│  │     │  │  └─ PromptCache.cs
-│  │     │  │
-│  │     │  ├─ WebSearchService/
-│  │     │  │  ├─ IWebSearchService.cs
-│  │     │  │  ├─ WebSearchService.cs
-│  │     │  │  ├─ SearXngClient.cs
-│  │     │  │  ├─ SerpApiClient.cs
-│  │     │  │  └─ SearchResultProcessor.cs
-│  │     │  │
-│  │     │  ├─ VectorDatabaseService/
-│  │     │  │  ├─ IVectorDatabaseService.cs
-│  │     │  │  ├─ ChromaDBClient.cs
-│  │     │  │  ├─ EmbeddingCache.cs
-│  │     │  │  ├─ IndexManager.cs
-│  │     │  │  └─ VectorQueryBuilder.cs
-│  │     │  │
-│  │     │  ├─ FinetuneService/
-│  │     │  │  ├─ IFinetuneService.cs
-│  │     │  │  ├─ FinetuneService.cs
-│  │     │  │  ├─ DatasetPreparer.cs
-│  │     │  │  ├─ ModelTrainer.cs
-│  │     │  │  └─ MetricsCalculator.cs
-│  │     │  │
-│  │     │  ├─ TelemetryService/
-│  │     │  │  ├─ ITelemetryService.cs
-│  │     │  │  ├─ OpenTelemetryService.cs
-│  │     │  │  ├─ MetricsCollector.cs
-│  │     │  │  ├─ TraceExporter.cs
-│  │     │  │  └─ HealthChecker.cs
-│  │     │  │
-│  │     │  ├─ UserInputService/
-│  │     │  │  ├─ IUserInputService.cs
-│  │     │  │  ├─ UserInputService.cs
-│  │     │  │  ├─ InputValidator.cs
-│  │     │  │  ├─ ContextAnalyzer.cs
-│  │     │  │  └─ IntentClassifier.cs
-│  │     │  │
-│  │     │  └─ FileUploadService/
-│  │     │     ├─ IFileUploadService.cs
-│  │     │     ├─ FileUploadService.cs
-│  │     │     ├─ FileValidator.cs
-│  │     │     ├─ StorageManager.cs
-│  │     │     └─ VirusScanner.cs
-│  │     │
-│  │     ├─ McpTools/                         # 🔗 MCP Tools
-│  │     │  ├─ IMcpTool.cs
-│  │     │  ├─ MusicTool.cs
-│  │     │  ├─ WeatherTool.cs
-│  │     │  ├─ CustomTool.cs
-│  │     │  └─ ToolRegistry.cs
-│  │     │
-│  │     ├─ Models/                           # 📦 Data Models
-│  │     │  ├─ WorkflowModel.cs
-│  │     │  ├─ TaskModel.cs
-│  │     │  ├─ RAGQuery.cs
-│  │     │  ├─ SearchResult.cs
-│  │     │  ├─ ExecutionResult.cs
-│  │     │  └─ EmbeddingModel.cs
-│  │     │
-│  │     ├─ WebSearch/                        # 🔍 Search Module
-│  │     │  ├─ Interfaces/
-│  │     │  │  └─ ISearchProvider.cs
-│  │     │  ├─ Providers/
-│  │     │  │  ├─ SearXngProvider.cs
-│  │     │  │  └─ SerpApiProvider.cs
-│  │     │  └─ Models/
-│  │     │     └─ SearchResult.cs
-│  │     │
-│  │     ├─ Agent.McpGateway.csproj           # Project File
-│  │     └─ GlobalUsings.cs
-│  │
-│  └─ agent-ui/                               # 🎨 React Frontend
-│     │
-│     ├─ public/                              # 📊 Static Assets
-│     │  ├─ index.html
-│     │  ├─ favicon.ico
-│     │  └─ manifest.json
-│     │
-│     ├─ src/                                 # 💻 Source Code
-│     │  ├─ index.tsx                         # Application Entry
-│     │  ├─ App.tsx                           # Root Component
-│     │  ├─ App.css                           # Global Styles
-│     │  │
-│     │  ├─ components/                       # ⚛️ React Components
-│     │  │  ├─ Layout/
-│     │  │  │  ├─ Header.tsx
-│     │  │  │  ├─ Sidebar.tsx
-│     │  │  │  ├─ Footer.tsx
-│     │  │  │  └─ LayoutWrapper.tsx
-│     │  │  │
-│     │  │  ├─ Workflow/
-│     │  │  │  ├─ WorkflowList.tsx
-│     │  │  │  ├─ WorkflowEditor.tsx
-│     │  │  │  ├─ WorkflowViewer.tsx
-│     │  │  │  └─ WorkflowNode.tsx
-│     │  │  │
-│     │  │  ├─ Task/
-│     │  │  │  ├─ TaskBoard.tsx
-│     │  │  │  ├─ TaskCard.tsx
-│     │  │  │  ├─ TaskModal.tsx
-│     │  │  │  └─ TaskForm.tsx
-│     │  │  │
-│     │  │  ├─ AI/
-│     │  │  │  ├─ ChatBox.tsx
-│     │  │  │  ├─ PromptEditor.tsx
-│     │  │  │  ├─ ResultDisplay.tsx
-│     │  │  │  └─ ModelSelector.tsx
-│     │  │  │
-│     │  │  └─ Common/
-│     │  │     ├─ Button.tsx
-│     │  │     ├─ Modal.tsx
-│     │  │     ├─ Notification.tsx
-│     │  │     ├─ Loading.tsx
-│     │  │     └─ ErrorBoundary.tsx
-│     │  │
-│     │  ├─ pages/                           # 📄 Pages
-│     │  │  ├─ Dashboard.tsx
-│     │  │  ├─ Workflows.tsx
-│     │  │  ├─ Tasks.tsx
-│     │  │  ├─ AIChat.tsx
-│     │  │  ├─ Settings.tsx
-│     │  │  ├─ Search.tsx
-│     │  │  ├─ NotFound.tsx
-│     │  │  └─ Unauthorized.tsx
-│     │  │
-│     │  ├─ services/                        # 🔌 API Services
-│     │  │  ├─ api.ts
-│     │  │  ├─ workflowApi.ts
-│     │  │  ├─ taskApi.ts
-│     │  │  ├─ aiApi.ts
-│     │  │  ├─ searchApi.ts
-│     │  │  └─ authApi.ts
-│     │  │
-│     │  ├─ hooks/                           # 🎣 Custom Hooks
-│     │  │  ├─ useWorkflows.ts
-│     │  │  ├─ useTasks.ts
-│     │  │  ├─ useAuth.ts
-│     │  │  ├─ useSignalR.ts
-│     │  │  ├─ useNotification.ts
-│     │  │  └─ useLocalStorage.ts
-│     │  │
-│     │  ├─ store/                           # 📦 State Management
-│     │  │  ├─ slices/
-│     │  │  │  ├─ workflowSlice.ts
-│     │  │  │  ├─ taskSlice.ts
-│     │  │  │  ├─ authSlice.ts
-│     │  │  │  ├─ uiSlice.ts
-│     │  │  │  └─ notificationSlice.ts
-│     │  │  └─ store.ts
-│     │  │
-│     │  ├─ styles/                          # 🎨 Styles
-│     │  │  ├─ variables.css
-│     │  │  ├─ themes.css
-│     │  │  ├─ notion-ui.css
-│     │  │  ├─ responsive.css
-│     │  │  └─ animations.css
-│     │  │
-│     │  ├─ utils/                           # 🔧 Utilities
-│     │  │  ├─ formatters.ts
-│     │  │  ├─ validators.ts
-│     │  │  ├─ constants.ts
-│     │  │  ├─ storage.ts
-│     │  │  └─ logger.ts
-│     │  │
-│     │  └─ types/                           # 📝 Type Definitions
-│     │     ├─ workflow.ts
-│     │     ├─ task.ts
-│     │     ├─ api.ts
-│     │     ├─ user.ts
-│     │     └─ index.ts
-│     │
-│     ├─ package.json                        # 📋 Dependencies
-│     ├─ tsconfig.json                       # ⚙️ TS Config
-│     ├─ vite.config.ts                      # 🔨 Build Config
-│     ├─ .env.example                        # 🔑 Environment Variables
-│     └─ .eslintrc.json                      # 📏 Lint Config
-│
-├─ infra/                                    # 🏗️ Infrastructure
-│  │
-│  ├─ docker/                                # 🐳 Docker
-│  │  ├─ Dockerfile.webapi                   # Backend Image
-│  │  ├─ Dockerfile.react                    # Frontend Image
-│  │  ├─ docker-compose.yml                  # Orchestration Config
-│  │  ├─ docker-compose.dev.yml              # Dev Config
-│  │  ├─ docker-compose.prod.yml             # Prod Config
-│  │  ├─ nginx.conf                          # Proxy Config
-│  │  ├─ nginx.ssl.conf                      # SSL Config
-│  │  ├─ .dockerignore                       # Docker Ignore
-│  │  └─ examples/
-│  │     ├─ docker-compose.dev.yml
-│  │     └─ docker-compose.prod.yml
-│  │
-│  ├─ kubernetes/                            # ☸️ K8s Manifests
-│  │  ├─ namespace.yaml
-│  │  ├─ configmap.yaml
-│  │  ├─ secrets.yaml
-│  │  ├─ deployments.yaml
-│  │  ├─ services.yaml
-│  │  ├─ ingress.yaml
-│  │  ├─ persistentvolumes.yaml
-│  │  ├─ hpa.yaml
-│  │  └─ rbac.yaml
-│  │
-│  ├─ helm/                                  # 📦 Helm Charts
-│  │  └─ manus-project/
-│  │     ├─ Chart.yaml
-│  │     ├─ values.yaml
-│  │     ├─ values.dev.yaml
-│  │     ├─ values.prod.yaml
-│  │     ├─ values.staging.yaml
-│  │     └─ templates/
-│  │        ├─ deployment.yaml
-│  │        ├─ service.yaml
-│  │        ├─ ingress.yaml
-│  │        ├─ configmap.yaml
-│  │        ├─ secrets.yaml
-│  │        └─ hpa.yaml
-│  │
-│  └─ envsetup/                              # 🔧 Environment Scripts
-│     ├─ install_dependencies.sh
-│     ├─ download_model.sh
-│     ├─ setup_database.sh
-│     ├─ configure_ssl.sh
-│     ├─ health_check.sh
-│     └─ monitoring_setup.sh
-│
-├─ llm/                                      # 🤖 ML Components
-│  │
-│  ├─ deploy/                                # 🚀 Deployment
-│  │  ├─ model_server.py
-│  │  ├─ api_examples.py
-│  │  ├─ requirements.txt
-│  │  └─ Dockerfile
-│  │
-│  └─ finetune/                              # 🎓 Fine-tuning
-│     ├─ train.py
-│     ├─ evaluate.py
-│     ├─ dataset_loader.py
-│     ├─ utils.py
-│     ├─ install_dependencies.sh
-│     └─ config.yaml
-│
-├─ test/                                     # 🧪 Tests
-│  │
-│  └─ Agent.Core.Tests/
-│     ├─ Unit/
-│     │  ├─ Services/
-│     │  │  ├─ WorkflowServiceTests.cs
-│     │  │  ├─ RAGServiceTests.cs
-│     │  │  └─ PromptServiceTests.cs
-│     │  ├─ Controllers/
-│     │  │  ├─ WorkflowControllerTests.cs
-│     │  │  └─ TaskControllerTests.cs
-│     │  └─ Repositories/
-│     │     └─ WorkflowRepositoryTests.cs
-│     │
-│     ├─ Integration/
-│     │  ├─ ApiIntegrationTests.cs
-│     │  ├─ DatabaseIntegrationTests.cs
-│     │  └─ WorkflowIntegrationTests.cs
-│     │
-│     ├─ MockData/
-│     │  ├─ TestDataFactory.cs
-│     │  └─ MockServices.cs
-│     │
-│     └─ Agent.Core.Tests.csproj
-│
-├─ docs/                                     # 📚 Documentation
-│  │
-│  ├─ README.md
-│  ├─ Architecture/
-│  │  ├─ system-architecture.md
-│  │  ├─ components-overview.md
-│  │  └─ data-flow.md
-│  │
-│  ├─ Setup/
-│  │  ├─ docker-deployment.md
-│  │  ├─ kubernetes-deployment.md
-│  │  ├─ helm-deployment.md
-│  │  └─ configuration-guide.md
-│  │
-│  ├─ Features/
-│  │  ├─ chromadb_integration.md
-│  │  ├─ ebpf_integration.md
-│  │  ├─ identity_signalr_integration.md
-│  │  ├─ mlflow_integration.md
-│  │  ├─ rag_prompt_engineering.md
-│  │  ├─ sandbox_terminal_integration.md
-│  │  ├─ semantic_kernel_examples.md
-│  │  ├─ workflow_integration.md
-│  │  └─ yarp_gateway_integration.md
-│  │
-│  ├─ API/
-│  │  ├─ workflow-api.md
-│  │  ├─ task-api.md
-│  │  ├─ ai-api.md
-│  │  └─ search-api.md
-│  │
-│  ├─ Development/
-│  │  ├─ getting-started.md
-│  │  ├─ development-setup.md
-│  │  ├─ code-structure.md
-│  │  ├─ coding-standards.md
-│  │  └─ testing-guide.md
-│  │
-│  └─ CHANGELOG.md
-│
-├─ .github/                                  # 🔄 CI/CD
-│  ├─ workflows/
-│  │  ├─ build.yml
-│  │  ├─ test.yml
-│  │  ├─ docker-build.yml
-│  │  └─ deploy.yml
-│  │
-│  ├─ ISSUE_TEMPLATE/
-│  │  ├─ bug_report.md
-│  │  ├─ feature_request.md
-│  │  └─ documentation.md
-│  │
-│  └─ PULL_REQUEST_TEMPLATE.md
-│
-└─ LICENSE                                   # 📜 MIT License
+apps/
+├─ agent-api/
+│  ├─ Agent.Api/                      # Startup & Configuration
+│  ├─ Agent.Application/              # Application Orchestration
+│  ├─ Agent.Core/                     # Core Business Logic
+│  └─ Agent.McpGateway/               # AI Orchestration Engine
+└─ agent-ui/                          # React Frontend
 ```
 
-### Project Structure Key Optimization Points
+### docs/ - Documentation
 
-#### 📌 **Modularization Optimization**
-- ✅ Clear layered design with low coupling, high cohesion
-- ✅ Single responsibility per module
-- ✅ Complete dependency injection support
+```
+docs/
+├─ Architecture/                      # Architecture Docs
+├─ Setup/                             # Deployment Guides
+├─ Features/                          # Feature Documentation
+├─ API/                               # API Documentation
+├─ Development/                       # Development Guides
+└─ CHANGELOG.md                       # Change Log
+```
 
-#### 🔄 **Service Decoupling**
-- ✅ Interface-Implementation separation (IService + Service)
-- ✅ Factory pattern supporting multiple implementations
-- ✅ Async/concurrent operation optimization
+### infra/ - Infrastructure
 
-#### 💾 **Data Access Improvements**
-- ✅ Generic repository base class reduces duplication
-- ✅ Standardized query building
-- ✅ Integrated caching strategy
+```
+infra/
+├─ docker/                            # Docker Configuration
+├─ kubernetes/                        # Kubernetes Manifests
+├─ helm/                              # Helm Charts
+└─ envsetup/                          # Environment Scripts
+```
 
-#### 🔐 **Security Enhancements**
-- ✅ Multi-layer authorization mechanism
-- ✅ Standardized input validation
-- ✅ Complete audit logging
+### llm/ - ML Components
+
+```
+llm/
+├─ deploy/                            # Model Deployment
+└─ finetune/                          # Model Fine-tuning
+```
+
+### test/ - Tests
+
+```
+test/
+└─ Agent.Core.Tests/                  # Test Suite
+   ├─ Unit/                           # Unit Tests
+   ├─ Integration/                    # Integration Tests
+   └─ MockData/                       # Test Data
+```
 
 ---
 
@@ -985,23 +555,30 @@ ENABLE_MLFLOW=true
 - **Key Files**: Program.cs, GlobalUsings.cs
 - **Extension Points**: ServiceCollectionExtensions, MiddlewareExtensions
 
+### Agent.Application - Application Orchestration
+- **Responsibility**: CQRS pattern implementation, DTO mapping, business process orchestration
+- **Key Features**: MediatR command/query handling, AutoMapper, validation pipeline
+- **Extension Points**: CommandHandlers, QueryHandlers, Behaviors
+
 ### Agent.Core - Core Business Logic
-- **Authorization Module**: Role-based, policy-based, claim-based authorization
-- **Data Access**: EF Core repositories, database migrations
-- **eBPF Module**: System monitoring and security detection
-- **SignalR**: Real-time communication and push notifications
+- **Identity & Authorization**: Role-based, policy-based, claim-based authorization
+- **Workflow & Task Management**: Orchestration and execution of complex processes
+- **System Monitoring**: eBPF and security detection
+- **Data Access**: EF Core repositories
+- **Real-Time Communication**: SignalR integration
+- **Gateway & Routing**: YARP reverse proxy
+- **Exception & Logging**: Unified exception handling and structured logging
 - **Identity Management**: User, role, and permission management
 
 ### Agent.McpGateway - AI Orchestration Engine
-- **Semantic Kernel Service**: LLM integration and abstraction
-- **RAG Service**: Knowledge base, document processing, similarity search
-- **Workflow Service**: Task orchestration and execution
-- **Sandbox Service**: Isolated command execution
-- **Prompt Service**: Prompt template management and optimization
-- **Web Search Service**: Information retrieval
-- **Vector Database Service**: Embedding storage
-- **Fine-tune Service**: Model training
-- **Telemetry Service**: Distributed tracing
+- **LLM Integration**: Semantic Kernel wrapper, model routing
+- **Knowledge Base & RAG**: Document processing, vector database, similarity search
+- **Workflow Orchestration**: Complex task orchestration and execution
+- **Prompt Engineering**: Template management and optimization
+- **Sandbox Execution**: Isolated command execution
+- **Search & Integration**: Web search, tool integration, file management
+- **Model Fine-Tuning**: Dataset preparation, model training
+- **Observability**: Telemetry and metrics collection
 
 ---
 
