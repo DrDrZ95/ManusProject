@@ -37,7 +37,7 @@ ManusProject is an enterprise-grade AI agent framework that combines cutting-edg
 
 ### Key Highlights
 
-- **🤖 Multi-Model Support**: Integration with OpenAI, Azure OpenAI, and Alibaba Qwen
+- **🤖 Multi-Model Support**: Integration with OpenAI, DeepSeek, Kimi, and Llama 4, supporting both open-source and closed-source models
 - **🏗️ Distributed Architecture**: Native support for Kubernetes and Docker, inherently scalable
 - **🔒 Advanced Security**: eBPF system monitoring, ASP.NET Core Identity integration, fine-grained access control
 - **⚡ Real-time Communication**: SignalR enables instant updates and push notifications
@@ -98,7 +98,7 @@ ManusProject is an enterprise-grade AI agent framework that combines cutting-edg
 | React | 18.0+ | Modern UI framework |
 | TypeScript | 5.0+ | Type-safe JavaScript development |
 | SignalR Client | 8.0+ | Real-time notification client |
-| Notion UI | Custom | Notion-style design system |
+| Tailwind CSS | Latest | Modern CSS framework |
 
 ### 💾 Data & Storage
 | Component | Purpose |
@@ -140,22 +140,22 @@ ManusProject is an enterprise-grade AI agent framework that combines cutting-edg
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃                      Layer 1: Presentation                          ┃
 ┃  ┌─────────────────────────────────────────────────────────────┐   ┃
-┃  │  React 18+ Application Interface (agent-ui)                  │   ┃
-┃  │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────┐   │   ┃
-┃  │  │  Dashboard       │  │  Workflow        │  │  Task    │   │   ┃
-┃  │  │  - Analytics     │  │  - Editor        │  │  - Board │   │   ┃
-┃  │  │  - Overview      │  │  - Visualizer    │  │  - Cards │   │   ┃
-┃  │  └──────────────────┘  └──────────────────┘  └──────────┘   │   ┃
+┃  │  React 18+ Application Interface (agent-ui)                 │   ┃
+┃  │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────┐  │   ┃
+┃  │  │  Dashboard       │  │  Workflow        │  │  Task    │  │   ┃
+┃  │  │  - Analytics     │  │  - Editor        │  │  - Board │  │   ┃
+┃  │  │  - Overview      │  │  - Visualizer    │  │  - Cards │  │   ┃
+┃  │  └──────────────────┘  └──────────────────┘  └──────────┘  │   ┃
 ┃  └─────────────────────────────────────────────────────────────┘   ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-                                  ↕
-                      HTTP/HTTPS + WebSocket
-                                  ↕
+                                  ↕                                   
+                      HTTP/HTTPS + WebSocket                          
+                                  ↕                                   
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃                    API Gateway Layer                                ┃
 ┃              (Nginx / YARP - Load Balancing)                        ┃
-└─────────────────────────────┬───────────────────────────────┘
-                              │
+└─────────────────────────────┬───────────────────────────────┘       
+                              │                                       
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃         Business Logic Layer (Application Layer)              ┃
 ┃                    ASP.NET Core Backend                       ┃
@@ -272,18 +272,19 @@ ManusProject is an enterprise-grade AI agent framework that combines cutting-edg
 ┃  │    └─ TraceExporter (Trace Exporting)                │   ┃
 ┃  └──────────────────────────────────────────────────────┘   ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-                                  ↕
-          ┌───────────────────────┼───────────────────┐
-          │                       │                   │
-    ┌─────▼──────┐        ┌──────▼─────┐    ┌─────▼──────┐
-    │ PostgreSQL │        │  ChromaDB   │    │ External   │
-    │ (Metadata) │        │  (Vectors)  │    │ Services   │
-    │            │        │             │    │            │
-    │ - Users    │        │ - Embeddings│    │ - OpenAI   │
-    │ - Workflows│        │ - Documents │    │ - Azure AI  │
-    │ - Tasks    │        │ - RAG Index │    │ - Qwen     │
-    │ - Config   │        │             │    │ - SearXNG  │
-    └────────────┘        └─────────────┘    └────────────┘
+                                  ↕                                   
+          ┌───────────────────────┼───────────────────┐               
+          │                       │                   │               
+    ┌─────▼──────┐        ┌──────▼─────┐    ┌─────▼──────┐            
+    │ PostgreSQL │        │  ChromaDB   │    │ External   │            
+    │ (Metadata) │        │  (Vectors)  │    │ Services   │            
+    │            │        │             │    │            │            
+    │ - Users    │        │ - Embeddings│    │ - OpenAI   │            
+    │ - Workflows│        │ - Documents │    │ - DeepSeek │            
+    │ - Tasks    │        │ - RAG Index │    │ - Kimi     │            
+    │ - Config   │        │             │    │ - Llama 4  │            
+    └────────────┘        └─────────────┘    │ - SearXNG  │            
+                                              └────────────┘            
 ```
 
 ### Architecture Characteristics
@@ -342,7 +343,7 @@ Redis            6.0+ (for caching)
 
 ### Network Requirements
 ```
-- Network connectivity to Azure/OpenAI services
+- Network connectivity to various LLM service providers
 - Firewall rules allowing:
   * Port 3000 (Frontend)
   * Port 5000 (Backend API)
@@ -517,8 +518,13 @@ API_PORT=5000
 
 # LLM Service Configuration
 OPENAI_API_KEY=sk-xxxxxxxxxxxxx
-AZURE_OPENAI_ENDPOINT=https://xxx.openai.azure.com/
-QWEN_API_KEY=xxxxxxxxxxxxx
+OPENAI_MODEL=gpt-4
+DEEPSEEK_API_KEY=xxxxxxxxxxxxx
+DEEPSEEK_MODEL=deepseek-chat
+KIMI_API_KEY=xxxxxxxxxxxxx
+KIMI_MODEL=moonshot-v1
+LLAMA_API_ENDPOINT=http://localhost:8000
+LLAMA_MODEL=llama-4-70b
 
 # Authentication
 JWT_SECRET_KEY=your-super-secret-key-min-32-chars
@@ -527,6 +533,10 @@ IDENTITY_SEED_ADMIN_PASSWORD=Admin@123456
 # Vector Database
 CHROMADB_HOST=chromadb
 CHROMADB_PORT=8000
+
+# Web Search
+ENABLE_WEB_SEARCH=true
+SEARXNG_ENDPOINT=http://searxng:8888
 
 # Monitoring & Telemetry
 ENABLE_PROMETHEUS=true
@@ -638,7 +648,7 @@ npm test
 
 ## 🤝 Contributing Guide
 
-We welcome any form of contribution!
+We welcome any form of contribution! Whether it's code improvements, documentation updates, bug fixes, or new feature suggestions, we appreciate your involvement.
 
 ### Contribution Process
 
@@ -648,13 +658,31 @@ We welcome any form of contribution!
 4. Push to branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
+### Welcome Feedback & Suggestions
+
+- 💡 **Share Optimization Suggestions in PRs**: If you have ideas for improving code, performance, or user experience, please share them in detail in your Pull Request
+- 🐛 **Report Bugs**: If you find any issues, please report them via Issues with reproduction steps
+- ✨ **Feature Suggestions**: For new features or improvements, feel free to discuss in Issues or Discussions
+- 📝 **Documentation Improvements**: If documentation is unclear or incomplete, we welcome improvement suggestions
+
 ### Contribution Requirements
 
 - ✅ All tests must pass
 - ✅ Code conforms to project style guidelines
 - ✅ Commit messages are clear and concise
-- ✅ PR includes detailed description
+- ✅ PR includes detailed description of changes
 - ✅ New features require documentation updates
+
+### Review Process
+
+Our maintenance team will review Pull Requests regularly. You may receive feedback such as:
+
+- Code review comments
+- Requests for additional tests
+- Documentation update suggestions
+- Performance or security optimization recommendations
+
+Please be patient with the review process as we aim to maintain code quality and long-term project maintainability.
 
 ---
 
@@ -733,7 +761,6 @@ Conditions:
 - Modularization refactor
 
 ### Q1-Q2 In Progress 🚀
-- Complete Notion UI redesign
 - Advanced caching strategy optimization
 - WebSearch enhancement and expansion
 - Model fine-tuning tool refinement
@@ -741,7 +768,7 @@ Conditions:
 
 ### Q2-Q3 Planned 🔮
 - Multi-language support (Chinese, English, Japanese, Korean)
-- Additional LLM integrations (Claude, Gemini)
+- Additional LLM integrations
 - Community plugin system
 - Desktop client (Electron)
 - Mobile app support (React Native)
