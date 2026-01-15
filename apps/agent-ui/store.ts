@@ -66,6 +66,7 @@ export const useStore = create<ExtendedAppState>((set, get) => {
     news: [],
     lastNewsFetch: 0,
     toast: null,
+    isSearchOpen: false,
 
     login: async (credentials: LoginRequest) => {
       try {
@@ -242,6 +243,7 @@ export const useStore = create<ExtendedAppState>((set, get) => {
     setEditingProject: (id) => set({ editingProjectId: id }),
     setInputMode: (mode) => set({ inputMode: mode }),
     setAgentMode: (enabled) => set({ isAgentMode: enabled }),
-    setToast: (toast) => set({ toast })
+    setToast: (toast) => set({ toast }),
+    toggleSearch: () => set((state) => ({ isSearchOpen: !state.isSearchOpen })),
   };
 });

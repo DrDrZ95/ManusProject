@@ -53,6 +53,83 @@ const Toast: React.FC = () => {
     );
 }
 
+const SearchModal: React.FC = () => {
+    const isSearchOpen = useStore(s => s.isSearchOpen);
+    const toggleSearch = useStore(s => s.toggleSearch);
+    const language = useStore(s => s.language);
+    const t = translations[language];
+    const [query, setQuery] = useState('');
+
+    if (!isSearchOpen) return null;
+
+    return (
+        <AnimatePresence>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm flex items-start justify-center pt-[15vh] px-4"
+                onClick={toggleSearch}
+            >
+                <motion.div
+                    initial={{ scale: 0.95, opacity: 0, y: -20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.95, opacity: 0, y: -20 }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                >
+                    <div className="flex items-center px-4 py-3 border-b border-gray-100">
+                        <Icons.Search className="w-5 h-5 text-gray-400" />
+                        <input 
+                            autoFocus
+                            type="text"
+                            placeholder={t.searchPlaceholder}
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            className="flex-1 px-4 py-2 outline-none text-gray-900 text-sm font-medium placeholder:text-gray-400"
+                        />
+                        <div className="flex items-center gap-2">
+                             <kbd className="hidden sm:inline-block px-2 py-1 bg-gray-100 rounded text-[10px] font-bold text-gray-500 border border-gray-200">ESC</kbd>
+                             <button onClick={toggleSearch} className="p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black">
+                                <Icons.Close className="w-4 h-4" />
+                             </button>
+                        </div>
+                    </div>
+                    
+                    <div className="p-2 min-h-[200px] max-h-[400px] overflow-y-auto custom-scrollbar">
+                         {!query && (
+                             <div className="p-8 text-center text-gray-400">
+                                 <Icons.Search className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                                 <p className="text-xs font-medium">Type to search across conversations and files</p>
+                             </div>
+                         )}
+                         {/* Simulated Results */}
+                         {query && (
+                             <div className="space-y-1">
+                                 <div className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Simulated Results</div>
+                                 <button className="w-full text-left px-3 py-2.5 hover:bg-gray-50 rounded-lg flex items-center gap-3 group">
+                                     {/* Fixed: Use Icons.Chat instead of Icons.MessageSquare */}
+                                     <Icons.Chat className="w-4 h-4 text-gray-400 group-hover:text-black" />
+                                     <span className="text-sm text-gray-700 group-hover:text-black font-medium">Discussion about React Hooks</span>
+                                 </button>
+                                 <button className="w-full text-left px-3 py-2.5 hover:bg-gray-50 rounded-lg flex items-center gap-3 group">
+                                     <Icons.FileText className="w-4 h-4 text-gray-400 group-hover:text-black" />
+                                     <span className="text-sm text-gray-700 group-hover:text-black font-medium">project_requirements.pdf</span>
+                                 </button>
+                             </div>
+                         )}
+                    </div>
+                    
+                    <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex justify-between">
+                        <span>Agent Search</span>
+                        <span>{query.length} chars</span>
+                    </div>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
+    );
+};
+
 const App: React.FC = () => {
   const isAuthenticated = useStore(s => s.isAuthenticated);
   const sessions = useStore(s => s.sessions);
@@ -67,6 +144,7 @@ const App: React.FC = () => {
   const language = useStore(s => s.language);
   const news = useStore(s => s.news);
   const inputMode = useStore(s => s.inputMode); 
+  const toggleSearch = useStore(s => s.toggleSearch);
   
   const setInput = useStore(s => s.setInput);
   const addMessage = useStore(s => s.addMessage);
@@ -106,6 +184,23 @@ const App: React.FC = () => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages.length, currentSessionId, isAuthenticated]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault();
+            toggleSearch();
+        }
+        if (e.key === 'Escape') {
+             // Close modals if open, handled inside modal components usually, 
+             // but here we can handle global escapes if needed.
+             useStore.getState().setActiveModal(null);
+             if (useStore.getState().isSearchOpen) toggleSearch();
+        }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleSearch]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -224,6 +319,7 @@ const App: React.FC = () => {
     <div className="flex h-screen w-full overflow-hidden bg-[#F3F4F6] text-gray-900 font-sans selection:bg-gray-300 selection:text-black">
       <Toast />
       <UserModals />
+      <SearchModal />
       
       <Sidebar />
       

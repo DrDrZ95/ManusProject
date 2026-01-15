@@ -51,7 +51,10 @@ import {
   Download,
   Eye,
   Monitor,
-  Image
+  Image,
+  Search,
+  Layers,
+  History
 } from 'lucide-react';
 
 // Unified icon collection for the application
@@ -107,5 +110,8 @@ export const Icons = {
   Download: Download,
   Preview: Eye,
   Remote: Monitor,
-  Image: Image
+  Image: Image,
+  Search: Search,
+  Layers: Layers,
+  History: History
 };

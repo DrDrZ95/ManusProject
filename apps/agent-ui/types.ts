@@ -140,6 +140,7 @@ export interface AppState {
   activeModal: ModalType;
   editingProjectId: string | null;
   toast: { message: string; type: 'info' | 'success' | 'warning' } | null; // Toast state
+  isSearchOpen: boolean; // Search Modal State
   
   login: (credentials: LoginRequest) => Promise<void>;
   logout: () => void;
@@ -172,4 +173,5 @@ export interface AppState {
   setInputMode: (mode: InputMode) => void;
   setAgentMode: (enabled: boolean) => void;
   setToast: (toast: { message: string; type: 'info' | 'success' | 'warning' } | null) => void;
+  toggleSearch: () => void;
 }

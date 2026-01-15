@@ -1,4 +1,3 @@
-
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { ErrorPage } from './ErrorPage';
 
@@ -13,11 +12,13 @@ interface State {
 /**
  * ErrorBoundary component to catch runtime errors in the component tree.
  */
-// Fix: Use the imported 'Component' class directly to ensure proper TypeScript inheritance and avoid property existence errors.
 export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false
-  };
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      hasError: false
+    };
+  }
 
   public static getDerivedStateFromError(_: Error): State {
     return { hasError: true };
@@ -34,7 +35,6 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     // Accessing props via the base class property
-    // By extending Component directly, 'props' is now correctly recognized.
     return this.props.children;
   }
 }

@@ -105,7 +105,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast })
         <div className={clsx(
           "flex flex-col",
           isUser ? "items-end" : "items-start",
-          "min-w-0"
+          "min-w-0 flex-1"
         )}>
           {/* Attachments if any */}
           {message.attachments && message.attachments.length > 0 && (
@@ -120,10 +120,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast })
           )}
 
           <div className={clsx(
-            "relative px-5 py-3.5 rounded-2xl text-[15px] leading-relaxed shadow-sm max-w-full overflow-hidden",
+            "relative text-[15px] leading-relaxed max-w-full overflow-hidden",
             isUser 
-              ? "bg-white border border-gray-200 text-gray-900 rounded-tr-sm" 
-              : "bg-white border border-gray-200 text-gray-900 rounded-tl-sm"
+              ? "px-5 py-3.5 bg-white border border-gray-200 text-gray-900 rounded-2xl rounded-tr-sm shadow-sm" 
+              : "py-1 px-0 bg-transparent text-gray-900 w-full" 
           )}>
              {isUser ? (
                <div className="whitespace-pre-wrap break-words">{message.content}</div>

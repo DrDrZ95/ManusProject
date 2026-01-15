@@ -252,6 +252,28 @@ export const Sidebar: React.FC = () => {
     ]});
   };
 
+  // Helper component for Slim Mode Buttons
+  const SlimButton = ({ icon: Icon, label, onClick, children }: any) => (
+    <div className="relative group/slim-item w-full flex justify-center py-2">
+       <button 
+         onClick={onClick}
+         className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100 hover:bg-black hover:text-white text-gray-500 transition-all active:scale-95 shadow-sm"
+       >
+          <Icon className="w-5 h-5" />
+       </button>
+       
+       {/* Flyout Menu */}
+       {children && (
+         <div className="absolute left-full top-0 ml-3 w-64 bg-white border border-gray-100 rounded-2xl shadow-2xl p-2 hidden group-hover/slim-item:block z-50 animate-fadeIn origin-top-left max-h-[80vh] overflow-y-auto custom-scrollbar">
+            <div className="px-3 py-2 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1">
+                {label}
+            </div>
+            {children}
+         </div>
+       )}
+    </div>
+  );
+
   return (
     <motion.aside 
       layout
@@ -291,7 +313,7 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* New Chat Button */}
-      <div className={clsx("mb-4 transition-all shrink-0", isSlim ? "px-2" : "px-5")}>
+      <div className={clsx("mb-2 transition-all shrink-0", isSlim ? "px-2" : "px-5")}>
         <button 
           onClick={store.createNewSession} 
           className={clsx(
@@ -303,6 +325,23 @@ export const Sidebar: React.FC = () => {
           <Icons.Plus className="w-5 h-5" strokeWidth={3} />
           {!isSlim && <span className="text-[11px] font-black tracking-[0.1em] uppercase">{t.newChat}</span>}
         </button>
+      </div>
+
+      {/* Search Button - Replaced below New Chat */}
+      <div className={clsx("mb-4 transition-all shrink-0", isSlim ? "px-2" : "px-5")}>
+         <button 
+            onClick={store.toggleSearch}
+            className={clsx(
+                "flex items-center justify-center transition-all active:scale-[0.98] border border-transparent",
+                 isSlim 
+                   ? "w-11 h-11 mx-auto rounded-xl hover:bg-gray-200/50 text-gray-500 bg-white shadow-sm" 
+                   : "w-full h-10 gap-3 px-4 text-left rounded-xl hover:bg-gray-200/50 text-gray-500 hover:text-black font-bold"
+            )}
+            title={isSlim ? t.search : undefined}
+         >
+             <Icons.Search className={clsx("w-5 h-5", !isSlim && "text-gray-400")} />
+             {!isSlim && <span>{t.search}</span>}
+         </button>
       </div>
 
       {/* Navigation Content */}
@@ -418,25 +457,51 @@ export const Sidebar: React.FC = () => {
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="h-full flex flex-col items-center gap-4 pt-4 overflow-y-auto custom-scrollbar"
+              className="h-full flex flex-col items-center gap-4 pt-4 overflow-visible"
             >
-              {/* Projects in Slim Mode - Only show markers */}
-              <div className="flex flex-col items-center gap-3">
-                 {activeGroups.map(g => (
-                    <button 
-                      key={g.id} 
-                      onClick={() => store.toggleSidebar()} 
-                      title={g.title}
-                      className="transition-transform hover:scale-110 active:scale-95"
-                    >
-                       <ProjectMarker group={g} isSlim />
-                    </button>
-                 ))}
-              </div>
-              
-              {activeGroups.length > 0 && <div className="w-10 h-px bg-gray-200 my-1" />}
+               {/* 1. Projects Button with Flyout */}
+               <SlimButton icon={Icons.Layers} label={t.groups} onClick={() => store.toggleSidebar()}>
+                  {activeGroups.length > 0 ? (
+                      <div className="space-y-1">
+                          {activeGroups.map(g => (
+                              <button
+                                key={g.id}
+                                onClick={(e) => { e.stopPropagation(); store.toggleSidebar(); }}
+                                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors text-left group/item"
+                              >
+                                  <ProjectMarker group={g} />
+                                  <span className="text-sm font-bold text-gray-700 truncate flex-1">{g.title || t.untitledGroup}</span>
+                              </button>
+                          ))}
+                      </div>
+                  ) : (
+                      <div className="p-2 text-xs text-gray-400 text-center italic">No projects</div>
+                  )}
+               </SlimButton>
 
-              {/* Chat session list removed in slim mode as requested */}
+               {/* 2. Chats Button with Flyout */}
+               <SlimButton icon={Icons.History} label={t.chats} onClick={() => store.toggleSidebar()}>
+                  {ungrouped.length > 0 ? (
+                      <div className="space-y-1">
+                         {ungrouped.slice(0, 10).map(s => (
+                            <button
+                                key={s.id}
+                                onClick={(e) => { e.stopPropagation(); store.selectSession(s.id); }}
+                                className={clsx(
+                                    "w-full text-left p-2 rounded-lg text-xs font-bold truncate transition-colors",
+                                    s.id === store.currentSessionId ? "bg-black text-white" : "text-gray-600 hover:bg-gray-100"
+                                )}
+                            >
+                                {s.title || "Untitled Chat"}
+                            </button>
+                         ))}
+                      </div>
+                  ) : (
+                      <div className="p-2 text-xs text-gray-400 text-center italic">No chats</div>
+                  )}
+               </SlimButton>
+
+               {/* Removed Search from bottom, added to top */}
             </motion.div>
           )}
         </AnimatePresence>

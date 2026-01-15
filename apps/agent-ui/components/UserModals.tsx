@@ -196,7 +196,8 @@ export const UserModals: React.FC = () => {
                 </div>
                 
                 <div className="space-y-4">
-                    <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar-h">
+                    {/* Added padding px-2 and py-2 to prevent shadow/border clipping */}
+                    <div className="flex gap-4 overflow-x-auto pb-4 pt-2 px-2 custom-scrollbar-h">
                         {CHARACTER_AVATARS.map((url, i) => (
                             <button 
                                 key={i} 
