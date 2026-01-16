@@ -1,12 +1,12 @@
-# Qwen3-4B-Instruct 模型环境设置
+# Llama3.1-8B-Instruct 模型环境设置
 
-本文档提供了运行 Qwen3-4B-Instruct 模型所需的环境设置说明。
+本文档提供了运行 Llama3.1-8B-Instruct 模型所需的环境设置说明。
 
 ## 系统要求
 
 - 基于 Linux 的操作系统 (推荐 Ubuntu 20.04 或更高版本)
 - Python 3.8 或更高版本
-- 至少 16GB RAM (Qwen3-4B 模型可能占用较多资源)
+- 至少 16GB RAM (Llama3.1-8B 模型可能占用较多资源)
 - 至少 20GB 可用磁盘空间 (用于模型和依赖项)
 - 强烈推荐使用具有 >= 8GB VRAM 的 CUDA 兼容 GPU (例如 NVIDIA Tesla T4, V100, A100) 以获得合理的性能。仅 CPU 设置是可能的，但会非常慢。
 
@@ -16,7 +16,7 @@
 
 1.  安装系统依赖项
 2.  设置 Python 环境和包
-3.  下载 Qwen3-4B-Instruct 模型
+3.  下载 Llama3.1-8B-Instruct 模型
 
 确保 `scripts/` 目录中的所有脚本都可执行：
 ```bash
@@ -54,7 +54,7 @@ cd /home/ubuntu/ai-agent
 
 ## 第 3 步：下载模型
 
-运行以下脚本以下载 Qwen3-4B-Instruct 模型：
+运行以下脚本以下载 Llama3.1-8B-Instruct 模型：
 
 ```bash
 cd /home/ubuntu/ai-agent
@@ -62,8 +62,8 @@ cd /home/ubuntu/ai-agent
 ```
 
 此脚本将：
-- 从 Hugging Face (`Qwen/Qwen3-4B-Instruct`) 下载 Qwen3-4B-Instruct 模型。
-- 将模型保存到 `/home/ubuntu/ai-agent/models/Qwen3-4B-Instruct` 目录。
+- 从 Hugging Face (`meta-llama/Llama3.1-8B-Instruct`) 下载 Llama3.1-8B-Instruct 模型。
+- 将模型保存到 `/home/ubuntu/ai-agent/models/Llama3.1-8B-Instruct` 目录。
 
 ## 验证设置
 
@@ -77,7 +77,7 @@ cd /home/ubuntu/ai-agent
 
 2.  运行一个简单的测试来加载模型 (这可能需要一些时间和内存)：
     ```python
-    python -c "from transformers import AutoModelForCausalLM, AutoTokenizer; import torch; model_path = '/home/ubuntu/ai-agent/models/Qwen3-4B-Instruct'; tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True); model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map='auto', torch_dtype=torch.bfloat16 if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else torch.float16 if torch.cuda.is_available() else torch.float32); print('Qwen3-4B-Instruct 模型加载成功！')"
+    python -c "from transformers import AutoModelForCausalLM, AutoTokenizer; import torch; model_path = '/home/ubuntu/ai-agent/models/Llama3.1-8B-Instruct'; tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True); model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map='auto', torch_dtype=torch.bfloat16 if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else torch.float16 if torch.cuda.is_available() else torch.float32); print('Llama3.1-8B-Instruct 模型加载成功！')"
     ```
     (注意：上面的 python 命令应该是一行。`torch_dtype` 部分用于在 CUDA 可用时进行优化加载。)
 

@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument(
         "--model_name", 
         type=str, 
-        default="Qwen/Qwen3-4B-Instruct",
+        default="deepseek-ai/DeepSeek-R1-Distill-Qwen3-4B",
         help="Base model to fine-tune"
     )
     parser.add_argument(

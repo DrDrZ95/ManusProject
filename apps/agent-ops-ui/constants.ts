@@ -284,7 +284,7 @@ export const MOCK_LOGS: PipelineLog[] = [
 
 export const MOCK_LOCAL_MODELS: LocalModel[] = [
   { id: 'm1', name: 'LLaMA-3-8B-Finance', baseModel: 'llama-3-8b', status: 'Fine-Tuning', accuracy: 88, precision: 85, recall: 90, epoch: 14, totalEpochs: 20 },
-  { id: 'm2', name: 'Qwen-72B-Sentiment', baseModel: 'qwen-72b-chat', status: 'Deployed', accuracy: 94, precision: 92, recall: 93, epoch: 10, totalEpochs: 10 },
+  { id: 'm2', name: 'DeepSeek-72B-Sentiment', baseModel: 'deepseek-24b', status: 'Deployed', accuracy: 94, precision: 92, recall: 93, epoch: 10, totalEpochs: 10 },
   { id: 'm3', name: 'Mistral-7B-v0.3', baseModel: 'mistral-7b', status: 'Idle', accuracy: 76, precision: 70, recall: 78, epoch: 0, totalEpochs: 50 },
 ];
 

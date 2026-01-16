@@ -1,22 +1,22 @@
-# Cross-Platform Fine-tuning Guide for Qwen3 Models
+# Cross-Platform Fine-tuning Guide for DeepSeek Models
 
-This guide provides instructions for fine-tuning Qwen3 language models across different platforms using:
+This guide provides instructions for fine-tuning DeepSeek language models across different platforms using:
 1. **Unsloth + LoRA** (for Linux/Windows)
 2. **MLX-LM** (for macOS with Apple Silicon)
 
 ## Overview
 
-Our cross-platform fine-tuning solution offers flexibility to work efficiently with Qwen3 models on various hardware configurations:
+Our cross-platform fine-tuning solution offers flexibility to work efficiently with DeepSeek models on various hardware configurations:
 
 - **Unsloth** accelerates LLM fine-tuning by optimizing the process for speed and memory efficiency on Linux/Windows
 - **LoRA** (Low-Rank Adaptation) reduces trainable parameters using low-rank matrix decompositions
 - **MLX-LM** provides native fine-tuning capabilities for macOS with Apple Silicon
 
-This approach enables efficient fine-tuning of Qwen3 models across different platforms, prioritizing CPU usage when needed and leveraging GPU acceleration when available.
+This approach enables efficient fine-tuning of DeepSeek models across different platforms, prioritizing CPU usage when needed and leveraging GPU acceleration when available.
 
-## Qwen3 Model Advantages
+## DeepSeek Model Advantages
 
-Qwen3 models offer several improvements over previous versions that make them excellent candidates for fine-tuning:
+DeepSeek models offer several improvements over previous versions that make them excellent candidates for fine-tuning:
 
 1. **Enhanced Performance**: Better reasoning capabilities and more accurate responses
 2. **Improved Context Handling**: More effective utilization of context window
@@ -84,7 +84,7 @@ The fine-tuning process is configured through the `FineTuningConfig` class in `f
 
 ```python
 FineTuningConfig(
-    model_name="Qwen/Qwen3-4B-Instruct",  # Updated to Qwen3
+    model_name="deepseek-ai/DeepSeek-R1-Distill-Qwen3-4B",  # Updated to DeepSeek
     output_dir="./results",
     lora_r=8,                   # LoRA rank
     lora_alpha=16,              # LoRA alpha parameter
@@ -124,7 +124,7 @@ The new parameters provide fine-grained control over hardware usage:
 
 ## Dataset Preparation
 
-To fine-tune a Qwen3 model, you need to prepare a dataset in one of the following formats:
+To fine-tune a DeepSeek model, you need to prepare a dataset in one of the following formats:
 - CSV file with columns for instructions/prompts and responses
 - JSON/JSONL file with instruction-response pairs
 - Hugging Face dataset
@@ -138,14 +138,14 @@ The dataset should contain pairs of prompts/instructions and corresponding respo
 
 ### Linux/Windows (Unsloth + LoRA)
 
-The simplest way to fine-tune a Qwen3 model on Linux/Windows is to use the `run_fine_tuning` function:
+The simplest way to fine-tune a DeepSeek model on Linux/Windows is to use the `run_fine_tuning` function:
 
 ```python
 from finetune.utils import FineTuningConfig, run_fine_tuning
 
 # Create configuration
 config = FineTuningConfig(
-    model_name="Qwen/Qwen3-4B-Instruct",  # Using Qwen3-4B model
+    model_name="deepseek-ai/DeepSeek-R1-Distill-Qwen3-4B",  # Using DeepSeek-4B model
     output_dir="./my_finetuned_model",
     cpu_only=False,  # Set to True to force CPU usage
     device_map="auto",  # Automatically distribute model across devices
@@ -170,7 +170,7 @@ source finetune/venv/bin/activate
 
 # Run the macOS example script
 python finetune/examples/macos_mlx_finetune.py \
-    --model_name "mlx-community/Qwen3-0.5B-Chat-mlx" \
+    --model_name "mlx-community/DeepSeek-0.5B-Chat-mlx" \
     --output_dir ./my_mlx_model \
     --test_prompt "Write a short story about a robot learning to paint."
 ```
@@ -185,7 +185,7 @@ The repository includes example scripts for both platforms:
    ```bash
    python finetune/examples/simple_finetune.py \
        --data_path path/to/your/dataset.json \
-       --model_name Qwen/Qwen3-4B-Instruct \
+       --model_name deepseek-ai/DeepSeek-R1-Distill-Qwen3-4B \
        --output_dir ./my_finetuned_model \
        --num_train_epochs 3 \
        --fp16
@@ -194,13 +194,13 @@ The repository includes example scripts for both platforms:
 2. **macOS**: `finetune/examples/macos_mlx_finetune.py`
    ```bash
    python finetune/examples/macos_mlx_finetune.py \
-       --model_name "mlx-community/Qwen3-0.5B-Chat-mlx" \
+       --model_name "mlx-community/DeepSeek-0.5B-Chat-mlx" \
        --output_dir ./my_mlx_model
    ```
 
 ## Generating Text with Fine-tuned Models
 
-After fine-tuning, you can generate text using the fine-tuned Qwen3 model with the same API across platforms:
+After fine-tuning, you can generate text using the fine-tuned DeepSeek model with the same API across platforms:
 
 ```python
 from finetune.utils import load_model_and_tokenizer, generate_text, FineTuningConfig
@@ -232,14 +232,14 @@ The `generate_text` function automatically detects the platform and model type, 
 
 ## Advanced Usage
 
-### Custom Prompt Templates for Qwen3
+### Custom Prompt Templates for DeepSeek
 
-Qwen3 models support a specific chat format. You can customize the prompt template used for fine-tuning:
+DeepSeek models support a specific chat format. You can customize the prompt template used for fine-tuning:
 
 ```python
 from finetune.utils import prepare_dataset, FineTuningConfig
 
-# Define custom prompt template for Qwen3
+# Define custom prompt template for DeepSeek
 custom_template = """<|im_start|>system
 You are a helpful AI assistant specialized in {domain}.<|im_end|>
 <|im_start|>user
@@ -268,10 +268,12 @@ from finetune.utils import FineTuningConfig, run_fine_tuning
 
 # Create configuration with W&B enabled
 config = FineTuningConfig(
-    model_name="Qwen/Qwen3-4B-Instruct",
+    model_name="deepseek-ai/DeepSeek-R1-Distill-Qwen3-4B
+
+",
     use_wandb=True,
     wandb_project="my-llm-finetuning",
-    wandb_run_name="qwen3-lora-experiment-1",
+    wandb_run_name="DeepSeek-lora-experiment-1",
 )
 
 # Run fine-tuning
@@ -281,20 +283,20 @@ run_fine_tuning(
 )
 ```
 
-## Qwen3 Model Selection Guide
+## DeepSeek Model Selection Guide
 
-Qwen3 comes in several sizes to fit different use cases and hardware constraints:
+DeepSeek comes in several sizes to fit different use cases and hardware constraints:
 
 | Model | Parameters | Use Case | Min. VRAM (GPU) | CPU Viable |
 |-------|------------|----------|-----------------|------------|
-| Qwen3-0.5B | 0.5 billion | Testing, mobile | 2GB | Yes (fast) |
-| Qwen3-1.8B | 1.8 billion | Light tasks | 4GB | Yes |
-| Qwen3-4B | 4 billion | General purpose | 8GB | Yes (slow) |
-| Qwen3-7B | 7 billion | Advanced tasks | 14GB | Limited |
-| Qwen3-8B | 8 billion | High performance | 16GB | Not recommended |
-| Qwen3-72B | 72 billion | Enterprise | 80GB+ | No |
+| DeepSeek-0.5B | 0.5 billion | Testing, mobile | 2GB | Yes (fast) |
+| DeepSeek-1.8B | 1.8 billion | Light tasks | 4GB | Yes |
+| DeepSeek-4B | 4 billion | General purpose | 8GB | Yes (slow) |
+| DeepSeek-7B | 7 billion | Advanced tasks | 14GB | Limited |
+| DeepSeek-8B | 8 billion | High performance | 16GB | Not recommended |
+| DeepSeek-72B | 72 billion | Enterprise | 80GB+ | No |
 
-For CPU-only environments, we recommend using Qwen3-0.5B or Qwen3-1.8B with 4-bit quantization.
+For CPU-only environments, we recommend using DeepSeek-0.5B or DeepSeek-1.8B with 4-bit quantization.
 
 ## Troubleshooting
 
@@ -306,24 +308,24 @@ If you encounter out-of-memory errors:
 3. Reduce `batch_size` in the configuration
 4. Increase `gradient_accumulation_steps` to compensate for smaller batch size
 5. Reduce `max_seq_length` if your data allows it
-6. Use a smaller Qwen3 model variant (e.g., Qwen3-1.8B instead of Qwen3-4B)
+6. Use a smaller DeepSeek model variant (e.g., DeepSeek-1.8B instead of DeepSeek-4B)
 
 ### Platform-Specific Issues
 
 #### Linux/Windows
 - If CUDA is not available, the system will automatically fall back to CPU
 - For better performance on CPU, consider using a smaller model or increasing quantization
-- For Qwen3 models, ensure you have the latest transformers library (version 4.36.0+)
+- For DeepSeek models, ensure you have the latest transformers library (version 4.36.0+)
 
 #### macOS
-- Ensure you're using a compatible MLX model (e.g., `mlx-community/Qwen3-0.5B-Chat-mlx`)
+- Ensure you're using a compatible MLX model (e.g., `mlx-community/DeepSeek-0.5B-Chat-mlx`)
 - If MLX-LM is not available, install it with `pip install mlx-lm`
 - For Apple Silicon optimization, ensure you're using Python 3.10+ with the arm64 architecture
 - MLX models are optimized specifically for Apple Silicon and provide much better performance than CPU-only PyTorch on macOS
 
 ## References
 
-- [Qwen3 Model Hub](https://huggingface.co/Qwen)
+- [DeepSeek Model Hub](https://huggingface.co/DeepSeek)
 - [Unsloth Documentation](https://github.com/unslothai/unsloth)
 - [LoRA Paper: "LoRA: Low-Rank Adaptation of Large Language Models"](https://arxiv.org/abs/2106.09685)
 - [PEFT Library Documentation](https://huggingface.co/docs/peft/index)

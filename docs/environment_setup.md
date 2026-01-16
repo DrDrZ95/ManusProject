@@ -1,12 +1,12 @@
-# Qwen3-4B-Instruct Model Environment Setup
+# Llama3.1-8B-Instruct Model Environment Setup
 
-This document provides instructions for setting up the environment required to run the Qwen3-4B-Instruct model.
+This document provides instructions for setting up the environment required to run the Llama3.1-8B-Instruct model.
 
 ## System Requirements
 
 - Linux-based operating system (Ubuntu 20.04 or later recommended)
 - Python 3.8 or later
-- At least 16GB RAM (Qwen3-4B models can be resource-intensive)
+- At least 16GB RAM (Llama3.1-8B models can be resource-intensive)
 - At least 20GB free disk space for the model and dependencies
 - CUDA-compatible GPU (e.g., NVIDIA Tesla T4, V100, A100) with >= 8GB VRAM highly recommended for reasonable performance. CPU-only setup is possible but will be very slow.
 
@@ -16,7 +16,7 @@ The setup process consists of three main steps, executed from the `/home/ubuntu/
 
 1. Installing system dependencies
 2. Setting up Python environment and packages
-3. Downloading the Qwen3-4B-Instruct model
+3. Downloading the Llama3.1-8B-Instruct model
 
 Make sure all scripts in the `scripts/` directory are executable:
 ```bash
@@ -54,7 +54,7 @@ This script will:
 
 ## Step 3: Download the Model
 
-Run the following script to download the Qwen3-4B-Instruct model:
+Run the following script to download the Llama3.1-8B-Instruct model:
 
 ```bash
 cd /home/ubuntu/ai-agent
@@ -62,8 +62,8 @@ cd /home/ubuntu/ai-agent
 ```
 
 This script will:
-- Download the Qwen3-4B-Instruct model from Hugging Face (`Qwen/Qwen3-4B-Instruct`).
-- Save the model to the `/home/ubuntu/ai-agent/models/Qwen3-4B-Instruct` directory.
+- Download the Llama3.1-8B-Instruct model from Hugging Face (`meta-llama/Llama3.1-8B-Instruct`).
+- Save the model to the `/home/ubuntu/ai-agent/models/Llama3.1-8B-Instruct` directory.
 
 ## Verifying the Setup
 
@@ -77,7 +77,7 @@ After completing all the steps above, you can verify that the setup was successf
 
 2. Running a simple test to load the model (this may take some time and memory):
    ```python
-   python -c "from transformers import AutoModelForCausalLM, AutoTokenizer; model_path = '/home/ubuntu/ai-agent/models/Qwen3-4B-Instruct'; tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True); model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map='auto', torch_dtype=torch.bfloat16 if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else torch.float16 if torch.cuda.is_available() else torch.float32); print('Qwen3-4B-Instruct model loaded successfully!')"
+   python -c "from transformers import AutoModelForCausalLM, AutoTokenizer; model_path = '/home/ubuntu/ai-agent/models/Llama3.1-8B-Instruct'; tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True); model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map='auto', torch_dtype=torch.bfloat16 if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else torch.float16 if torch.cuda.is_available() else torch.float32); print('Llama3.1-8B-Instruct model loaded successfully!')"
    ```
    (Note: The python command above should be a single line. The `torch_dtype` part is for optimized loading if CUDA is available.)
 

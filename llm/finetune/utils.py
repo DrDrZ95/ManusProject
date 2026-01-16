@@ -57,7 +57,7 @@ class FineTuningConfig:
     
     def __init__(
         self,
-        model_name: str = "Qwen/Qwen3-4B-Instruct",
+        model_name: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen3-4B",
         output_dir: str = "./results",
         lora_r: int = 8,
         lora_alpha: int = 16,

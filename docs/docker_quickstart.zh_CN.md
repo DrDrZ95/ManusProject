@@ -1,6 +1,6 @@
 # Docker 部署和快速入门指南
 
-本指南提供了使用 Docker 部署 AI Agent 应用程序的说明，包括 .NET Web API 后端、React 前端以及可选的基于 Python 的 Qwen3 模型服务器。
+本指南提供了使用 Docker 部署 AI Agent 应用程序的说明，包括 .NET Web API 后端、React 前端以及可选的基于 Python 的 Llama-4 模型服务器。
 
 ## 前提条件
 
@@ -52,7 +52,7 @@ Docker 设置包括：
 
 3. **Python 模型服务器容器**（可选）：
    - Dockerfile：`docker/Dockerfile.python`
-   - 托管 Qwen3-4B-Instruct 模型
+   - 托管 Llama-4-Scout-17B-16E-Instruct 模型
    - 暴露端口 2025
 
 ## 开发设置

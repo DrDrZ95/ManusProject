@@ -204,7 +204,7 @@ Here's a complete example of integrating the `DynamicExternalAccessTool` with an
 public async Task<string> ProcessUserQuery(string userQuery, CancellationToken cancellationToken)
 {
     // First, get a response from the AI model
-    var aiResponse = await _qwenServiceClient.GenerateTextAsync(userQuery, cancellationToken);
+    var aiResponse = await _llmServiceClient.GenerateTextAsync(userQuery, cancellationToken);
     
     // Check if the AI response indicates a need for external data
     if (aiResponse.Contains("[NEED_WEATHER_DATA]"))

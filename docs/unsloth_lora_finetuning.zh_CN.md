@@ -1,22 +1,22 @@
-# 跨平台微调 Qwen3 模型指南
+# 跨平台微调 DeepSeek 模型指南
 
-本指南提供了在不同平台上使用以下技术微调 Qwen3 语言模型的说明：
+本指南提供了在不同平台上使用以下技术微调 DeepSeek 语言模型的说明：
 1. **Unsloth + LoRA**（适用于 Linux/Windows）
 2. **MLX-LM**（适用于搭载 Apple Silicon 的 macOS）
 
 ## 概述
 
-我们的跨平台微调解决方案提供了在各种硬件配置上高效微调 Qwen3 模型的灵活性：
+我们的跨平台微调解决方案提供了在各种硬件配置上高效微调 DeepSeek 模型的灵活性：
 
 - **Unsloth** 通过优化速度和内存效率，加速 Linux/Windows 上的 LLM 微调
 - **LoRA**（低秩适应）使用低秩矩阵分解减少可训练参数
 - **MLX-LM** 为搭载 Apple Silicon 的 macOS 提供原生微调功能
 
-这种方法使得在不同平台上高效微调 Qwen3 模型成为可能，在需要时优先使用 CPU，在可用时利用 GPU 加速。
+这种方法使得在不同平台上高效微调 DeepSeek 模型成为可能，在需要时优先使用 CPU，在可用时利用 GPU 加速。
 
-## Qwen3 模型优势
+## DeepSeek 模型优势
 
-Qwen3 模型相比之前版本提供了多项改进，使其成为微调的绝佳选择：
+DeepSeek 模型相比之前版本提供了多项改进，使其成为微调的绝佳选择：
 
 1. **增强性能**：更好的推理能力和更准确的响应
 2. **改进的上下文处理**：更有效地利用上下文窗口
@@ -84,7 +84,7 @@ pip install transformers datasets pandas numpy
 
 ```python
 FineTuningConfig(
-    model_name="Qwen/Qwen3-4B-Instruct",  # 更新为 Qwen3
+    model_name="deepseek-ai/DeepSeek-R1-Distill-Qwen3-4B",  # 更新为 DeepSeek
     output_dir="./results",
     lora_r=8,                   # LoRA 秩
     lora_alpha=16,              # LoRA alpha 参数
@@ -124,7 +124,7 @@ FineTuningConfig(
 
 ## 数据集准备
 
-要微调 Qwen3 模型，您需要准备以下格式之一的数据集：
+要微调 DeepSeek 模型，您需要准备以下格式之一的数据集：
 - 带有指令/提示和响应列的 CSV 文件
 - 带有指令-响应对的 JSON/JSONL 文件
 - Hugging Face 数据集
@@ -138,14 +138,14 @@ FineTuningConfig(
 
 ### Linux/Windows（Unsloth + LoRA）
 
-在 Linux/Windows 上微调 Qwen3 模型的最简单方法是使用 `run_fine_tuning` 函数：
+在 Linux/Windows 上微调 DeepSeek 模型的最简单方法是使用 `run_fine_tuning` 函数：
 
 ```python
 from finetune.utils import FineTuningConfig, run_fine_tuning
 
 # 创建配置
 config = FineTuningConfig(
-    model_name="Qwen/Qwen3-4B-Instruct",  # 使用 Qwen3-4B 模型
+    model_name="deepseek-ai/DeepSeek-R1-Distill-Qwen3-4B",  # 使用 DeepSeek-4B 模型
     output_dir="./my_finetuned_model",
     cpu_only=False,  # 设置为 True 强制使用 CPU
     device_map="auto",  # 自动将模型分布在设备上
@@ -170,7 +170,7 @@ source finetune/venv/bin/activate
 
 # 运行 macOS 示例脚本
 python finetune/examples/macos_mlx_finetune.py \
-    --model_name "mlx-community/Qwen3-0.5B-Chat-mlx" \
+    --model_name "mlx-community/DeepSeek-0.5B-Chat-mlx" \
     --output_dir ./my_mlx_model \
     --test_prompt "写一个关于机器人学习绘画的短故事。"
 ```
@@ -185,7 +185,7 @@ python finetune/examples/macos_mlx_finetune.py \
    ```bash
    python finetune/examples/simple_finetune.py \
        --data_path path/to/your/dataset.json \
-       --model_name Qwen/Qwen3-4B-Instruct \
+       --model_name deepseek-ai/DeepSeek-R1-Distill-Qwen3-4B \
        --output_dir ./my_finetuned_model \
        --num_train_epochs 3 \
        --fp16
@@ -194,13 +194,13 @@ python finetune/examples/macos_mlx_finetune.py \
 2. **macOS**：`finetune/examples/macos_mlx_finetune.py`
    ```bash
    python finetune/examples/macos_mlx_finetune.py \
-       --model_name "mlx-community/Qwen3-0.5B-Chat-mlx" \
+       --model_name "mlx-community/DeepSeek-0.5B-Chat-mlx" \
        --output_dir ./my_mlx_model
    ```
 
 ## 使用微调模型生成文本
 
-微调后，您可以使用相同的 API 在各平台上使用微调后的 Qwen3 模型生成文本：
+微调后，您可以使用相同的 API 在各平台上使用微调后的 DeepSeek 模型生成文本：
 
 ```python
 from finetune.utils import load_model_and_tokenizer, generate_text, FineTuningConfig
@@ -232,14 +232,14 @@ print(generated_text)
 
 ## 高级用法
 
-### Qwen3 的自定义提示模板
+### DeepSeek 的自定义提示模板
 
-Qwen3 模型支持特定的对话格式。您可以自定义用于微调的提示模板：
+DeepSeek 模型支持特定的对话格式。您可以自定义用于微调的提示模板：
 
 ```python
 from finetune.utils import prepare_dataset, FineTuningConfig
 
-# 为 Qwen3 定义自定义提示模板
+# 为 DeepSeek 定义自定义提示模板
 custom_template = """<|im_start|>system
 您是一位专门从事{domain}的有用AI助手。<|im_end|>
 <|im_start|>user
@@ -268,10 +268,10 @@ from finetune.utils import FineTuningConfig, run_fine_tuning
 
 # 创建启用 W&B 的配置
 config = FineTuningConfig(
-    model_name="Qwen/Qwen3-4B-Instruct",
+    model_name="deepseek-ai/DeepSeek-R1-Distill-Qwen3-4B",
     use_wandb=True,
     wandb_project="my-llm-finetuning",
-    wandb_run_name="qwen3-lora-experiment-1",
+    wandb_run_name="DeepSeek-lora-experiment-1",
 )
 
 # 运行微调
@@ -281,20 +281,20 @@ run_fine_tuning(
 )
 ```
 
-## Qwen3 模型选择指南
+## DeepSeek 模型选择指南
 
-Qwen3 有多种规模以适应不同用例和硬件限制：
+DeepSeek 有多种规模以适应不同用例和硬件限制：
 
 | 模型 | 参数 | 用例 | 最小显存 (GPU) | CPU 可行性 |
 |-------|------------|----------|-----------------|------------|
-| Qwen3-0.5B | 0.5 亿 | 测试、移动设备 | 2GB | 是（快速） |
-| Qwen3-1.8B | 1.8 亿 | 轻量级任务 | 4GB | 是 |
-| Qwen3-4B | 4 亿 | 通用目的 | 8GB | 是（慢） |
-| Qwen3-7B | 7 亿 | 高级任务 | 14GB | 有限 |
-| Qwen3-8B | 8 亿 | 高性能 | 16GB | 不推荐 |
-| Qwen3-72B | 72 亿 | 企业级 | 80GB+ | 否 |
+| DeepSeek-0.5B | 0.5 亿 | 测试、移动设备 | 2GB | 是（快速） |
+| DeepSeek-1.8B | 1.8 亿 | 轻量级任务 | 4GB | 是 |
+| DeepSeek-4B | 4 亿 | 通用目的 | 8GB | 是（慢） |
+| DeepSeek-7B | 7 亿 | 高级任务 | 14GB | 有限 |
+| DeepSeek-8B | 8 亿 | 高性能 | 16GB | 不推荐 |
+| DeepSeek-72B | 72 亿 | 企业级 | 80GB+ | 否 |
 
-对于仅 CPU 环境，我们推荐使用 Qwen3-0.5B 或 Qwen3-1.8B 并配合 4 位量化。
+对于仅 CPU 环境，我们推荐使用 DeepSeek-0.5B 或 DeepSeek-1.8B 并配合 4 位量化。
 
 ## 故障排除
 
@@ -306,24 +306,24 @@ Qwen3 有多种规模以适应不同用例和硬件限制：
 3. 减小配置中的 `batch_size`
 4. 增加 `gradient_accumulation_steps` 以补偿较小的批量大小
 5. 如果您的数据允许，减小 `max_seq_length`
-6. 使用较小的 Qwen3 模型变体（例如，使用 Qwen3-1.8B 而不是 Qwen3-4B）
+6. 使用较小的 DeepSeek 模型变体（例如，使用 DeepSeek-1.8B 而不是 DeepSeek-4B）
 
 ### 平台特定问题
 
 #### Linux/Windows
 - 如果 CUDA 不可用，系统将自动回退到 CPU
 - 为了在 CPU 上获得更好的性能，考虑使用较小的模型或增加量化
-- 对于 Qwen3 模型，确保您使用最新的 transformers 库（版本 4.36.0+）
+- 对于 DeepSeek 模型，确保您使用最新的 transformers 库（版本 4.36.0+）
 
 #### macOS
-- 确保您使用的是兼容的 MLX 模型（例如 `mlx-community/Qwen3-0.5B-Chat-mlx`）
+- 确保您使用的是兼容的 MLX 模型（例如 `mlx-community/DeepSeek-0.5B-Chat-mlx`）
 - 如果 MLX-LM 不可用，使用 `pip install mlx-lm` 安装
 - 对于 Apple Silicon 优化，确保您使用的是 arm64 架构的 Python 3.10+
 - MLX 模型专为 Apple Silicon 优化，在 macOS 上比仅 CPU 的 PyTorch 提供更好的性能
 
 ## 参考资料
 
-- [Qwen3 模型中心](https://huggingface.co/Qwen)
+- [DeepSeek 模型中心](https://huggingface.co/Qwen)
 - [Unsloth 文档](https://github.com/unslothai/unsloth)
 - [LoRA 论文："LoRA: Low-Rank Adaptation of Large Language Models"](https://arxiv.org/abs/2106.09685)
 - [PEFT 库文档](https://huggingface.co/docs/peft/index)

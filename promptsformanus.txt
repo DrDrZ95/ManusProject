@@ -1,5 +1,0 @@
-I have deleted all the files of `/ai-agent`. From now on, please use the GitHub remote repository `ManusProject` of connectors as the main project: 
-1. Please pull and host this remote repository in the "ai-agent/" folder. You can first try to pull the "main" remote branch. Just do it once. If there are any issues, please report them promptly. 
-* Please ensure that this step is carried out correctly.
-2. The subsequent core interactions also revolve around this remote repository of the connectors. If you encounter the problem that the api-agent cannot find the file later, please prioritize pulling this remote repository.
-3. The version of this remote repository is guaranteed to be our latest build history. So there is no need to worry. Your core task in the future is to continuously optimize and interact with this remote repository.

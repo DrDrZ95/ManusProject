@@ -134,7 +134,7 @@ echo "💡 若需再次激活微调环境，请执行：source finetune/venv/bin
 
 
 # ========================================
-# 6. git部分需要手动进行
+# 6. git部分需要手动进行(参考自己的情况来执行)
 # ========================================
 exit
 
@@ -147,7 +147,7 @@ cd /home/ubuntu/ai-agent
 echo "1. 初始化"
 git init
 echo "2. 添加远程remote"
-git remote add origin "git@github.com:DrDrZ95/ManusProject.git"
+git remote add origin "git@github.com:xxx/xxx.git"
 
 git config --global user.email ""
 git config --global user.name ""
@@ -164,6 +164,3 @@ git checkout -b main origin/main
 
 echo "6. 确保本地 跟踪"
 git branch --set-upstream-to=origin/main
-
-echo "7.可以忽略"
-git pull

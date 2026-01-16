@@ -1,6 +1,6 @@
 # Docker Deployment and Quick Start Guide
 
-This guide provides instructions for deploying the AI Agent application using Docker, which includes the .NET Web API backend, React frontend, and optionally the Python-based Qwen3 model server.
+This guide provides instructions for deploying the AI Agent application using Docker, which includes the .NET Web API backend, React frontend, and optionally the Python-based Llama4 model server.
 
 ## Prerequisites
 
@@ -52,7 +52,7 @@ The Docker setup includes:
 
 3. **Python Model Server Container** (Optional):
    - Dockerfile: `docker/Dockerfile.python`
-   - Hosts the Qwen3-4B-Instruct model
+   - Hosts the Llama-4-Scout-17B-16E-Instruct model
    - Exposes port 2025
 
 ## Development Setup

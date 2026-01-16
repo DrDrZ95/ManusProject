@@ -128,7 +128,7 @@ from datasets import load_dataset
 
 # 使用 Unsloth 优化加载模型
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="Qwen/Qwen3-4B-Instruct",
+    model_name="meta-llama/Llama-4-Scout-17B-16E-Instruct",
     max_seq_length=2048,
     dtype=torch.bfloat16,
     load_in_4bit=True,

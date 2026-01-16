@@ -1,10 +1,10 @@
 #!/bin/bash
 # download_model.sh
-# Script to download Qwen3-4B-Instruct model
+# Script to download deepseek-ai/DeepSeek-R1-Distill-Qwen3-4B model
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
-echo "Downloading Qwen3-4B-Instruct model..."
+echo "Downloading deepseek-ai/DeepSeek-R1-Distill-Qwen3-4B model..."
 
 # Create model directory if it doesn't exist
 mkdir -p /home/ubuntu/ai-agent/models
@@ -22,8 +22,8 @@ python3 -c "
 from huggingface_hub import snapshot_download
 import os
 
-model_name = 'Qwen/Qwen3-4B-Instruct'
-model_path = f'/home/ubuntu/ai-agent/models/{model_name.replace("Qwen/", "")}'
+model_name = 'deepseek-ai/DeepSeek-R1-Distill-Qwen3-4B'
+model_path = f'/home/ubuntu/ai-agent/models/{model_name.replace("deepseek-ai/", "")}'
 os.makedirs(model_path, exist_ok=True)
 
 print(f'Downloading {model_name} model from Hugging Face to {model_path}...')
@@ -37,4 +37,4 @@ snapshot_download(
 print('Model download completed successfully!')
 "
 
-echo "Qwen3-4B-Instruct model download completed!"
+echo "DeepSeek-R1-Distill-Qwen3-4B model download completed!"

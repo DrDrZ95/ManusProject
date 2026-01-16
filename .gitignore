@@ -12,10 +12,6 @@ ENV/
 # Model files (large files - consider Git LFS for these if you must commit them)
 models/*
 !models/.gitkeep
-# If you download models into a subdirectory of models, e.g. models/Qwen2-7B-Instruct,
-# and want to keep the directory structure but not the large files:
-# models/Qwen2-7B-Instruct/*
-# !models/Qwen2-7B-Instruct/.gitkeep
 
 # Logs
 logs/

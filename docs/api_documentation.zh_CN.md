@@ -1,10 +1,10 @@
-# Qwen3-4B 模型 API 文档
+# Llama 4 Scout-17B 模型 API 文档
 
-本文档为 Qwen3-4B 模型 API 提供了全面的文档说明。
+本文档为 Llama 4 Scout-17B 模型 API 提供了全面的文档说明。
 
 ## API 概述
 
-Qwen3-4B 模型通过 FastAPI 部署为一个 RESTful API 服务。该 API 在 2025 端口上运行，并提供使用 Qwen3-4B 语言模型进行文本生成的端点。相比之前的 Qwen 版本，Qwen3-4B 提供了更好的性能和功能。
+Llama 4 Scout-17B 模型通过 FastAPI 部署为一个 RESTful API 服务。该 API 在 2025 端口上运行，并提供使用 Llama 4 Scout-17B 语言模型进行文本生成的端点。相比之前的 Llama4 版本，Llama 4 Scout-17B 提供了更好的性能和功能。
 
 ## API 端点
 
@@ -16,10 +16,10 @@ Qwen3-4B 模型通过 FastAPI 部署为一个 RESTful API 服务。该 API 在 2
 - **响应示例**:
   ```json
   {
-    "name": "Qwen3-4B API",
+    "name": "Llama 4 Scout-17B API",
     "version": "1.0.0",
     "status": "active",
-    "model": "Qwen/Qwen3-4B-Instruct"
+    "model": "meta-llama/Llama-4-Scout-17B-16E-Instruct"
   }
   ```
 
@@ -89,9 +89,9 @@ Qwen3-4B 模型通过 FastAPI 部署为一个 RESTful API 服务。该 API 在 2
   }
   ```
 
-## Qwen3 模型改进
+## Llama4 模型改进
 
-Qwen3-4B 相比之前的 Qwen 版本提供了多项改进：
+Llama 4 Scout-17B 相比之前的 Llama 版本提供了多项改进：
 
 1. **增强性能**：更好的推理能力和更准确的响应
 2. **改进的上下文处理**：更有效地利用上下文窗口
@@ -127,8 +127,8 @@ python src/api_examples.py --url "http://your-server-address:2025"
 ```python
 import requests
 
-def generate_text_from_qwen3(prompt, max_length=512, temperature=0.7):
-    """使用 Qwen3-4B API 生成文本"""
+def generate_text_from_llama4(prompt, max_length=512, temperature=0.7):
+    """使用 Llama 4 Scout-17B API 生成文本"""
     api_url = "http://localhost:2025/generate"
     
     payload = {
@@ -145,7 +145,7 @@ def generate_text_from_qwen3(prompt, max_length=512, temperature=0.7):
         raise Exception(f"API 请求失败: {response.text}")
 
 # 示例用法
-result = generate_text_from_qwen3("编写一个 Python 函数以升序对数字列表进行排序。")
+result = generate_text_from_llama4("编写一个 Python 函数以升序对数字列表进行排序。")
 print(result)
 ```
 
@@ -153,14 +153,14 @@ print(result)
 
 ### 对话完成
 
-Qwen3-4B 支持结构化格式的对话完成。以下是使用方法：
+Llama 4 Scout-17B 支持结构化格式的对话完成。以下是使用方法：
 
 ```python
 import requests
 import json
 
-def chat_with_qwen3(messages, temperature=0.7):
-    """使用 Qwen3-4B API 生成对话完成"""
+def chat_with_llama4(messages, temperature=0.7):
+    """使用 Llama 4 Scout-17B API 生成对话完成"""
     api_url = "http://localhost:2025/generate"
     
     # 将消息格式化为对话提示
@@ -196,7 +196,7 @@ messages = [
     {"role": "system", "content": "你是一个有帮助的AI助手。"},
     {"role": "user", "content": "Python的主要特点是什么？"}
 ]
-response = chat_with_qwen3(messages)
+response = chat_with_llama4(messages)
 print(response)
 ```
 
@@ -212,13 +212,13 @@ API 为各种场景提供了适当的错误处理：
 
 - 第一次请求可能需要更长时间，因为模型需要加载到内存中 (尤其是加载到 GPU)。
 - 生成时间取决于请求的 `max_length` 参数和提示的复杂性。
-- 与仅 CPU 推理相比，使用具有足够显存 (推荐 Qwen3-4B >=8GB) 的 CUDA 兼容 GPU 可显著提高性能。
+- 与仅 CPU 推理相比，使用具有足够显存 (推荐 Llama 4 Scout-17B >=8GB) 的 CUDA 兼容 GPU 可显著提高性能。
 - 对于生产用途，请考虑部署在具有足够 RAM (>=16GB) 和合适 GPU 的机器上。
-- Qwen3-4B 在性能和资源需求之间提供了良好的平衡，使其适合在资源有限的环境中部署。
+- Llama 4 Scout-17B 在性能和资源需求之间提供了良好的平衡，使其适合在资源有限的环境中部署。
 
 ## 资源优化
 
-要优化 Qwen3-4B 的资源使用：
+要优化 Llama 4 Scout-17B 的资源使用：
 
 1. **量化**：考虑使用 4 位或 8 位量化以减少内存占用
 2. **批处理**：尽可能批量处理多个请求

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # model_server.py
-# Script to deploy Qwen3-4B model with FastAPI
+# Script to deploy deepseek-ai/DeepSeek-R1-Distill-Qwen3-4B model with FastAPI
 
 import os
 import torch
@@ -23,15 +23,15 @@ logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Qwen3-4B API",
-    description="API for Qwen3-4B language model",
+    title="DeepSeek API",
+    description="API for DeepSeek language model",
     version="1.0.0"
 )
 
 # Define request model
 class GenerationRequest(BaseModel):
     prompt: str
-    max_length: int = 512  # Increased default max_length for potentially longer Qwen responses
+    max_length: int = 512  # Increased default max_length for potentially longer DeepSeek responses
     temperature: float = 0.7
     top_p: float = 0.9
     top_k: int = 50
@@ -40,7 +40,7 @@ class GenerationRequest(BaseModel):
 # Global variables for model and tokenizer
 model = None
 tokenizer = None
-MODEL_NAME = "Qwen/Qwen3-4B-Instruct" # HF model ID for Qwen3-4B
+MODEL_NAME = "deepseek-ai/DeepSeek-R1-Distill-Qwen3-4B" # HF model ID for DeepSeek
 
 @app.on_event("startup")
 async def startup_event():
@@ -73,7 +73,7 @@ async def startup_event():
 async def root():
     """Root endpoint with API information"""
     return {
-        "name": "Qwen3-4B API",
+        "name": "DeepSeek API",
         "version": "1.0.0",
         "status": "active",
         "model": MODEL_NAME
@@ -95,7 +95,7 @@ async def generate_text(request: GenerationRequest):
         raise HTTPException(status_code=503, detail="Model or tokenizer not loaded")
     
     try:
-        # Qwen models often use a specific chat template format for prompts.
+        # DeepSeek models often use a specific chat template format for prompts.
         # For simplicity, this example directly uses the prompt string.
         # For chat applications, apply the tokenizer's chat template.
         # messages = [{"role": "user", "content": request.prompt}]
@@ -120,7 +120,7 @@ async def generate_text(request: GenerationRequest):
             )
         
         # Decode generated text
-        # For Qwen, sometimes the prompt is included in the output, so we might need to slice it off.
+        # For DeepSeek, sometimes the prompt is included in the output, so we might need to slice it off.
         # This depends on the specific model and generation parameters.
         # For now, decode full output.
         generated_texts = [tokenizer.decode(output, skip_special_tokens=True) for output in outputs]
