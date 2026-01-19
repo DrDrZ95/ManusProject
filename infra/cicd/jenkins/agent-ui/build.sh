@@ -4,6 +4,9 @@
 # 安装依赖 (Install Dependencies)
 cd ../../../apps/agent-ui && pnpm install
 
+# 代码检查 (Linting)
+pnpm run lint
+
 # 构建 (Build)
 pnpm run build
 

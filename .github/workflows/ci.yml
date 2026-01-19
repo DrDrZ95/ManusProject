@@ -1,0 +1,105 @@
+name: AI Agent CI/CD Pipeline
+
+# 触发条件：每次推送和拉取请求 (Trigger on each push and pull request)
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # a) 后端构建与测试 (Backend build and test)
+  backend-build-test:
+    name: Backend Build & Test (.NET 8.0)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore apps/agent-api/Agent.Api/Agent.Api.csproj
+
+      - name: Build backend
+        run: dotnet build apps/agent-api/Agent.Api/Agent.Api.csproj --configuration Release --no-restore
+
+      - name: Run backend tests with coverage
+        run: |
+          dotnet test test/Agent.Api.Tests/Agent.Api.Tests.csproj \
+            --configuration Release \
+            --no-build \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./TestResults
+          fail_ci_if_error: false
+
+  # b) 前端构建与测试 (Frontend build and test)
+  frontend-build-test:
+    name: Frontend Build & Test (Node.js 18+)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+          cache-dependency-path: apps/agent-ui/pnpm-lock.yaml
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - name: Install dependencies
+        working-directory: apps/agent-ui
+        run: pnpm install
+
+      - name: Run ESLint checks
+        working-directory: apps/agent-ui
+        run: pnpm run lint
+
+      - name: Build frontend
+        working-directory: apps/agent-ui
+        run: pnpm run build
+
+      - name: Run frontend tests
+        working-directory: apps/agent-ui
+        run: pnpm test
+
+  # c) Docker 镜像构建验证 (Docker image build verification)
+  docker-build-verify:
+    name: Docker Build Verification
+    runs-on: ubuntu-latest
+    needs: [backend-build-test, frontend-build-test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Agent-API Image
+        run: |
+          docker build -t agent-api:test -f infra/docker/Dockerfile.webapi .
+
+      - name: Build Agent-UI Image
+        run: |
+          docker build -t agent-ui:test -f infra/docker/Dockerfile.react .
+
+      - name: Run Basic Health Checks (Simulated)
+        run: |
+          echo "Starting containers for health check..."
+          # 这里可以添加 docker-compose up -d 并使用 curl 检查健康接口
+          # For verification, we just check if images exist
+          docker images | grep agent-api
+          docker images | grep agent-ui
+          echo "Docker images built and verified successfully!"
