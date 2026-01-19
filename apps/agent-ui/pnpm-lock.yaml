@@ -29,6 +29,9 @@ importers:
       framer-motion:
         specifier: ^12.23.24
         version: 12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      jsrsasign:
+        specifier: ^11.1.0
+        version: 11.1.0
       lucide-react:
         specifier: ^0.554.0
         version: 0.554.0(react@19.2.1)
@@ -835,6 +838,9 @@ packages:
     resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
     engines: {node: '>=6'}
     hasBin: true
+
+  jsrsasign@11.1.0:
+    resolution: {integrity: sha512-Ov74K9GihaK9/9WncTe1mPmvrO7Py665TUfUKvraXBpu+xcTWitrtuOwcjf4KMU9maPaYn0OuaWy0HOzy/GBXg==}
 
   jwa@2.0.1:
     resolution: {integrity: sha512-hRF04fqJIP8Abbkq5NKGN0Bbr3JxlQ+qhZufXVr0DvujKy93ZCbXZMHDL4EOtodSbCWxOqR8MS1tXA5hwqCXDg==}
@@ -2013,6 +2019,8 @@ snapshots:
       bignumber.js: 9.3.1
 
   json5@2.2.3: {}
+
+  jsrsasign@11.1.0: {}
 
   jwa@2.0.1:
     dependencies:
