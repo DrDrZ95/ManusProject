@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { ErrorInfo, ReactNode } from 'react';
 import { ErrorPage } from './ErrorPage';
 
 interface Props {
@@ -12,7 +12,7 @@ interface State {
 /**
  * ErrorBoundary component to catch runtime errors in the component tree.
  */
-export class ErrorBoundary extends Component<Props, State> {
+export class ErrorBoundary extends React.Component<Props, State> {
   public state: State = {
     hasError: false
   };

@@ -334,6 +334,17 @@ export const Sidebar: React.FC = () => {
       }
   };
 
+  // Handle Slim Item Click (Selects first session in group or does nothing)
+  const handleSlimProjectClick = (e: React.MouseEvent, group: Group) => {
+    e.stopPropagation();
+    // Try to find the first session in this group to select it
+    const firstSession = activeSessions.find(s => s.groupId === group.id);
+    if (firstSession) {
+        store.selectSession(firstSession.id);
+    }
+    // Do not toggle sidebar
+  };
+
   // Helper component for Slim Mode Buttons
   const SlimButton = ({ icon: Icon, label, onClick, children }: any) => (
     <div className="relative group/slim-item w-full flex justify-center py-2">
@@ -344,13 +355,15 @@ export const Sidebar: React.FC = () => {
           <Icon className="w-5 h-5" />
        </button>
        
-       {/* Flyout Menu */}
+       {/* Flyout Menu - Updated to be on the right side and prevent disappearance */}
        {children && (
-         <div className="absolute left-full top-0 ml-3 w-64 bg-white border border-gray-100 rounded-2xl shadow-2xl p-2 hidden group-hover/slim-item:block z-50 animate-fadeIn origin-top-left max-h-[80vh] overflow-y-auto custom-scrollbar">
-            <div className="px-3 py-2 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1">
-                {label}
+         <div className="absolute left-full top-0 pl-4 hidden group-hover/slim-item:block z-50">
+            <div className="w-64 bg-white border border-gray-100 rounded-2xl shadow-2xl p-2 animate-fadeIn origin-top-left max-h-[80vh] overflow-y-auto custom-scrollbar">
+                <div className="px-3 py-2 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1">
+                    {label}
+                </div>
+                {children}
             </div>
-            {children}
          </div>
        )}
     </div>
@@ -427,7 +440,7 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Navigation Content */}
-      <div className="flex-1 overflow-hidden relative">
+      <div className={clsx("flex-1 relative", isSlim ? "overflow-visible" : "overflow-hidden")}>
         <AnimatePresence mode="popLayout">
           {!isSlim ? (
             <motion.div 
@@ -553,7 +566,7 @@ export const Sidebar: React.FC = () => {
                           {activeGroups.map(g => (
                               <button
                                 key={g.id}
-                                onClick={(e) => { e.stopPropagation(); store.toggleSidebar(); }}
+                                onClick={(e) => handleSlimProjectClick(e, g)}
                                 className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors text-left group/item"
                               >
                                   <ProjectMarker group={g} />
