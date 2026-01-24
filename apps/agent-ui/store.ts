@@ -168,7 +168,8 @@ export const useStore = create<ExtendedAppState>((set, get) => {
       const randomColor = PROJECT_COLORS[Math.floor(Math.random() * PROJECT_COLORS.length)];
       const randomMarker = MARKER_CHARS[Math.floor(Math.random() * MARKER_CHARS.length)];
       
-      return { groups: [...state.groups, { id, title, marker: randomMarker, color: randomColor, collapsed: false }] };
+      // Changed collapsed to true by default
+      return { groups: [...state.groups, { id, title, marker: randomMarker, color: randomColor, collapsed: true }] };
     }),
 
     updateGroup: (id, updates) => set((state) => ({

@@ -82,75 +82,138 @@ const ProjectMarker = ({ group, isSlim }: { group: Group, isSlim?: boolean }) =>
   </div>
 );
 
-const NavItem = ({ isActive, isEditing, editValue, onEditChange, onEditSubmit, onClick, onContextMenu, onActionClick, children, icon: Icon, group, isSlim, isSubItem }: any) => (
-  <div className={clsx("relative group/item mb-0.5", isSlim ? "px-2" : isSubItem ? "pr-2" : "px-4")}>
-    <button
-      onClick={onClick}
-      onContextMenu={onContextMenu}
-      title={isSlim ? children : undefined}
-      className={clsx(
-        "w-full h-10 flex items-center rounded-xl transition-all duration-200 relative",
-        isSlim ? "justify-center px-0" : "px-2 gap-3",
-        isActive ? "bg-gray-200/50 text-black font-black" : "text-gray-600 hover:bg-gray-200/30",
-        isSubItem && !isSlim && "h-9"
-      )}
-    >
-      {group ? (
-        <ProjectMarker group={group} isSlim={isSlim} />
-      ) : Icon ? (
-        <Icon className={clsx(isSlim ? "w-5 h-5" : "w-4 h-4", "shrink-0", isActive ? "text-black" : "text-gray-400 group-hover:text-black")} />
-      ) : (
-        isSlim ? (
-          <div className={clsx("w-8 h-8 rounded-lg flex items-center justify-center transition-colors", isActive ? "bg-black text-white" : "bg-gray-100 text-gray-400")}>
-            <Icons.Chat className="w-4 h-4" />
-          </div>
-        ) : null
-      )}
-      
-      {!isSlim && (
-        <div className="flex-1 min-w-0 pr-4">
-          {isEditing ? (
-            <input 
-              autoFocus 
-              className="w-full bg-transparent outline-none text-sm font-black border-b-2 border-black/10 focus:border-black py-0.5"
-              value={editValue}
-              onChange={(e) => onEditChange(e.target.value)}
-              onBlur={() => onEditSubmit()}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') onEditSubmit();
-                if (e.key === 'Escape') onEditSubmit(true);
-              }}
-              onClick={(e) => e.stopPropagation()}
-            />
-          ) : (
-            <span className={clsx("block truncate text-[13px] tracking-tight transition-opacity text-left", isActive ? "opacity-100" : "opacity-80 font-bold")}>
-                {children || "Untitled"}
-            </span>
-          )}
-        </div>
-      )}
+interface NavItemProps {
+    isActive?: boolean;
+    isEditing?: boolean;
+    editValue?: string;
+    onEditChange?: (val: string) => void;
+    onEditSubmit?: (cancel?: boolean) => void;
+    onClick: () => void;
+    onContextMenu?: (e: React.MouseEvent) => void;
+    onActionClick?: (e: React.MouseEvent) => void;
+    children?: React.ReactNode;
+    icon?: any;
+    group?: Group;
+    isSlim?: boolean;
+    isSubItem?: boolean;
+    draggable?: boolean;
+    onDragStart?: (e: React.DragEvent) => void;
+    onDrop?: (e: React.DragEvent) => void;
+}
 
-      {isActive && !isEditing && (
-        <div className={clsx(
-          "absolute top-1/2 -translate-y-1/2 w-1 h-4 bg-black rounded-r-full shadow-sm shadow-black/20",
-          isSlim ? "left-0" : isSubItem ? "-left-[1px]" : "left-0"
-        )} />
-      )}
-    </button>
+const NavItem: React.FC<NavItemProps> = ({ 
+    isActive, isEditing, editValue, onEditChange, onEditSubmit, onClick, onContextMenu, onActionClick, children, icon: Icon, group, isSlim, isSubItem,
+    draggable, onDragStart, onDrop
+}) => {
+    const [isDragOver, setIsDragOver] = useState(false);
+
+    const handleDragOver = (e: React.DragEvent) => {
+        if (onDrop) {
+            e.preventDefault();
+            setIsDragOver(true);
+        }
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        if (onDrop) {
+            setIsDragOver(false);
+        }
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        if (onDrop) {
+            e.preventDefault();
+            setIsDragOver(false);
+            onDrop(e);
+        }
+    };
+
+    return (
+      <div className={clsx("relative group/item mb-0.5", isSlim ? "px-2" : isSubItem ? "pr-2" : "px-4")}>
+        <button
+          onClick={onClick}
+          onContextMenu={onContextMenu}
+          title={isSlim ? (children as string) : undefined}
+          draggable={draggable}
+          onDragStart={onDragStart}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={clsx(
+            "w-full h-10 flex items-center rounded-xl transition-all duration-200 relative border border-transparent",
+            isSlim ? "justify-center px-0" : "px-2 gap-3",
+            isActive ? "bg-gray-200/50 text-black font-black" : "text-gray-600 hover:bg-gray-200/30",
+            isSubItem && !isSlim && "h-9",
+            isDragOver && "bg-blue-50 border-blue-300 shadow-inner"
+          )}
+        >
+          {group ? (
+            <ProjectMarker group={group} isSlim={isSlim} />
+          ) : Icon ? (
+            <Icon className={clsx(isSlim ? "w-5 h-5" : "w-4 h-4", "shrink-0", isActive ? "text-black" : "text-gray-400 group-hover:text-black")} />
+          ) : (
+            isSlim ? (
+              <div className={clsx("w-8 h-8 rounded-lg flex items-center justify-center transition-colors", isActive ? "bg-black text-white" : "bg-gray-100 text-gray-400")}>
+                <Icons.Chat className="w-4 h-4" />
+              </div>
+            ) : null
+          )}
+          
+          {!isSlim && (
+            <div className="flex-1 min-w-0 pr-1 flex items-center justify-between">
+              {isEditing ? (
+                <input 
+                  autoFocus 
+                  className="w-full bg-transparent outline-none text-sm font-black border-b-2 border-black/10 focus:border-black py-0.5"
+                  value={editValue}
+                  onChange={(e) => onEditChange?.(e.target.value)}
+                  onBlur={() => onEditSubmit?.()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') onEditSubmit?.();
+                    if (e.key === 'Escape') onEditSubmit?.(true);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <span className={clsx("block truncate text-[13px] tracking-tight transition-opacity text-left flex-1", isActive ? "opacity-100" : "opacity-80 font-bold")}>
+                    {children || "Untitled"}
+                </span>
+              )}
+              
+              {/* Expand/Collapse Icon moved to the right */}
+              {group && !isEditing && (
+                  <div className="text-gray-400 transition-transform duration-200 ml-2">
+                       {group.collapsed ? <Icons.ChevronLeft className="w-4 h-4" /> : <Icons.ChevronDown className="w-4 h-4" />}
+                  </div>
+              )}
+            </div>
+          )}
     
-    {!isEditing && !isSlim && (
-      <button 
-        onClick={(e) => {
-          e.stopPropagation();
-          onActionClick?.(e);
-        }}
-        className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-black opacity-0 group-hover/item:opacity-100 transition-opacity rounded-md hover:bg-white"
-      >
-        <Icons.MoreVertical className="w-3.5 h-3.5" />
-      </button>
-    )}
-  </div>
-);
+          {isActive && !isEditing && (
+            <div className={clsx(
+              "absolute top-1/2 -translate-y-1/2 w-1 h-4 bg-black rounded-r-full shadow-sm shadow-black/20",
+              isSlim ? "left-0" : isSubItem ? "-left-[1px]" : "left-0"
+            )} />
+          )}
+        </button>
+        
+        {!isEditing && !isSlim && (
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onActionClick?.(e);
+            }}
+            className={clsx(
+                "absolute top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-black opacity-0 group-hover/item:opacity-100 transition-opacity rounded-md hover:bg-white z-10",
+                group ? "right-10" : "right-4"
+            )}
+          >
+            <Icons.MoreVertical className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+    );
+};
 
 export const Sidebar: React.FC = () => {
   const store = useStore();
@@ -250,6 +313,25 @@ export const Sidebar: React.FC = () => {
       { separator: true },
       { label: t.delete, icon: Icons.Trash, onClick: () => store.deleteSession(s.id), danger: true }
     ]});
+  };
+
+  // Drag and Drop Logic
+  const handleDragStartSession = (e: React.DragEvent, sessionId: string) => {
+      e.dataTransfer.setData('application/json', JSON.stringify({ type: 'session', id: sessionId }));
+      e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDropOnGroup = (e: React.DragEvent, groupId: string) => {
+      try {
+          const data = JSON.parse(e.dataTransfer.getData('application/json'));
+          if (data.type === 'session' && data.id) {
+              store.moveSession(data.id, groupId);
+              // Expand the group dropped into
+              store.updateGroup(groupId, { collapsed: false });
+          }
+      } catch (err) {
+          console.error('Failed to parse drag data', err);
+      }
   };
 
   // Helper component for Slim Mode Buttons
@@ -388,6 +470,7 @@ export const Sidebar: React.FC = () => {
                               onContextMenu={(e: any) => onContextMenuGroup(e, group)}
                               onActionClick={(e: any) => onContextMenuGroup(e, group)}
                               onClick={() => store.updateGroup(group.id, { collapsed: !group.collapsed })}
+                              onDrop={(e) => handleDropOnGroup(e, group.id)}
                             >
                               {group.title || t.untitledGroup}
                             </NavItem>
@@ -405,6 +488,8 @@ export const Sidebar: React.FC = () => {
                                       onClick={() => store.selectSession(s.id)} 
                                       onContextMenu={(e: any) => onContextMenuSession(e, s)}
                                       onActionClick={(e: any) => onContextMenuSession(e, s)}
+                                      draggable={true}
+                                      onDragStart={(e) => handleDragStartSession(e, s.id)}
                                     >
                                        {s.title || "Untitled Chat"}
                                     </NavItem>
@@ -443,6 +528,8 @@ export const Sidebar: React.FC = () => {
                             onClick={() => store.selectSession(s.id)} 
                             onContextMenu={(e: any) => onContextMenuSession(e, s)}
                             onActionClick={(e: any) => onContextMenuSession(e, s)}
+                            draggable={true}
+                            onDragStart={(e) => handleDragStartSession(e, s.id)}
                           >
                              {s.title || "Untitled Chat"}
                           </NavItem>
