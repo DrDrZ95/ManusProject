@@ -67,6 +67,12 @@ public interface IWorkflowService
     Task<bool> CompleteStepAsync(string planId, int stepIndex, string? result = null, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Mark step as failed
+    /// 标记步骤为失败
+    /// </summary>
+    Task<bool> FailStepAsync(string planId, int stepIndex, string? reason = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Generate todo list file content for a plan
     /// 为计划生成待办事项列表文件内容
     /// 
@@ -116,4 +122,31 @@ public interface IWorkflowService
     Task<WorkflowProgress> GetProgressAsync(string planId, CancellationToken cancellationToken = default);
 
     Task<string> CreateWorkflowAsync(string llmResponse);
+
+    // --- Workflow Execution Engine Control (工作流执行引擎控制) ---
+
+    /// <summary>
+    /// 启动工作流执行引擎 (Start the workflow execution engine)
+    /// </summary>
+    Task<bool> StartWorkflowAsync(string planId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 暂停工作流执行引擎 (Pause the workflow execution engine)
+    /// </summary>
+    Task<bool> PauseWorkflowAsync(string planId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 恢复工作流执行引擎 (Resume the workflow execution engine)
+    /// </summary>
+    Task<bool> ResumeWorkflowAsync(string planId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 终止工作流执行引擎 (Terminate the workflow execution engine)
+    /// </summary>
+    Task<bool> TerminateWorkflowAsync(string planId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 触发状态转换 (Trigger a state transition)
+    /// </summary>
+    Task<bool> TriggerStateTransitionAsync(string planId, WorkflowEvent @event, string? interventionReason = null, CancellationToken cancellationToken = default);
 }

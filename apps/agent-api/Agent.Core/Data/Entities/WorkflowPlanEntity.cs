@@ -34,6 +34,21 @@ public class WorkflowPlanEntity
     public PlanStatus Status { get; set; } = PlanStatus.NotStarted;
 
     /// <summary>
+    /// 当前工作流状态 (Current Workflow State)
+    /// </summary>
+    public WorkflowState CurrentState { get; set; } = WorkflowState.Idle;
+
+    /// <summary>
+    /// 人工干预原因 (Reason for Manual Intervention)
+    /// </summary>
+    public string? InterventionReason { get; set; }
+
+    /// <summary>
+    /// 连续失败次数 (Consecutive Failure Count)
+    /// </summary>
+    public int FailureCount { get; set; } = 0;
+
+    /// <summary>
     /// 元数据 (Metadata)
     /// 存储额外的JSON格式数据，例如执行器键、用户ID等
     /// </summary>

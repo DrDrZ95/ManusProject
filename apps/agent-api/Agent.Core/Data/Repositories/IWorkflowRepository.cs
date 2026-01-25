@@ -29,6 +29,16 @@ public interface IWorkflowRepository
     Task<bool> UpdatePlanStatusAsync(Guid planId, PlanStatus status, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// 更新工作流计划的状态机状态和干预原因 (Update the state machine state and intervention reason of a workflow plan)
+    /// </summary>
+    Task<bool> UpdatePlanStateAsync(Guid planId, WorkflowState state, string? interventionReason, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 更新工作流计划的连续失败次数 (Update the consecutive failure count of a workflow plan)
+    /// </summary>
+    Task<bool> UpdatePlanFailureCountAsync(Guid planId, int failureCount, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// 删除工作流计划 (Delete a workflow plan)
     /// </summary>
     Task DeletePlanAsync(Guid planId, CancellationToken cancellationToken = default);
