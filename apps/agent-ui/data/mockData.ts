@@ -6,6 +6,104 @@ const HOUR = 3600 * 1000;
 
 export const MOCK_SESSIONS: ChatSession[] = [
   {
+    id: 'mock-session-rich-1',
+    title: 'Media Capabilities Demo',
+    updatedAt: NOW,
+    messages: [
+      {
+        id: 'mr-1',
+        role: Role.USER,
+        content: 'Show me the product demo video.',
+        timestamp: NOW - 600000
+      },
+      {
+        id: 'mr-2',
+        role: Role.MODEL,
+        content: `Here is the promotional video for the Q4 launch:
+
+[[VIDEO:https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4]]
+
+It highlights the new AI features and UI overhaul.`,
+        timestamp: NOW - 500000
+      },
+      {
+        id: 'mr-3',
+        role: Role.USER,
+        content: 'Looks good. Can I see the live deployment?',
+        timestamp: NOW - 400000
+      },
+      {
+        id: 'mr-4',
+        role: Role.MODEL,
+        content: `I've spun up a sandbox environment for you. You can interact with the current build below:
+
+[[IFRAME:https://demo.internal.app/v2]]`,
+        timestamp: NOW - 300000
+      },
+      {
+        id: 'mr-5',
+        role: Role.USER,
+        content: 'Should we release this to production?',
+        timestamp: NOW - 200000
+      },
+      {
+        id: 'mr-6',
+        role: Role.MODEL,
+        content: `All automated tests have passed, but the documentation is still pending review.
+
+What is your decision?
+
+[[OPTIONS:Deploy to Prod, Hold for Review, Rollback]]`,
+        timestamp: NOW - 100000
+      }
+    ]
+  },
+  {
+    id: 'mock-session-rich-2',
+    title: '多媒体交互演示 (中文)',
+    updatedAt: NOW - HOUR,
+    messages: [
+      {
+        id: 'mrc-1',
+        role: Role.USER,
+        content: '请播放关于安全协议的培训视频。',
+        timestamp: NOW - HOUR - 600000
+      },
+      {
+        id: 'mrc-2',
+        role: Role.MODEL,
+        content: `好的，这是最新的安全合规培训视频：
+
+[[VIDEO:https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4]]
+
+请确保观看完毕。`,
+        timestamp: NOW - HOUR - 500000
+      },
+      {
+        id: 'mrc-3',
+        role: Role.USER,
+        content: '我的测试环境部署好了吗？',
+        timestamp: NOW - HOUR - 400000
+      },
+      {
+        id: 'mrc-4',
+        role: Role.MODEL,
+        content: `是的，测试环境已就绪。您可以通过下方的窗口直接访问：
+
+[[IFRAME:https://test-env.internal.corp/dashboard]]`,
+        timestamp: NOW - HOUR - 300000
+      },
+      {
+        id: 'mrc-5',
+        role: Role.MODEL,
+        content: `检测到服务器负载较高。建议采取以下措施之一：
+
+[[OPTIONS:自动扩容, 清理缓存, 联系运维]]`,
+        timestamp: NOW - HOUR - 200000
+      }
+    ]
+  },
+  {
     id: 'mock-session-1',
     title: 'Python Snake Game',
     updatedAt: NOW - HOUR * 2,

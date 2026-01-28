@@ -296,6 +296,48 @@ Based on the analysis, the project is currently **under budget** by 15%. However
 Deployment to **staging** is complete. You can verify the changes at \`staging.internal.app\`. No regression issues were detected during the smoke test.`
 ];
 
+// New Rich Media / Widget Responses
+const RICH_MEDIA_RESPONSES = [
+  // Video Resource
+  `Sure, here is the tutorial video you asked for regarding the new internal framework setup.
+
+[[VIDEO:https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4]]
+
+After watching, you can proceed to the configuration step.`,
+
+  `好的，这是关于新内部框架设置的教程视频。
+
+[[VIDEO:https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4]]
+
+看完后，您可以继续进行配置步骤。`,
+
+  // Iframe / Web Preview
+  `I have deployed the staging environment for the landing page. You can preview it below:
+
+[[IFRAME:https://staging.internal.app/preview]]
+
+Let me know if you want to push this to production.`,
+
+  `我已经部署了落地页的预发布环境。您可以在下方预览：
+
+[[IFRAME:https://staging.internal.app/preview]]
+
+如果您希望推送到生产环境，请告诉我。`,
+
+  // Options / Decision
+  `I found a conflict in \`package.json\`. The lockfile version (v2.1.0) does not match the manifest (v2.2.0).
+
+How would you like to resolve this?
+
+[[OPTIONS:Update Lockfile, Revert Manifest, Ignore Warning]]`,
+
+  `在 \`package.json\` 中发现冲突。锁定文件版本 (v2.1.0) 与清单 (v2.2.0) 不匹配。
+
+您希望如何解决？
+
+[[OPTIONS:更新锁定文件, 还原清单, 忽略警告]]`
+];
+
 export const streamGeminiResponse = async (
   apiKey: string,
   modelType: ModelType,
@@ -313,10 +355,21 @@ export const streamGeminiResponse = async (
   try {
     // Pick response based on input mode
     let responseSet = GENERAL_RESPONSES;
-    if (inputMode === 'agent') responseSet = AGENT_RESPONSES;
-    else if (inputMode === 'oa_work') responseSet = OA_WORK_RESPONSES;
-    else if (inputMode === 'brainstorm') responseSet = BRAINSTORM_RESPONSES;
-    else if (inputMode === 'company') responseSet = COMPANY_RESPONSES;
+    
+    // Add 20% chance to show rich media in general/agent modes for demo purposes
+    const showRichMedia = Math.random() < 0.2;
+
+    if (showRichMedia && (inputMode === 'general' || inputMode === 'agent')) {
+       responseSet = RICH_MEDIA_RESPONSES;
+    } else if (inputMode === 'agent') {
+       responseSet = AGENT_RESPONSES;
+    } else if (inputMode === 'oa_work') {
+       responseSet = OA_WORK_RESPONSES;
+    } else if (inputMode === 'brainstorm') {
+       responseSet = BRAINSTORM_RESPONSES;
+    } else if (inputMode === 'company') {
+       responseSet = COMPANY_RESPONSES;
+    }
 
     const responseTemplate = responseSet[Math.floor(Math.random() * responseSet.length)];
     

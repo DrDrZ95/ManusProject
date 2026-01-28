@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -57,6 +56,108 @@ const CodeBlock = ({ language, children }: { language: string, children?: React.
   );
 };
 
+// Rich Media Components
+const VideoWidget: React.FC<{ url: string }> = ({ url }) => (
+    <div className="my-4 rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-black">
+        <video controls className="w-full aspect-video" src={url} poster="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+);
+
+const IframeWidget: React.FC<{ url: string, title?: string }> = ({ url, title }) => (
+    <div className="my-4 rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-white">
+        <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 flex items-center gap-2">
+            <div className="flex gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+            </div>
+            <div className="flex-1 text-center text-xs text-gray-500 font-mono bg-white mx-4 rounded py-0.5 px-2 truncate">
+                {url}
+            </div>
+        </div>
+        <div className="relative w-full aspect-[4/3] bg-gray-50 flex items-center justify-center">
+             {/* Using a simulated iframe placeholder to avoid X-Frame-Options issues in demo */}
+             <div className="text-center p-8">
+                <Icons.Remote className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h4 className="text-gray-900 font-bold mb-2">External Content Preview</h4>
+                <p className="text-gray-500 text-sm mb-4">Content from {new URL(url).hostname}</p>
+                <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors">
+                    <Icons.ArrowRight className="w-4 h-4" />
+                    Open in New Tab
+                </a>
+             </div>
+        </div>
+    </div>
+);
+
+const OptionsWidget: React.FC<{ options: string[] }> = ({ options }) => (
+    <div className="flex flex-wrap gap-2 my-4">
+        {options.map((opt, idx) => (
+            <button 
+                key={idx}
+                className="px-4 py-2 bg-white border border-gray-200 hover:border-black hover:bg-gray-50 rounded-xl text-sm font-bold text-gray-700 transition-all shadow-sm active:scale-95"
+                onClick={() => alert(`Selected option: ${opt}`)}
+            >
+                {opt}
+            </button>
+        ))}
+    </div>
+);
+
+// Content Parser
+const RichContentRenderer = ({ content }: { content: string }) => {
+    // Regex for different widgets: [[TYPE:DATA]]
+    // Splitting by lines or specific tags to interleave components
+    const parts = content.split(/(\[\[(?:VIDEO|IFRAME|OPTIONS):.*?\]\])/g);
+
+    return (
+        <>
+            {parts.map((part, index) => {
+                const videoMatch = part.match(/^\[\[VIDEO:(.*?)\]\]$/);
+                const iframeMatch = part.match(/^\[\[IFRAME:(.*?)\]\]$/);
+                const optionsMatch = part.match(/^\[\[OPTIONS:(.*?)\]\]$/);
+
+                if (videoMatch) {
+                    return <VideoWidget key={index} url={videoMatch[1]} />;
+                }
+                if (iframeMatch) {
+                    return <IframeWidget key={index} url={iframeMatch[1]} />;
+                }
+                if (optionsMatch) {
+                    const opts = optionsMatch[1].split(',').map(s => s.trim());
+                    return <OptionsWidget key={index} options={opts} />;
+                }
+
+                // Render standard markdown for non-widget parts
+                if (!part.trim()) return null;
+
+                return (
+                    <ReactMarkdown
+                        key={index}
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                            code({ node, inline, className, children, ...props }: any) {
+                                const match = /language-(\w+)/.exec(className || '');
+                                return !inline && match ? (
+                                    <CodeBlock language={match[1]}>{children}</CodeBlock>
+                                ) : (
+                                    <code className={className} {...props}>
+                                        {children}
+                                    </code>
+                                );
+                            }
+                        }}
+                    >
+                        {part}
+                    </ReactMarkdown>
+                );
+            })}
+        </>
+    );
+};
+
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast }) => {
   const isUser = message.role === Role.USER;
   const userAvatar = useStore(s => s.user?.avatar);
@@ -82,12 +183,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast })
       )}
     >
       <div className={clsx(
-        "flex max-w-[85%] md:max-w-[75%]",
+        "flex max-w-[90%] md:max-w-[80%]",
         isUser ? "flex-row-reverse" : "flex-row"
       )}>
         {/* Avatar */}
         <div className={clsx(
-          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-1 shadow-sm overflow-hidden",
+          "flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center mt-1 shadow-sm overflow-hidden",
           isUser ? "bg-gray-200 ml-3" : "bg-black text-white mr-3"
         )}>
           {isUser ? (
@@ -97,7 +198,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast })
                <div className="w-full h-full rounded-full bg-gradient-to-br from-gray-100 to-gray-300" />
              )
           ) : (
-             <Icons.Zap className="w-4 h-4" fill="currentColor" />
+             <Icons.Zap className="w-5 h-5" fill="currentColor" />
           )}
         </div>
 
@@ -120,7 +221,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast })
           )}
 
           <div className={clsx(
-            "relative text-[15px] leading-relaxed max-w-full overflow-hidden",
+            "relative text-[17px] leading-relaxed max-w-full overflow-hidden",
             isUser 
               ? "px-5 py-3.5 bg-white border border-gray-200 text-gray-900 rounded-2xl rounded-tr-sm shadow-sm" 
               : "py-1 px-0 bg-transparent text-gray-900 w-full" 
@@ -128,26 +229,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast })
              {isUser ? (
                <div className="whitespace-pre-wrap break-words">{message.content}</div>
              ) : (
-               <div className="prose prose-sm max-w-none prose-headings:font-semibold prose-p:text-gray-800 prose-a:text-blue-600 prose-code:text-red-500 prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded-md prose-pre:p-0 prose-pre:bg-transparent break-words">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      code({ node, inline, className, children, ...props }: any) {
-                        const match = /language-(\w+)/.exec(className || '');
-                        return !inline && match ? (
-                          <CodeBlock language={match[1]}>{children}</CodeBlock>
-                        ) : (
-                          <code className={className} {...props}>
-                            {children}
-                          </code>
-                        );
-                      }
-                    }}
-                  >
-                    {message.content || ''} 
-                  </ReactMarkdown>
+               <div className="prose prose-base max-w-none prose-headings:font-semibold prose-p:text-gray-800 prose-a:text-blue-600 prose-code:text-red-500 prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded-md prose-pre:p-0 prose-pre:bg-transparent break-words">
+                  <RichContentRenderer content={message.content || ''} />
                   {message.isStreaming && (
-                      <span className="inline-block w-1.5 h-4 ml-1 align-middle bg-black animate-pulse" />
+                      <span className="inline-block w-1.5 h-5 ml-1 align-middle bg-black animate-pulse" />
                   )}
                </div>
              )}
@@ -158,7 +243,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast })
              "flex items-center gap-3 mt-1 px-1",
              isUser ? "flex-row-reverse" : "flex-row"
           )}>
-             <span className="text-[10px] text-gray-400">
+             <span className="text-[11px] text-gray-400 font-medium">
                 {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
              </span>
 
@@ -173,15 +258,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast })
                         <button 
                             onClick={handleCopyMessage}
                             title="Copy message"
-                            className="p-1 text-gray-400 hover:text-black hover:bg-gray-200 rounded-md transition-all"
+                            className="p-1.5 text-gray-400 hover:text-black hover:bg-gray-200 rounded-md transition-all"
                         >
-                            {copied ? <Icons.Check className="w-3 h-3 text-green-600" /> : <Icons.Copy className="w-3 h-3" />}
+                            {copied ? <Icons.Check className="w-3.5 h-3.5 text-green-600" /> : <Icons.Copy className="w-3.5 h-3.5" />}
                         </button>
                         <button 
                             title="Share"
-                            className="p-1 text-gray-400 hover:text-black hover:bg-gray-200 rounded-md transition-all"
+                            className="p-1.5 text-gray-400 hover:text-black hover:bg-gray-200 rounded-md transition-all"
                         >
-                            <Icons.Mail className="w-3 h-3" />
+                            <Icons.Mail className="w-3.5 h-3.5" />
                         </button>
                     </motion.div>
                 )}

@@ -13,6 +13,14 @@ interface State {
  * ErrorBoundary component to catch runtime errors in the component tree.
  */
 export class ErrorBoundary extends React.Component<Props, State> {
+  // Explicitly declaring props to satisfy TS in some environments
+  public readonly props: Readonly<Props>;
+
+  constructor(props: Props) {
+    super(props);
+    this.props = props;
+  }
+
   public state: State = {
     hasError: false
   };
