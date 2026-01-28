@@ -1,3 +1,6 @@
+using Agent.Application.Hubs; // 引入通知服务接口
+using Agent.Core.Notifications; // 引入通知DTO
+
 namespace Agent.Core.Workflow;
 
 /// <summary>
@@ -8,15 +11,20 @@ namespace Agent.Core.Workflow;
 public class WorkflowExecutionEngine : IWorkflowEngine
 {
     private WorkflowState _currentState = WorkflowState.Idle;
+    private readonly Guid _planId; // 新增：工作流计划ID
+    private readonly IWorkflowNotificationService _notificationService; // 新增：通知服务
     private readonly WorkflowContext _context;
     private readonly Dictionary<WorkflowState, Dictionary<WorkflowEvent, WorkflowState>> _transitionMap;
 
     /// <inheritdoc />
     public WorkflowState CurrentState => _currentState;
 
-    public WorkflowExecutionEngine(long taskId)
+    public WorkflowExecutionEngine(Guid planId, WorkflowState initialState, IWorkflowNotificationService notificationService)
     {
-        _context = new WorkflowContext(taskId);
+        _planId = planId;
+        _currentState = initialState;
+        _notificationService = notificationService;
+        _context = new WorkflowContext(planId.GetHashCode()); // 使用 planId 的哈希码作为 taskId，保持兼容性
         _transitionMap = BuildTransitionMap();
     }
 
@@ -106,11 +114,23 @@ public class WorkflowExecutionEngine : IWorkflowEngine
         await OnStateExitAsync(_currentState, workflowEvent, data);
 
         // 3. 更新状态 (Update the state)
+        var oldState = _currentState;
         _currentState = nextState;
         _context.ExecutionHistory.Add($"State Transition: {workflowEvent} -> {_currentState}");
         Console.WriteLine($"[WorkflowEngine] State changed to {_currentState} via event {workflowEvent}.");
 
-        // 4. 执行新状态的进入逻辑 (Execute entry logic for the new state)
+        // 4. 广播状态变更 (Broadcast state change)
+        await _notificationService.BroadcastStateChange(
+            _planId.ToString(),
+            new StateChangeNotificationDto(
+                _planId.ToString(),
+                oldState.ToString(),
+                _currentState.ToString(),
+                DateTime.UtcNow
+            )
+        );
+
+        // 5. 执行新状态的进入逻辑 (Execute entry logic for the new state)
         await OnStateEnterAsync(_currentState, workflowEvent, data);
     }
 
@@ -133,6 +153,17 @@ public class WorkflowExecutionEngine : IWorkflowEngine
                 }
                 // 通知用户 (Notify user via SignalR)
                 Console.WriteLine($"[WorkflowEngine] MANUAL INTERVENTION REQUIRED. Reason: {_context.InterventionInfo?.Reason}");
+                
+                // 实际通知逻辑 (Actual notification logic)
+                var notification = new InterventionNotificationDto(
+                    _planId.ToString(),
+                    _context.InterventionInfo?.Reason ?? "Manual intervention required.",
+                    "Current step context is not yet implemented.", // TODO: 实际应用中应提供当前步骤的详细上下文
+                    "Approve, Reject, or Modify the plan.",
+                    15 // 默认15分钟超时
+                );
+                await _notificationService.NotifyInterventionRequired(_planId.ToString(), notification);
+                
                 break;
             case WorkflowState.Completed:
                 // 任务完成后的清理和通知 (Cleanup and notification after task completion)

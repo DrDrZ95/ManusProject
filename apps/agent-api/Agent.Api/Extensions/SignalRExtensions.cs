@@ -1,3 +1,8 @@
+using Agent.Application.Hubs; // 引入新的Hub命名空间
+using Agent.Core.Notifications; // 引入通知DTO命名空间
+using Agent.Core.Workflow; // 引入工作流相关命名空间
+using Microsoft.AspNetCore.SignalR; // 引入SignalR命名空间
+
 namespace Agent.Api.Extensions;
 
 /// <summary>
@@ -15,6 +20,9 @@ public static class SignalRExtensions
     /// <returns>Service collection - 服务集合</returns>
     public static IServiceCollection AddSignalRServices(this IServiceCollection services, IConfiguration configuration)
     {
+        // 注册 SignalR 通知服务 (Register SignalR Notification Service)
+        services.AddSingleton<IWorkflowNotificationService, WorkflowNotificationService>();
+
         // Add JWT authentication for SignalR
         // 为SignalR添加JWT认证
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -139,6 +147,18 @@ public static class SignalRExtensions
 
         // Map SignalR hubs with automatic reconnection
         // 映射SignalR hubs并启用自动重连
+        app.MapHub<WorkflowHub>("/workflowHub", options => // 注册新的 WorkflowHub
+        {
+            // Configure transport options for automatic reconnection
+            // 为自动重连配置传输选项
+            options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets |
+                                Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
+            
+            // Configure automatic reconnection intervals
+            // 配置自动重连间隔
+            options.LongPolling.PollTimeout = TimeSpan.FromSeconds(90);
+            options.WebSockets.CloseTimeout = TimeSpan.FromSeconds(30);
+        });
         app.MapHub<AIAgentHub>("/aiagentHub", options =>
         {
             // Configure transport options for automatic reconnection

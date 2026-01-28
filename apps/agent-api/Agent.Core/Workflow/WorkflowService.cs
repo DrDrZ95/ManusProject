@@ -12,6 +12,7 @@ public class WorkflowService : IWorkflowService
     private readonly ILogger<WorkflowService> _logger;
     private readonly WorkflowOptions _options;
     private readonly IWorkflowRepository _repository;
+    private readonly IWorkflowNotificationService _notificationService; // 新增：通知服务
     
     // 状态机引擎实例管理 (State machine engine instance management)
     private readonly ConcurrentDictionary<Guid, IWorkflowEngine> _engines = new();
@@ -19,11 +20,13 @@ public class WorkflowService : IWorkflowService
     public WorkflowService(
         ILogger<WorkflowService> logger,
         IOptions<WorkflowOptions> options,
-        IWorkflowRepository repository)
+        IWorkflowRepository repository,
+        IWorkflowNotificationService notificationService) // 注入通知服务
     {
         _logger = logger;
         _options = options.Value;
         _repository = repository;
+        _notificationService = notificationService;
     }
 
     /// <summary>
@@ -44,7 +47,7 @@ public class WorkflowService : IWorkflowService
         }
 
         // 使用当前持久化的状态初始化引擎 (Initialize engine with current persisted state)
-        var newEngine = new WorkflowExecutionEngine(planId, planEntity.CurrentState);
+        var newEngine = new WorkflowExecutionEngine(planId, planEntity.CurrentState, _notificationService); // 传入通知服务
         _engines[planId] = newEngine;
         return newEngine;
     }
@@ -96,7 +99,7 @@ public class WorkflowService : IWorkflowService
             var resultPlan = addedEntity.ToModel();
             
             // 5. 初始化并启动状态机 (Initialize and start the state machine)
-            var engine = new WorkflowExecutionEngine(resultPlan.Id, resultPlan.CurrentState);
+            var engine = new WorkflowExecutionEngine(resultPlan.Id, resultPlan.CurrentState, _notificationService); // 传入通知服务
             _engines[resultPlan.Id] = engine;
             await engine.TriggerEventAsync(WorkflowEvent.StartTask);
             await PersistEngineStateAsync(resultPlan.Id, engine.CurrentState, null, cancellationToken);
