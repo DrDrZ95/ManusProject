@@ -12,6 +12,9 @@ public class WorkflowService : IWorkflowService
     private readonly ILogger<WorkflowService> _logger;
     private readonly WorkflowOptions _options;
     private readonly IWorkflowRepository _repository;
+    
+    // 状态机引擎实例管理 (State machine engine instance management)
+    private readonly ConcurrentDictionary<Guid, IWorkflowEngine> _engines = new();
 
     public WorkflowService(
         ILogger<WorkflowService> logger,
@@ -21,6 +24,29 @@ public class WorkflowService : IWorkflowService
         _logger = logger;
         _options = options.Value;
         _repository = repository;
+    }
+
+    /// <summary>
+    /// 获取或创建工作流执行引擎实例 (Get or create a workflow execution engine instance)
+    /// </summary>
+    private async Task<IWorkflowEngine?> GetOrCreateEngineAsync(Guid planId, CancellationToken cancellationToken)
+    {
+        if (_engines.TryGetValue(planId, out var engine))
+        {
+            return engine;
+        }
+
+        var planEntity = await _repository.GetPlanByIdAsync(planId, cancellationToken);
+        if (planEntity == null)
+        {
+            _logger.LogWarning("Plan not found for engine creation: {PlanId}", planId);
+            return null;
+        }
+
+        // 使用当前持久化的状态初始化引擎 (Initialize engine with current persisted state)
+        var newEngine = new WorkflowExecutionEngine(planId, planEntity.CurrentState);
+        _engines[planId] = newEngine;
+        return newEngine;
     }
 
     /// <summary>
@@ -69,6 +95,12 @@ public class WorkflowService : IWorkflowService
             // 4. 转换回业务模型并返回 (Convert back to business model and return)
             var resultPlan = addedEntity.ToModel();
             
+            // 5. 初始化并启动状态机 (Initialize and start the state machine)
+            var engine = new WorkflowExecutionEngine(resultPlan.Id, resultPlan.CurrentState);
+            _engines[resultPlan.Id] = engine;
+            await engine.TriggerEventAsync(WorkflowEvent.StartTask);
+            await PersistEngineStateAsync(resultPlan.Id, engine.CurrentState, null, cancellationToken);
+
             _logger.LogInformation("Created workflow plan with ID: {PlanId}, Title: {Title}", resultPlan.Id, request.Title);
             
             return resultPlan;
@@ -94,7 +126,15 @@ public class WorkflowService : IWorkflowService
         
         var entity = await _repository.GetPlanByIdAsync(id, cancellationToken);
         
-        return entity?.ToModel();
+        var model = entity?.ToModel();
+        
+        // 如果存在，确保引擎已加载 (If exists, ensure engine is loaded)
+        if (model != null && !_engines.ContainsKey(model.Id))
+        {
+            await GetOrCreateEngineAsync(model.Id, cancellationToken);
+        }
+        
+        return model;
     }
 
     /// <summary>
@@ -105,7 +145,18 @@ public class WorkflowService : IWorkflowService
     {
         var entities = await _repository.GetAllPlansAsync(cancellationToken);
         
-        return entities.Select(e => e.ToModel()).ToList();
+        var models = entities.Select(e => e.ToModel()).ToList();
+        
+        // 确保所有计划的引擎都已加载 (Ensure all plan engines are loaded)
+        foreach (var model in models)
+        {
+            if (!_engines.ContainsKey(model.Id))
+            {
+                await GetOrCreateEngineAsync(model.Id, cancellationToken);
+            }
+        }
+        
+        return models;
     }
 
     /// <summary>
@@ -122,8 +173,88 @@ public class WorkflowService : IWorkflowService
             if (!Guid.TryParse(planId, out var id))
             {
                 _logger.LogWarning("Invalid Plan ID format: {PlanId}", planId);
-                return false;
-            }
+        return false;
+    }
+
+    // --- Workflow Execution Engine Control (工作流执行引擎控制) ---
+
+    /// <summary>
+    /// 启动工作流执行引擎 (Start the workflow execution engine)
+    /// </summary>
+    public async Task<bool> StartWorkflowAsync(string planId, CancellationToken cancellationToken = default)
+    {
+        return await TriggerStateTransitionAsync(planId, WorkflowEvent.StartTask, null, cancellationToken);
+    }
+
+    /// <summary>
+    /// 暂停工作流执行引擎 (Pause the workflow execution engine)
+    /// </summary>
+    public async Task<bool> PauseWorkflowAsync(string planId, CancellationToken cancellationToken = default)
+    {
+        // 暂停通常是人工干预触发，这里模拟一个通用的暂停事件
+        return await TriggerStateTransitionAsync(planId, WorkflowEvent.NeedIntervention, "User requested pause.", cancellationToken);
+    }
+
+    /// <summary>
+    /// 恢复工作流执行引擎 (Resume the workflow execution engine)
+    /// </summary>
+    public async Task<bool> ResumeWorkflowAsync(string planId, CancellationToken cancellationToken = default)
+    {
+        return await TriggerStateTransitionAsync(planId, WorkflowEvent.UserResume, null, cancellationToken);
+    }
+
+    /// <summary>
+    /// 终止工作流执行引擎 (Terminate the workflow execution engine)
+    /// </summary>
+    public async Task<bool> TerminateWorkflowAsync(string planId, CancellationToken cancellationToken = default)
+    {
+        return await TriggerStateTransitionAsync(planId, WorkflowEvent.UserTerminate, "User requested termination.", cancellationToken);
+    }
+
+    /// <summary>
+    /// 触发状态转换 (Trigger a state transition)
+    /// </summary>
+    public async Task<bool> TriggerStateTransitionAsync(string planId, WorkflowEvent @event, string? interventionReason = null, CancellationToken cancellationToken = default)
+    {
+        if (!Guid.TryParse(planId, out var id))
+        {
+            _logger.LogWarning("Invalid Plan ID format: {PlanId}", planId);
+            return false;
+        }
+
+        var engine = await GetOrCreateEngineAsync(id, cancellationToken);
+        if (engine == null)
+        {
+            return false;
+        }
+
+        try
+        {
+            // 触发状态机事件 (Trigger state machine event)
+            await engine.TriggerEventAsync(@event, new ManualInterventionInfo { Reason = interventionReason });
+            
+            // 持久化新的状态 (Persist the new state)
+            await PersistEngineStateAsync(id, engine.CurrentState, interventionReason, cancellationToken);
+
+            _logger.LogInformation("Workflow {PlanId} transitioned to state {State} via event {Event}", 
+                planId, engine.CurrentState, @event);
+            
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to trigger state transition for plan {PlanId} with event {Event}", planId, @event);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 持久化引擎状态到数据库 (Persist engine state to the database)
+    /// </summary>
+    private async Task PersistEngineStateAsync(Guid planId, WorkflowState state, string? interventionReason, CancellationToken cancellationToken)
+    {
+        await _repository.UpdatePlanStateAsync(planId, state, interventionReason, cancellationToken);
+    }
 
             var planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
             if (planEntity == null)
@@ -204,11 +335,13 @@ public class WorkflowService : IWorkflowService
             // 如果步骤未开始，标记为进行中 - If step not started, mark as in progress
             if (activeStepEntity.Status == PlanStepStatus.NotStarted)
             {
-                // 自动将状态更新为 InProgress
-                await UpdateStepStatusAsync(planId, activeStepEntity.Index, PlanStepStatus.InProgress, cancellationToken);
-                // 重新获取更新后的实体 (Re-fetch the updated entity)
-                planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
-                activeStepEntity = planEntity?.Steps.FirstOrDefault(s => s.Index == activeStepEntity.Index);
+	            // 自动将状态更新为 InProgress
+	            await UpdateStepStatusAsync(planId, activeStepEntity.Index, PlanStepStatus.InProgress, cancellationToken);
+	            // 触发状态机转换 (Trigger state machine transition)
+	            await TriggerStateTransitionAsync(planId, WorkflowEvent.StepStart, null, cancellationToken);
+	            // 重新获取更新后的实体 (Re-fetch the updated entity)
+	            planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
+	            activeStepEntity = planEntity?.Steps.FirstOrDefault(s => s.Index == activeStepEntity.Index);
             }
             
             return activeStepEntity?.ToModel();
@@ -222,47 +355,134 @@ public class WorkflowService : IWorkflowService
     /// Mark step as completed and move to next
     /// 标记步骤为已完成并移动到下一步
     /// </summary>
-    public async Task<bool> CompleteStepAsync(string planId, int stepIndex, string? result = null, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            // 1. 更新状态为 Completed (Update status to Completed)
-            var success = await UpdateStepStatusAsync(planId, stepIndex, PlanStepStatus.Completed, cancellationToken);
-            
-            // 2. 如果成功且有结果，则更新结果 (If successful and result exists, update result)
-            if (success && !string.IsNullOrEmpty(result))
-            {
-                if (!Guid.TryParse(planId, out var id))
-                {
-                    _logger.LogWarning("Invalid Plan ID format: {PlanId}", planId);
-                    return false;
-                }
-
-                var planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
-                var stepEntity = planEntity?.Steps.FirstOrDefault(s => s.Index == stepIndex);
-
-                if (stepEntity != null)
-                {
-                    // 使用 Repository 的专用方法更新结果 (Use Repository's dedicated method to update result)
-                    await _repository.UpdateStepStatusAndResultAsync(
-                        stepEntity.Id, 
-                        PlanStepStatus.Completed, // 确保状态是 Completed
-                        result, 
-                        null, 
-                        DateTime.UtcNow,
-                        cancellationToken);
-                }
-            }
-
-            _logger.LogInformation("Completed step {StepIndex} for plan {PlanId}", stepIndex, planId);
-            return success;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error completing step for plan: {PlanId}, step: {StepIndex}", planId, stepIndex);
-            return false;
-        }
-    }
+	    public async Task<bool> CompleteStepAsync(string planId, int stepIndex, string? result = null, CancellationToken cancellationToken = default)
+	    {
+	        try
+	        {
+	            if (!Guid.TryParse(planId, out var id))
+	            {
+	                _logger.LogWarning("Invalid Plan ID format: {PlanId}", planId);
+	                return false;
+	            }
+	
+	            var planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
+	            var stepEntity = planEntity?.Steps.FirstOrDefault(s => s.Index == stepIndex);
+	
+	            if (stepEntity == null)
+	            {
+	                _logger.LogWarning("Step not found: {StepIndex} for plan: {PlanId}", stepIndex, planId);
+	                return false;
+	            }
+	
+	            // 1. 敏感标签检测 (Sensitive tag detection)
+	            if (stepEntity.Text.Contains("[SENSITIVE]") || stepEntity.Text.Contains("[PAYMENT]"))
+	            {
+	                await TriggerStateTransitionAsync(planId, WorkflowEvent.NeedIntervention, $"Step {stepIndex} contains sensitive tag and requires manual approval.", cancellationToken);
+	                _logger.LogWarning("Step {StepIndex} for plan {PlanId} triggered ManualIntervention due to sensitive tag.", stepIndex, planId);
+	                return false; // 阻止完成，等待人工干预
+	            }
+	
+	            // 2. 更新状态为 Completed (Update status to Completed)
+	            var success = await UpdateStepStatusAsync(planId, stepIndex, PlanStepStatus.Completed, cancellationToken);
+	            
+	            // 3. 如果成功且有结果，则更新结果 (If successful and result exists, update result)
+	            if (success && !string.IsNullOrEmpty(result))
+	            {
+	                // 使用 Repository 的专用方法更新结果 (Use Repository's dedicated method to update result)
+	                await _repository.UpdateStepStatusAndResultAsync(
+	                    stepEntity.Id, 
+	                    PlanStepStatus.Completed, // 确保状态是 Completed
+	                    result, 
+	                    null, 
+	                    DateTime.UtcNow,
+	                    cancellationToken);
+	            }
+	
+	            // 4. 触发状态机转换 (Trigger state machine transition)
+	            await TriggerStateTransitionAsync(planId, WorkflowEvent.StepComplete, null, cancellationToken);
+	
+	            // 5. 重置失败次数 (Reset failure count)
+	            var plan = await GetPlanAsync(planId, cancellationToken);
+	            if (plan != null && plan.FailureCount > 0)
+	            {
+	                await _repository.UpdatePlanFailureCountAsync(id, 0, cancellationToken);
+	            }
+	
+	            _logger.LogInformation("Completed step {StepIndex} for plan {PlanId}", stepIndex, planId);
+	            return success;
+	        }
+	        catch (Exception ex)
+	        {
+	            _logger.LogError(ex, "Error completing step for plan: {PlanId}, step: {StepIndex}", planId, stepIndex);
+	            return false;
+	        }
+	    }
+	
+	    /// <summary>
+	    /// Mark step as failed
+	    /// 标记步骤为失败
+	    /// </summary>
+	    public async Task<bool> FailStepAsync(string planId, int stepIndex, string? reason = null, CancellationToken cancellationToken = default)
+	    {
+	        try
+	        {
+	            if (!Guid.TryParse(planId, out var id))
+	            {
+	                _logger.LogWarning("Invalid Plan ID format: {PlanId}", planId);
+	                return false;
+	            }
+	
+	            var planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
+	            var stepEntity = planEntity?.Steps.FirstOrDefault(s => s.Index == stepIndex);
+	
+	            if (stepEntity == null)
+	            {
+	                _logger.LogWarning("Step not found: {StepIndex} for plan: {PlanId}", stepIndex, planId);
+	                return false;
+	            }
+	
+	            // 1. 更新状态为 Failed (Update status to Failed)
+	            var success = await UpdateStepStatusAsync(planId, stepIndex, PlanStepStatus.Failed, cancellationToken);
+	
+	            // 2. 更新失败原因 (Update failure reason in result field)
+	            if (success)
+	            {
+	                // 使用 Repository 的专用方法更新结果 (Use Repository's dedicated method to update result)
+	                await _repository.UpdateStepStatusAndResultAsync(
+	                    stepEntity.Id, 
+	                    PlanStepStatus.Failed, 
+	                    reason ?? "Step failed without specific reason.", 
+	                    null, 
+	                    DateTime.UtcNow,
+	                    cancellationToken);
+	            }
+	
+	            // 3. 触发状态机转换 (Trigger state machine transition)
+	            await TriggerStateTransitionAsync(planId, WorkflowEvent.StepFailed, reason, cancellationToken);
+	
+	            // 4. 失败次数检测 (Failure count detection)
+	            var plan = await GetPlanAsync(planId, cancellationToken);
+	            if (plan != null)
+	            {
+	                var newFailureCount = plan.FailureCount + 1;
+	                await _repository.UpdatePlanFailureCountAsync(id, newFailureCount, cancellationToken);
+	
+	                if (newFailureCount >= 3)
+	                {
+	                    await TriggerStateTransitionAsync(planId, WorkflowEvent.NeedIntervention, "Three consecutive step failures detected. Manual intervention required.", cancellationToken);
+	                    _logger.LogError("Plan {PlanId} triggered ManualIntervention after 3 consecutive failures.", planId);
+	                }
+	            }
+	
+	            _logger.LogWarning("Failed step {StepIndex} for plan {PlanId}. Reason: {Reason}", stepIndex, planId, reason);
+	            return success;
+	        }
+	        catch (Exception ex)
+	        {
+	            _logger.LogError(ex, "Error failing step for plan: {PlanId}, step: {StepIndex}", planId, stepIndex);
+	            return false;
+	        }
+	    }
 
     /// <summary>
     /// Generate todo list file content for a plan

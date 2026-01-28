@@ -73,9 +73,41 @@ public class WorkflowRepository : IWorkflowRepository
         {
             WorkflowPlanEntity plan = _plans[planId];
             plan.Status = status;
+            plan.UpdatedAt = DateTime.UtcNow;
             return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// 更新工作流计划的状态机状态和干预原因 (Update the state machine state and intervention reason of a workflow plan)
+    /// </summary>
+    public Task<bool> UpdatePlanStateAsync(Guid planId, WorkflowState state, string? interventionReason, CancellationToken cancellationToken = default)
+    {
+        if (_plans.ContainsKey(planId))
+        {
+            WorkflowPlanEntity plan = _plans[planId];
+            plan.CurrentState = state;
+            plan.InterventionReason = interventionReason;
+            plan.UpdatedAt = DateTime.UtcNow;
+            return Task.FromResult(true);
+        }
+        return Task.FromResult(false);
+    }
+
+    /// <summary>
+    /// 更新工作流计划的连续失败次数 (Update the consecutive failure count of a workflow plan)
+    /// </summary>
+    public Task<bool> UpdatePlanFailureCountAsync(Guid planId, int failureCount, CancellationToken cancellationToken = default)
+    {
+        if (_plans.ContainsKey(planId))
+        {
+            WorkflowPlanEntity plan = _plans[planId];
+            plan.FailureCount = failureCount;
+            plan.UpdatedAt = DateTime.UtcNow;
+            return Task.FromResult(true);
+        }
+        return Task.FromResult(false);
     }
 
     /// <summary>
