@@ -1,6 +1,8 @@
 
 import { ProjectStatus, ClusterNode, DataToolNode, MetricPoint, FlowNode, PipelineLog, LocalModel, K8sPod, GitCommit, FileSystemNode } from './types';
 
+const currentYear = new Date().getFullYear();
+
 export const TRANSLATIONS = {
   en: {
     dashboard: "Operations Overview",
@@ -275,16 +277,16 @@ export const MOCK_FLOW_NODES: FlowNode[] = [
 ];
 
 export const MOCK_LOGS: PipelineLog[] = [
-  { id: '1', timestamp: '2023-10-27 10:00:01', level: 'INFO', message: 'Pipeline started via One-Click Execution', stage: 'System' },
-  { id: '2', timestamp: '2023-10-27 10:00:05', level: 'INFO', message: 'Data ingestion complete. 45GB loaded.', stage: 'Ingestion' },
-  { id: '3', timestamp: '2023-10-27 10:01:20', level: 'WARN', message: 'Missing values detected in col "feature_x". Imputing...', stage: 'Preprocessing' },
-  { id: '4', timestamp: '2023-10-27 10:02:15', level: 'INFO', message: 'Training started on GPU-01', stage: 'Training' },
-  { id: '5', timestamp: '2023-10-27 10:05:00', level: 'ERROR', message: 'Gradient explosion detected in layer 4.', stage: 'Training' },
+  { id: '1', timestamp: `${currentYear}-10-27 10:00:01`, level: 'INFO', message: 'Pipeline started via One-Click Execution', stage: 'System' },
+  { id: '2', timestamp: `${currentYear}-10-27 10:00:05`, level: 'INFO', message: 'Data ingestion complete. 45GB loaded.', stage: 'Ingestion' },
+  { id: '3', timestamp: `${currentYear}-10-27 10:01:20`, level: 'WARN', message: 'Missing values detected in col "feature_x". Imputing...', stage: 'Preprocessing' },
+  { id: '4', timestamp: `${currentYear}-10-27 10:02:15`, level: 'INFO', message: 'Training started on GPU-01', stage: 'Training' },
+  { id: '5', timestamp: `${currentYear}-10-27 10:05:00`, level: 'ERROR', message: 'Gradient explosion detected in layer 4.', stage: 'Training' },
 ];
 
 export const MOCK_LOCAL_MODELS: LocalModel[] = [
   { id: 'm1', name: 'LLaMA-3-8B-Finance', baseModel: 'llama-3-8b', status: 'Fine-Tuning', accuracy: 88, precision: 85, recall: 90, epoch: 14, totalEpochs: 20 },
-  { id: 'm2', name: 'DeepSeek-72B-Sentiment', baseModel: 'deepseek-24b', status: 'Deployed', accuracy: 94, precision: 92, recall: 93, epoch: 10, totalEpochs: 10 },
+  { id: 'm2', name: 'Qwen-72B-Sentiment', baseModel: 'qwen-72b-chat', status: 'Deployed', accuracy: 94, precision: 92, recall: 93, epoch: 10, totalEpochs: 10 },
   { id: 'm3', name: 'Mistral-7B-v0.3', baseModel: 'mistral-7b', status: 'Idle', accuracy: 76, precision: 70, recall: 78, epoch: 0, totalEpochs: 50 },
 ];
 

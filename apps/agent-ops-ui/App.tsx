@@ -22,7 +22,8 @@ const App = () => {
   const [view, setView] = useState<ViewState>(ViewState.DASHBOARD);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [terminalOpen, setTerminalOpen] = useState(true);
-  const [lang, setLang] = useState<Language>('zh'); 
+  // Default to English as requested
+  const [lang, setLang] = useState<Language>('en'); 
   const [theme, setTheme] = useState<ThemeMode>('light'); 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [activeSettingsTab, setActiveSettingsTab] = useState('system');
@@ -80,13 +81,13 @@ const App = () => {
       <div className="flex items-center">
         {sidebarOpen ? (
           <>
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap text-slate-400 dark:text-nexus-500 mr-3">
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap text-slate-400 dark:text-nexus-500 mr-2">
               {label}
             </span>
-            <div className="h-[1px] flex-1 bg-slate-100 dark:bg-nexus-800/50"></div>
+            <div className="h-[1px] flex-1 bg-slate-100 dark:bg-nexus-800"></div>
           </>
         ) : (
-          <div className="h-[1px] w-full bg-slate-100 dark:bg-nexus-800/50"></div>
+          <div className="h-[1px] w-full bg-slate-100 dark:bg-nexus-800"></div>
         )}
       </div>
     </div>
@@ -99,7 +100,7 @@ const App = () => {
   return (
     <div className="flex h-screen bg-light-bg dark:bg-nexus-900 text-light-text dark:text-nexus-100 overflow-hidden font-sans selection:bg-nexus-accent selection:text-white transition-colors duration-500">
       
-      {/* Sidebar */}
+      {/* Optimized Sidebar */}
       <aside 
         className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-light-surface dark:bg-nexus-900 border-r border-slate-200 dark:border-nexus-800/50 flex flex-col transition-all duration-500 z-20 shadow-xl`}
       >
@@ -111,12 +112,13 @@ const App = () => {
             </div>
             {sidebarOpen && (
               <div className="ml-3">
-                <span className="text-lg font-black tracking-tighter text-nexus-900 dark:text-white leading-none block">Nexus <span className="text-nexus-accent font-light italic">OS</span></span>
+                <span className="text-lg font-black tracking-tighter text-nexus-900 dark:text-white leading-none block">Manus<span className="text-nexus-accent font-light italic">Project</span></span>
                 <span className="text-[8px] font-black uppercase tracking-[0.3em] text-nexus-500 block mt-1">Intelligence Core</span>
               </div>
             )}
           </div>
           
+          {/* Top Right Indent Toggle Button */}
           <button 
              onClick={() => setSidebarOpen(!sidebarOpen)}
              className={`absolute ${sidebarOpen ? 'top-6 right-3' : 'top-6 right-2'} p-1.5 rounded-lg transition-all duration-300 border border-transparent hover:bg-slate-100 dark:hover:bg-nexus-800 text-slate-400 dark:text-nexus-500 z-30`}
@@ -164,6 +166,7 @@ const App = () => {
           </div>
         </nav>
         
+        {/* Minimal Sidebar Bottom Dock (Terminal Only) */}
         <div className="p-4 border-t border-slate-100 dark:border-nexus-800/50">
            <button 
              onClick={() => setTerminalOpen(!terminalOpen)}
@@ -174,7 +177,9 @@ const App = () => {
         </div>
       </aside>
 
+      {/* Main Layout Area */}
       <main className="flex-1 flex flex-col relative overflow-hidden">
+        
         <header className="h-20 bg-light-surface/70 dark:bg-nexus-900/70 backdrop-blur-xl border-b border-slate-200 dark:border-nexus-800/50 flex items-center justify-between px-10 z-10">
           <div className="flex items-center space-x-6">
              <div className="hidden sm:flex items-center space-x-3 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-nexus-500">

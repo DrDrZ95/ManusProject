@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   User, Lock, Settings as SettingsIcon, Bell, Save, Key, Shield, Smartphone, 
@@ -15,9 +16,11 @@ const Settings: React.FC<SettingsProps> = ({ lang, activeTab: initialTab }) => {
   const t = TRANSLATIONS[lang];
   const [activeTab, setActiveTab] = useState(initialTab || 'profile');
   const [isSaving, setIsSaving] = useState(false);
+  
+  const currentYear = new Date().getFullYear();
   const [apiKeys, setApiKeys] = useState([
-    { id: 'pk_live_51M...', name: 'Production Cluster', created: '2023-08-15', lastUsed: '2h ago' },
-    { id: 'pk_test_84K...', name: 'Dev Environment', created: '2023-09-02', lastUsed: '5m ago' },
+    { id: 'pk_live_51M...', name: 'Production Cluster', created: `${currentYear}-08-15`, lastUsed: '2h ago' },
+    { id: 'pk_test_84K...', name: 'Dev Environment', created: `${currentYear}-09-02`, lastUsed: '5m ago' },
   ]);
 
   useEffect(() => {

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Database, Server, Search, Activity, Power, RefreshCw, X, ArrowRight 
@@ -16,6 +17,8 @@ const DataTools: React.FC<DataToolsProps> = ({ lang }) => {
   const t = TRANSLATIONS[lang];
   const [selectedTool, setSelectedTool] = useState<DataToolNode | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'cli'>('overview');
+  
+  const currentYear = new Date().getFullYear();
 
   const ToolIcon = ({ type }: { type: string }) => {
     switch (type) {
@@ -189,11 +192,11 @@ const DataTools: React.FC<DataToolsProps> = ({ lang }) => {
                     <div className="bg-nexus-900 rounded-lg p-4 font-mono text-xs text-nexus-300 h-96 overflow-y-auto border border-nexus-700 shadow-inner">
                        <div className="text-nexus-500 mb-2 border-b border-nexus-700 pb-2">/var/log/{selectedTool.type.toLowerCase()}/error.log</div>
                        <div className="space-y-1">
-                          <div>[2023-10-28 14:20:01] INFO: Node started successfully.</div>
-                          <div>[2023-10-28 14:20:05] INFO: Cluster health changed from RED to YELLOW.</div>
-                          <div className="text-yellow-400">[2023-10-28 14:21:00] WARN: High memory pressure detected (85%).</div>
-                          <div className="text-green-400">[2023-10-28 14:22:30] INFO: Garbage collection completed in 240ms.</div>
-                          <div>[2023-10-28 14:25:00] INFO: Indexing batch #40291 complete.</div>
+                          <div>[{currentYear}-10-28 14:20:01] INFO: Node started successfully.</div>
+                          <div>[{currentYear}-10-28 14:20:05] INFO: Cluster health changed from RED to YELLOW.</div>
+                          <div className="text-yellow-400">[{currentYear}-10-28 14:21:00] WARN: High memory pressure detected (85%).</div>
+                          <div className="text-green-400">[{currentYear}-10-28 14:22:30] INFO: Garbage collection completed in 240ms.</div>
+                          <div>[{currentYear}-10-28 14:25:00] INFO: Indexing batch #40291 complete.</div>
                        </div>
                     </div>
                  )}
