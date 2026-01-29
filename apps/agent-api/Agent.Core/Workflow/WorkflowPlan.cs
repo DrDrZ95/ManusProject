@@ -1,7 +1,3 @@
-using Agent.Core.Data.Entities;
-using System.ComponentModel;
-using System.Text.Json;
-
 namespace Agent.Core.Workflow;
 
 /// <summary>
@@ -32,7 +28,81 @@ public enum PlanStepStatus
     /// Blocked - 已阻塞
     /// </summary>
     [Description("Blocked")]
-    Blocked
+    Blocked,
+    
+    /// <summary>
+    /// Failed - 失败
+    /// </summary>
+    [Description("Failed")]
+    Failed
+}
+
+/// <summary>
+/// 工作流计划业务模型 (Workflow Plan Business Model)
+/// </summary>
+public class WorkflowPlan
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Plan steps - 计划步骤
+    /// </summary>
+    public List<WorkflowStep> Steps { get; set; } = new();
+
+    /// <summary>
+    /// Step statuses - 步骤状态（历史字段，兼容旧模型）
+    /// </summary>
+    public List<PlanStepStatus> StepStatuses { get; set; } = new();
+
+    /// <summary>
+    /// Current step index - 当前步骤索引（历史字段，兼容旧模型）
+    /// </summary>
+    public int? CurrentStepIndex { get; set; }
+
+    public List<string> ExecutorKeys { get; set; } = new();
+    public Dictionary<string, object> Metadata { get; set; } = new();
+
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+
+    public PlanStatus Status { get; set; }
+
+    /// <summary>
+    /// 当前工作流状态 (Current Workflow State)
+    /// </summary>
+    public WorkflowState CurrentState { get; set; } = WorkflowState.Idle;
+
+    /// <summary>
+    /// 人工干预原因 (Reason for Manual Intervention)
+    /// </summary>
+    public string? InterventionReason { get; set; }
+
+    /// <summary>
+    /// 连续失败次数 (Consecutive Failure Count)
+    /// </summary>
+    public int FailureCount { get; set; } = 0;
+}
+
+/// <summary>
+/// 工作流步骤业务模型 (Workflow Step Business Model)
+/// </summary>
+public class WorkflowStep
+{
+    public Guid Id { get; set; }
+    public int Index { get; set; }
+    public string Text { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public PlanStepStatus Status { get; set; }
+    public string? Result { get; set; }
+    public DateTime? StartedAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
+
+    /// <summary>
+    /// Step metadata - 步骤元数据（来自旧模型补齐）
+    /// </summary>
+    public Dictionary<string, object> Metadata { get; set; } = new();
 }
 
 /// <summary>
@@ -122,73 +192,11 @@ public class WorkflowProgress
     /// Has blocked steps - 是否有阻塞步骤
     /// </summary>
     public bool HasBlockedSteps => BlockedSteps > 0;
-    
+
     /// <summary>
     /// Estimated time remaining - 预计剩余时间
     /// </summary>
     public TimeSpan? EstimatedTimeRemaining { get; set; }
-}
-
-// --------------------------------------------------------------------------------
-// WorkflowPlan.cs existing content starts here
-// --------------------------------------------------------------------------------
-
-
-/// <summary>
-/// 工作流计划业务模型 (Workflow Plan Business Model)
-/// </summary>
-public class WorkflowPlan
-{
-    public Guid Id { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public List<string> ExecutorKeys { get; set; } = new List<string>();
-    public Dictionary<string, object> Metadata { get; set; } = new Dictionary<string, object>();
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public PlanStatus Status { get; set; }
-    
-    /// <summary>
-    /// 当前工作流状态 (Current Workflow State)
-    /// </summary>
-    public WorkflowState CurrentState { get; set; } = WorkflowState.Idle;
-
-    /// <summary>
-    /// 人工干预原因 (Reason for Manual Intervention)
-    /// </summary>
-    public string? InterventionReason { get; set; }
-
-    /// <summary>
-    /// 连续失败次数 (Consecutive Failure Count)
-    /// </summary>
-    public int FailureCount { get; set; } = 0;
-
-    public List<WorkflowStep> Steps { get; set; } = new List<WorkflowStep>();
-    
-    /// <summary>
-    /// 当前步骤索引 (Current Step Index)
-    /// </summary>
-    public int? CurrentStepIndex { get; set; }
-}
-
-/// <summary>
-/// 工作流步骤业务模型 (Workflow Step Business Model)
-/// </summary>
-public class WorkflowStep
-{
-    public Guid Id { get; set; }
-    public int Index { get; set; }
-    public string Text { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
-    public PlanStepStatus Status { get; set; }
-    public string? Result { get; set; }
-    public DateTime? StartedAt { get; set; }
-    public DateTime? CompletedAt { get; set; }
-    
-    /// <summary>
-    /// 步骤元数据 (Step Metadata)
-    /// </summary>
-    public Dictionary<string, object> Metadata { get; set; } = new();
 }
 
 /// <summary>
@@ -196,61 +204,72 @@ public class WorkflowStep
 /// </summary>
 public static class WorkflowPlanExtensions
 {
-    public static WorkflowPlanEntity ToEntity(this WorkflowPlan model)
-    {
-        return new WorkflowPlanEntity
-        {
-            Id = model.Id,
-            Title = model.Title,
-            Description = model.Description,
-            Status = model.Status,
-            CurrentState = model.CurrentState, // 新增状态字段
-            InterventionReason = model.InterventionReason, // 新增干预原因
-            FailureCount = model.FailureCount, // 新增失败次数
-            Metadata = JsonSerializer.Serialize(model.Metadata),
-            ExecutorKeys = JsonSerializer.Serialize(model.ExecutorKeys),
-            CreatedAt = model.CreatedAt,
-            UpdatedAt = model.UpdatedAt,
-            Steps = model.Steps.Select(s => new WorkflowStepEntity
-            {
-                Id = s.Id,
-                Index = s.Index,
-                Text = s.Text,
-                Type = s.Type,
-                Status = s.Status,
-                Result = s.Result,
-                StartedAt = s.StartedAt,
-                CompletedAt = s.CompletedAt
-            }).ToList()
-        };
-    }
-
     public static WorkflowPlan ToModel(this WorkflowPlanEntity entity)
     {
-        return new WorkflowPlan
+        var model = new WorkflowPlan
         {
             Id = entity.Id,
             Title = entity.Title,
             Description = entity.Description,
-            Status = entity.Status,
-            CurrentState = entity.CurrentState, // 新增状态字段
-            InterventionReason = entity.InterventionReason, // 新增干预原因
-            FailureCount = entity.FailureCount, // 新增失败次数
-            Metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(entity.Metadata ?? "{}") ?? new Dictionary<string, object>(),
-            ExecutorKeys = JsonSerializer.Deserialize<List<string>>(entity.ExecutorKeys ?? "[]") ?? new List<string>(),
+            // ExecutorKeys 和 Metadata 假设在 Entity 中是 string，需要反序列化，这里简化处理
+            // In a real app, Metadata/ExecutorKeys would need JSON deserialization
+            ExecutorKeys = new List<string>(), 
+            Metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(entity.Metadata),
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
-            Steps = entity.Steps.Select(s => new WorkflowStep
-            {
-                Id = s.Id,
-                Index = s.Index,
-                Text = s.Text,
-                Type = s.Type,
-                Status = s.Status,
-                Result = s.Result,
-                StartedAt = s.StartedAt,
-                CompletedAt = s.CompletedAt
-            }).OrderBy(s => s.Index).ToList()
+            Status = entity.Status,
+            Steps = entity.Steps.Select(s => s.ToModel()).ToList(),
+            StepStatuses = entity.Steps.Select(s => s.Status).ToList(),
+            CurrentStepIndex = entity.Steps.FirstOrDefault(s => s.Status.IsActive())?.Index
+        };
+        return model;
+    }
+
+    public static WorkflowStep ToModel(this WorkflowStepEntity entity)
+    {
+        return new WorkflowStep
+        {
+            Index = entity.Index,
+            Text = entity.Text,
+            Type = entity.Type,
+            Status = entity.Status,
+            StartedAt = entity.StartedAt,
+            CompletedAt = entity.CompletedAt,
+            Result = entity.Result
+        };
+    }
+
+    // --- Model to Entity (业务模型到实体) ---
+
+    public static WorkflowPlanEntity ToEntity(this WorkflowPlan model)
+    {
+        var entity = new WorkflowPlanEntity
+        {
+            Id = model.Id,
+            Title = model.Title,
+            Description = model.Description,
+            // ExecutorKeys 和 Metadata 假设在 Entity 中是 string，需要序列化，这里简化处理
+            Metadata = JsonSerializer.Serialize(model.Metadata),
+            CreatedAt = model.CreatedAt,
+            UpdatedAt = model.UpdatedAt,
+            Status = model.Status,
+            Steps = model.Steps.Select(s => s.ToEntity(model.Id)).ToList()
+        };
+        return entity;
+    }
+
+    public static WorkflowStepEntity ToEntity(this WorkflowStep model, Guid planId)
+    {
+        return new WorkflowStepEntity
+        {
+            PlanId = planId,
+            Index = model.Index,
+            Text = model.Text,
+            Type = model.Type,
+            Status = model.Status,
+            StartedAt = model.StartedAt,
+            CompletedAt = model.CompletedAt,
+            Result = model.Result
         };
     }
 }

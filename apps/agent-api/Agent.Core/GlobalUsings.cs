@@ -12,9 +12,8 @@ global using Agent.Core.Models.Identity;
 
 global using Agent.Core.Memory.Interfaces;
 
+global using Agent.Core.Notifications;
 global using Agent.Core.Workflow;
-global using Agent.Core.Workflow.Models;
-global using Agent.Core.Data.Mappers;
 global using HealthChecks.NpgSql;
 
 global using Microsoft.AspNetCore.Builder;

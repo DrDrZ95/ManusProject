@@ -24,9 +24,9 @@ global using Agent.Application.Services.SemanticKernel.Planner;
 global using Agent.Application.Services.Telemetry;
 global using Agent.Application.Services.UserInput;
 global using Agent.Application.Services.VectorDatabase;
-
+global using Agent.Application.Services.Workflow;
+    
 global using Agent.Core.Workflow;
-global using Agent.Core.Workflow.Models;
 global using Agent.McpGateway;
 global using Agent.McpGateway.UniversalMcp;
 

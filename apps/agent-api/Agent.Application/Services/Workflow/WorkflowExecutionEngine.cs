@@ -1,7 +1,4 @@
-using Agent.Application.Hubs; // 引入通知服务接口
-using Agent.Core.Notifications; // 引入通知DTO
-
-namespace Agent.Core.Workflow;
+namespace Agent.Application.Services.Workflow;
 
 /// <summary>
 /// 工作流执行引擎 (Workflow Execution Engine)
@@ -162,7 +159,7 @@ public class WorkflowExecutionEngine : IWorkflowEngine
                     "Approve, Reject, or Modify the plan.",
                     15 // 默认15分钟超时
                 );
-                await _notificationService.NotifyInterventionRequired(_planId.ToString(), notification);
+                _notificationService.NotifyInterventionRequired(_planId.ToString(), notification);
                 
                 break;
             case WorkflowState.Completed:

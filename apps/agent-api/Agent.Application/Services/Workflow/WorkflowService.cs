@@ -1,4 +1,4 @@
-namespace Agent.Core.Workflow;
+namespace Agent.Application.Services.Workflow;
 
 /// <summary>
 /// Workflow service implementation
@@ -162,22 +162,6 @@ public class WorkflowService : IWorkflowService
         return models;
     }
 
-    /// <summary>
-    /// Update step status in a plan
-    /// 更新计划中的步骤状态
-    /// 
-    /// 对应AI-Agent中的mark_step功能
-    /// Corresponds to mark_step functionality in AI-Agent
-    /// </summary>
-    public async Task<bool> UpdateStepStatusAsync(string planId, int stepIndex, PlanStepStatus status, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            if (!Guid.TryParse(planId, out var id))
-            {
-                _logger.LogWarning("Invalid Plan ID format: {PlanId}", planId);
-        return false;
-    }
 
     // --- Workflow Execution Engine Control (工作流执行引擎控制) ---
 
@@ -239,6 +223,24 @@ public class WorkflowService : IWorkflowService
     {
         await _repository.UpdatePlanStateAsync(planId, state, interventionReason, cancellationToken);
     }
+    
+    
+    /// <summary>
+    /// Update step status in a plan
+    /// 更新计划中的步骤状态
+    /// 
+    /// 对应AI-Agent中的mark_step功能
+    /// Corresponds to mark_step functionality in AI-Agent
+    /// </summary>
+    public async Task<bool> UpdateStepStatusAsync(string planId, int stepIndex, PlanStepStatus status, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (!Guid.TryParse(planId, out var id))
+            {
+                _logger.LogWarning("Invalid Plan ID format: {PlanId}", planId);
+                return false;
+            }
 
             var planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
             if (planEntity == null)
@@ -287,6 +289,12 @@ public class WorkflowService : IWorkflowService
         }
     }
 
+    public Task<bool> UpdateStepStatusAndResultAsync(string planId, int stepIndex, PlanStepStatus status,
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
     /// <summary>
     /// Get current active step in a plan
     /// 获取计划中当前活动步骤
@@ -322,7 +330,7 @@ public class WorkflowService : IWorkflowService
 	            // 自动将状态更新为 InProgress
 	            await UpdateStepStatusAsync(planId, activeStepEntity.Index, PlanStepStatus.InProgress, cancellationToken);
 	            // 触发状态机转换 (Trigger state machine transition)
-	            await TriggerStateTransitionAsync(planId, WorkflowEvent.StepStart, null, cancellationToken);
+	            await TriggerStateTransitionAsync(planId, WorkflowEvent.StartTask, null, cancellationToken);
 	            // 重新获取更新后的实体 (Re-fetch the updated entity)
 	            planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
 	            activeStepEntity = planEntity?.Steps.FirstOrDefault(s => s.Index == activeStepEntity.Index);

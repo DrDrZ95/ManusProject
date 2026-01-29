@@ -1,4 +1,4 @@
-namespace Agent.Core.Workflow;
+namespace Agent.Application.Services.Workflow;
 
 /// <summary>
 /// Interface for workflow management operations
@@ -45,7 +45,18 @@ public interface IWorkflowService
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>Success status - 成功状态</returns>
     Task<bool> UpdateStepStatusAsync(string planId, int stepIndex, PlanStepStatus status, CancellationToken cancellationToken = default);
-
+    
+    /// <summary>
+    /// Update step status and result in a plan
+    /// 更新计划中的和结果
+    /// </summary>
+    /// <param name="planId">Plan ID - 计划ID</param>
+    /// <param name="stepIndex">Step index - 步骤索引</param>
+    /// <param name="status">New status - 新状态</param>
+    /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
+    /// <returns>Success status - 成功状态</returns>
+    Task<bool> UpdateStepStatusAndResultAsync(string planId, int stepIndex, PlanStepStatus status, CancellationToken cancellationToken = default);
+    
     /// <summary>
     /// Get current active step in a plan
     /// 获取计划中当前活动步骤

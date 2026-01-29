@@ -1,6 +1,3 @@
-using Agent.Core.Notifications;
-using Microsoft.AspNetCore.SignalR;
-
 namespace Agent.Application.Hubs;
 
 /// <summary>
@@ -59,41 +56,4 @@ public class WorkflowHub : Hub
     
     // TODO: 实现基于用户ID的推送，需要集成身份验证系统 (Implement user ID based push, requires authentication system integration)
     // public async Task NotifyUser(string userId, string message) { ... }
-}
-
-/// <summary>
-/// SignalR 通知服务接口 (SignalR Notification Service Interface)
-/// 抽象出通知逻辑，方便在 WorkflowExecutionEngine 中注入和使用
-/// </summary>
-public interface IWorkflowNotificationService
-{
-    Task NotifyInterventionRequired(string planId, InterventionNotificationDto notification);
-    Task BroadcastStateChange(string planId, StateChangeNotificationDto notification);
-}
-
-/// <summary>
-/// SignalR 通知服务实现 (SignalR Notification Service Implementation)
-/// </summary>
-public class WorkflowNotificationService : IWorkflowNotificationService
-{
-    private readonly IHubContext<WorkflowHub> _hubContext;
-
-    public WorkflowNotificationService(IHubContext<WorkflowHub> hubContext)
-    {
-        _hubContext = hubContext;
-    }
-
-    public async Task NotifyInterventionRequired(string planId, InterventionNotificationDto notification)
-    {
-        // 直接调用 HubContext 的 Clients.Group 方法进行推送
-        // Directly call HubContext's Clients.Group method for push notification
-        await _hubContext.Clients.Group(planId).SendAsync("ReceiveInterventionRequired", notification);
-    }
-
-    public async Task BroadcastStateChange(string planId, StateChangeNotificationDto notification)
-    {
-        // 直接调用 HubContext 的 Clients.Group 方法进行推送
-        // Directly call HubContext's Clients.Group method for push notification
-        await _hubContext.Clients.Group(planId).SendAsync("ReceiveStateChange", notification);
-    }
 }

@@ -5,6 +5,9 @@ global using Agent.Core.Data.Entities;
 global using Agent.Core.Identity;
 global using Agent.Core.Models;
 global using Agent.Core.Workflow;
+global using Agent.Core.Notifications;
+
+global using Agent.Application.Hubs;
 
 global using Agent.Application.Services.Finetune;
 global using Agent.Application.Services.Multimodal;
@@ -15,6 +18,7 @@ global using Agent.Application.Services.SemanticKernel;
 global using Agent.Application.Services.SemanticKernel.Planner;
 global using Agent.Application.Services.PostgreSQL;
 global using Agent.Application.Services.VectorDatabase;
+global using Agent.Application.Services.Workflow;
 
 
 global using Microsoft.AspNetCore.Authorization;
@@ -33,6 +37,7 @@ global using Microsoft.Data.SqlClient;
 global using System.Collections.Generic;
 global using System;
 global using System.Collections;
+global using System.Collections.Concurrent;
 global using System.ComponentModel;
 global using System.Data;
 global using System.Data.Common;
