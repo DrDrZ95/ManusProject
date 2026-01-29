@@ -16,15 +16,34 @@ The `agent-ui` project utilizes a modular service architecture to interact with 
 
 The API access pattern is consistent across all services: each service encapsulates a specific domain of functionality and uses the `httpClient` to make API requests. This modular approach makes the codebase easy to maintain and extend.
 
-### 2. Component Structure
+### 2. Component Structure and API Reference Plan
 
-The `agent-ui` project is built with React and uses a component-based architecture. The main components are:
+The `agent-ui` project is built with React and uses a component-based architecture. Below is a reference plan mapping core components to their primary API interactions.
 
-*   **`App.tsx`**: The root component that manages the overall application layout and routing.
-*   **`InputArea.tsx`**: The component responsible for user input, including text, voice, and attachments.
-*   **`Sidebar.tsx`**: The sidebar component that displays chat sessions and other navigation links.
-*   **`MessageBubble.tsx`**: The component that renders individual chat messages.
-*   **`LoginPage.tsx`**: The login page component.
+#### Component API Reference Plan
+
+```markdown
+# App.tsx
+GET - /api/v1/user/profile (User authentication and profile loading)
+GET - /api/v1/config (Application configuration)
+
+# Sidebar.tsx
+GET - /api/v1/chats (List of chat sessions)
+POST - /api/v1/chats (Create new chat session)
+DELETE - /api/v1/chats/{id} (Delete chat session)
+
+# MessageBubble.tsx
+GET - /api/v1/messages/{id}/status (Message status polling/update)
+POST - /api/v1/messages/{id}/feedback (User feedback on message)
+
+# InputArea.tsx
+POST - /api/v1/messages (User Input Module - Send new message/prompt)
+GET - /api/v1/messages/staging (User Input Content Staging Module - Retrieve draft content)
+POST - /api/v1/files/upload (File upload for attachments)
+
+# LoginPage.tsx
+POST - /api/v1/auth/login (User login and token retrieval)
+```
 
 ### 3. `InputArea.tsx` Enhancement Plan
 

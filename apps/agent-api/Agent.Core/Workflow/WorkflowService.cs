@@ -189,34 +189,21 @@ public class WorkflowService : IWorkflowService
         return await TriggerStateTransitionAsync(planId, WorkflowEvent.StartTask, null, cancellationToken);
     }
 
-    /// <summary>
-    /// 暂停工作流执行引擎 (Pause the workflow execution engine)
-    /// </summary>
     public async Task<bool> PauseWorkflowAsync(string planId, CancellationToken cancellationToken = default)
     {
-        // 暂停通常是人工干预触发，这里模拟一个通用的暂停事件
         return await TriggerStateTransitionAsync(planId, WorkflowEvent.NeedIntervention, "User requested pause.", cancellationToken);
     }
 
-    /// <summary>
-    /// 恢复工作流执行引擎 (Resume the workflow execution engine)
-    /// </summary>
     public async Task<bool> ResumeWorkflowAsync(string planId, CancellationToken cancellationToken = default)
     {
         return await TriggerStateTransitionAsync(planId, WorkflowEvent.UserResume, null, cancellationToken);
     }
 
-    /// <summary>
-    /// 终止工作流执行引擎 (Terminate the workflow execution engine)
-    /// </summary>
     public async Task<bool> TerminateWorkflowAsync(string planId, CancellationToken cancellationToken = default)
     {
         return await TriggerStateTransitionAsync(planId, WorkflowEvent.UserTerminate, "User requested termination.", cancellationToken);
     }
 
-    /// <summary>
-    /// 触发状态转换 (Trigger a state transition)
-    /// </summary>
     public async Task<bool> TriggerStateTransitionAsync(string planId, WorkflowEvent @event, string? interventionReason = null, CancellationToken cancellationToken = default)
     {
         if (!Guid.TryParse(planId, out var id))
@@ -233,10 +220,7 @@ public class WorkflowService : IWorkflowService
 
         try
         {
-            // 触发状态机事件 (Trigger state machine event)
             await engine.TriggerEventAsync(@event, new ManualInterventionInfo { Reason = interventionReason });
-            
-            // 持久化新的状态 (Persist the new state)
             await PersistEngineStateAsync(id, engine.CurrentState, interventionReason, cancellationToken);
 
             _logger.LogInformation("Workflow {PlanId} transitioned to state {State} via event {Event}", 
@@ -251,9 +235,6 @@ public class WorkflowService : IWorkflowService
         }
     }
 
-    /// <summary>
-    /// 持久化引擎状态到数据库 (Persist engine state to the database)
-    /// </summary>
     private async Task PersistEngineStateAsync(Guid planId, WorkflowState state, string? interventionReason, CancellationToken cancellationToken)
     {
         await _repository.UpdatePlanStateAsync(planId, state, interventionReason, cancellationToken);
