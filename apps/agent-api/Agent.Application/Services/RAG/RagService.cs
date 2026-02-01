@@ -1,5 +1,8 @@
 namespace Agent.Application.Services.RAG;
 
+using System.Text.Json; // Added for JsonSerializer
+using Agent.Core.Utils; // Added for SecurityHelper
+
 /// <summary>
 /// RAG service implementation with hybrid retrieval capabilities
 /// 具有混合检索能力的RAG服务实现
@@ -9,15 +12,18 @@ public class RagService : IRagService
     private readonly IVectorDatabaseService _vectorDb;
     private readonly ISemanticKernelService _semanticKernel;
     private readonly ILogger<RagService> _logger;
+    private readonly IAgentCacheService _cacheService; // 新增：缓存服务
 
     public RagService(
         IVectorDatabaseService vectorDb,
         ISemanticKernelService semanticKernel,
-        ILogger<RagService> logger)
+        ILogger<RagService> logger,
+        IAgentCacheService cacheService) // 注入缓存服务
     {
         _vectorDb = vectorDb ?? throw new ArgumentNullException(nameof(vectorDb));
         _semanticKernel = semanticKernel ?? throw new ArgumentNullException(nameof(semanticKernel));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     }
 
     #region Document Management - 文档管理
@@ -100,6 +106,10 @@ public class RagService : IRagService
 
             _logger.LogInformation("Successfully added document {DocumentId} with {ChunkCount} chunks", 
                 document.Id, chunks.Count);
+
+            // Invalidate retrieval and response caches for this collection - 使该集合的检索和响应缓存失效
+            await _cacheService.RemoveByPrefixAsync($"rag:retrieval:{collectionName}:");
+            await _cacheService.RemoveByPrefixAsync($"rag:response:{collectionName}:");
 
             return document.Id;
         }
@@ -206,6 +216,10 @@ public class RagService : IRagService
             await AddDocumentAsync(collectionName, document);
 
             _logger.LogInformation("Successfully updated document {DocumentId}", document.Id);
+
+            // Invalidate retrieval and response caches for this collection - 使该集合的检索和响应缓存失效
+            await _cacheService.RemoveByPrefixAsync($"rag:retrieval:{collectionName}:");
+            await _cacheService.RemoveByPrefixAsync($"rag:response:{collectionName}:");
         }
         catch (Exception ex)
         {
@@ -236,6 +250,10 @@ public class RagService : IRagService
             await _vectorDb.DeleteDocumentsAsync(collectionName, null, filter);
 
             _logger.LogInformation("Successfully deleted document {DocumentId}", documentId);
+
+            // Invalidate retrieval and response caches for this collection - 使该集合的检索和响应缓存失效
+            await _cacheService.RemoveByPrefixAsync($"rag:retrieval:{collectionName}:");
+            await _cacheService.RemoveByPrefixAsync($"rag:response:{collectionName}:");
         }
         catch (Exception ex)
         {
@@ -270,69 +288,88 @@ public class RagService : IRagService
     /// Hybrid retrieval combining vector, keyword, and semantic search
     /// 结合向量、关键词和语义搜索的混合检索
     /// </summary>
-    public async Task<RagRetrievalResult> HybridRetrievalAsync(string collectionName, RagQuery query)
-    {
-        var stopwatch = Stopwatch.StartNew();
-        
-        try
+        public async Task<RagRetrievalResult> HybridRetrievalAsync(string collectionName, RagQuery query, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Performing hybrid retrieval in collection {CollectionName} for query: {Query}", 
-                collectionName, query.Text);
+            // 计算查询哈希值作为缓存键的一部分 (Calculate query hash as part of the cache key)
+            var queryHash = SecurityHelper.GetSha256Hash(JsonSerializer.Serialize(query) + collectionName);
+            // 缓存键: rag:retrieval:{集合名称}:{查询哈希} (Cache key: rag:retrieval:{collection_name}:{query_hash})
+            var cacheKey = $"rag:retrieval:{collectionName}:{queryHash}";
 
-            // 1. Parallel execution of different retrieval strategies - 并行执行不同的检索策略
-            var vectorTask = VectorRetrievalAsync(collectionName, query.Text, query.TopK * 2);
-            var keywordTask = KeywordRetrievalAsync(collectionName, query.Text, query.TopK * 2);
-            var semanticTask = SemanticRetrievalAsync(collectionName, query.Text, query.TopK * 2);
-
-            await Task.WhenAll(vectorTask, keywordTask, semanticTask);
-
-            var vectorResults = await vectorTask;
-            var keywordResults = await keywordTask;
-            var semanticResults = await semanticTask;
-
-            // 2. Merge and score results using hybrid weights - 使用混合权重合并和评分结果
-            var weights = query.Weights ?? new HybridRetrievalWeights();
-            var mergedResults = MergeRetrievalResults(vectorResults, keywordResults, semanticResults, weights);
-
-            // 3. Apply re-ranking if enabled - 如果启用，应用重排序
-            if (query.ReRanking?.Enabled == true)
+            // 尝试从缓存中获取检索结果 (Try to get retrieval results from cache)
+            var cachedResult = await _cacheService.GetAsync<RagRetrievalResult>(cacheKey, cancellationToken);
+            if (cachedResult != null)
             {
-                mergedResults = await ApplyReRankingAsync(query.Text, mergedResults, query.ReRanking);
+                _logger.LogInformation("Cache Hit (Retrieval): Retrieved {ChunkCount} chunks for query: {Query}", cachedResult.Chunks.Count(), query.Text);
+                return cachedResult;
             }
 
-            // 4. Apply filters and limit results - 应用过滤器并限制结果
-            var filteredResults = ApplyFiltersAndLimit(mergedResults, query);
-
-            stopwatch.Stop();
-
-            var result = new RagRetrievalResult
+            var stopwatch = Stopwatch.StartNew();
+            
+            try
             {
-                Chunks = filteredResults,
-                TotalMatches = filteredResults.Count,
-                ExecutionTimeMs = stopwatch.ElapsedMilliseconds,
-                Strategy = RetrievalStrategy.Hybrid,
-                Metadata = new Dictionary<string, object>
+                _logger.LogInformation("Cache Miss (Retrieval): Performing hybrid retrieval in collection {CollectionName} for query: {Query}", 
+                    collectionName, query.Text);        // 1. Parallel execution of different retrieval strategies - 并行执行不同的检索策略
+                var vectorTask = VectorRetrievalAsync(collectionName, query.Text, query.TopK * 2);
+                var keywordTask = KeywordRetrievalAsync(collectionName, query.Text, query.TopK * 2);
+                var semanticTask = SemanticRetrievalAsync(collectionName, query.Text, query.TopK * 2);
+
+                await Task.WhenAll(vectorTask, keywordTask, semanticTask);
+
+                var vectorResults = await vectorTask;
+                var keywordResults = await keywordTask;
+                var semanticResults = await semanticTask;
+
+                // 2. Merge and score results using hybrid weights - 使用混合权重合并和评分结果
+                var weights = query.Weights ?? new HybridRetrievalWeights();
+                var mergedResults = MergeRetrievalResults(vectorResults, keywordResults, semanticResults, weights);
+
+                // 3. Apply re-ranking if enabled - 如果启用，应用重排序
+                if (query.ReRanking?.Enabled == true)
                 {
-                    ["vector_results"] = vectorResults.TotalMatches,
-                    ["keyword_results"] = keywordResults.TotalMatches,
-                    ["semantic_results"] = semanticResults.TotalMatches,
-                    ["weights"] = JsonSerializer.Serialize(weights),
-                    ["reranking_enabled"] = query.ReRanking?.Enabled ?? false
+                    mergedResults = await ApplyReRankingAsync(query.Text, mergedResults, query.ReRanking);
                 }
-            };
 
-            _logger.LogInformation("Hybrid retrieval completed in {ElapsedMs}ms with {ResultCount} results", 
-                stopwatch.ElapsedMilliseconds, result.TotalMatches);
+                // 4. Apply filters and limit results - 应用过滤器并限制结果
+                var filteredResults = ApplyFiltersAndLimit(mergedResults, query);
 
-            return result;
+                stopwatch.Stop();
+
+                var result = new RagRetrievalResult
+                {
+                    Chunks = filteredResults,
+                    TotalMatches = filteredResults.Count,
+                    ExecutionTimeMs = stopwatch.ElapsedMilliseconds,
+                    Strategy = RetrievalStrategy.Hybrid,
+                    Metadata = new Dictionary<string, object>
+                    {
+                        ["vector_results"] = vectorResults.TotalMatches,
+                        ["keyword_results"] = keywordResults.TotalMatches,
+                        ["semantic_results"] = semanticResults.TotalMatches,
+                        ["weights"] = JsonSerializer.Serialize(weights),
+                        ["reranking_enabled"] = query.ReRanking?.Enabled ?? false
+                    }
+                };
+
+                _logger.LogInformation("Hybrid retrieval completed in {ElapsedMs}ms with {ResultCount} results", 
+                    stopwatch.ElapsedMilliseconds, result.TotalMatches);
+
+                // 将检索结果存入缓存 (Cache the retrieval results)
+                await _cacheService.SetAsync(
+                    cacheKey,
+                    result,
+                    memoryTtl: TimeSpan.FromHours(new Random().Next(1, 7)), // 1-6小时动态 TTL (1-6 hours dynamic TTL)
+                    distributedTtl: TimeSpan.FromHours(new Random().Next(1, 7)), // 1-6小时动态 TTL (1-6 hours dynamic TTL)
+                    cancellationToken: cancellationToken);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                _logger.LogError(ex, "Failed to perform hybrid retrieval");
+                throw;
+            }
         }
-        catch (Exception ex)
-        {
-            stopwatch.Stop();
-            _logger.LogError(ex, "Failed to perform hybrid retrieval");
-            throw;
-        }
-    }
 
     /// <summary>
     /// Vector similarity retrieval
@@ -539,12 +576,24 @@ public class RagService : IRagService
     /// 使用RAG和检索到的上下文生成响应
     /// </summary>
     public async Task<RagResponse> GenerateResponseAsync(string collectionName, RagGenerationRequest request)
-    {
-        var stopwatch = Stopwatch.StartNew();
-        
-        try
         {
-            _logger.LogInformation("Generating RAG response for query: {Query}", request.Query);
+            // Layer 3: Response Cache - 第三层：完整响应缓存
+            var queryHash = SecurityHelper.GetSha256Hash(JsonSerializer.Serialize(request.RetrievalOptions));
+            var systemPromptHash = SecurityHelper.GetSha256Hash(request.SystemPrompt ?? "");
+            var cacheKey = $"rag:response:{collectionName}:{queryHash}:{systemPromptHash}";
+
+            var cachedResponse = await _cacheService.GetAsync<RagResponse>(cacheKey);
+            if (cachedResponse != null)
+            {
+                _logger.LogInformation("Cache Hit (Response): Retrieved full response for query: {Query}", request.Query);
+                return cachedResponse;
+            }
+
+            var stopwatch = Stopwatch.StartNew();
+            
+            try
+            {
+                _logger.LogInformation("Generating RAG response for query: {Query}", request.Query);
 
             // 1. Retrieve relevant context - 检索相关上下文
             var retrievalQuery = request.RetrievalOptions ?? new RagQuery
@@ -601,6 +650,13 @@ public class RagService : IRagService
                     ["generation_model"] = "semantic-kernel"
                 }
             };
+
+            // 将生成的响应存入缓存 (Cache the generated response)
+            await _cacheService.SetAsync(
+                cacheKey,
+                ragResponse,
+                memoryTtl: TimeSpan.FromMinutes(new Random().Next(15, 61)), // 15-60分钟动态 TTL
+                distributedTtl: TimeSpan.FromMinutes(new Random().Next(15, 61)));
 
             _logger.LogInformation("RAG response generated in {ElapsedMs}ms with confidence {Confidence}", 
                 stopwatch.ElapsedMilliseconds, confidenceScore);

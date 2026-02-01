@@ -186,20 +186,23 @@ public class SemanticKernelService : ISemanticKernelService
     /// </summary>
     public async Task<float[]> GenerateEmbeddingAsync(string text)
     {
-        // 缓存键基于文本内容的哈希值 (Cache key based on text content hash)
-        var cacheKey = $"embedding:{text.GetHashCode()}";
+        // 计算文本内容的 SHA256 哈希值作为内容标识 (Calculate SHA256 hash of text content as content identifier)
+        var contentHash = SecurityHelper.GetSha256Hash(text);
+        // 缓存键: embedding:{模型名称}:{内容哈希} (Cache key: embedding:{model_name}:{content_hash})
+        var cacheKey = $"embedding:{_options.EmbeddingModel}:{contentHash}";
         
         // 使用 GetOrCreateAsync 尝试从缓存获取，否则生成并缓存 (Use GetOrCreateAsync to try cache, otherwise generate and cache)
         var embeddingArray = await _cacheService.GetOrCreateAsync<float[]>(
             cacheKey,
             async () =>
             {
-                _logger.LogInformation("Cache Miss: Generating embedding for text length: {TextLength}", text.Length);
+                _logger.LogInformation("Cache Miss (Embedding): Generating embedding for text length: {TextLength}", text.Length);
                 var embedding = await _embeddingService.GenerateEmbeddingAsync(text);
                 _logger.LogInformation("Embedding generated successfully, dimension: {Dimension}", embedding.Length);
                 return embedding.ToArray();
             },
-            memoryTtl: _options.EmbeddingResultsTtl // 使用配置的 TTL (Use configured TTL)
+            memoryTtl: TimeSpan.FromDays(7), // 7天 TTL (7-day TTL)
+            distributedTtl: TimeSpan.FromDays(7) // 7天 TTL (7-day TTL)
         );
 
         return embeddingArray;
