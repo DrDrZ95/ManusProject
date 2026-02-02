@@ -9,6 +9,17 @@ This project is continuously being optimized, and the author strives for 3+ upda
 
 **C# never lost online, never won in reality. Man! what can i say?** 🚀
 
+## 2026-02-01 Reminder
+Due to Manus' recent reduction of key functions and the increasingly serious problems exposed in its Reddit community, the author's expectations for Manus have been declining. 
+
+Because it has become more oriented towards non-professional users, both the loopholes in the payment system and the efficiency of integrating the model for project modifications have become increasingly poor.
+I began to miss the version that was released not long ago.
+
+This has forced the author to rethink and switch to more professional platforms and tools such as Cursor / Claude Code / Antigravity / Codex in order to continue the project. 
+
+**Not only this was disappointing:**
+
+![Damn](./docs/photo.png)
 ---
 
 [中文版本](./README.zh_CN.md)
