@@ -1,4 +1,4 @@
-# ManusProject - AI 智能代理平台
+# AgentProject - AI 智能代理平台
 
 > 一个企业级 AI 代理框架，基于 .NET 8.0 和 React 构建，专为自主任务执行和智能工作流自动化设计。
 > All files and solution logic are generated from Manus. reference: https://manus.im/
@@ -44,7 +44,7 @@
 
 ## 🎯 项目概述
 
-ManusProject 是一个企业级 AI 代理框架，融合了最先进的大语言模型（LLM）技术与强大的后端基础设施以及直观的前端界面。该平台通过智能工作流管理、检索增强生成（RAG）和沙箱任务处理，实现自主任务执行。
+AgentProject 是一个企业级 AI 代理框架，融合了最先进的大语言模型（LLM）技术与强大的后端基础设施以及直观的前端界面。该平台通过智能工作流管理、检索增强生成（RAG）和沙箱任务处理，实现自主任务执行。
 
 ### 核心亮点
 
@@ -849,7 +849,7 @@ test/
 ```bash
 # 克隆仓库
 git clone https://github.com/DrDrZ95/ManusProject.git
-cd ManusProject
+cd AgentProject
 
 # 进入 Docker 目录
 cd infra/docker
@@ -878,7 +878,7 @@ docker-compose down
 ```bash
 # 克隆仓库
 git clone https://github.com/DrDrZ95/ManusProject.git
-cd ManusProject
+cd AgentProject
 
 # 1. 配置后端
 cd apps/agent-api/Agent.Api
@@ -901,20 +901,20 @@ dotnet ef database update
 
 ```bash
 # 创建命名空间
-kubectl create namespace manus-project
+kubectl create namespace agent-project
 
 # 使用 Helm 安装
 cd infra/helm
-helm install manus-project ./manus-project-chart \
-  -n manus-project \
+helm install agent-project ./agent-project-chart \
+  -n agent-project \
   -f values.yaml
 
 # 验证部署
-kubectl get pods -n manus-project
-kubectl get svc -n manus-project
+kubectl get pods -n agent-project
+kubectl get svc -n agent-project
 
 # 查看部署日志
-kubectl logs -n manus-project -l app=manus-project -f
+kubectl logs -n agent-project -l app=agent-project -f
 ```
 
 ---
@@ -942,9 +942,9 @@ services:
 
 # PostgreSQL 数据库
 POSTGRES_PASSWORD=your_secure_password
-POSTGRES_USER=manus_user
-POSTGRES_DB=manus_db
-DATABASE_CONNECTION_STRING=Host=postgres;Port=5432;Database=manus_db;Username=manus_user;Password=your_secure_password
+POSTGRES_USER=agent_user
+POSTGRES_DB=agent_db
+DATABASE_CONNECTION_STRING=Host=postgres;Port=5432;Database=agent_db;Username=agent_user;Password=your_secure_password
 
 # API 配置
 API_ENDPOINT=https://your-domain.com
@@ -1164,7 +1164,6 @@ MIT License 允许：
 
 ### 参考链接
 - **GitHub 仓库**：https://github.com/DrDrZ95/ManusProject
-- **Manus 项目**：https://manus.im/ (代码生成工具)
 
 ---
 
@@ -1220,5 +1219,3 @@ MIT License 允许：
 - GraphQL API 层
 
 ---
-
-**所有文件和解决方案逻辑由 Manus 协助生成。参考：https://manus.im/**

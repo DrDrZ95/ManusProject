@@ -1,7 +1,7 @@
-# ManusProject - AI-Powered Intelligent Agent Platform
+# AgentProject - AI-Powered Intelligent Agent Platform
 
 > A professional-grade AI agent framework built with .NET 8.0 and React, designed for autonomous task execution and intelligent workflow automation.
-> All files and solution logic are generated from Manus. reference: https://manus.im/
+> All files and solution logic are generated from Manus. reference: https://manus.im/ **About to be abandoned**
 
 ### 📢 Author's Message
 
@@ -44,7 +44,7 @@ This has forced the author to rethink and switch to more professional platforms 
 
 ## 🎯 Project Overview
 
-ManusProject is an enterprise-grade AI agent framework that combines cutting-edge Large Language Model (LLM) technologies with robust backend infrastructure and intuitive frontend interfaces. The platform enables autonomous task execution through intelligent workflow management, Retrieval-Augmented Generation (RAG), and sandbox-based task processing.
+AgentProject is an enterprise-grade AI agent framework that combines cutting-edge Large Language Model (LLM) technologies with robust backend infrastructure and intuitive frontend interfaces. The platform enables autonomous task execution through intelligent workflow management, Retrieval-Augmented Generation (RAG), and sandbox-based task processing.
 
 ### Key Highlights
 
@@ -428,7 +428,7 @@ test/
 ```bash
 # Clone repository
 git clone https://github.com/DrDrZ95/ManusProject.git
-cd ManusProject
+cd AgentProject
 
 # Navigate to Docker directory
 cd infra/docker
@@ -457,7 +457,7 @@ docker-compose down
 ```bash
 # Clone repository
 git clone https://github.com/DrDrZ95/ManusProject.git
-cd ManusProject
+cd AgentProject
 
 # 1. Configure backend
 cd apps/agent-api/Agent.Api
@@ -480,20 +480,20 @@ dotnet ef database update
 
 ```bash
 # Create namespace
-kubectl create namespace manus-project
+kubectl create namespace agent-project
 
 # Install using Helm
 cd infra/helm
-helm install manus-project ./manus-project-chart \
-  -n manus-project \
+helm install agent-project ./agent-project-chart \
+  -n agent-project \
   -f values.yaml
 
 # Verify deployment
-kubectl get pods -n manus-project
-kubectl get svc -n manus-project
+kubectl get pods -n agent-project
+kubectl get svc -n agent-project
 
 # View deployment logs
-kubectl logs -n manus-project -l app=manus-project -f
+kubectl logs -n agent-project -l app=agent-project -f
 ```
 
 ---
@@ -521,7 +521,7 @@ services:
 
 # PostgreSQL Database
 POSTGRES_PASSWORD=your_secure_password
-DATABASE_CONNECTION_STRING=Host=postgres;Port=5432;Database=manus;...
+DATABASE_CONNECTION_STRING=Host=postgres;Port=5432;Database=agent;...
 
 # API Configuration
 API_ENDPOINT=https://your-domain.com
@@ -730,7 +730,6 @@ Conditions:
 
 ### Reference Links
 - **GitHub Repository**: https://github.com/DrDrZ95/ManusProject
-- **Manus Project**: https://manus.im/ (code generation tool)
 
 ---
 
@@ -787,4 +786,3 @@ Conditions:
 
 ---
 
-**All files and solution logic generated with assistance from Manus. Reference: https://manus.im/**
