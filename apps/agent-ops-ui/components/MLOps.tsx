@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Play, Download, Sliders, CheckCircle, Clock, AlertTriangle, 
@@ -141,7 +142,7 @@ const MLOps: React.FC<MLOpsProps> = ({ lang }) => {
                     >Fatal Errors</button>
                  </div>
               </div>
-              <button className="flex items-center text-[10px] font-black uppercase tracking-widest text-nexus-accent hover:text-blue-400 bg-nexus- accent/5 px-3 py-1.5 rounded-lg border border-nexus-accent/20">
+              <button className="flex items-center text-[10px] font-black uppercase tracking-widest text-nexus-accent hover:text-blue-400 bg-nexus-accent/5 px-3 py-1.5 rounded-lg border border-nexus-accent/20">
                  <Download size={14} className="mr-2" /> {t.export} Audit Log
               </button>
            </div>
@@ -203,7 +204,7 @@ const MLOps: React.FC<MLOpsProps> = ({ lang }) => {
                   <Search size={12} className="mr-2" /> Tail Logs
                 </div>
                 <div className="bg-black/40 p-4 rounded-2xl border border-nexus-800 group-hover:border-nexus-accent/50 transition-all select-all cursor-pointer shadow-inner">
-                  <span className="text-nexus-accent mr-2">$</span> kubectl logs -f deploy/nexus-pipeline-alpha --since=10m
+                  <span className="text-nexus-accent mr-2">$</span> kubectl logs -f deploy/agent-pipeline-alpha --since=10m
                 </div>
               </div>
               <div className="group">

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Server, Database, Folder, 
-  Settings as SettingsIcon, Terminal as TerminalIcon, Search, Bell, Globe, Layers, Zap, Moon, Sun, HardDrive, User, LogOut, ChevronsLeft, ChevronsRight, Command
+  Settings as SettingsIcon, Terminal as TerminalIcon, Search, Bell, Globe, Layers, Zap, Moon, Sun, HardDrive, User, LogOut, ChevronsLeft, ChevronsRight, Command, Lock
 } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import MLOps from './components/MLOps';
@@ -27,6 +27,9 @@ const App = () => {
   const [theme, setTheme] = useState<ThemeMode>('light'); 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [activeSettingsTab, setActiveSettingsTab] = useState('system');
+
+  // Hardcoded for now, would typically come from auth context
+  const currentUserAvatar = "https://rickandmortyapi.com/api/character/avatar/1.jpeg"; // Rick
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -54,27 +57,30 @@ const App = () => {
     setUserMenuOpen(false);
   };
 
-  const NavItem = ({ viewTarget, icon: Icon, label, onClick }: { viewTarget: ViewState, icon: any, label: string, onClick?: () => void }) => (
-    <button 
-      onClick={() => {
-        if (onClick) onClick();
-        setView(viewTarget);
-      }}
-      className={`w-full flex items-center group relative transition-all duration-300 px-4 py-2.5 rounded-xl ${
-        view === viewTarget 
-        ? 'bg-nexus-accent text-white shadow-lg shadow-nexus-accent/20' 
-        : 'text-slate-500 dark:text-nexus-400 hover:bg-slate-100 dark:hover:bg-nexus-800/50 hover:text-nexus-900 dark:hover:text-white'
-      } ${!sidebarOpen ? 'justify-center' : 'space-x-3.5'}`}
-    >
-      <Icon size={18} className={`${view === viewTarget ? 'text-white' : 'group-hover:scale-110 transition-transform'}`} />
-      {sidebarOpen && <span className="font-bold text-[11px] uppercase tracking-wider truncate">{label}</span>}
-      {!sidebarOpen && (
-        <div className="absolute left-16 invisible group-hover:visible bg-nexus-900 text-white text-[10px] font-black uppercase tracking-widest py-2 px-3 rounded-lg shadow-2xl z-50 pointer-events-none whitespace-nowrap border border-nexus-700">
-           {label}
-        </div>
-      )}
-    </button>
-  );
+  const NavItem = ({ viewTarget, icon: Icon, label, onClick, isActive }: { viewTarget: ViewState, icon: any, label: string, onClick?: () => void, isActive?: boolean }) => {
+    const active = isActive !== undefined ? isActive : view === viewTarget;
+    return (
+      <button 
+        onClick={() => {
+          if (onClick) onClick();
+          setView(viewTarget);
+        }}
+        className={`w-full flex items-center group relative transition-all duration-300 px-4 py-2.5 rounded-xl ${
+          active 
+          ? 'bg-nexus-accent text-white shadow-lg shadow-nexus-accent/20' 
+          : 'text-slate-500 dark:text-nexus-400 hover:bg-slate-100 dark:hover:bg-nexus-800/50 hover:text-nexus-900 dark:hover:text-white'
+        } ${!sidebarOpen ? 'justify-center' : 'space-x-3.5'}`}
+      >
+        <Icon size={18} className={`${active ? 'text-white' : 'group-hover:scale-110 transition-transform'}`} />
+        {sidebarOpen && <span className="font-bold text-[11px] uppercase tracking-wider truncate">{label}</span>}
+        {!sidebarOpen && (
+          <div className="absolute left-16 invisible group-hover:visible bg-nexus-900 text-white text-[10px] font-black uppercase tracking-widest py-2 px-3 rounded-lg shadow-2xl z-50 pointer-events-none whitespace-nowrap border border-nexus-700">
+             {label}
+          </div>
+        )}
+      </button>
+    );
+  };
 
   const NavCategory = ({ label }: { label: string }) => (
     <div className="mt-8 mb-2 px-4">
@@ -137,17 +143,17 @@ const App = () => {
             <NavItem viewTarget={ViewState.DASHBOARD} icon={LayoutDashboard} label={t.dashboard} />
           </div>
 
+          <NavCategory label={t.catProjectInfo} />
+          <div className="space-y-1">
+            <NavItem viewTarget={ViewState.PROJECTS} icon={Folder} label={t.projects} />
+            <NavItem viewTarget={ViewState.KUBERNETES} icon={Server} label={t.kubernetes} />
+            <NavItem viewTarget={ViewState.DATA_TOOLS} icon={Database} label={t.dataTools} />
+          </div>
+
           <NavCategory label={t.catMachineLearning} />
           <div className="space-y-1">
             <NavItem viewTarget={ViewState.MLOPS} icon={Layers} label={t.mlops} />
             <NavItem viewTarget={ViewState.LOCAL_MODEL} icon={Zap} label={t.localModel} />
-          </div>
-
-          <NavCategory label={t.catProjectInfo} />
-          <div className="space-y-1">
-            <NavItem viewTarget={ViewState.KUBERNETES} icon={Server} label={t.kubernetes} />
-            <NavItem viewTarget={ViewState.DATA_TOOLS} icon={Database} label={t.dataTools} />
-            <NavItem viewTarget={ViewState.PROJECTS} icon={Folder} label={t.projects} />
           </div>
 
           <NavCategory label={t.catStorage} />
@@ -159,9 +165,31 @@ const App = () => {
           <div className="space-y-1">
             <NavItem 
               viewTarget={ViewState.SETTINGS} 
+              icon={User} 
+              label={t.profile} 
+              onClick={() => setActiveSettingsTab('profile')}
+              isActive={view === ViewState.SETTINGS && activeSettingsTab === 'profile'}
+            />
+            <NavItem 
+              viewTarget={ViewState.SETTINGS} 
+              icon={Lock} 
+              label={t.accountSettings} 
+              onClick={() => setActiveSettingsTab('account')}
+              isActive={view === ViewState.SETTINGS && activeSettingsTab === 'account'}
+            />
+            <NavItem 
+              viewTarget={ViewState.SETTINGS} 
               icon={SettingsIcon} 
               label={t.settings} 
               onClick={() => setActiveSettingsTab('system')}
+              isActive={view === ViewState.SETTINGS && activeSettingsTab === 'system'}
+            />
+            <NavItem 
+              viewTarget={ViewState.SETTINGS} 
+              icon={Bell} 
+              label={t.notifications} 
+              onClick={() => setActiveSettingsTab('notifications')}
+              isActive={view === ViewState.SETTINGS && activeSettingsTab === 'notifications'}
             />
           </div>
         </nav>
@@ -226,7 +254,9 @@ const App = () => {
                    onClick={() => setUserMenuOpen(!userMenuOpen)}
                    className="flex items-center space-x-3 p-1 pr-3 rounded-2xl bg-slate-100 dark:bg-nexus-800/50 border border-slate-200 dark:border-nexus-700 hover:border-nexus-accent/30 transition-all shadow-sm"
                 >
-                   <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-500 to-purple-500 shadow-lg border border-white/20"></div>
+                   <div className="w-8 h-8 rounded-xl bg-nexus-200 dark:bg-nexus-700 shadow-lg border border-white/20 overflow-hidden">
+                      <img src={currentUserAvatar} alt="User Avatar" className="w-full h-full object-cover" />
+                   </div>
                    <div className="text-left hidden lg:block text-[10px] uppercase font-black">
                      <p className="text-slate-800 dark:text-white tracking-widest leading-none mb-0.5">Admin</p>
                      <p className="text-nexus-500 tracking-tighter leading-none">Verified</p>
@@ -237,7 +267,7 @@ const App = () => {
                    <div className="absolute right-0 mt-4 w-60 bg-white dark:bg-nexus-800 border border-slate-200 dark:border-nexus-700 rounded-3xl shadow-2xl z-50 animate-fade-in overflow-hidden p-2">
                       <div className="px-4 py-4 mb-2 bg-slate-50 dark:bg-nexus-900/50 rounded-2xl text-[10px] uppercase font-black">
                          <p className="text-slate-900 dark:text-white tracking-widest">Administrator</p>
-                         <p className="text-slate-400 dark:text-nexus-500 font-bold truncate lowercase">sys_ops_001@opsnexus.io</p>
+                         <p className="text-slate-400 dark:text-nexus-500 font-bold truncate lowercase">sys_ops_001@agentproject.io</p>
                       </div>
                       <div className="space-y-1">
                          <button onClick={() => handleNavigateSettings('profile')} className="flex w-full items-center px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-nexus-300 hover:bg-slate-50 dark:hover:bg-nexus-700 rounded-xl transition-colors">

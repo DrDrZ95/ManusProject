@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Server, Database, Folder, 
-  Settings as SettingsIcon, Terminal as TerminalIcon, Search, Bell, Globe, Layers, Zap, Moon, Sun, HardDrive, User, LogOut, ChevronsLeft, ChevronsRight, Command
+  Settings as SettingsIcon, Terminal as TerminalIcon, Search, Bell, Globe, Layers, Zap, Moon, Sun, HardDrive, User, LogOut, ChevronsLeft, ChevronsRight, Command, Lock
 } from 'lucide-react';
 import Dashboard from './Dashboard';
 import MLOps from './MLOps';
@@ -22,7 +22,8 @@ const App = () => {
   const [view, setView] = useState<ViewState>(ViewState.DASHBOARD);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [terminalOpen, setTerminalOpen] = useState(true);
-  const [lang, setLang] = useState<Language>('zh'); 
+  // Default to English as requested
+  const [lang, setLang] = useState<Language>('en'); 
   const [theme, setTheme] = useState<ThemeMode>('light'); 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [activeSettingsTab, setActiveSettingsTab] = useState('system');
@@ -60,7 +61,7 @@ const App = () => {
         setView(viewTarget);
       }}
       className={`w-full flex items-center group relative transition-all duration-300 px-4 py-2.5 rounded-xl ${
-        view === viewTarget 
+        view === viewTarget && (viewTarget !== ViewState.SETTINGS || activeSettingsTab === (label === t.profile ? 'profile' : label === t.accountSettings ? 'account' : label === t.notifications ? 'notifications' : 'system'))
         ? 'bg-nexus-accent text-white shadow-lg shadow-nexus-accent/20' 
         : 'text-slate-500 dark:text-nexus-400 hover:bg-slate-100 dark:hover:bg-nexus-800/50 hover:text-nexus-900 dark:hover:text-white'
       } ${!sidebarOpen ? 'justify-center' : 'space-x-3.5'}`}
@@ -104,14 +105,14 @@ const App = () => {
         className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-light-surface dark:bg-nexus-900 border-r border-slate-200 dark:border-nexus-800/50 flex flex-col transition-all duration-500 z-20 shadow-xl`}
       >
         {/* Sidebar Header with Toggle in Top Right */}
-        <div className="h-20 flex items-center px-4 relative group/header">
+        <div className="h-20 flex items-center px-4 relative group/header border-b border-transparent">
           <div className={`flex items-center transition-all ${!sidebarOpen && 'mx-auto'}`}>
             <div className="w-10 h-10 bg-nexus-accent rounded-2xl flex items-center justify-center shrink-0 shadow-xl shadow-nexus-accent/20 rotate-3 group-hover:rotate-0 transition-transform cursor-pointer">
               <Globe size={22} className="text-white" />
             </div>
             {sidebarOpen && (
               <div className="ml-3">
-                <span className="text-lg font-black tracking-tighter text-nexus-900 dark:text-white leading-none block">Nexus <span className="text-nexus-accent font-light italic">OS</span></span>
+                <span className="text-lg font-black tracking-tighter text-nexus-900 dark:text-white leading-none block">Agent<span className="text-nexus-accent font-light italic">Project</span></span>
                 <span className="text-[8px] font-black uppercase tracking-[0.3em] text-nexus-500 block mt-1">Intelligence Core</span>
               </div>
             )}
@@ -120,7 +121,7 @@ const App = () => {
           {/* Top Right Indent Toggle Button */}
           <button 
              onClick={() => setSidebarOpen(!sidebarOpen)}
-             className={`absolute ${sidebarOpen ? 'top-6 right-3' : 'top-2 right-2'} p-1.5 rounded-lg transition-all duration-300 border border-transparent hover:bg-slate-100 dark:hover:bg-nexus-800 text-slate-400 dark:text-nexus-500 z-30`}
+             className={`absolute ${sidebarOpen ? 'top-6 right-3' : 'top-6 right-2'} p-1.5 rounded-lg transition-all duration-300 border border-transparent hover:bg-slate-100 dark:hover:bg-nexus-800 text-slate-400 dark:text-nexus-500 z-30`}
              title={sidebarOpen ? "Collapse Menu" : "Expand Menu"}
            >
              {sidebarOpen ? (
@@ -132,21 +133,21 @@ const App = () => {
         </div>
 
         <nav className="flex-1 overflow-y-auto px-4 custom-scrollbar pb-10">
-          <div className="pt-2">
+          <div className="pt-4">
             <NavItem viewTarget={ViewState.DASHBOARD} icon={LayoutDashboard} label={t.dashboard} />
+          </div>
+
+          <NavCategory label={t.catProjectInfo} />
+          <div className="space-y-1">
+            <NavItem viewTarget={ViewState.PROJECTS} icon={Folder} label={t.projects} />
+            <NavItem viewTarget={ViewState.KUBERNETES} icon={Server} label={t.kubernetes} />
+            <NavItem viewTarget={ViewState.DATA_TOOLS} icon={Database} label={t.dataTools} />
           </div>
 
           <NavCategory label={t.catMachineLearning} />
           <div className="space-y-1">
             <NavItem viewTarget={ViewState.MLOPS} icon={Layers} label={t.mlops} />
             <NavItem viewTarget={ViewState.LOCAL_MODEL} icon={Zap} label={t.localModel} />
-          </div>
-
-          <NavCategory label={t.catProjectInfo} />
-          <div className="space-y-1">
-            <NavItem viewTarget={ViewState.KUBERNETES} icon={Server} label={t.kubernetes} />
-            <NavItem viewTarget={ViewState.DATA_TOOLS} icon={Database} label={t.dataTools} />
-            <NavItem viewTarget={ViewState.PROJECTS} icon={Folder} label={t.projects} />
           </div>
 
           <NavCategory label={t.catStorage} />
@@ -158,9 +159,27 @@ const App = () => {
           <div className="space-y-1">
             <NavItem 
               viewTarget={ViewState.SETTINGS} 
+              icon={User} 
+              label={t.profile} 
+              onClick={() => setActiveSettingsTab('profile')}
+            />
+            <NavItem 
+              viewTarget={ViewState.SETTINGS} 
+              icon={Lock} 
+              label={t.accountSettings} 
+              onClick={() => setActiveSettingsTab('account')}
+            />
+            <NavItem 
+              viewTarget={ViewState.SETTINGS} 
               icon={SettingsIcon} 
               label={t.settings} 
               onClick={() => setActiveSettingsTab('system')}
+            />
+            <NavItem 
+              viewTarget={ViewState.SETTINGS} 
+              icon={Bell} 
+              label={t.notifications} 
+              onClick={() => setActiveSettingsTab('notifications')}
             />
           </div>
         </nav>
@@ -169,7 +188,7 @@ const App = () => {
         <div className="p-4 border-t border-slate-100 dark:border-nexus-800/50">
            <button 
              onClick={() => setTerminalOpen(!terminalOpen)}
-             className={`w-full flex items-center justify-center p-3 rounded-2xl bg-slate-50 dark:bg-nexus-900 border border-slate-200 dark:border-nexus-700 hover:border-nexus-accent text-slate-500 dark:text-nexus-400 hover:text-nexus-accent transition-all group`}
+             className={`w-full flex items-center justify-center p-3 rounded-2xl bg-slate-50 dark:bg-nexus-900/50 border border-slate-200 dark:border-nexus-800/50 hover:border-nexus-accent text-slate-500 dark:text-nexus-400 hover:text-nexus-accent transition-all group`}
            >
               <TerminalIcon size={18} />
            </button>
@@ -185,7 +204,7 @@ const App = () => {
                 <Command size={14} />
                 <span>ROOT</span>
                 <span>/</span>
-                <span className="text-nexus-accent font-bold">{view}</span>
+                <span className="text-nexus-accent font-bold tracking-widest">{view}</span>
              </div>
              
              <div className="relative hidden md:block w-80">
@@ -236,7 +255,7 @@ const App = () => {
                    <div className="absolute right-0 mt-4 w-60 bg-white dark:bg-nexus-800 border border-slate-200 dark:border-nexus-700 rounded-3xl shadow-2xl z-50 animate-fade-in overflow-hidden p-2">
                       <div className="px-4 py-4 mb-2 bg-slate-50 dark:bg-nexus-900/50 rounded-2xl text-[10px] uppercase font-black">
                          <p className="text-slate-900 dark:text-white tracking-widest">Administrator</p>
-                         <p className="text-slate-400 dark:text-nexus-500 font-bold truncate lowercase">sys_ops_001@opsnexus.io</p>
+                         <p className="text-slate-400 dark:text-nexus-500 font-bold truncate lowercase">sys_ops_001@agentproject.io</p>
                       </div>
                       <div className="space-y-1">
                          <button onClick={() => handleNavigateSettings('profile')} className="flex w-full items-center px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-nexus-300 hover:bg-slate-50 dark:hover:bg-nexus-700 rounded-xl transition-colors">
