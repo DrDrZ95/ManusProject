@@ -112,7 +112,7 @@ const App = () => {
             </div>
             {sidebarOpen && (
               <div className="ml-3">
-                <span className="text-lg font-black tracking-tighter text-nexus-900 dark:text-white leading-none block">Manus<span className="text-nexus-accent font-light italic">Project</span></span>
+                <span className="text-lg font-black tracking-tighter text-nexus-900 dark:text-white leading-none block">Agent<span className="text-nexus-accent font-light italic">Project</span></span>
                 <span className="text-[8px] font-black uppercase tracking-[0.3em] text-nexus-500 block mt-1">Intelligence Core</span>
               </div>
             )}

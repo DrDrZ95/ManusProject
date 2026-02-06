@@ -46,7 +46,7 @@ public static class ApiVersioningExtensions
             Title = $"Agent.Api {description.ApiVersion}",
             Version = description.ApiVersion.ToString(),
             Description = "API for the AI Agent application. 应用程序的AI Agent API。",
-            Contact = new OpenApiContact { Name = "Manus Team", Email = "help@manus.im" },
+            Contact = new OpenApiContact { Name = "Agent Team", Email = "help@agent.im" },
             License = new OpenApiLicense { Name = "MIT", Url = new Uri("https://opensource.org/licenses/MIT") }
         };
 

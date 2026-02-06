@@ -1,6 +1,6 @@
 #!/bin/bash
 # === AI Agent 操作系统恢复脚本 ===
-# 功能：为了避免manus'computer无法恢复，集成 pnpm、.NET 8、Python 、 Unsloth 、 Docker、 btrace 相关环境，持续补充中。
+# 功能：初期为了避免厂商提供的sandbox无法恢复，集成 pnpm、.NET 8、Python 、 Unsloth 、 Docker、 btrace 相关环境，持续补充中。
 
 set -e  # 出错时立即中止执行
 
