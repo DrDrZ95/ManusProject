@@ -11,7 +11,8 @@ namespace Agent.Api.Controllers;
 /// Converted from AI-Agent project's sandbox.py and terminal.py functionality
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Produces("application/json")]
 public class SandboxTerminalController : ControllerBase
 {
@@ -33,10 +34,17 @@ public class SandboxTerminalController : ControllerBase
     /// <param name="request">Command execution request - 命令执行请求</param>
     /// <returns>Command execution result - 命令执行结果</returns>
     [HttpPost("execute")]
-    [ProducesResponseType(typeof(SandboxCommandResult), 200)]
-    [ProducesResponseType(typeof(ProblemDetails), 400)]
-    [ProducesResponseType(typeof(ProblemDetails), 500)]
-    public async Task<ActionResult<SandboxCommandResult>> ExecuteCommand(
+    [SwaggerOperation(
+        Summary = "Execute command",
+        Description = "Executes a shell command in the sandbox environment.",
+        OperationId = "ExecuteCommand",
+        Tags = new[] { "Sandbox" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<SandboxCommandResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<SandboxCommandResult>>> ExecuteCommand(
         [FromBody] ExecuteCommandRequest request)
     {
         try
@@ -46,12 +54,7 @@ public class SandboxTerminalController : ControllerBase
             // 验证请求 - Validate request
             if (string.IsNullOrWhiteSpace(request.Command))
             {
-                return BadRequest(new ProblemDetails
-                {
-                    Title = "Invalid Command",
-                    Detail = "Command cannot be empty",
-                    Status = 400
-                });
+                return BadRequest(ApiResponse<SandboxCommandResult>.Fail("Command cannot be empty"));
             }
 
             // 执行命令 - Execute command
@@ -61,17 +64,12 @@ public class SandboxTerminalController : ControllerBase
                 request.Timeout,
                 HttpContext.RequestAborted);
 
-            return Ok(result);
+            return Ok(ApiResponse<SandboxCommandResult>.Ok(result));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to execute command: {Command}", request.Command);
-            return StatusCode(500, new ProblemDetails
-            {
-                Title = "Command Execution Failed",
-                Detail = ex.Message,
-                Status = 500
-            });
+            return StatusCode(500, ApiResponse<SandboxCommandResult>.Fail(ex.Message));
         }
     }
 
@@ -85,9 +83,16 @@ public class SandboxTerminalController : ControllerBase
     /// <param name="request">Streaming command request - 流式命令请求</param>
     /// <returns>Streaming command output - 流式命令输出</returns>
     [HttpPost("execute/stream")]
+    [SwaggerOperation(
+        Summary = "Execute command with streaming output",
+        Description = "Executes a shell command and streams the output in real-time.",
+        OperationId = "ExecuteCommandStream",
+        Tags = new[] { "Sandbox" }
+    )]
     [Produces("text/plain")]
-    [ProducesResponseType(200)]
-    [ProducesResponseType(typeof(ProblemDetails), 400)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> ExecuteCommandStream(
         [FromBody] ExecuteCommandRequest request)
     {
@@ -98,12 +103,7 @@ public class SandboxTerminalController : ControllerBase
             // 验证请求 - Validate request
             if (string.IsNullOrWhiteSpace(request.Command))
             {
-                return BadRequest(new ProblemDetails
-                {
-                    Title = "Invalid Command",
-                    Detail = "Command cannot be empty",
-                    Status = 400
-                });
+                return BadRequest(ApiResponse<object>.Fail("Command cannot be empty"));
             }
 
             // 设置流式响应 - Setup streaming response
@@ -122,30 +122,23 @@ public class SandboxTerminalController : ControllerBase
                 await Response.Body.FlushAsync(HttpContext.RequestAborted);
             }
 
-            return new ContentResult {
-                StatusCode = StatusCodes.Status404NotFound,   // 对应 HTTP 204
-                Content    = string.Empty,                     // NoContent 一般没内容
-                ContentType = "text/plain; charset=utf-8"
-            };
+            return new EmptyResult();
         }
         catch (OperationCanceledException)
         {
             _logger.LogInformation("Streaming command was cancelled: {Command}", request.Command);
-            return new ContentResult {
-                StatusCode = StatusCodes.Status404NotFound,   // 对应 HTTP 204
-                Content    = string.Empty,                     // NoContent 一般没内容
-                ContentType = "text/plain; charset=utf-8"
-            };
+            return new EmptyResult();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to execute streaming command: {Command}", request.Command);
+            // If headers are already sent, we can't change status code, so just write error to stream
+            if (!Response.HasStarted)
+            {
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
+            }
             await Response.WriteAsync($"Error: {ex.Message}\n");
-            return new ContentResult {
-                StatusCode = StatusCodes.Status404NotFound,   // 对应 HTTP 204
-                Content    = string.Empty,                     // NoContent 一般没内容
-                ContentType = "text/plain; charset=utf-8"
-            };
+            return new EmptyResult();
         }
     }
 
@@ -155,23 +148,26 @@ public class SandboxTerminalController : ControllerBase
     /// </summary>
     /// <returns>Current working directory - 当前工作目录</returns>
     [HttpGet("workdir")]
-    [ProducesResponseType(typeof(WorkingDirectoryResponse), 200)]
-    public async Task<ActionResult<WorkingDirectoryResponse>> GetWorkingDirectory()
+    [SwaggerOperation(
+        Summary = "Get working directory",
+        Description = "Retrieves the current working directory of the sandbox terminal.",
+        OperationId = "GetWorkingDirectory",
+        Tags = new[] { "Sandbox" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<WorkingDirectoryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<WorkingDirectoryResponse>>> GetWorkingDirectory()
     {
         try
         {
             var workingDir = await _terminalService.GetWorkingDirectoryAsync();
-            return Ok(new WorkingDirectoryResponse { WorkingDirectory = workingDir });
+            return Ok(ApiResponse<WorkingDirectoryResponse>.Ok(new WorkingDirectoryResponse { WorkingDirectory = workingDir }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get working directory");
-            return StatusCode(500, new ProblemDetails
-            {
-                Title = "Failed to Get Working Directory",
-                Detail = ex.Message,
-                Status = 500
-            });
+            return StatusCode(500, ApiResponse<WorkingDirectoryResponse>.Fail(ex.Message));
         }
     }
 
@@ -182,50 +178,43 @@ public class SandboxTerminalController : ControllerBase
     /// <param name="request">Working directory request - 工作目录请求</param>
     /// <returns>Success status - 成功状态</returns>
     [HttpPost("workdir")]
-    [ProducesResponseType(typeof(SetWorkingDirectoryResponse), 200)]
-    [ProducesResponseType(typeof(ProblemDetails), 400)]
-    public async Task<ActionResult<SetWorkingDirectoryResponse>> SetWorkingDirectory(
+    [SwaggerOperation(
+        Summary = "Set working directory",
+        Description = "Sets the working directory for the sandbox terminal.",
+        OperationId = "SetWorkingDirectory",
+        Tags = new[] { "Sandbox" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<SetWorkingDirectoryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<SetWorkingDirectoryResponse>>> SetWorkingDirectory(
         [FromBody] SetWorkingDirectoryRequest request)
     {
         try
         {
             if (string.IsNullOrWhiteSpace(request.Path))
             {
-                return BadRequest(new ProblemDetails
-                {
-                    Title = "Invalid Path",
-                    Detail = "Path cannot be empty",
-                    Status = 400
-                });
+                return BadRequest(ApiResponse<SetWorkingDirectoryResponse>.Fail("Path cannot be empty"));
             }
 
             var success = await _terminalService.SetWorkingDirectoryAsync(request.Path);
             
             if (!success)
             {
-                return BadRequest(new ProblemDetails
-                {
-                    Title = "Failed to Set Working Directory",
-                    Detail = "The specified path is invalid or inaccessible",
-                    Status = 400
-                });
+                return BadRequest(ApiResponse<SetWorkingDirectoryResponse>.Fail("The specified path is invalid or inaccessible"));
             }
 
-            return Ok(new SetWorkingDirectoryResponse 
+            return Ok(ApiResponse<SetWorkingDirectoryResponse>.Ok(new SetWorkingDirectoryResponse 
             { 
                 Success = true, 
                 WorkingDirectory = await _terminalService.GetWorkingDirectoryAsync() 
-            });
+            }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to set working directory: {Path}", request.Path);
-            return StatusCode(500, new ProblemDetails
-            {
-                Title = "Failed to Set Working Directory",
-                Detail = ex.Message,
-                Status = 500
-            });
+            return StatusCode(500, ApiResponse<SetWorkingDirectoryResponse>.Fail(ex.Message));
         }
     }
 
@@ -236,41 +225,38 @@ public class SandboxTerminalController : ControllerBase
     /// <param name="request">Command safety check request - 命令安全检查请求</param>
     /// <returns>Safety check result - 安全检查结果</returns>
     [HttpPost("check-command")]
-    [ProducesResponseType(typeof(CommandSafetyResponse), 200)]
-    [ProducesResponseType(typeof(ProblemDetails), 400)]
-    public ActionResult<CommandSafetyResponse> CheckCommandSafety(
+    [SwaggerOperation(
+        Summary = "Check command safety",
+        Description = "Analyzes a command to determine if it is safe to execute in the sandbox.",
+        OperationId = "CheckCommandSafety",
+        Tags = new[] { "Sandbox" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<CommandSafetyResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public ActionResult<ApiResponse<CommandSafetyResponse>> CheckCommandSafety(
         [FromBody] CommandSafetyRequest request)
     {
         try
         {
             if (string.IsNullOrWhiteSpace(request.Command))
             {
-                return BadRequest(new ProblemDetails
-                {
-                    Title = "Invalid Command",
-                    Detail = "Command cannot be empty",
-                    Status = 400
-                });
+                return BadRequest(ApiResponse<CommandSafetyResponse>.Fail("Command cannot be empty"));
             }
 
             var isSafe = _terminalService.IsCommandSafe(request.Command);
             
-            return Ok(new CommandSafetyResponse 
+            return Ok(ApiResponse<CommandSafetyResponse>.Ok(new CommandSafetyResponse 
             { 
                 IsSafe = isSafe,
                 Command = request.Command,
                 Message = isSafe ? "Command is safe to execute" : "Command contains potentially dangerous operations"
-            });
+            }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to check command safety: {Command}", request.Command);
-            return StatusCode(500, new ProblemDetails
-            {
-                Title = "Safety Check Failed",
-                Detail = ex.Message,
-                Status = 500
-            });
+            return StatusCode(500, ApiResponse<CommandSafetyResponse>.Fail(ex.Message));
         }
     }
 
@@ -280,23 +266,25 @@ public class SandboxTerminalController : ControllerBase
     /// </summary>
     /// <returns>System information - 系统信息</returns>
     [HttpGet("system-info")]
-    [ProducesResponseType(typeof(SandboxSystemInfo), 200)]
-    public async Task<ActionResult<SandboxSystemInfo>> GetSystemInfo()
+    [SwaggerOperation(
+        Summary = "Get system information",
+        Description = "Retrieves information about the sandbox system environment.",
+        OperationId = "GetSystemInfo",
+        Tags = new[] { "Sandbox" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<SandboxSystemInfo>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<SandboxSystemInfo>>> GetSystemInfo()
     {
         try
         {
             var systemInfo = await _terminalService.GetSystemInfoAsync();
-            return Ok(systemInfo);
+            return Ok(ApiResponse<SandboxSystemInfo>.Ok(systemInfo));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get system information");
-            return StatusCode(500, new ProblemDetails
-            {
-                Title = "Failed to Get System Information",
-                Detail = ex.Message,
-                Status = 500
-            });
+            return StatusCode(500, ApiResponse<SandboxSystemInfo>.Fail(ex.Message));
         }
     }
 
@@ -306,8 +294,15 @@ public class SandboxTerminalController : ControllerBase
     /// </summary>
     /// <returns>Health status - 健康状态</returns>
     [HttpGet("health")]
-    [ProducesResponseType(typeof(TerminalHealthResponse), 200)]
-    public async Task<ActionResult<TerminalHealthResponse>> GetHealth()
+    [SwaggerOperation(
+        Summary = "Get health status",
+        Description = "Checks the health status of the sandbox terminal service.",
+        OperationId = "GetHealth",
+        Tags = new[] { "Sandbox" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<TerminalHealthResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<TerminalHealthResponse>>> GetHealth()
     {
         try
         {
@@ -319,24 +314,24 @@ public class SandboxTerminalController : ControllerBase
 
             var isHealthy = result.IsSuccess && result.StandardOutput.Contains("health-check");
 
-            return Ok(new TerminalHealthResponse
+            return Ok(ApiResponse<TerminalHealthResponse>.Ok(new TerminalHealthResponse
             {
                 IsHealthy = isHealthy,
                 Status = isHealthy ? "Healthy" : "Unhealthy",
                 LastChecked = DateTime.UtcNow,
                 Details = isHealthy ? "Terminal service is responding normally" : "Terminal service is not responding properly"
-            });
+            }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Health check failed");
-            return Ok(new TerminalHealthResponse
+            return Ok(ApiResponse<TerminalHealthResponse>.Ok(new TerminalHealthResponse
             {
                 IsHealthy = false,
                 Status = "Unhealthy",
                 LastChecked = DateTime.UtcNow,
                 Details = $"Health check failed: {ex.Message}"
-            });
+            }));
         }
     }
 }
@@ -476,4 +471,3 @@ public class TerminalHealthResponse
 }
 
 #endregion
-

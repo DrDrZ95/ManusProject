@@ -5,7 +5,9 @@ namespace Agent.Api.Controllers;
 /// 语义内核API控制器，用于AI操作
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("1.0")]
+[Produces("application/json")]
 public class SemanticKernelController : ControllerBase
 {
     private readonly ISemanticKernelService _semanticKernelService;
@@ -28,8 +30,19 @@ public class SemanticKernelController : ControllerBase
     /// Get chat completion response
     /// 获取聊天完成响应
     /// </summary>
+    /// <param name="request">Chat completion request / 聊天完成请求</param>
+    /// <returns>Chat completion response / 聊天完成响应</returns>
     [HttpPost("chat/completion")]
-    public async Task<IActionResult> GetChatCompletion([FromBody] ChatCompletionRequest request)
+    [SwaggerOperation(
+        Summary = "Get chat completion response",
+        Description = "Generates a chat completion response based on the provided prompt and system message.",
+        OperationId = "GetChatCompletion",
+        Tags = new[] { "SemanticKernel" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<ChatCompletionResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<ChatCompletionResponse>>> GetChatCompletion([FromBody] ChatCompletionRequest request)
     {
         try
         {
@@ -39,16 +52,16 @@ public class SemanticKernelController : ControllerBase
                 request.Prompt, 
                 request.SystemMessage);
 
-            return Ok(new ChatCompletionResponse
+            return Ok(ApiResponse<ChatCompletionResponse>.Ok(new ChatCompletionResponse
             {
                 Response = response,
                 Success = true
-            });
+            }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to process chat completion request");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, ApiResponse<ChatCompletionResponse>.Fail(ex.Message));
         }
     }
 
@@ -56,7 +69,18 @@ public class SemanticKernelController : ControllerBase
     /// Get streaming chat completion response
     /// 获取流式聊天完成响应
     /// </summary>
+    /// <param name="request">Chat completion request / 聊天完成请求</param>
+    /// <returns>Streaming chat completion / 流式聊天完成</returns>
     [HttpPost("chat/completion/stream")]
+    [SwaggerOperation(
+        Summary = "Get streaming chat completion response",
+        Description = "Generates a streaming chat completion response (Server-Sent Events).",
+        OperationId = "GetStreamingChatCompletion",
+        Tags = new[] { "SemanticKernel" }
+    )]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetStreamingChatCompletion([FromBody] ChatCompletionRequest request)
     {
         try
@@ -78,15 +102,15 @@ public class SemanticKernelController : ControllerBase
             }
 
             return new ContentResult {
-                StatusCode = StatusCodes.Status204NoContent,   // 对应 HTTP 204
-                Content    = string.Empty,                     // NoContent 一般没内容
-                ContentType = "text/plain; charset=utf-8"
+                StatusCode = StatusCodes.Status200OK,
+                Content = string.Empty,
+                ContentType = "text/event-stream"
             };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to process streaming chat completion request");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
         }
     }
 
@@ -94,8 +118,19 @@ public class SemanticKernelController : ControllerBase
     /// Get chat completion with conversation history
     /// 使用对话历史获取聊天完成
     /// </summary>
+    /// <param name="request">Chat history request / 聊天历史请求</param>
+    /// <returns>Chat completion response / 聊天完成响应</returns>
     [HttpPost("chat/completion/history")]
-    public async Task<IActionResult> GetChatCompletionWithHistory([FromBody] ChatHistoryRequest request)
+    [SwaggerOperation(
+        Summary = "Get chat completion with conversation history",
+        Description = "Generates a chat completion response based on the conversation history.",
+        OperationId = "GetChatCompletionWithHistory",
+        Tags = new[] { "SemanticKernel" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<ChatCompletionResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<ChatCompletionResponse>>> GetChatCompletionWithHistory([FromBody] ChatHistoryRequest request)
     {
         try
         {
@@ -103,16 +138,16 @@ public class SemanticKernelController : ControllerBase
 
             var response = await _semanticKernelService.GetChatCompletionWithHistoryAsync(request.Messages);
 
-            return Ok(new ChatCompletionResponse
+            return Ok(ApiResponse<ChatCompletionResponse>.Ok(new ChatCompletionResponse
             {
                 Response = response,
                 Success = true
-            });
+            }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to process chat completion with history request");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, ApiResponse<ChatCompletionResponse>.Fail(ex.Message));
         }
     }
 
@@ -124,8 +159,19 @@ public class SemanticKernelController : ControllerBase
     /// Generate text embedding
     /// 生成文本嵌入
     /// </summary>
+    /// <param name="request">Embedding request / 嵌入请求</param>
+    /// <returns>Embedding response / 嵌入响应</returns>
     [HttpPost("embeddings/generate")]
-    public async Task<IActionResult> GenerateEmbedding([FromBody] EmbeddingRequest request)
+    [SwaggerOperation(
+        Summary = "Generate text embedding",
+        Description = "Generates an embedding vector for the provided text.",
+        OperationId = "GenerateEmbedding",
+        Tags = new[] { "SemanticKernel" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<EmbeddingResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<EmbeddingResponse>>> GenerateEmbedding([FromBody] EmbeddingRequest request)
     {
         try
         {
@@ -133,17 +179,17 @@ public class SemanticKernelController : ControllerBase
 
             var embedding = await _semanticKernelService.GenerateEmbeddingAsync(request.Text);
 
-            return Ok(new EmbeddingResponse
+            return Ok(ApiResponse<EmbeddingResponse>.Ok(new EmbeddingResponse
             {
                 Embedding = embedding,
                 Dimension = embedding.Length,
                 Success = true
-            });
+            }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to generate embedding");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, ApiResponse<EmbeddingResponse>.Fail(ex.Message));
         }
     }
 
@@ -151,8 +197,19 @@ public class SemanticKernelController : ControllerBase
     /// Generate multiple text embeddings
     /// 生成多个文本嵌入
     /// </summary>
+    /// <param name="request">Batch embedding request / 批量嵌入请求</param>
+    /// <returns>Batch embedding response / 批量嵌入响应</returns>
     [HttpPost("embeddings/generate/batch")]
-    public async Task<IActionResult> GenerateEmbeddings([FromBody] BatchEmbeddingRequest request)
+    [SwaggerOperation(
+        Summary = "Generate multiple text embeddings",
+        Description = "Generates embedding vectors for a batch of texts.",
+        OperationId = "GenerateEmbeddings",
+        Tags = new[] { "SemanticKernel" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<BatchEmbeddingResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<BatchEmbeddingResponse>>> GenerateEmbeddings([FromBody] BatchEmbeddingRequest request)
     {
         try
         {
@@ -160,17 +217,17 @@ public class SemanticKernelController : ControllerBase
 
             var embeddings = await _semanticKernelService.GenerateEmbeddingsAsync(request.Texts);
 
-            return Ok(new BatchEmbeddingResponse
+            return Ok(ApiResponse<BatchEmbeddingResponse>.Ok(new BatchEmbeddingResponse
             {
                 Embeddings = embeddings.ToList(),
                 Count = embeddings.Count(),
                 Success = true
-            });
+            }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to generate embeddings");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, ApiResponse<BatchEmbeddingResponse>.Fail(ex.Message));
         }
     }
 
@@ -182,8 +239,19 @@ public class SemanticKernelController : ControllerBase
     /// Save text to memory
     /// 将文本保存到记忆中
     /// </summary>
+    /// <param name="request">Save memory request / 保存记忆请求</param>
+    /// <returns>Result of the operation / 操作结果</returns>
     [HttpPost("memory/save")]
-    public async Task<IActionResult> SaveMemory([FromBody] SaveMemoryRequest request)
+    [SwaggerOperation(
+        Summary = "Save text to memory",
+        Description = "Saves a text entry to the Semantic Memory.",
+        OperationId = "SaveMemory",
+        Tags = new[] { "SemanticKernel" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> SaveMemory([FromBody] SaveMemoryRequest request)
     {
         try
         {
@@ -195,12 +263,12 @@ public class SemanticKernelController : ControllerBase
                 request.Id,
                 request.Metadata);
 
-            return Ok(new { success = true, message = "Memory saved successfully" });
+            return Ok(ApiResponse<object>.Ok(new { message = "Memory saved successfully" }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save memory");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
         }
     }
 
@@ -208,8 +276,19 @@ public class SemanticKernelController : ControllerBase
     /// Search memory
     /// 搜索记忆
     /// </summary>
+    /// <param name="request">Search memory request / 搜索记忆请求</param>
+    /// <returns>Search memory response / 搜索记忆响应</returns>
     [HttpPost("memory/search")]
-    public async Task<IActionResult> SearchMemory([FromBody] SearchMemoryRequest request)
+    [SwaggerOperation(
+        Summary = "Search memory",
+        Description = "Searches for relevant information in the Semantic Memory.",
+        OperationId = "SearchMemory",
+        Tags = new[] { "SemanticKernel" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<SearchMemoryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<SearchMemoryResponse>>> SearchMemory([FromBody] SearchMemoryRequest request)
     {
         try
         {
@@ -221,17 +300,17 @@ public class SemanticKernelController : ControllerBase
                 request.Limit,
                 request.MinRelevance);
 
-            return Ok(new SearchMemoryResponse
+            return Ok(ApiResponse<SearchMemoryResponse>.Ok(new SearchMemoryResponse
             {
                 Results = results.ToList(),
                 Count = results.Count(),
                 Success = true
-            });
+            }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to search memory");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, ApiResponse<SearchMemoryResponse>.Fail(ex.Message));
         }
     }
 
@@ -239,8 +318,20 @@ public class SemanticKernelController : ControllerBase
     /// Remove memory
     /// 删除记忆
     /// </summary>
+    /// <param name="collectionName">Collection name / 集合名称</param>
+    /// <param name="id">Memory ID / 记忆ID</param>
+    /// <returns>Result of the operation / 操作结果</returns>
     [HttpDelete("memory/{collectionName}/{id}")]
-    public async Task<IActionResult> RemoveMemory(string collectionName, string id)
+    [SwaggerOperation(
+        Summary = "Remove memory",
+        Description = "Removes a memory entry from the Semantic Memory.",
+        OperationId = "RemoveMemory",
+        Tags = new[] { "SemanticKernel" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> RemoveMemory(string collectionName, string id)
     {
         try
         {
@@ -248,12 +339,12 @@ public class SemanticKernelController : ControllerBase
 
             await _semanticKernelService.RemoveMemoryAsync(collectionName, id);
 
-            return Ok(new { success = true, message = "Memory removed successfully" });
+            return Ok(ApiResponse<object>.Ok(new { message = "Memory removed successfully" }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to remove memory");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
         }
     }
 
@@ -265,8 +356,19 @@ public class SemanticKernelController : ControllerBase
     /// Invoke a kernel function
     /// 调用内核函数
     /// </summary>
+    /// <param name="request">Invoke function request / 调用函数请求</param>
+    /// <returns>Invoke function response / 调用函数响应</returns>
     [HttpPost("functions/invoke")]
-    public async Task<IActionResult> InvokeFunction([FromBody] InvokeFunctionRequest request)
+    [SwaggerOperation(
+        Summary = "Invoke a kernel function",
+        Description = "Invokes a specific Semantic Kernel function.",
+        OperationId = "InvokeFunction",
+        Tags = new[] { "SemanticKernel" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<InvokeFunctionResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<InvokeFunctionResponse>>> InvokeFunction([FromBody] InvokeFunctionRequest request)
     {
         try
         {
@@ -277,16 +379,16 @@ public class SemanticKernelController : ControllerBase
                 request.FunctionName,
                 request.Arguments);
 
-            return Ok(new InvokeFunctionResponse
+            return Ok(ApiResponse<InvokeFunctionResponse>.Ok(new InvokeFunctionResponse
             {
                 Result = result,
                 Success = true
-            });
+            }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to invoke function: {FunctionName}", request.FunctionName);
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, ApiResponse<InvokeFunctionResponse>.Fail(ex.Message));
         }
     }
 
@@ -294,8 +396,18 @@ public class SemanticKernelController : ControllerBase
     /// Get available functions
     /// 获取可用函数
     /// </summary>
+    /// <returns>Available functions response / 可用函数响应</returns>
     [HttpGet("functions")]
-    public IActionResult GetAvailableFunctions()
+    [SwaggerOperation(
+        Summary = "Get available functions",
+        Description = "Retrieves a list of all available Semantic Kernel functions.",
+        OperationId = "GetAvailableFunctions",
+        Tags = new[] { "SemanticKernel" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<AvailableFunctionsResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public ActionResult<ApiResponse<AvailableFunctionsResponse>> GetAvailableFunctions()
     {
         try
         {
@@ -303,17 +415,17 @@ public class SemanticKernelController : ControllerBase
 
             var functions = _semanticKernelService.GetAvailableFunctions();
 
-            return Ok(new AvailableFunctionsResponse
+            return Ok(ApiResponse<AvailableFunctionsResponse>.Ok(new AvailableFunctionsResponse
             {
                 Functions = functions.ToList(),
                 Count = functions.Count(),
                 Success = true
-            });
+            }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get available functions");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, ApiResponse<AvailableFunctionsResponse>.Fail(ex.Message));
         }
     }
 
@@ -325,8 +437,19 @@ public class SemanticKernelController : ControllerBase
     /// Semantic search using vector database
     /// 使用向量数据库进行语义搜索
     /// </summary>
+    /// <param name="request">Semantic search request / 语义搜索请求</param>
+    /// <returns>Semantic search response / 语义搜索响应</returns>
     [HttpPost("search/semantic")]
-    public async Task<IActionResult> SemanticSearch([FromBody] SemanticSearchRequest request)
+    [SwaggerOperation(
+        Summary = "Semantic search using vector database",
+        Description = "Performs a semantic search against the vector database.",
+        OperationId = "VectorSemanticSearch",
+        Tags = new[] { "SemanticKernel" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<SemanticSearchResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<SemanticSearchResponse>>> SemanticSearch([FromBody] SemanticSearchRequest request)
     {
         try
         {
@@ -343,18 +466,18 @@ public class SemanticKernelController : ControllerBase
                     IncludeMetadata = true
                 });
 
-            return Ok(new SemanticSearchResponse
+            return Ok(ApiResponse<SemanticSearchResponse>.Ok(new SemanticSearchResponse
             {
                 Matches = searchResult.Matches.ToList(),
                 TotalMatches = searchResult.TotalMatches,
                 ExecutionTimeMs = searchResult.ExecutionTimeMs,
                 Success = true
-            });
+            }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to perform semantic search");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, ApiResponse<SemanticSearchResponse>.Fail(ex.Message));
         }
     }
 
@@ -362,8 +485,19 @@ public class SemanticKernelController : ControllerBase
     /// Add documents with embeddings to vector database
     /// 向向量数据库添加带有嵌入的文档
     /// </summary>
+    /// <param name="request">Add documents request / 添加文档请求</param>
+    /// <returns>Result of the operation / 操作结果</returns>
     [HttpPost("documents/add")]
-    public async Task<IActionResult> AddDocuments([FromBody] AddDocumentsRequest request)
+    [SwaggerOperation(
+        Summary = "Add documents with embeddings to vector database",
+        Description = "Adds documents to the vector database, automatically generating embeddings if needed.",
+        OperationId = "AddVectorDocuments",
+        Tags = new[] { "SemanticKernel" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> AddDocuments([FromBody] AddDocumentsRequest request)
     {
         try
         {
@@ -375,6 +509,8 @@ public class SemanticKernelController : ControllerBase
             foreach (var doc in request.Documents)
             {
                 // Generate embedding if not provided - 如果未提供嵌入则生成
+                // Note: Assuming VectorDocument has Content and Embedding properties
+                // and AddDocumentsRequest uses VectorDocument or compatible type
                 var embedding = doc.Embedding ?? await _semanticKernelService.GenerateEmbeddingAsync(doc.Content);
 
                 vectorDocuments.Add(new VectorDocument
@@ -389,12 +525,12 @@ public class SemanticKernelController : ControllerBase
 
             await _vectorDatabaseService.AddDocumentsAsync(request.CollectionName, vectorDocuments);
 
-            return Ok(new { success = true, message = $"Added {vectorDocuments.Count} documents successfully" });
+            return Ok(ApiResponse<object>.Ok(new { message = $"Added {vectorDocuments.Count} documents successfully" }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to add documents");
-            return StatusCode(500, new { error = ex.Message });
+            return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
         }
     }
 
@@ -512,4 +648,3 @@ public class DocumentRequest
 }
 
 #endregion
-

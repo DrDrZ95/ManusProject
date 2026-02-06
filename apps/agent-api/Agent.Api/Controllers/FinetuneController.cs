@@ -8,7 +8,8 @@ namespace Agent.Api.Controllers;
 /// Provides API endpoints for Python fine-tuning functionality in AI-Agent system
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Produces("application/json")]
 public class FinetuneController : ControllerBase
 {
@@ -30,7 +31,17 @@ public class FinetuneController : ControllerBase
     /// <param name="request">Fine-tuning request - 微调请求</param>
     /// <returns>Job ID - 任务ID</returns>
     [HttpPost("start")]
-    public async Task<ActionResult<StartFinetuneResponse>> StartFinetune([FromBody] FinetuneRequest request)
+    [SwaggerOperation(
+        Summary = "Start a new fine-tuning job",
+        Description = "Initiates a new model fine-tuning job with the specified parameters.",
+        OperationId = "StartFinetune",
+        Tags = new[] { "Finetune" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<StartFinetuneResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<StartFinetuneResponse>>> StartFinetune([FromBody] FinetuneRequest request)
     {
         using (var span = _telemetryProvider.StartSpan("FinetuneController.StartFinetune"))
         {
@@ -41,19 +52,19 @@ public class FinetuneController : ControllerBase
             if (string.IsNullOrWhiteSpace(request.JobName))
             {
                 span.SetStatus(ActivityStatusCode.Error, "Job name is required");
-                return BadRequest(new { error = "Job name is required", message = "任务名称不能为空" });
+                return BadRequest(ApiResponse<StartFinetuneResponse>.Fail("Job name is required"));
             }
 
             if (string.IsNullOrWhiteSpace(request.DatasetPath))
             {
                 span.SetStatus(ActivityStatusCode.Error, "Dataset path is required");
-                return BadRequest(new { error = "Dataset path is required", message = "数据集路径不能为空" });
+                return BadRequest(ApiResponse<StartFinetuneResponse>.Fail("Dataset path is required"));
             }
 
             if (string.IsNullOrWhiteSpace(request.OutputDir))
             {
                 span.SetStatus(ActivityStatusCode.Error, "Output directory is required");
-                return BadRequest(new { error = "Output directory is required", message = "输出目录不能为空" });
+                return BadRequest(ApiResponse<StartFinetuneResponse>.Fail("Output directory is required"));
             }
 
             try
@@ -71,18 +82,14 @@ public class FinetuneController : ControllerBase
                     Status = "queued"
                 };
 
-                return Ok(response);
+                return Ok(ApiResponse<StartFinetuneResponse>.Ok(response));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to start fine-tuning job: {JobName} - 启动微调任务失败: {JobName}", request.JobName, request.JobName);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { 
-                    error = "Internal server error", 
-                    message = ex.Message,
-                    chineseMessage = "服务器内部错误"
-                });
+                return StatusCode(500, ApiResponse<StartFinetuneResponse>.Fail(ex.Message));
             }
         }
     }
@@ -94,7 +101,18 @@ public class FinetuneController : ControllerBase
     /// <param name="jobId">Job ID - 任务ID</param>
     /// <returns>Job status - 任务状态</returns>
     [HttpGet("{jobId}/status")]
-    public async Task<ActionResult<FinetuneJobStatusResponse>> GetJobStatus(string jobId)
+    [SwaggerOperation(
+        Summary = "Get fine-tuning job status",
+        Description = "Retrieves the current status and progress of a fine-tuning job.",
+        OperationId = "GetJobStatus",
+        Tags = new[] { "Finetune" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<FinetuneJobStatusResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<FinetuneJobStatusResponse>>> GetJobStatus(string jobId)
     {
         using (var span = _telemetryProvider.StartSpan("FinetuneController.GetJobStatus"))
         {
@@ -104,7 +122,7 @@ public class FinetuneController : ControllerBase
             if (string.IsNullOrWhiteSpace(jobId))
             {
                 span.SetStatus(ActivityStatusCode.Error, "Job ID is required");
-                return BadRequest(new { error = "Job ID is required", message = "任务ID不能为空" });
+                return BadRequest(ApiResponse<FinetuneJobStatusResponse>.Fail("Job ID is required"));
             }
 
             try
@@ -113,7 +131,7 @@ public class FinetuneController : ControllerBase
                 if (record == null)
                 {
                     span.SetStatus(ActivityStatusCode.Error, "Job not found");
-                    return NotFound(new { error = "Job not found", message = "任务未找到", jobId });
+                    return NotFound(ApiResponse<FinetuneJobStatusResponse>.Fail($"Job not found: {jobId}"));
                 }
                 span.SetAttribute("finetune.status", record.Status.ToString());
                 span.SetAttribute("finetune.progress", record.Progress);
@@ -130,7 +148,7 @@ public class FinetuneController : ControllerBase
                     TotalEpochs = record.TotalEpochs,
                     CurrentLoss = record.CurrentLoss,
                     BestLoss = record.BestLoss,
-                    EstimatedTimeRemaining = record.EstimatedTimeRemaining,
+                    EstimatedTimeRemaining = record.EstimatedTimeRemaining.HasValue ? TimeSpan.FromSeconds(record.EstimatedTimeRemaining.Value) : null,
                     CreatedAt = record.CreatedAt,
                     StartedAt = record.StartedAt,
                     CompletedAt = record.CompletedAt,
@@ -138,18 +156,14 @@ public class FinetuneController : ControllerBase
                     OutputPath = record.OutputPath
                 };
 
-                return Ok(response);
+                return Ok(ApiResponse<FinetuneJobStatusResponse>.Ok(response));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get job status: {JobId} - 获取任务状态失败: {JobId}", jobId, jobId);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { 
-                    error = "Internal server error", 
-                    message = ex.Message,
-                    chineseMessage = "服务器内部错误"
-                });
+                return StatusCode(500, ApiResponse<FinetuneJobStatusResponse>.Fail(ex.Message));
             }
         }
     }
@@ -161,7 +175,18 @@ public class FinetuneController : ControllerBase
     /// <param name="jobId">Job ID - 任务ID</param>
     /// <returns>Success status - 成功状态</returns>
     [HttpPost("{jobId}/cancel")]
-    public async Task<ActionResult> CancelJob(string jobId)
+    [SwaggerOperation(
+        Summary = "Cancel a running fine-tuning job",
+        Description = "Cancels a currently running fine-tuning job.",
+        OperationId = "CancelJob",
+        Tags = new[] { "Finetune" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<object>>> CancelJob(string jobId)
     {
         using (var span = _telemetryProvider.StartSpan("FinetuneController.CancelJob"))
         {
@@ -171,7 +196,7 @@ public class FinetuneController : ControllerBase
             if (string.IsNullOrWhiteSpace(jobId))
             {
                 span.SetStatus(ActivityStatusCode.Error, "Job ID is required");
-                return BadRequest(new { error = "Job ID is required", message = "任务ID不能为空" });
+                return BadRequest(ApiResponse<object>.Fail("Job ID is required"));
             }
 
             try
@@ -180,21 +205,16 @@ public class FinetuneController : ControllerBase
                 span.SetAttribute("finetune.cancel_success", success);
                 if (success)
                 {
-                    return Ok(new { 
+                    return Ok(ApiResponse<object>.Ok(new { 
                         message = "Job cancelled successfully", 
                         chineseMessage = "任务取消成功",
                         jobId 
-                    });
+                    }));
                 }
                 else
                 {
                     span.SetStatus(ActivityStatusCode.Error, "Failed to cancel job");
-                    return BadRequest(new { 
-                        error = "Failed to cancel job", 
-                        message = "Job may not be running or already completed",
-                        chineseMessage = "任务可能未在运行或已完成",
-                        jobId 
-                    });
+                    return BadRequest(ApiResponse<object>.Fail("Failed to cancel job. Job may not be running or already completed."));
                 }
             }
             catch (Exception ex)
@@ -202,11 +222,7 @@ public class FinetuneController : ControllerBase
                 _logger.LogError(ex, "Failed to cancel job: {JobId} - 取消任务失败: {JobId}", jobId, jobId);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { 
-                    error = "Internal server error", 
-                    message = ex.Message,
-                    chineseMessage = "服务器内部错误"
-                });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -219,7 +235,17 @@ public class FinetuneController : ControllerBase
     /// <param name="limit">Maximum number of results - 最大结果数</param>
     /// <returns>List of jobs - 任务列表</returns>
     [HttpGet]
-    public async Task<ActionResult<List<FinetuneJobSummary>>> GetJobs(
+    [SwaggerOperation(
+        Summary = "Get all fine-tuning jobs",
+        Description = "Retrieves a list of all fine-tuning jobs, optionally filtered by status.",
+        OperationId = "GetJobs",
+        Tags = new[] { "Finetune" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<List<FinetuneJobSummary>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<List<FinetuneJobSummary>>>> GetJobs(
         [FromQuery] FinetuneStatus? status = null, 
         [FromQuery] int limit = 100)
     {
@@ -233,7 +259,7 @@ public class FinetuneController : ControllerBase
             if (limit <= 0 || limit > 1000)
             {
                 span.SetStatus(ActivityStatusCode.Error, "Limit must be between 1 and 1000");
-                return BadRequest(new { error = "Limit must be between 1 and 1000", message = "限制必须在1到1000之间" });
+                return BadRequest(ApiResponse<List<FinetuneJobSummary>>.Fail("Limit must be between 1 and 1000"));
             }
 
             try
@@ -257,18 +283,14 @@ public class FinetuneController : ControllerBase
                     Priority = r.Priority
                 }).ToList();
 
-                return Ok(jobs);
+                return Ok(ApiResponse<List<FinetuneJobSummary>>.Ok(jobs));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get jobs - 获取任务列表失败");
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { 
-                    error = "Internal server error", 
-                    message = ex.Message,
-                    chineseMessage = "服务器内部错误"
-                });
+                return StatusCode(500, ApiResponse<List<FinetuneJobSummary>>.Fail(ex.Message));
             }
         }
     }
@@ -280,7 +302,18 @@ public class FinetuneController : ControllerBase
     /// <param name="jobId">Job ID - 任务ID</param>
     /// <returns>Job logs - 任务日志</returns>
     [HttpGet("{jobId}/logs")]
-    public async Task<ActionResult<JobLogsResponse>> GetJobLogs(string jobId)
+    [SwaggerOperation(
+        Summary = "Get job logs",
+        Description = "Retrieves the execution logs for a specific fine-tuning job.",
+        OperationId = "GetJobLogs",
+        Tags = new[] { "Finetune" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<JobLogsResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<JobLogsResponse>>> GetJobLogs(string jobId)
     {
         using (var span = _telemetryProvider.StartSpan("FinetuneController.GetJobLogs"))
         {
@@ -290,7 +323,7 @@ public class FinetuneController : ControllerBase
             if (string.IsNullOrWhiteSpace(jobId))
             {
                 span.SetStatus(ActivityStatusCode.Error, "Job ID is required");
-                return BadRequest(new { error = "Job ID is required", message = "任务ID不能为空" });
+                return BadRequest(ApiResponse<JobLogsResponse>.Fail("Job ID is required"));
             }
 
             try
@@ -299,29 +332,24 @@ public class FinetuneController : ControllerBase
                 if (logs == null)
                 {
                     span.SetStatus(ActivityStatusCode.Error, "Job not found");
-                    return NotFound(new { error = "Job not found", message = "任务未找到", jobId });
+                    return NotFound(ApiResponse<JobLogsResponse>.Fail($"Job not found: {jobId}"));
                 }
                 span.SetAttribute("finetune.log_length", logs.Length);
 
                 var response = new JobLogsResponse
                 {
                     JobId = jobId,
-                    Logs = logs,
-                    LogLines = logs.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries).ToList()
+                    Logs = logs?.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>()
                 };
 
-                return Ok(response);
+                return Ok(ApiResponse<JobLogsResponse>.Ok(response));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get job logs: {JobId} - 获取任务日志失败: {JobId}", jobId, jobId);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { 
-                    error = "Internal server error", 
-                    message = ex.Message,
-                    chineseMessage = "服务器内部错误"
-                });
+                return StatusCode(500, ApiResponse<JobLogsResponse>.Fail(ex.Message));
             }
         }
     }
@@ -332,7 +360,16 @@ public class FinetuneController : ControllerBase
     /// </summary>
     /// <returns>Environment validation result - 环境验证结果</returns>
     [HttpGet("environment/validate")]
-    public async Task<ActionResult<PythonEnvironmentInfo>> ValidateEnvironment()
+    [SwaggerOperation(
+        Summary = "Validate Python environment",
+        Description = "Validates the Python environment configuration and availability.",
+        OperationId = "ValidateEnvironment",
+        Tags = new[] { "Finetune" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<PythonEnvironmentInfo>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<PythonEnvironmentInfo>>> ValidateEnvironment()
     {
         using (var span = _telemetryProvider.StartSpan("FinetuneController.ValidateEnvironment"))
         {
@@ -343,18 +380,14 @@ public class FinetuneController : ControllerBase
                 var envInfo = await _finetuneService.ValidatePythonEnvironmentAsync();
                 span.SetAttribute("python.version", envInfo.PythonVersion);
                 span.SetAttribute("python.is_installed", envInfo.IsPythonInstalled);
-                return Ok(envInfo);
+                return Ok(ApiResponse<PythonEnvironmentInfo>.Ok(envInfo));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to validate Python environment - Python环境验证失败");
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { 
-                    error = "Internal server error", 
-                    message = ex.Message,
-                    chineseMessage = "服务器内部错误"
-                });
+                return StatusCode(500, ApiResponse<PythonEnvironmentInfo>.Fail(ex.Message));
             }
         }
     }
@@ -365,7 +398,16 @@ public class FinetuneController : ControllerBase
     /// </summary>
     /// <returns>List of available models - 可用模型列表</returns>
     [HttpGet("models")]
-    public async Task<ActionResult<List<string>>> GetAvailableModels()
+    [SwaggerOperation(
+        Summary = "Get available models",
+        Description = "Retrieves a list of base models available for fine-tuning.",
+        OperationId = "GetAvailableModels",
+        Tags = new[] { "Finetune" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<List<string>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<List<string>>>> GetAvailableModels()
     {
         using (var span = _telemetryProvider.StartSpan("FinetuneController.GetAvailableModels"))
         {
@@ -375,18 +417,14 @@ public class FinetuneController : ControllerBase
             {
                 var models = await _finetuneService.GetAvailableModelsAsync();
                 span.SetAttribute("finetune.model_count", models.Count);
-                return Ok(models);
+                return Ok(ApiResponse<List<string>>.Ok(models));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get available models - 获取可用模型失败");
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { 
-                    error = "Internal server error", 
-                    message = ex.Message,
-                    chineseMessage = "服务器内部错误"
-                });
+                return StatusCode(500, ApiResponse<List<string>>.Fail(ex.Message));
             }
         }
     }
@@ -398,7 +436,17 @@ public class FinetuneController : ControllerBase
     /// <param name="request">Fine-tuning request - 微调请求</param>
     /// <returns>Resource estimation - 资源估算</returns>
     [HttpPost("estimate")]
-    public async Task<ActionResult<ResourceEstimation>> EstimateResources([FromBody] FinetuneRequest request)
+    [SwaggerOperation(
+        Summary = "Estimate training resources",
+        Description = "Estimates the required resources (GPU memory, time) for a fine-tuning job.",
+        OperationId = "EstimateResources",
+        Tags = new[] { "Finetune" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<ResourceEstimation>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<ResourceEstimation>>> EstimateResources([FromBody] FinetuneRequest request)
     {
         using (var span = _telemetryProvider.StartSpan("FinetuneController.EstimateResources"))
         {
@@ -408,7 +456,7 @@ public class FinetuneController : ControllerBase
             if (string.IsNullOrWhiteSpace(request.DatasetPath))
             {
                 span.SetStatus(ActivityStatusCode.Error, "Dataset path is required");
-                return BadRequest(new { error = "Dataset path is required", message = "数据集路径不能为空" });
+                return BadRequest(ApiResponse<ResourceEstimation>.Fail("Dataset path is required"));
             }
 
             try
@@ -416,18 +464,14 @@ public class FinetuneController : ControllerBase
                 var estimation = await _finetuneService.EstimateResourcesAsync(request);
                 span.SetAttribute("finetune.estimated_gpu_memory", estimation.EstimatedGpuMemoryMb);
                 span.SetAttribute("finetune.estimated_training_time", estimation.EstimatedTrainingTimeMinutes);
-                return Ok(estimation);
+                return Ok(ApiResponse<ResourceEstimation>.Ok(estimation));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to estimate resources - 资源估算失败");
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { 
-                    error = "Internal server error", 
-                    message = ex.Message,
-                    chineseMessage = "服务器内部错误"
-                });
+                return StatusCode(500, ApiResponse<ResourceEstimation>.Fail(ex.Message));
             }
         }
     }
@@ -440,7 +484,18 @@ public class FinetuneController : ControllerBase
     /// <param name="progress">Progress update - 进度更新</param>
     /// <returns>Success status - 成功状态</returns>
     [HttpPost("{jobId}/progress")]
-    public async Task<ActionResult> UpdateJobProgress(string jobId, [FromBody] FinetuneProgress progress)
+    [SwaggerOperation(
+        Summary = "Update job progress",
+        Description = "Updates the progress of a running fine-tuning job (Internal Use).",
+        OperationId = "UpdateJobProgress",
+        Tags = new[] { "Finetune" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<object>>> UpdateJobProgress(string jobId, [FromBody] FinetuneProgress progress)
     {
         using (var span = _telemetryProvider.StartSpan("FinetuneController.UpdateJobProgress"))
         {
@@ -451,7 +506,7 @@ public class FinetuneController : ControllerBase
             if (string.IsNullOrWhiteSpace(jobId))
             {
                 span.SetStatus(ActivityStatusCode.Error, "Job ID is required");
-                return BadRequest(new { error = "Job ID is required", message = "任务ID不能为空" });
+                return BadRequest(ApiResponse<object>.Fail("Job ID is required"));
             }
 
             try
@@ -460,16 +515,16 @@ public class FinetuneController : ControllerBase
                 span.SetAttribute("finetune.update_success", success);
                 if (success)
                 {
-                    return Ok(new { 
+                    return Ok(ApiResponse<object>.Ok(new { 
                         message = "Progress updated successfully", 
                         chineseMessage = "进度更新成功",
                         jobId 
-                    });
+                    }));
                 }
                 else
                 {
                     span.SetStatus(ActivityStatusCode.Error, "Job not found");
-                    return NotFound(new { error = "Job not found", message = "任务未找到", jobId });
+                    return NotFound(ApiResponse<object>.Fail($"Job not found: {jobId}"));
                 }
             }
             catch (Exception ex)
@@ -477,325 +532,8 @@ public class FinetuneController : ControllerBase
                 _logger.LogError(ex, "Failed to update job progress: {JobId} - 更新任务进度失败: {JobId}", jobId, jobId);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { 
-                    error = "Internal server error", 
-                    message = ex.Message,
-                    chineseMessage = "服务器内部错误"
-                });
-            }
-        }
-    }
-
-    /// <summary>
-    /// Get system information
-    /// 获取系统信息
-    /// </summary>
-    /// <returns>System information - 系统信息</returns>
-    [HttpGet("system-info")]
-    public async Task<ActionResult<FinetuneSystemInfo>> GetSystemInfo()
-    {
-        using (var span = _telemetryProvider.StartSpan("FinetuneController.GetSystemInfo"))
-        {
-            _logger.LogInformation("Getting system information - 获取系统信息");
-            
-            try
-            {
-                var envInfo = await _finetuneService.ValidatePythonEnvironmentAsync();
-                var models = await _finetuneService.GetAvailableModelsAsync();
-                
-                var systemInfo = new FinetuneSystemInfo
-                {
-                    SystemName = "AI-Agent Python Fine-tuning System",
-                    Version = "1.0.0",
-                    PythonEnvironment = envInfo,
-                    AvailableModels = models,
-                    SupportedFeatures = new List<string>
-                    {
-                        "llama model fine-tuning",
-                        "Custom dataset support", 
-                        "GPU acceleration",
-                        "Progress tracking",
-                        "Checkpoint saving",
-                        "Resource estimation",
-                        "Job cancellation"
-                    },
-                    DefaultConfiguration = new FinetuneRequest
-                    {
-                        BaseModel = "meta-llama/Llama-3.1-8B-Instruct",
-                        Epochs = 3,
-                        LearningRate = 2e-5,
-                        BatchSize = 4,
-                        MaxLength = 512,
-                        SaveCheckpoints = true,
-                        SaveSteps = 500,
-                        EvalSteps = 500,
-                        LoggingSteps = 100,
-                        WarmupSteps = 100,
-                        WeightDecay = 0.01,
-                        Priority = 5
-                    }
-                };
-                span.SetAttribute("system.python_installed", envInfo.IsPythonInstalled);
-                span.SetAttribute("system.available_models_count", models.Count);
-                return Ok(systemInfo);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to get system information - 获取系统信息失败");
-                span.RecordException(ex);
-                span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { 
-                    error = "Internal server error", 
-                    message = ex.Message,
-                    chineseMessage = "服务器内部错误"
-                });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
 }
-
-#region Response Models - 响应模型
-
-/// <summary>
-/// Start fine-tune response model
-/// 启动微调响应模型
-/// </summary>
-public class StartFinetuneResponse
-{
-    /// <summary>
-    /// Job ID - 任务ID
-    /// </summary>
-    public string JobId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Response message - 响应消息
-    /// </summary>
-    public string Message { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Chinese response message - 中文响应消息
-    /// </summary>
-    public string ChineseMessage { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Job status - 任务状态
-    /// </summary>
-    public string Status { get; set; } = string.Empty;
-}
-
-/// <summary>
-/// Fine-tune job status response model
-/// 微调任务状态响应模型
-/// </summary>
-public class FinetuneJobStatusResponse
-{
-    /// <summary>
-    /// Job ID - 任务ID
-    /// </summary>
-    public string JobId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Job name - 任务名称
-    /// </summary>
-    public string JobName { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Job status - 任务状态
-    /// </summary>
-    public string Status { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Status display name - 状态显示名称
-    /// </summary>
-    public string StatusDisplay { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Chinese status display name - 中文状态显示名称
-    /// </summary>
-    public string ChineseStatusDisplay { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Progress percentage - 进度百分比
-    /// </summary>
-    public int Progress { get; set; }
-
-    /// <summary>
-    /// Current epoch - 当前轮次
-    /// </summary>
-    public int CurrentEpoch { get; set; }
-
-    /// <summary>
-    /// Total epochs - 总轮次
-    /// </summary>
-    public int TotalEpochs { get; set; }
-
-    /// <summary>
-    /// Current loss - 当前损失
-    /// </summary>
-    public double? CurrentLoss { get; set; }
-
-    /// <summary>
-    /// Best loss - 最佳损失
-    /// </summary>
-    public double? BestLoss { get; set; }
-
-    /// <summary>
-    /// Estimated time remaining - 预计剩余时间
-    /// </summary>
-    public int? EstimatedTimeRemaining { get; set; }
-
-    /// <summary>
-    /// Created timestamp - 创建时间戳
-    /// </summary>
-    public DateTime CreatedAt { get; set; }
-
-    /// <summary>
-    /// Started timestamp - 开始时间戳
-    /// </summary>
-    public DateTime? StartedAt { get; set; }
-
-    /// <summary>
-    /// Completed timestamp - 完成时间戳
-    /// </summary>
-    public DateTime? CompletedAt { get; set; }
-
-    /// <summary>
-    /// Error message - 错误消息
-    /// </summary>
-    public string? ErrorMessage { get; set; }
-
-    /// <summary>
-    /// Output path - 输出路径
-    /// </summary>
-    public string? OutputPath { get; set; }
-}
-
-/// <summary>
-/// Fine-tune job summary model
-/// 微调任务摘要模型
-/// </summary>
-public class FinetuneJobSummary
-{
-    /// <summary>
-    /// Job ID - 任务ID
-    /// </summary>
-    public string JobId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Job name - 任务名称
-    /// </summary>
-    public string JobName { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Base model - 基础模型
-    /// </summary>
-    public string BaseModel { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Job status - 任务状态
-    /// </summary>
-    public string Status { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Status display name - 状态显示名称
-    /// </summary>
-    public string StatusDisplay { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Chinese status display name - 中文状态显示名称
-    /// </summary>
-    public string ChineseStatusDisplay { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Progress percentage - 进度百分比
-    /// </summary>
-    public int Progress { get; set; }
-
-    /// <summary>
-    /// Created timestamp - 创建时间戳
-    /// </summary>
-    public DateTime CreatedAt { get; set; }
-
-    /// <summary>
-    /// Started timestamp - 开始时间戳
-    /// </summary>
-    public DateTime? StartedAt { get; set; }
-
-    /// <summary>
-    /// Completed timestamp - 完成时间戳
-    /// </summary>
-    public DateTime? CompletedAt { get; set; }
-
-    /// <summary>
-    /// Created by user - 创建用户
-    /// </summary>
-    public string? CreatedBy { get; set; }
-
-    /// <summary>
-    /// Priority level - 优先级
-    /// </summary>
-    public int Priority { get; set; }
-}
-
-/// <summary>
-/// Job logs response model
-/// 任务日志响应模型
-/// </summary>
-public class JobLogsResponse
-{
-    /// <summary>
-    /// Job ID - 任务ID
-    /// </summary>
-    public string JobId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Raw logs - 原始日志
-    /// </summary>
-    public string Logs { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Log lines - 日志行
-    /// </summary>
-    public List<string> LogLines { get; set; } = new();
-}
-
-/// <summary>
-/// Fine-tune system information model
-/// 微调系统信息模型
-/// </summary>
-public class FinetuneSystemInfo
-{
-    /// <summary>
-    /// System name - 系统名称
-    /// </summary>
-    public string SystemName { get; set; } = string.Empty;
-
-    /// <summary>
-    /// System version - 系统版本
-    /// </summary>
-    public string Version { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Python environment info - Python环境信息
-    /// </summary>
-    public PythonEnvironmentInfo PythonEnvironment { get; set; } = new();
-
-    /// <summary>
-    /// Available models - 可用模型
-    /// </summary>
-    public List<string> AvailableModels { get; set; } = new();
-
-    /// <summary>
-    /// Supported features - 支持的功能
-    /// </summary>
-    public List<string> SupportedFeatures { get; set; } = new();
-
-    /// <summary>
-    /// Default configuration - 默认配置
-    /// </summary>
-    public FinetuneRequest DefaultConfiguration { get; set; } = new();
-}
-
-#endregion
-
-

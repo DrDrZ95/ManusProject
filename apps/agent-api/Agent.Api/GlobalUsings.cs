@@ -1,3 +1,8 @@
+global using Agent.Core.Models.Common;
+global using Agent.Core.Models.Finetune;
+global using Swashbuckle.AspNetCore.Annotations;
+global using Microsoft.AspNetCore.Http;
+
 global using Agent.Api.Extensions;
 
 global using Agent.Core;

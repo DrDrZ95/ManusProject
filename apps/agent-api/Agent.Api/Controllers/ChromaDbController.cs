@@ -5,7 +5,8 @@ namespace Agent.Api.Controllers;
 /// ChromaDB 操作控制器
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("1.0")]
 [Produces("application/json")]
 public class ChromaDbController : ControllerBase
 {
@@ -26,9 +27,18 @@ public class ChromaDbController : ControllerBase
     /// </summary>
     /// <returns>List of collections</returns>
     [HttpGet("collections")]
-    [ProducesResponseType(typeof(IEnumerable<Collection>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<Collection>>> GetCollections()
+    [SwaggerOperation(
+        Summary = "Get all collections",
+        Description = "Retrieves a list of all available ChromaDB collections.",
+        OperationId = "GetCollections",
+        Tags = new[] { "ChromaDB" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<VectorCollection>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<IEnumerable<VectorCollection>>>> GetCollections()
     {
         using (var span = _telemetryProvider.StartSpan("ChromaDbController.GetCollections"))
         {
@@ -36,14 +46,14 @@ public class ChromaDbController : ControllerBase
             {
                 var collections = await _chromaDbService.ListCollectionsAsync();
                 span.SetAttribute("chromadb.collection_count", collections.Count());
-                return Ok(collections);
+                return Ok(ApiResponse<IEnumerable<VectorCollection>>.Ok(collections));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get collections");
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { error = "Failed to retrieve collections", details = ex.Message });
+                return StatusCode(500, ApiResponse<IEnumerable<VectorCollection>>.Fail(ex.Message));
             }
         }
     }
@@ -55,10 +65,18 @@ public class ChromaDbController : ControllerBase
     /// <param name="request">Collection creation request</param>
     /// <returns>Created collection</returns>
     [HttpPost("collections")]
-    [ProducesResponseType(typeof(Collection), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<Collection>> CreateCollection([FromBody] CreateCollectionRequest request)
+    [SwaggerOperation(
+        Summary = "Create a new collection",
+        Description = "Creates a new ChromaDB collection with the specified name and metadata.",
+        OperationId = "CreateCollection",
+        Tags = new[] { "ChromaDB" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<VectorCollection>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<VectorCollection>>> CreateCollection([FromBody] CreateCollectionRequest request)
     {
         using (var span = _telemetryProvider.StartSpan("ChromaDbController.CreateCollection"))
         {
@@ -66,21 +84,21 @@ public class ChromaDbController : ControllerBase
             if (string.IsNullOrWhiteSpace(request.Name))
             {
                 span.SetStatus(ActivityStatusCode.Error, "Collection name is required");
-                return BadRequest(new { error = "Collection name is required" });
+                return BadRequest(ApiResponse<VectorCollection>.Fail("Collection name is required"));
             }
 
             try
             {
                 var collection = await _chromaDbService.CreateCollectionAsync(request.Name, request.Metadata);
                 span.SetAttribute("chromadb.collection_id", collection.Id);
-                return CreatedAtAction(nameof(GetCollection), new { name = request.Name }, collection);
+                return CreatedAtAction(nameof(GetCollection), new { name = request.Name, version = "1.0" }, ApiResponse<VectorCollection>.Ok(collection));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create collection: {CollectionName}", request.Name);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { error = "Failed to create collection", details = ex.Message });
+                return StatusCode(500, ApiResponse<VectorCollection>.Fail(ex.Message));
             }
         }
     }
@@ -92,10 +110,18 @@ public class ChromaDbController : ControllerBase
     /// <param name="name">Collection name</param>
     /// <returns>Collection details</returns>
     [HttpGet("collections/{name}")]
-    [ProducesResponseType(typeof(Collection), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<Collection>> GetCollection(string name)
+    [SwaggerOperation(
+        Summary = "Get a specific collection",
+        Description = "Retrieves details of a specific ChromaDB collection by name.",
+        OperationId = "GetCollection",
+        Tags = new[] { "ChromaDB" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<VectorCollection>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<VectorCollection>>> GetCollection(string name)
     {
         using (var span = _telemetryProvider.StartSpan("ChromaDbController.GetCollection"))
         {
@@ -104,14 +130,14 @@ public class ChromaDbController : ControllerBase
             {
                 var collection = await _chromaDbService.GetCollectionAsync(name);
                 span.SetAttribute("chromadb.collection_id", collection.Id);
-                return Ok(collection);
+                return Ok(ApiResponse<VectorCollection>.Ok(collection));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get collection: {CollectionName}", name);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { error = "Failed to retrieve collection", details = ex.Message });
+                return StatusCode(500, ApiResponse<VectorCollection>.Fail(ex.Message));
             }
         }
     }
@@ -123,10 +149,18 @@ public class ChromaDbController : ControllerBase
     /// <param name="name">Collection name</param>
     /// <returns>Success status</returns>
     [HttpDelete("collections/{name}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> DeleteCollection(string name)
+    [SwaggerOperation(
+        Summary = "Delete a collection",
+        Description = "Deletes a specific ChromaDB collection by name.",
+        OperationId = "DeleteCollection",
+        Tags = new[] { "ChromaDB" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<object>>> DeleteCollection(string name)
     {
         using (var span = _telemetryProvider.StartSpan("ChromaDbController.DeleteCollection"))
         {
@@ -137,17 +171,17 @@ public class ChromaDbController : ControllerBase
                 span.SetAttribute("chromadb.delete_success", success);
                 if (success)
                 {
-                    return NoContent();
+                    return Ok(ApiResponse<object>.Ok(new { message = "Collection deleted successfully" }));
                 }
                 span.SetStatus(ActivityStatusCode.Error, "Collection not found");
-                return NotFound(new { error = "Collection not found" });
+                return NotFound(ApiResponse<object>.Fail("Collection not found"));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to delete collection: {CollectionName}", name);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { error = "Failed to delete collection", details = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -160,10 +194,18 @@ public class ChromaDbController : ControllerBase
     /// <param name="request">Add documents request</param>
     /// <returns>Success status</returns>
     [HttpPost("collections/{collectionName}/documents")]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> AddDocuments(string collectionName, [FromBody] AddDocumentsRequest request)
+    [SwaggerOperation(
+        Summary = "Add documents to a collection",
+        Description = "Adds one or more documents to the specified ChromaDB collection.",
+        OperationId = "AddDocuments",
+        Tags = new[] { "ChromaDB" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<object>>> AddDocuments(string collectionName, [FromBody] AddDocumentsRequest request)
     {
         using (var span = _telemetryProvider.StartSpan("ChromaDbController.AddDocuments"))
         {
@@ -172,20 +214,21 @@ public class ChromaDbController : ControllerBase
             if (request.Documents == null || !request.Documents.Any())
             {
                 span.SetStatus(ActivityStatusCode.Error, "Documents are required");
-                return BadRequest(new { error = "Documents are required" });
+                return BadRequest(ApiResponse<object>.Fail("Documents are required"));
             }
 
             try
             {
                 await _chromaDbService.AddDocumentsAsync(collectionName, request.Documents, request.Ids, request.Metadatas);
-                return Created($"api/chromadb/collections/{collectionName}/documents", new { message = "Documents added successfully" });
+                // Return 200 OK with wrapper instead of 201 Created for consistency, or use Created with wrapper
+                return Ok(ApiResponse<object>.Ok(new { message = "Documents added successfully" }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to add documents to collection: {CollectionName}", collectionName);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { error = "Failed to add documents", details = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -198,10 +241,18 @@ public class ChromaDbController : ControllerBase
     /// <param name="request">Query request</param>
     /// <returns>Query results</returns>
     [HttpPost("collections/{collectionName}/query")]
-    [ProducesResponseType(typeof(QueryResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<QueryResponse>> QueryDocuments(string collectionName, [FromBody] QueryRequest request)
+    [SwaggerOperation(
+        Summary = "Query documents from a collection",
+        Description = "Queries documents from the specified ChromaDB collection based on vector similarity or metadata.",
+        OperationId = "QueryDocuments",
+        Tags = new[] { "ChromaDB" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<QueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<QueryResponse>>> QueryDocuments(string collectionName, [FromBody] QueryRequest request)
     {
         using (var span = _telemetryProvider.StartSpan("ChromaDbController.QueryDocuments"))
         {
@@ -210,21 +261,21 @@ public class ChromaDbController : ControllerBase
             if (request.QueryTexts == null || !request.QueryTexts.Any())
             {
                 span.SetStatus(ActivityStatusCode.Error, "Query texts are required");
-                return BadRequest(new { error = "Query texts are required" });
+                return BadRequest(ApiResponse<QueryResponse>.Fail("Query texts are required"));
             }
 
             try
             {
                 var result = await _chromaDbService.QueryAsync(collectionName, request.QueryTexts, request.NResults, request.Where);
                 span.SetAttribute("chromadb.result_count", result.Documents?.Count() ?? 0);
-                return Ok(result);
+                return Ok(ApiResponse<QueryResponse>.Ok(result));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to query collection: {CollectionName}", collectionName);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { error = "Failed to query documents", details = ex.Message });
+                return StatusCode(500, ApiResponse<QueryResponse>.Fail(ex.Message));
             }
         }
     }
@@ -237,9 +288,18 @@ public class ChromaDbController : ControllerBase
     /// <param name="ids">Document IDs (optional)</param>
     /// <returns>Documents</returns>
     [HttpGet("collections/{collectionName}/documents")]
-    [ProducesResponseType(typeof(GetResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<GetResponse>> GetDocuments(string collectionName, [FromQuery] string[]? ids = null)
+    [SwaggerOperation(
+        Summary = "Get documents from a collection",
+        Description = "Retrieves specific documents from the ChromaDB collection by their IDs.",
+        OperationId = "GetDocuments",
+        Tags = new[] { "ChromaDB" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<GetResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<GetResponse>>> GetDocuments(string collectionName, [FromQuery] string[]? ids = null)
     {
         using (var span = _telemetryProvider.StartSpan("ChromaDbController.GetDocuments"))
         {
@@ -249,14 +309,14 @@ public class ChromaDbController : ControllerBase
             {
                 var result = await _chromaDbService.GetDocumentsAsync(collectionName, ids);
                 span.SetAttribute("chromadb.document_count", result.Documents?.Count() ?? 0);
-                return Ok(result);
+                return Ok(ApiResponse<GetResponse>.Ok(result));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get documents from collection: {CollectionName}", collectionName);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { error = "Failed to get documents", details = ex.Message });
+                return StatusCode(500, ApiResponse<GetResponse>.Fail(ex.Message));
             }
         }
     }
@@ -276,5 +336,3 @@ public class QueryRequest
     public int NResults { get; set; } = 10;
     public Dictionary<string, object>? Where { get; set; }
 }
-
-

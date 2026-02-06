@@ -8,7 +8,8 @@ namespace Agent.Api.Controllers;
 /// Provides workflow management API based on AI-Agent planning.py
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("1.0")]
 [Produces("application/json")]
 public class WorkflowController : ControllerBase
 {
@@ -31,9 +32,17 @@ public class WorkflowController : ControllerBase
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>Created workflow plan - 创建的工作流计划</returns>
     [HttpPost]
-    [ProducesResponseType(typeof(WorkflowPlan), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<WorkflowPlan>> CreatePlan(
+    [SwaggerOperation(
+        Summary = "Create a new workflow plan",
+        Description = "Creates a new workflow plan based on the provided title and steps.",
+        OperationId = "CreateWorkflowPlan",
+        Tags = new[] { "Workflow" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<WorkflowPlan>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<WorkflowPlan>>> CreatePlan(
         [FromBody] CreatePlanRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -42,12 +51,12 @@ public class WorkflowController : ControllerBase
             // 验证请求 - Validate request
             if (string.IsNullOrWhiteSpace(request.Title))
             {
-                return BadRequest("Plan title is required - 计划标题是必需的");
+                return BadRequest(ApiResponse<object>.Fail("Plan title is required - 计划标题是必需的"));
             }
 
             if (request.Steps == null || request.Steps.Count == 0)
             {
-                return BadRequest("At least one step is required - 至少需要一个步骤");
+                return BadRequest(ApiResponse<object>.Fail("At least one step is required - 至少需要一个步骤"));
             }
 
             var plan = await _workflowService.CreatePlanAsync(request, cancellationToken);
@@ -56,13 +65,13 @@ public class WorkflowController : ControllerBase
             
             return CreatedAtAction(
                 nameof(GetPlan),
-                new { planId = plan.Id },
-                plan);
+                new { version = "1.0", planId = plan.Id },
+                ApiResponse<WorkflowPlan>.Ok(plan, "Plan created successfully"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating workflow plan");
-            return StatusCode(500, "Internal server error - 内部服务器错误");
+            return StatusCode(500, ApiResponse<object>.Fail("Internal server error - 内部服务器错误"));
         }
     }
 
@@ -74,9 +83,16 @@ public class WorkflowController : ControllerBase
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>Workflow plan - 工作流计划</returns>
     [HttpGet("{planId}")]
-    [ProducesResponseType(typeof(WorkflowPlan), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<WorkflowPlan>> GetPlan(
+    [SwaggerOperation(
+        Summary = "Get workflow plan by ID",
+        Description = "Retrieves a specific workflow plan by its unique identifier.",
+        OperationId = "GetWorkflowPlan",
+        Tags = new[] { "Workflow" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<WorkflowPlan>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<WorkflowPlan>>> GetPlan(
         string planId,
         CancellationToken cancellationToken = default)
     {
@@ -86,15 +102,15 @@ public class WorkflowController : ControllerBase
             
             if (plan == null)
             {
-                return NotFound($"Plan not found: {planId} - 计划未找到");
+                return NotFound(ApiResponse<object>.Fail($"Plan not found: {planId} - 计划未找到"));
             }
 
-            return Ok(plan);
+            return Ok(ApiResponse<WorkflowPlan>.Ok(plan));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting workflow plan: {PlanId}", planId);
-            return StatusCode(500, "Internal server error - 内部服务器错误");
+            return StatusCode(500, ApiResponse<object>.Fail("Internal server error - 内部服务器错误"));
         }
     }
 
@@ -105,19 +121,26 @@ public class WorkflowController : ControllerBase
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>List of workflow plans - 工作流计划列表</returns>
     [HttpGet]
-    [ProducesResponseType(typeof(List<WorkflowPlan>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<WorkflowPlan>>> GetAllPlans(
+    [SwaggerOperation(
+        Summary = "Get all workflow plans",
+        Description = "Retrieves a list of all available workflow plans.",
+        OperationId = "GetAllWorkflowPlans",
+        Tags = new[] { "Workflow" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<List<WorkflowPlan>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<List<WorkflowPlan>>>> GetAllPlans(
         CancellationToken cancellationToken = default)
     {
         try
         {
             var plans = await _workflowService.GetAllPlansAsync(cancellationToken);
-            return Ok(plans);
+            return Ok(ApiResponse<List<WorkflowPlan>>.Ok(plans));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting all workflow plans");
-            return StatusCode(500, "Internal server error - 内部服务器错误");
+            return StatusCode(500, ApiResponse<object>.Fail("Internal server error - 内部服务器错误"));
         }
     }
 
@@ -131,10 +154,16 @@ public class WorkflowController : ControllerBase
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>Success status - 成功状态</returns>
     [HttpPut("{planId}/steps/{stepIndex}/status")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateStepStatus(
+    [SwaggerOperation(
+        Summary = "Update step status",
+        Description = "Updates the status of a specific step within a workflow plan.",
+        OperationId = "UpdateWorkflowStepStatus",
+        Tags = new[] { "Workflow" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<object>>> UpdateStepStatus(
         string planId,
         int stepIndex,
         [FromBody] UpdateStepStatusRequest request,
@@ -147,15 +176,15 @@ public class WorkflowController : ControllerBase
 
             if (!success)
             {
-                return NotFound($"Plan or step not found - 计划或步骤未找到");
+                return NotFound(ApiResponse<object>.Fail($"Plan or step not found - 计划或步骤未找到"));
             }
 
-            return Ok(new { success = true, message = "Step status updated - 步骤状态已更新" });
+            return Ok(ApiResponse<object>.Ok(null, "Step status updated - 步骤状态已更新"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating step status: {PlanId}, {StepIndex}", planId, stepIndex);
-            return StatusCode(500, "Internal server error - 内部服务器错误");
+            return StatusCode(500, ApiResponse<object>.Fail("Internal server error - 内部服务器错误"));
         }
     }
 
@@ -167,9 +196,16 @@ public class WorkflowController : ControllerBase
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>Current step information - 当前步骤信息</returns>
     [HttpGet("{planId}/current-step")]
-    [ProducesResponseType(typeof(WorkflowStep), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<WorkflowStep>> GetCurrentStep(
+    [SwaggerOperation(
+        Summary = "Get current active step",
+        Description = "Retrieves the currently active step in the specified workflow plan.",
+        OperationId = "GetWorkflowCurrentStep",
+        Tags = new[] { "Workflow" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<WorkflowStep>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<WorkflowStep>>> GetCurrentStep(
         string planId,
         CancellationToken cancellationToken = default)
     {
@@ -179,15 +215,15 @@ public class WorkflowController : ControllerBase
             
             if (step == null)
             {
-                return NotFound($"No active step found for plan: {planId} - 计划中没有找到活动步骤");
+                return NotFound(ApiResponse<object>.Fail($"No active step found for plan: {planId} - 计划中没有找到活动步骤"));
             }
 
-            return Ok(step);
+            return Ok(ApiResponse<WorkflowStep>.Ok(step));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting current step: {PlanId}", planId);
-            return StatusCode(500, "Internal server error - 内部服务器错误");
+            return StatusCode(500, ApiResponse<object>.Fail("Internal server error - 内部服务器错误"));
         }
     }
 
@@ -201,9 +237,16 @@ public class WorkflowController : ControllerBase
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>Success status - 成功状态</returns>
     [HttpPost("{planId}/steps/{stepIndex}/complete")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> CompleteStep(
+    [SwaggerOperation(
+        Summary = "Mark step as completed",
+        Description = "Marks a specific step as completed and provides the result.",
+        OperationId = "CompleteWorkflowStep",
+        Tags = new[] { "Workflow" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<object>>> CompleteStep(
         string planId,
         int stepIndex,
         [FromBody] CompleteStepRequest request,
@@ -216,15 +259,15 @@ public class WorkflowController : ControllerBase
 
             if (!success)
             {
-                return NotFound($"Plan or step not found - 计划或步骤未找到");
+                return NotFound(ApiResponse<object>.Fail($"Plan or step not found - 计划或步骤未找到"));
             }
 
-            return Ok(new { success = true, message = "Step completed - 步骤已完成" });
+            return Ok(ApiResponse<object>.Ok(null, "Step completed - 步骤已完成"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error completing step: {PlanId}, {StepIndex}", planId, stepIndex);
-            return StatusCode(500, "Internal server error - 内部服务器错误");
+            return StatusCode(500, ApiResponse<object>.Fail("Internal server error - 内部服务器错误"));
         }
     }
 
@@ -239,8 +282,16 @@ public class WorkflowController : ControllerBase
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>Todo list content - 待办事项列表内容</returns>
     [HttpGet("{planId}/todo")]
+    [SwaggerOperation(
+        Summary = "Generate todo list",
+        Description = "Generates a markdown formatted todo list for the specified plan.",
+        OperationId = "GenerateWorkflowTodoList",
+        Tags = new[] { "Workflow" }
+    )]
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
     [Produces("text/markdown", "application/json")]
     public async Task<IActionResult> GenerateToDoList(
         string planId,
@@ -256,16 +307,16 @@ public class WorkflowController : ControllerBase
                 return Content(todoContent, "text/markdown");
             }
             
-            return Ok(new { content = todoContent, planId });
+            return Ok(ApiResponse<object>.Ok(new { content = todoContent, planId }));
         }
         catch (ArgumentException ex)
         {
-            return NotFound(ex.Message);
+            return NotFound(ApiResponse<object>.Fail(ex.Message));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error generating todo list: {PlanId}", planId);
-            return StatusCode(500, "Internal server error - 内部服务器错误");
+            return StatusCode(500, ApiResponse<object>.Fail("Internal server error - 内部服务器错误"));
         }
     }
 
@@ -278,10 +329,17 @@ public class WorkflowController : ControllerBase
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>Success status - 成功状态</returns>
     [HttpPost("{planId}/todo/save")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> SaveToDoListToFile(
+    [SwaggerOperation(
+        Summary = "Save todo list to file",
+        Description = "Saves the generated todo list to a specified file path.",
+        OperationId = "SaveWorkflowTodoList",
+        Tags = new[] { "Workflow" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<object>>> SaveToDoListToFile(
         string planId,
         [FromBody] SaveToDoListRequest request,
         CancellationToken cancellationToken = default)
@@ -290,7 +348,7 @@ public class WorkflowController : ControllerBase
         {
             if (string.IsNullOrWhiteSpace(request.FilePath))
             {
-                return BadRequest("File path is required - 文件路径是必需的");
+                return BadRequest(ApiResponse<object>.Fail("File path is required - 文件路径是必需的"));
             }
 
             var success = await _workflowService.SaveToDoListToFileAsync(
@@ -298,19 +356,17 @@ public class WorkflowController : ControllerBase
 
             if (!success)
             {
-                return NotFound($"Plan not found or save failed - 计划未找到或保存失败");
+                return NotFound(ApiResponse<object>.Fail($"Plan not found or save failed - 计划未找到或保存失败"));
             }
 
-            return Ok(new { 
-                success = true, 
-                message = "Todo list saved to file - 待办事项列表已保存到文件",
+            return Ok(ApiResponse<object>.Ok(new { 
                 filePath = request.FilePath 
-            });
+            }, "Todo list saved to file - 待办事项列表已保存到文件"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error saving todo list to file: {PlanId}, {FilePath}", planId, request.FilePath);
-            return StatusCode(500, "Internal server error - 内部服务器错误");
+            return StatusCode(500, ApiResponse<object>.Fail("Internal server error - 内部服务器错误"));
         }
     }
 
@@ -322,10 +378,17 @@ public class WorkflowController : ControllerBase
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>Loaded plan ID - 加载的计划ID</returns>
     [HttpPost("todo/load")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> LoadToDoListFromFile(
+    [SwaggerOperation(
+        Summary = "Load todo list from file",
+        Description = "Loads a todo list from a specified file path.",
+        OperationId = "LoadWorkflowTodoList",
+        Tags = new[] { "Workflow" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<object>>> LoadToDoListFromFile(
         [FromBody] LoadToDoListRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -333,7 +396,7 @@ public class WorkflowController : ControllerBase
         {
             if (string.IsNullOrWhiteSpace(request.FilePath))
             {
-                return BadRequest("File path is required - 文件路径是必需的");
+                return BadRequest(ApiResponse<object>.Fail("File path is required - 文件路径是必需的"));
             }
 
             var planId = await _workflowService.LoadToDoListFromFileAsync(
@@ -341,20 +404,18 @@ public class WorkflowController : ControllerBase
 
             if (planId == null)
             {
-                return NotFound($"File not found or load failed - 文件未找到或加载失败");
+                return NotFound(ApiResponse<object>.Fail($"File not found or load failed - 文件未找到或加载失败"));
             }
 
-            return Ok(new { 
-                success = true, 
-                message = "Todo list loaded from file - 待办事项列表已从文件加载",
+            return Ok(ApiResponse<object>.Ok(new { 
                 planId,
                 filePath = request.FilePath 
-            });
+            }, "Todo list loaded from file - 待办事项列表已从文件加载"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error loading todo list from file: {FilePath}", request.FilePath);
-            return StatusCode(500, "Internal server error - 内部服务器错误");
+            return StatusCode(500, ApiResponse<object>.Fail("Internal server error - 内部服务器错误"));
         }
     }
 
@@ -366,20 +427,27 @@ public class WorkflowController : ControllerBase
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>Progress information - 进度信息</returns>
     [HttpGet("{planId}/progress")]
-    [ProducesResponseType(typeof(WorkflowProgress), StatusCodes.Status200OK)]
-    public async Task<ActionResult<WorkflowProgress>> GetProgress(
+    [SwaggerOperation(
+        Summary = "Get plan progress",
+        Description = "Retrieves the execution progress of the specified workflow plan.",
+        OperationId = "GetWorkflowProgress",
+        Tags = new[] { "Workflow" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<WorkflowProgress>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<WorkflowProgress>>> GetProgress(
         string planId,
         CancellationToken cancellationToken = default)
     {
         try
         {
             var progress = await _workflowService.GetProgressAsync(planId, cancellationToken);
-            return Ok(progress);
+            return Ok(ApiResponse<WorkflowProgress>.Ok(progress));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting progress: {PlanId}", planId);
-            return StatusCode(500, "Internal server error - 内部服务器错误");
+            return StatusCode(500, ApiResponse<object>.Fail("Internal server error - 内部服务器错误"));
         }
     }
 
@@ -391,9 +459,16 @@ public class WorkflowController : ControllerBase
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>Success status - 成功状态</returns>
     [HttpDelete("{planId}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeletePlan(
+    [SwaggerOperation(
+        Summary = "Delete workflow plan",
+        Description = "Deletes a specified workflow plan.",
+        OperationId = "DeleteWorkflowPlan",
+        Tags = new[] { "Workflow" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<object>>> DeletePlan(
         string planId,
         CancellationToken cancellationToken = default)
     {
@@ -403,15 +478,15 @@ public class WorkflowController : ControllerBase
 
             if (!success)
             {
-                return NotFound($"Plan not found: {planId} - 计划未找到");
+                return NotFound(ApiResponse<object>.Fail($"Plan not found: {planId} - 计划未找到"));
             }
 
-            return Ok(new { success = true, message = "Plan deleted - 计划已删除" });
+            return Ok(ApiResponse<object>.Ok(null, "Plan deleted - 计划已删除"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting plan: {PlanId}", planId);
-            return StatusCode(500, "Internal server error - 内部服务器错误");
+            return StatusCode(500, ApiResponse<object>.Fail("Internal server error - 内部服务器错误"));
         }
     }
 }

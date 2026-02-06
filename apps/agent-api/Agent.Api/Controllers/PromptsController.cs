@@ -8,7 +8,9 @@ namespace Agent.Api.Controllers;
 /// Provides management and access functionality for dynamic prompt template library
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("1.0")]
+[Produces("application/json")]
 public class PromptsController : ControllerBase
 {
     private readonly IPromptsService _promptsService;
@@ -26,18 +28,29 @@ public class PromptsController : ControllerBase
     /// </summary>
     /// <returns>List of categories - 类别列表</returns>
     [HttpGet("categories")]
-    public async Task<ActionResult<List<string>>> GetCategories()
+    [SwaggerOperation(
+        Summary = "Get all available prompt categories",
+        Description = "Retrieves a list of all available prompt categories.",
+        OperationId = "GetPromptCategories",
+        Tags = new[] { "Prompts" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<List<string>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<List<string>>>> GetCategories()
     {
         try
         {
             _logger.LogInformation("Getting all prompt categories");
             var categories = await _promptsService.GetCategoriesAsync();
-            return Ok(categories);
+            return Ok(ApiResponse<List<string>>.Ok(categories));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting prompt categories");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, ApiResponse<List<string>>.Fail("Internal server error"));
         }
     }
 
@@ -48,18 +61,29 @@ public class PromptsController : ControllerBase
     /// <param name="category">Prompt category - 提示词类别</param>
     /// <returns>List of prompts - 提示词列表</returns>
     [HttpGet("category/{category}")]
-    public async Task<ActionResult<List<PromptTemplate>>> GetPromptsByCategory(string category)
+    [SwaggerOperation(
+        Summary = "Get prompts by category",
+        Description = "Retrieves all prompts within a specific category.",
+        OperationId = "GetPromptsByCategory",
+        Tags = new[] { "Prompts" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<List<PromptTemplate>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<List<PromptTemplate>>>> GetPromptsByCategory(string category)
     {
         try
         {
             _logger.LogInformation("Getting prompts for category: {Category}", category);
             var prompts = await _promptsService.GetPromptsByCategoryAsync(category);
-            return Ok(prompts);
+            return Ok(ApiResponse<List<PromptTemplate>>.Ok(prompts));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting prompts for category: {Category}", category);
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, ApiResponse<List<PromptTemplate>>.Fail("Internal server error"));
         }
     }
 
@@ -71,7 +95,18 @@ public class PromptsController : ControllerBase
     /// <param name="name">Prompt name - 提示词名称</param>
     /// <returns>Prompt template - 提示词模板</returns>
     [HttpGet("{category}/{name}")]
-    public async Task<ActionResult<PromptTemplate>> GetPrompt(string category, string name)
+    [SwaggerOperation(
+        Summary = "Get specific prompt template",
+        Description = "Retrieves a specific prompt template by category and name.",
+        OperationId = "GetPrompt",
+        Tags = new[] { "Prompts" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<PromptTemplate>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<PromptTemplate>>> GetPrompt(string category, string name)
     {
         try
         {
@@ -80,15 +115,15 @@ public class PromptsController : ControllerBase
             
             if (prompt == null)
             {
-                return NotFound($"Prompt not found: {category}/{name}");
+                return NotFound(ApiResponse<PromptTemplate>.Fail($"Prompt not found: {category}/{name}"));
             }
 
-            return Ok(prompt);
+            return Ok(ApiResponse<PromptTemplate>.Ok(prompt));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting prompt: {Category}/{Name}", category, name);
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, ApiResponse<PromptTemplate>.Fail("Internal server error"));
         }
     }
 
@@ -99,23 +134,34 @@ public class PromptsController : ControllerBase
     /// <param name="keywords">Search keywords - 搜索关键词</param>
     /// <returns>List of matching prompts - 匹配的提示词列表</returns>
     [HttpGet("search")]
-    public async Task<ActionResult<List<PromptTemplate>>> SearchPrompts([FromQuery] string keywords)
+    [SwaggerOperation(
+        Summary = "Search prompts by keywords",
+        Description = "Searches for prompts using keywords.",
+        OperationId = "SearchPrompts",
+        Tags = new[] { "Prompts" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<List<PromptTemplate>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<List<PromptTemplate>>>> SearchPrompts([FromQuery] string keywords)
     {
         try
         {
             if (string.IsNullOrWhiteSpace(keywords))
             {
-                return BadRequest("Keywords parameter is required");
+                return BadRequest(ApiResponse<List<PromptTemplate>>.Fail("Keywords parameter is required"));
             }
 
             _logger.LogInformation("Searching prompts with keywords: {Keywords}", keywords);
             var prompts = await _promptsService.SearchPromptsAsync(keywords);
-            return Ok(prompts);
+            return Ok(ApiResponse<List<PromptTemplate>>.Ok(prompts));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error searching prompts with keywords: {Keywords}", keywords);
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, ApiResponse<List<PromptTemplate>>.Fail("Internal server error"));
         }
     }
 
@@ -126,13 +172,24 @@ public class PromptsController : ControllerBase
     /// <param name="request">Render request - 渲染请求</param>
     /// <returns>Rendered prompt - 渲染后的提示词</returns>
     [HttpPost("render")]
-    public async Task<ActionResult<string>> RenderPrompt([FromBody] RenderPromptRequest request)
+    [SwaggerOperation(
+        Summary = "Render prompt with variables",
+        Description = "Renders a prompt template with the provided variables.",
+        OperationId = "RenderPrompt",
+        Tags = new[] { "Prompts" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<string>>> RenderPrompt([FromBody] RenderPromptRequest request)
     {
         try
         {
             if (request == null || string.IsNullOrWhiteSpace(request.Category) || string.IsNullOrWhiteSpace(request.Name))
             {
-                return BadRequest("Category and Name are required");
+                return BadRequest(ApiResponse<string>.Fail("Category and Name are required"));
             }
 
             _logger.LogInformation("Rendering prompt: {Category}/{Name}", request.Category, request.Name);
@@ -140,16 +197,16 @@ public class PromptsController : ControllerBase
             var template = await _promptsService.GetPromptAsync(request.Category, request.Name);
             if (template == null)
             {
-                return NotFound($"Prompt not found: {request.Category}/{request.Name}");
+                return NotFound(ApiResponse<string>.Fail($"Prompt not found: {request.Category}/{request.Name}"));
             }
 
             var rendered = _promptsService.RenderPrompt(template, request.Variables ?? new Dictionary<string, object>());
-            return Ok(rendered);
+            return Ok(ApiResponse<string>.Ok(rendered));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error rendering prompt: {Category}/{Name}", request?.Category, request?.Name);
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, ApiResponse<string>.Fail("Internal server error"));
         }
     }
 
@@ -160,13 +217,24 @@ public class PromptsController : ControllerBase
     /// <param name="template">Prompt template - 提示词模板</param>
     /// <returns>Success status - 成功状态</returns>
     [HttpPost]
-    public async Task<ActionResult<bool>> SavePrompt([FromBody] PromptTemplate template)
+    [SwaggerOperation(
+        Summary = "Save or update prompt template",
+        Description = "Saves a new prompt template or updates an existing one.",
+        OperationId = "SavePrompt",
+        Tags = new[] { "Prompts" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<bool>>> SavePrompt([FromBody] PromptTemplate template)
     {
         try
         {
             if (template == null || string.IsNullOrWhiteSpace(template.Category) || string.IsNullOrWhiteSpace(template.Name))
             {
-                return BadRequest("Template with valid Category and Name is required");
+                return BadRequest(ApiResponse<bool>.Fail("Template with valid Category and Name is required"));
             }
 
             _logger.LogInformation("Saving prompt: {Category}/{Name}", template.Category, template.Name);
@@ -174,17 +242,17 @@ public class PromptsController : ControllerBase
             
             if (success)
             {
-                return Ok(true);
+                return Ok(ApiResponse<bool>.Ok(true));
             }
             else
             {
-                return StatusCode(500, "Failed to save prompt");
+                return StatusCode(500, ApiResponse<bool>.Fail("Failed to save prompt"));
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error saving prompt: {Category}/{Name}", template?.Category, template?.Name);
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, ApiResponse<bool>.Fail("Internal server error"));
         }
     }
 
@@ -196,7 +264,18 @@ public class PromptsController : ControllerBase
     /// <param name="name">Prompt name - 提示词名称</param>
     /// <returns>Success status - 成功状态</returns>
     [HttpDelete("{category}/{name}")]
-    public async Task<ActionResult<bool>> DeletePrompt(string category, string name)
+    [SwaggerOperation(
+        Summary = "Delete prompt template",
+        Description = "Deletes a prompt template by category and name.",
+        OperationId = "DeletePrompt",
+        Tags = new[] { "Prompts" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<bool>>> DeletePrompt(string category, string name)
     {
         try
         {
@@ -205,17 +284,17 @@ public class PromptsController : ControllerBase
             
             if (success)
             {
-                return Ok(true);
+                return Ok(ApiResponse<bool>.Ok(true));
             }
             else
             {
-                return NotFound($"Prompt not found: {category}/{name}");
+                return NotFound(ApiResponse<bool>.Fail($"Prompt not found: {category}/{name}"));
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting prompt: {Category}/{Name}", category, name);
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, ApiResponse<bool>.Fail("Internal server error"));
         }
     }
 
@@ -225,18 +304,29 @@ public class PromptsController : ControllerBase
     /// </summary>
     /// <returns>List of tool types - 工具类型列表</returns>
     [HttpGet("tools/types")]
-    public async Task<ActionResult<List<string>>> GetToolTypes()
+    [SwaggerOperation(
+        Summary = "Get all available tool types",
+        Description = "Retrieves a list of all available tool types.",
+        OperationId = "GetToolTypes",
+        Tags = new[] { "Prompts" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<List<string>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<List<string>>>> GetToolTypes()
     {
         try
         {
             _logger.LogInformation("Getting all tool types");
             var toolTypes = await _promptsService.GetToolTypesAsync();
-            return Ok(toolTypes);
+            return Ok(ApiResponse<List<string>>.Ok(toolTypes));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting tool types");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, ApiResponse<List<string>>.Fail("Internal server error"));
         }
     }
 
@@ -247,18 +337,29 @@ public class PromptsController : ControllerBase
     /// <param name="toolType">Tool type - 工具类型</param>
     /// <returns>List of tool examples - 工具示例列表</returns>
     [HttpGet("tools/{toolType}")]
-    public async Task<ActionResult<List<ToolExample>>> GetToolExamples(string toolType)
+    [SwaggerOperation(
+        Summary = "Get tool examples by type",
+        Description = "Retrieves tool examples for a specific tool type.",
+        OperationId = "GetToolExamples",
+        Tags = new[] { "Prompts" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<List<ToolExample>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<List<ToolExample>>>> GetToolExamples(string toolType)
     {
         try
         {
             _logger.LogInformation("Getting tool examples for type: {ToolType}", toolType);
             var examples = await _promptsService.GetToolExamplesAsync(toolType);
-            return Ok(examples);
+            return Ok(ApiResponse<List<ToolExample>>.Ok(examples));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting tool examples for type: {ToolType}", toolType);
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, ApiResponse<List<ToolExample>>.Fail("Internal server error"));
         }
     }
 
@@ -268,7 +369,18 @@ public class PromptsController : ControllerBase
     /// </summary>
     /// <returns>Library statistics - 库统计信息</returns>
     [HttpGet("statistics")]
-    public async Task<ActionResult<PromptLibraryStatistics>> GetStatistics()
+    [SwaggerOperation(
+        Summary = "Get prompt template library statistics",
+        Description = "Retrieves statistics about the prompt template library.",
+        OperationId = "GetPromptStatistics",
+        Tags = new[] { "Prompts" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<PromptLibraryStatistics>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<PromptLibraryStatistics>>> GetStatistics()
     {
         try
         {
@@ -301,12 +413,12 @@ public class PromptsController : ControllerBase
                 statistics.TotalToolExamples += examples.Count;
             }
 
-            return Ok(statistics);
+            return Ok(ApiResponse<PromptLibraryStatistics>.Ok(statistics));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting prompt library statistics");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, ApiResponse<PromptLibraryStatistics>.Fail("Internal server error"));
         }
     }
 }
@@ -369,4 +481,3 @@ public class PromptLibraryStatistics
     /// </summary>
     public Dictionary<string, int> ToolTypeDetails { get; set; } = new();
 }
-

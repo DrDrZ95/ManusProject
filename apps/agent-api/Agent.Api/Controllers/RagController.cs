@@ -5,7 +5,9 @@ namespace Agent.Api.Controllers;
 /// RAG（检索增强生成）控制器，用于企业场景
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("1.0")]
+[Produces("application/json")]
 public class RagController : ControllerBase
 {
     private readonly IRagService _ragService;
@@ -25,8 +27,22 @@ public class RagController : ControllerBase
     /// Add document to knowledge base
     /// 向知识库添加文档
     /// </summary>
+    /// <param name="collectionName">Collection name / 集合名称</param>
+    /// <param name="document">Document content / 文档内容</param>
+    /// <returns>Result of the operation / 操作结果</returns>
     [HttpPost("collections/{collectionName}/documents")]
-    public async Task<IActionResult> AddDocument(string collectionName, [FromBody] RagDocument document)
+    [SwaggerOperation(
+        Summary = "Add document to knowledge base",
+        Description = "Adds a new document to the specified RAG collection.",
+        OperationId = "AddDocument",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<object>>> AddDocument(string collectionName, [FromBody] RagDocument document)
     {
         using (var span = _telemetryProvider.StartSpan("RagController.AddDocument"))
         {
@@ -40,18 +56,17 @@ public class RagController : ControllerBase
                 var documentId = await _ragService.AddDocumentAsync(collectionName, document);
                 span.SetAttribute("rag.document_added_id", documentId);
                 
-                return Ok(new { 
-                    success = true, 
+                return Ok(ApiResponse<object>.Ok(new { 
                     documentId = documentId,
                     message = $"Document {documentId} added successfully to {collectionName}"
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to add document to collection {CollectionName}", collectionName);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -60,8 +75,20 @@ public class RagController : ControllerBase
     /// Get documents from knowledge base
     /// 从知识库获取文档
     /// </summary>
+    /// <param name="collectionName">Collection name / 集合名称</param>
+    /// <param name="ids">Document IDs / 文档ID列表</param>
+    /// <returns>List of documents / 文档列表</returns>
     [HttpGet("collections/{collectionName}/documents")]
-    public async Task<IActionResult> GetDocuments(string collectionName, [FromQuery] string[]? ids = null)
+    [SwaggerOperation(
+        Summary = "Get documents from knowledge base",
+        Description = "Retrieves documents from the specified RAG collection.",
+        OperationId = "GetDocuments",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> GetDocuments(string collectionName, [FromQuery] string[]? ids = null)
     {
         using (var span = _telemetryProvider.StartSpan("RagController.GetDocuments"))
         {
@@ -74,18 +101,17 @@ public class RagController : ControllerBase
                 var documents = await _ragService.GetDocumentsAsync(collectionName, ids);
                 span.SetAttribute("rag.returned_documents_count", documents.Count());
                 
-                return Ok(new { 
-                    success = true, 
+                return Ok(ApiResponse<object>.Ok(new { 
                     documents = documents,
                     count = documents.Count()
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get documents from collection {CollectionName}", collectionName);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -94,8 +120,21 @@ public class RagController : ControllerBase
     /// Update document in knowledge base
     /// 更新知识库中的文档
     /// </summary>
+    /// <param name="collectionName">Collection name / 集合名称</param>
+    /// <param name="documentId">Document ID / 文档ID</param>
+    /// <param name="document">Document content / 文档内容</param>
+    /// <returns>Result of the operation / 操作结果</returns>
     [HttpPut("collections/{collectionName}/documents/{documentId}")]
-    public async Task<IActionResult> UpdateDocument(string collectionName, string documentId, [FromBody] RagDocument document)
+    [SwaggerOperation(
+        Summary = "Update document in knowledge base",
+        Description = "Updates an existing document in the specified RAG collection.",
+        OperationId = "UpdateDocument",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> UpdateDocument(string collectionName, string documentId, [FromBody] RagDocument document)
     {
         using (var span = _telemetryProvider.StartSpan("RagController.UpdateDocument"))
         {
@@ -111,17 +150,16 @@ public class RagController : ControllerBase
                 await _ragService.UpdateDocumentAsync(collectionName, document);
                 span.SetAttribute("rag.update_success", true);
                 
-                return Ok(new { 
-                    success = true, 
+                return Ok(ApiResponse<object>.Ok(new { 
                     message = $"Document {documentId} updated successfully"
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to update document {DocumentId}", documentId);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -130,8 +168,20 @@ public class RagController : ControllerBase
     /// Delete document from knowledge base
     /// 从知识库删除文档
     /// </summary>
+    /// <param name="collectionName">Collection name / 集合名称</param>
+    /// <param name="documentId">Document ID / 文档ID</param>
+    /// <returns>Result of the operation / 操作结果</returns>
     [HttpDelete("collections/{collectionName}/documents/{documentId}")]
-    public async Task<IActionResult> DeleteDocument(string collectionName, string documentId)
+    [SwaggerOperation(
+        Summary = "Delete document from knowledge base",
+        Description = "Deletes a document from the specified RAG collection.",
+        OperationId = "DeleteDocument",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> DeleteDocument(string collectionName, string documentId)
     {
         using (var span = _telemetryProvider.StartSpan("RagController.DeleteDocument"))
         {
@@ -145,17 +195,16 @@ public class RagController : ControllerBase
                 await _ragService.DeleteDocumentAsync(collectionName, documentId);
                 span.SetAttribute("rag.delete_success", true);
                 
-                return Ok(new { 
-                    success = true, 
+                return Ok(ApiResponse<object>.Ok(new { 
                     message = $"Document {documentId} deleted successfully"
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to delete document {DocumentId}", documentId);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -164,8 +213,19 @@ public class RagController : ControllerBase
     /// Get document count in collection
     /// 获取集合中的文档数量
     /// </summary>
+    /// <param name="collectionName">Collection name / 集合名称</param>
+    /// <returns>Document count / 文档数量</returns>
     [HttpGet("collections/{collectionName}/count")]
-    public async Task<IActionResult> GetDocumentCount(string collectionName)
+    [SwaggerOperation(
+        Summary = "Get document count in collection",
+        Description = "Gets the total number of documents in the specified RAG collection.",
+        OperationId = "GetDocumentCount",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> GetDocumentCount(string collectionName)
     {
         using (var span = _telemetryProvider.StartSpan("RagController.GetDocumentCount"))
         {
@@ -175,18 +235,17 @@ public class RagController : ControllerBase
                 var count = await _ragService.GetDocumentCountAsync(collectionName);
                 span.SetAttribute("rag.document_count", count);
                 
-                return Ok(new { 
-                    success = true, 
+                return Ok(ApiResponse<object>.Ok(new { 
                     collectionName = collectionName,
                     documentCount = count
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get document count for collection {CollectionName}", collectionName);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -199,8 +258,20 @@ public class RagController : ControllerBase
     /// Hybrid retrieval combining multiple strategies
     /// 结合多种策略的混合检索
     /// </summary>
+    /// <param name="collectionName">Collection name / 集合名称</param>
+    /// <param name="query">Query options / 查询选项</param>
+    /// <returns>Retrieval results / 检索结果</returns>
     [HttpPost("collections/{collectionName}/retrieve/hybrid")]
-    public async Task<IActionResult> HybridRetrieval(string collectionName, [FromBody] RagQuery query)
+    [SwaggerOperation(
+        Summary = "Hybrid retrieval",
+        Description = "Performs hybrid retrieval combining multiple strategies (keyword, vector, semantic).",
+        OperationId = "HybridRetrieval",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> HybridRetrieval(string collectionName, [FromBody] RagQuery query)
     {
         using (var span = _telemetryProvider.StartSpan("RagController.HybridRetrieval"))
         {
@@ -213,17 +284,16 @@ public class RagController : ControllerBase
                 var result = await _ragService.HybridRetrievalAsync(collectionName, query);
                 span.SetAttribute("rag.retrieval_result_count", result.RetrievedDocuments?.Count() ?? 0);
                 
-                return Ok(new { 
-                    success = true, 
+                return Ok(ApiResponse<object>.Ok(new { 
                     result = result
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to perform hybrid retrieval");
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -232,8 +302,20 @@ public class RagController : ControllerBase
     /// Vector similarity retrieval
     /// 向量相似度检索
     /// </summary>
+    /// <param name="collectionName">Collection name / 集合名称</param>
+    /// <param name="request">Vector retrieval request / 向量检索请求</param>
+    /// <returns>Retrieval results / 检索结果</returns>
     [HttpPost("collections/{collectionName}/retrieve/vector")]
-    public async Task<IActionResult> VectorRetrieval(string collectionName, [FromBody] VectorRetrievalRequest request)
+    [SwaggerOperation(
+        Summary = "Vector similarity retrieval",
+        Description = "Performs vector-based similarity retrieval.",
+        OperationId = "VectorRetrieval",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> VectorRetrieval(string collectionName, [FromBody] VectorRetrievalRequest request)
     {
         using (var span = _telemetryProvider.StartSpan("RagController.VectorRetrieval"))
         {
@@ -247,17 +329,16 @@ public class RagController : ControllerBase
                 var result = await _ragService.VectorRetrievalAsync(collectionName, request.Query, request.TopK);
                 span.SetAttribute("rag.retrieval_result_count", result.RetrievedDocuments?.Count() ?? 0);
                 
-                return Ok(new { 
-                    success = true, 
+                return Ok(ApiResponse<object>.Ok(new { 
                     result = result
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to perform vector retrieval");
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -266,8 +347,20 @@ public class RagController : ControllerBase
     /// Keyword-based retrieval
     /// 基于关键词的检索
     /// </summary>
+    /// <param name="collectionName">Collection name / 集合名称</param>
+    /// <param name="request">Keyword retrieval request / 关键词检索请求</param>
+    /// <returns>Retrieval results / 检索结果</returns>
     [HttpPost("collections/{collectionName}/retrieve/keyword")]
-    public async Task<IActionResult> KeywordRetrieval(string collectionName, [FromBody] KeywordRetrievalRequest request)
+    [SwaggerOperation(
+        Summary = "Keyword-based retrieval",
+        Description = "Performs keyword-based retrieval.",
+        OperationId = "KeywordRetrieval",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> KeywordRetrieval(string collectionName, [FromBody] KeywordRetrievalRequest request)
     {
         using (var span = _telemetryProvider.StartSpan("RagController.KeywordRetrieval"))
         {
@@ -281,17 +374,16 @@ public class RagController : ControllerBase
                 var result = await _ragService.KeywordRetrievalAsync(collectionName, request.Query, request.TopK);
                 span.SetAttribute("rag.retrieval_result_count", result.RetrievedDocuments?.Count() ?? 0);
                 
-                return Ok(new { 
-                    success = true, 
+                return Ok(ApiResponse<object>.Ok(new { 
                     result = result
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to perform keyword retrieval");
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -300,8 +392,20 @@ public class RagController : ControllerBase
     /// Semantic retrieval with re-ranking
     /// 带重排序的语义检索
     /// </summary>
+    /// <param name="collectionName">Collection name / 集合名称</param>
+    /// <param name="request">Semantic retrieval request / 语义检索请求</param>
+    /// <returns>Retrieval results / 检索结果</returns>
     [HttpPost("collections/{collectionName}/retrieve/semantic")]
-    public async Task<IActionResult> SemanticRetrieval(string collectionName, [FromBody] SemanticRetrievalRequest request)
+    [SwaggerOperation(
+        Summary = "Semantic retrieval with re-ranking",
+        Description = "Performs semantic retrieval with re-ranking.",
+        OperationId = "SemanticRetrieval",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> SemanticRetrieval(string collectionName, [FromBody] SemanticRetrievalRequest request)
     {
         using (var span = _telemetryProvider.StartSpan("RagController.SemanticRetrieval"))
         {
@@ -315,17 +419,16 @@ public class RagController : ControllerBase
                 var result = await _ragService.SemanticRetrievalAsync(collectionName, request.Query, request.TopK);
                 span.SetAttribute("rag.retrieval_result_count", result.RetrievedDocuments?.Count() ?? 0);
                 
-                return Ok(new { 
-                    success = true, 
+                return Ok(ApiResponse<object>.Ok(new { 
                     result = result
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to perform semantic retrieval");
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -338,8 +441,20 @@ public class RagController : ControllerBase
     /// Generate response using RAG
     /// 使用RAG生成响应
     /// </summary>
+    /// <param name="collectionName">Collection name / 集合名称</param>
+    /// <param name="request">Generation request / 生成请求</param>
+    /// <returns>Generated response / 生成的响应</returns>
     [HttpPost("collections/{collectionName}/generate")]
-    public async Task<IActionResult> GenerateResponse(string collectionName, [FromBody] RagGenerationRequest request)
+    [SwaggerOperation(
+        Summary = "Generate response using RAG",
+        Description = "Generates a response using Retrieval Augmented Generation.",
+        OperationId = "GenerateResponse",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> GenerateResponse(string collectionName, [FromBody] RagGenerationRequest request)
     {
         using (var span = _telemetryProvider.StartSpan("RagController.GenerateResponse"))
         {
@@ -352,17 +467,16 @@ public class RagController : ControllerBase
                 var response = await _ragService.GenerateResponseAsync(collectionName, request);
                 span.SetAttribute("rag.generated_response_length", response.Response?.Length);
                 
-                return Ok(new { 
-                    success = true, 
+                return Ok(ApiResponse<object>.Ok(new { 
                     response = response
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to generate RAG response");
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -371,7 +485,19 @@ public class RagController : ControllerBase
     /// Generate streaming response using RAG
     /// 使用RAG生成流式响应
     /// </summary>
+    /// <param name="collectionName">Collection name / 集合名称</param>
+    /// <param name="request">Generation request / 生成请求</param>
+    /// <returns>Streaming response / 流式响应</returns>
     [HttpPost("collections/{collectionName}/generate/stream")]
+    [SwaggerOperation(
+        Summary = "Generate streaming response using RAG",
+        Description = "Generates a streaming response using Retrieval Augmented Generation (Server-Sent Events).",
+        OperationId = "GenerateStreamingResponse",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GenerateStreamingResponse(string collectionName, [FromBody] RagGenerationRequest request)
     {
         using (var span = _telemetryProvider.StartSpan("RagController.GenerateStreamingResponse"))
@@ -402,7 +528,7 @@ public class RagController : ControllerBase
                 _logger.LogError(ex, "Failed to generate streaming RAG response");
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -415,8 +541,19 @@ public class RagController : ControllerBase
     /// Enterprise Q&A with domain knowledge
     /// 具有领域知识的企业问答
     /// </summary>
+    /// <param name="request">Enterprise Q&A request / 企业问答请求</param>
+    /// <returns>Q&A response / 问答响应</returns>
     [HttpPost("enterprise/qa")]
-    public async Task<IActionResult> EnterpriseQA([FromBody] EnterpriseQARequest request)
+    [SwaggerOperation(
+        Summary = "Enterprise Q&A with domain knowledge",
+        Description = "Performs Question & Answering using enterprise domain knowledge.",
+        OperationId = "EnterpriseQA",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> EnterpriseQA([FromBody] EnterpriseQARequest request)
     {
         using (var span = _telemetryProvider.StartSpan("RagController.EnterpriseQA"))
         {
@@ -433,18 +570,17 @@ public class RagController : ControllerBase
                     request.Options);
                 span.SetAttribute("rag.qa_response_length", response.Response?.Length);
                 
-                return Ok(new { 
-                    success = true, 
+                return Ok(ApiResponse<object>.Ok(new { 
                     response = response,
                     knowledgeBase = request.KnowledgeBase
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to process enterprise Q&A");
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -453,8 +589,21 @@ public class RagController : ControllerBase
     /// Document summarization
     /// 文档摘要
     /// </summary>
+    /// <param name="collectionName">Collection name / 集合名称</param>
+    /// <param name="documentId">Document ID / 文档ID</param>
+    /// <param name="options">Summary options / 摘要选项</param>
+    /// <returns>Document summary / 文档摘要</returns>
     [HttpPost("collections/{collectionName}/documents/{documentId}/summarize")]
-    public async Task<IActionResult> SummarizeDocument(string collectionName, string documentId, [FromBody] RagSummaryOptions? options = null)
+    [SwaggerOperation(
+        Summary = "Document summarization",
+        Description = "Generates a summary for the specified document.",
+        OperationId = "SummarizeDocument",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> SummarizeDocument(string collectionName, string documentId, [FromBody] RagSummaryOptions? options = null)
     {
         using (var span = _telemetryProvider.StartSpan("RagController.SummarizeDocument"))
         {
@@ -468,18 +617,17 @@ public class RagController : ControllerBase
                 var response = await _ragService.DocumentSummarizationAsync(collectionName, documentId, options);
                 span.SetAttribute("rag.summary_length", response.Summary?.Length);
                 
-                return Ok(new { 
-                    success = true, 
+                return Ok(ApiResponse<object>.Ok(new { 
                     summary = response,
                     documentId = documentId
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to summarize document {DocumentId}", documentId);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -488,8 +636,20 @@ public class RagController : ControllerBase
     /// Multi-document analysis
     /// 多文档分析
     /// </summary>
+    /// <param name="collectionName">Collection name / 集合名称</param>
+    /// <param name="request">Analysis request / 分析请求</param>
+    /// <returns>Analysis result / 分析结果</returns>
     [HttpPost("collections/{collectionName}/analyze")]
-    public async Task<IActionResult> AnalyzeDocuments(string collectionName, [FromBody] MultiDocumentAnalysisRequest request)
+    [SwaggerOperation(
+        Summary = "Multi-document analysis",
+        Description = "Analyzes multiple documents in the RAG collection.",
+        OperationId = "AnalyzeDocuments",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> AnalyzeDocuments(string collectionName, [FromBody] MultiDocumentAnalysisRequest request)
     {
         using (var span = _telemetryProvider.StartSpan("RagController.AnalyzeDocuments"))
         {
@@ -507,18 +667,17 @@ public class RagController : ControllerBase
                     request.AnalysisQuery);
                 span.SetAttribute("rag.analysis_result_length", response.AnalysisResult?.Length);
                 
-                return Ok(new { 
-                    success = true, 
+                return Ok(ApiResponse<object>.Ok(new { 
                     analysis = response,
                     documentCount = request.DocumentIds.Count()
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to analyze documents");
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -531,8 +690,19 @@ public class RagController : ControllerBase
     /// Create knowledge base
     /// 创建知识库
     /// </summary>
+    /// <param name="request">Creation request / 创建请求</param>
+    /// <returns>Result of operation / 操作结果</returns>
     [HttpPost("knowledge-bases")]
-    public async Task<IActionResult> CreateKnowledgeBase([FromBody] CreateKnowledgeBaseRequest request)
+    [SwaggerOperation(
+        Summary = "Create knowledge base",
+        Description = "Creates a new knowledge base with the specified configuration.",
+        OperationId = "CreateKnowledgeBase",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> CreateKnowledgeBase([FromBody] CreateKnowledgeBaseRequest request)
     {
         using (var span = _telemetryProvider.StartSpan("RagController.CreateKnowledgeBase"))
         {
@@ -544,19 +714,18 @@ public class RagController : ControllerBase
                 var collectionId = await _ragService.CreateKnowledgeBaseAsync(request.Name, request.Config);
                 span.SetAttribute("rag.created_collection_id", collectionId);
                 
-                return Ok(new { 
-                    success = true, 
+                return Ok(ApiResponse<object>.Ok(new { 
                     collectionId = collectionId,
                     name = request.Name,
                     message = $"Knowledge base \'{request.Name}\' created successfully"
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create knowledge base {Name}", request.Name);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -565,8 +734,19 @@ public class RagController : ControllerBase
     /// Delete knowledge base
     /// 删除知识库
     /// </summary>
+    /// <param name="name">Knowledge base name / 知识库名称</param>
+    /// <returns>Result of operation / 操作结果</returns>
     [HttpDelete("knowledge-bases/{name}")]
-    public async Task<IActionResult> DeleteKnowledgeBase(string name)
+    [SwaggerOperation(
+        Summary = "Delete knowledge base",
+        Description = "Deletes an existing knowledge base.",
+        OperationId = "DeleteKnowledgeBase",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> DeleteKnowledgeBase(string name)
     {
         using (var span = _telemetryProvider.StartSpan("RagController.DeleteKnowledgeBase"))
         {
@@ -578,17 +758,16 @@ public class RagController : ControllerBase
                 await _ragService.DeleteKnowledgeBaseAsync(name);
                 span.SetAttribute("rag.delete_success", true);
                 
-                return Ok(new { 
-                    success = true, 
+                return Ok(ApiResponse<object>.Ok(new { 
                     message = $"Knowledge base \'{name}\' deleted successfully"
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to delete knowledge base {Name}", name);
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -597,8 +776,18 @@ public class RagController : ControllerBase
     /// List all knowledge bases
     /// 列出所有知识库
     /// </summary>
+    /// <returns>List of knowledge bases / 知识库列表</returns>
     [HttpGet("knowledge-bases")]
-    public async Task<IActionResult> ListKnowledgeBases()
+    [SwaggerOperation(
+        Summary = "List all knowledge bases",
+        Description = "Lists all available knowledge bases.",
+        OperationId = "ListKnowledgeBases",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> ListKnowledgeBases()
     {
         using (var span = _telemetryProvider.StartSpan("RagController.ListKnowledgeBases"))
         {
@@ -609,18 +798,17 @@ public class RagController : ControllerBase
                 var knowledgeBases = await _ragService.ListKnowledgeBasesAsync();
                 span.SetAttribute("rag.knowledge_base_count", knowledgeBases.Count());
                 
-                return Ok(new { 
-                    success = true, 
+                return Ok(ApiResponse<object>.Ok(new { 
                     knowledgeBases = knowledgeBases,
                     count = knowledgeBases.Count()
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to list knowledge bases");
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(500, new { success = false, error = ex.Message });
+                return StatusCode(500, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -633,8 +821,17 @@ public class RagController : ControllerBase
     /// RAG service health check
     /// RAG服务健康检查
     /// </summary>
+    /// <returns>Health status / 健康状态</returns>
     [HttpGet("health")]
-    public async Task<IActionResult> HealthCheck()
+    [SwaggerOperation(
+        Summary = "RAG service health check",
+        Description = "Checks the health status of the RAG service.",
+        OperationId = "RagHealthCheck",
+        Tags = new[] { "RAG" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status503ServiceUnavailable)]
+    public async Task<ActionResult<ApiResponse<object>>> HealthCheck()
     {
         using (var span = _telemetryProvider.StartSpan("RagController.HealthCheck"))
         {
@@ -644,27 +841,21 @@ public class RagController : ControllerBase
                 var knowledgeBases = await _ragService.ListKnowledgeBasesAsync();
                 span.SetAttribute("rag.health_check_knowledge_base_count", knowledgeBases.Count());
                 
-                return Ok(new
+                return Ok(ApiResponse<object>.Ok(new
                 {
                     status = "healthy",
                     service = "RAG",
                     knowledgeBaseCount = knowledgeBases.Count(),
                     timestamp = DateTime.UtcNow,
                     version = "1.0.0"
-                });
+                }));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "RAG service health check failed");
                 span.RecordException(ex);
                 span.SetStatus(ActivityStatusCode.Error, ex.Message);
-                return StatusCode(503, new
-                {
-                    status = "unhealthy",
-                    service = "RAG",
-                    error = ex.Message,
-                    timestamp = DateTime.UtcNow
-                });
+                return StatusCode(503, ApiResponse<object>.Fail(ex.Message));
             }
         }
     }
@@ -781,8 +972,4 @@ public class CreateKnowledgeBaseRequest
     public RagCollectionConfig Config { get; set; } = new();
 }
 
-
-
 #endregion
-
-
