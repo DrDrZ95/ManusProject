@@ -64,3 +64,9 @@ global using Prometheus;
 global using OpenTelemetry.Trace;
 
 global using Python.Runtime;
+
+global using Agent.Core.Utils;
+global using Microsoft.SemanticKernel.ChatCompletion;
+global using Microsoft.SemanticKernel.Connectors.OpenAI;
+global using Microsoft.SemanticKernel.Embeddings;
+global using System.Runtime.CompilerServices;

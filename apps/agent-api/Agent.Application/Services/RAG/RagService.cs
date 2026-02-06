@@ -1,8 +1,5 @@
 namespace Agent.Application.Services.RAG;
 
-using System.Text.Json; // Added for JsonSerializer
-using Agent.Core.Utils; // Added for SecurityHelper
-
 /// <summary>
 /// RAG service implementation with hybrid retrieval capabilities
 /// 具有混合检索能力的RAG服务实现
@@ -108,8 +105,8 @@ public class RagService : IRagService
                 document.Id, chunks.Count);
 
             // Invalidate retrieval and response caches for this collection - 使该集合的检索和响应缓存失效
-            await _cacheService.RemoveByPrefixAsync($"rag:retrieval:{collectionName}:");
-            await _cacheService.RemoveByPrefixAsync($"rag:response:{collectionName}:");
+            // await _cacheService.RemoveByPrefixAsync($"rag:retrieval:{collectionName}:");
+            // await _cacheService.RemoveByPrefixAsync($"rag:response:{collectionName}:");
 
             return document.Id;
         }
@@ -218,8 +215,8 @@ public class RagService : IRagService
             _logger.LogInformation("Successfully updated document {DocumentId}", document.Id);
 
             // Invalidate retrieval and response caches for this collection - 使该集合的检索和响应缓存失效
-            await _cacheService.RemoveByPrefixAsync($"rag:retrieval:{collectionName}:");
-            await _cacheService.RemoveByPrefixAsync($"rag:response:{collectionName}:");
+            // await _cacheService.RemoveByPrefixAsync($"rag:retrieval:{collectionName}:");
+            // await _cacheService.RemoveByPrefixAsync($"rag:response:{collectionName}:");
         }
         catch (Exception ex)
         {
@@ -252,8 +249,8 @@ public class RagService : IRagService
             _logger.LogInformation("Successfully deleted document {DocumentId}", documentId);
 
             // Invalidate retrieval and response caches for this collection - 使该集合的检索和响应缓存失效
-            await _cacheService.RemoveByPrefixAsync($"rag:retrieval:{collectionName}:");
-            await _cacheService.RemoveByPrefixAsync($"rag:response:{collectionName}:");
+            // await _cacheService.RemoveByPrefixAsync($"rag:retrieval:{collectionName}:");
+            // await _cacheService.RemoveByPrefixAsync($"rag:response:{collectionName}:");
         }
         catch (Exception ex)
         {
@@ -288,7 +285,7 @@ public class RagService : IRagService
     /// Hybrid retrieval combining vector, keyword, and semantic search
     /// 结合向量、关键词和语义搜索的混合检索
     /// </summary>
-        public async Task<RagRetrievalResult> HybridRetrievalAsync(string collectionName, RagQuery query, CancellationToken cancellationToken = default)
+        public async Task<RagRetrievalResult> HybridRetrievalAsync(string collectionName, RagQuery query)
         {
             // 计算查询哈希值作为缓存键的一部分 (Calculate query hash as part of the cache key)
             var queryHash = SecurityHelper.GetSha256Hash(JsonSerializer.Serialize(query) + collectionName);
@@ -296,7 +293,7 @@ public class RagService : IRagService
             var cacheKey = $"rag:retrieval:{collectionName}:{queryHash}";
 
             // 尝试从缓存中获取检索结果 (Try to get retrieval results from cache)
-            var cachedResult = await _cacheService.GetAsync<RagRetrievalResult>(cacheKey, cancellationToken);
+            var cachedResult = await _cacheService.GetAsync<RagRetrievalResult>(cacheKey);
             if (cachedResult != null)
             {
                 _logger.LogInformation("Cache Hit (Retrieval): Retrieved {ChunkCount} chunks for query: {Query}", cachedResult.Chunks.Count(), query.Text);
@@ -350,23 +347,15 @@ public class RagService : IRagService
                     }
                 };
 
-                _logger.LogInformation("Hybrid retrieval completed in {ElapsedMs}ms with {ResultCount} results", 
-                    stopwatch.ElapsedMilliseconds, result.TotalMatches);
-
-                // 将检索结果存入缓存 (Cache the retrieval results)
-                await _cacheService.SetAsync(
-                    cacheKey,
-                    result,
-                    memoryTtl: TimeSpan.FromHours(new Random().Next(1, 7)), // 1-6小时动态 TTL (1-6 hours dynamic TTL)
-                    distributedTtl: TimeSpan.FromHours(new Random().Next(1, 7)), // 1-6小时动态 TTL (1-6 hours dynamic TTL)
-                    cancellationToken: cancellationToken);
+                // 将结果存入缓存 (Cache the result)
+                // 默认缓存 30 分钟 (Default cache duration: 30 minutes)
+                await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromMinutes(30));
 
                 return result;
             }
             catch (Exception ex)
             {
-                stopwatch.Stop();
-                _logger.LogError(ex, "Failed to perform hybrid retrieval");
+                _logger.LogError(ex, "Failed to execute hybrid retrieval");
                 throw;
             }
         }

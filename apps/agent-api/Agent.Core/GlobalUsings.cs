@@ -45,6 +45,8 @@ global using System.Linq.Expressions;
 global using System.Security.Claims;
 global using System.Net.Http.Json;
 global using System.Runtime.InteropServices;
+global using System.Security.Cryptography;
+global using System.Text;
 
 //可能存在功能不完善,不使用但保留
 //global using ChromaDB.Client;

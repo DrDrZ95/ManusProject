@@ -96,8 +96,9 @@ dist/
 build/
 out/
 
-# Vite
-.vite/
+# Trae Memory History
+/history/
+
 
 # Next.js
 .next/

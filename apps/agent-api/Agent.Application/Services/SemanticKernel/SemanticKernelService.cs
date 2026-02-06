@@ -1,8 +1,3 @@
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
-using Microsoft.SemanticKernel.Embeddings;
-using System.Runtime.CompilerServices;
-
 namespace Agent.Application.Services.SemanticKernel;
 
 /// <summary>
