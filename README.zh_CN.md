@@ -15,7 +15,7 @@
 因为它变得更面向非专业用户，不管是支付体系的漏洞还是集成模型对于项目的改动效率和算力变得越来越**拉跨**，
 开始怀念刚发布不久的那个版本。
 
-迫使作者在近段时间需要重新思考，并更改为 Cursor / Claude Code / Antigravity / Codex 等专业的平台和工具进行继续构建。
+迫使作者在近段时间需要重新思考，并更改为 Cursor / Claude Code / Codex 等专业的平台和工具进行继续构建。
 
 **失望的不止是这个：**
 
@@ -59,10 +59,11 @@ AgentProject 是一个企业级 AI 代理框架，融合了最先进的大语言
 ## ✨ 核心特性
 
 ### 🤖 AI & LLM 能力
-- **Semantic Kernel 集成** - 统一的 LLM 抽象层，支持多个模型提供商
+- **Semantic Kernel 集成** - 统一的 LLM 抽象层，支持多个模型提供商 (OpenAI、DeepSeek、Kimi、Llama 4)
+- **模型上下文协议 (MCP)** - 标准化工具集成框架，实现 AI 工具的无缝互操作
 - **检索增强生成（RAG）** - 与 ChromaDB 和自定义向量存储集成的智能知识库
 - **高级提示工程** - 具有动态变量替换和模板管理的提示系统
-- **模型微调工具** - 完整的脚本和工具支持自定义模型适配
+- **模型微调工具** - 完整的脚本和工具支持自定义模型适配，集成 MLflow 追踪
 
 ### ⚙️ 工作流与自动化
 - **智能工作流引擎** - 支持复杂多步骤任务的编排和执行
@@ -370,477 +371,145 @@ Redis            6.0+ (缓存加速)
 
 ```
 apps/
-├─ agent-api/                              # 🔧 后端 API 服务
-│  ├─ Agent.Api/                           # 🎯 应用启动和配置
-│  │  ├─ Controllers/
-│  │  │  ├─ HealthCheckController.cs       # 健康检查
-│  │  │  ├─ WorkflowController.cs          # 工作流管理
-│  │  │  ├─ TaskController.cs              # 任务管理
-│  │  │  ├─ AIController.cs                # AI/LLM 操作
-│  │  │  ├─ SearchController.cs            # 搜索功能
-│  │  │  └─ AdminController.cs             # 管理员功能
-│  │  ├─ Extensions/
-│  │  │  ├─ ServiceCollectionExtensions.cs # DI 扩展
-│  │  │  ├─ AuthenticationExtensions.cs    # 认证配置
-│  │  │  ├─ CorsExtensions.cs              # CORS 配置
-│  │  │  └─ MiddlewareExtensions.cs        # 中间件扩展
-│  │  ├─ GlobalUsings.cs                   # 全局 using
-│  │  ├─ Program.cs                        # 启动入口
-│  │  ├─ Agent.Api.csproj
-│  │  ├─ appsettings.json
-│  │  ├─ appsettings.Development.json
-│  │  └─ appsettings.Production.json
-│  │
-│  ├─ Agent.Application/                   # 💼 应用编排和流程
-│  │  ├─ DTOs/                             # 📦 数据传输对象
-│  │  │  ├─ Request/
-│  │  │  │  ├─ CreateWorkflowDto.cs
-│  │  │  │  ├─ CreateTaskDto.cs
-│  │  │  │  └─ UpdateWorkflowDto.cs
-│  │  │  └─ Response/
-│  │  │     ├─ WorkflowDto.cs
-│  │  │     ├─ TaskDto.cs
-│  │  │     └─ ApiResponseDto.cs
-│  │  │
-│  │  ├─ Mappers/                          # 🗺️ 实体映射
-│  │  │  ├─ WorkflowMappingProfile.cs
-│  │  │  ├─ TaskMappingProfile.cs
-│  │  │  └─ UserMappingProfile.cs
-│  │  │
-│  │  ├─ Validators/                       # ✅ 业务验证
-│  │  │  ├─ CreateWorkflowValidator.cs
-│  │  │  ├─ UpdateTaskValidator.cs
-│  │  │  └─ UserInputValidator.cs
-│  │  │
-│  │  ├─ Commands/                         # ⚡ CQRS 命令
-│  │  │  ├─ CreateWorkflowCommand.cs
-│  │  │  ├─ ExecuteTaskCommand.cs
-│  │  │  ├─ UpdateWorkflowCommand.cs
-│  │  │  └─ DeleteWorkflowCommand.cs
-│  │  │
-│  │  ├─ Queries/                          # 🔍 CQRS 查询
-│  │  │  ├─ GetWorkflowQuery.cs
-│  │  │  ├─ ListWorkflowsQuery.cs
-│  │  │  ├─ SearchTasksQuery.cs
-│  │  │  └─ GetUserQuery.cs
-│  │  │
-│  │  ├─ CommandHandlers/                  # 🎯 命令处理器
-│  │  │  ├─ CreateWorkflowCommandHandler.cs
-│  │  │  ├─ ExecuteTaskCommandHandler.cs
-│  │  │  └─ DeleteWorkflowCommandHandler.cs
-│  │  │
-│  │  ├─ QueryHandlers/                    # 📊 查询处理器
-│  │  │  ├─ GetWorkflowQueryHandler.cs
-│  │  │  ├─ ListWorkflowsQueryHandler.cs
-│  │  │  └─ SearchTasksQueryHandler.cs
-│  │  │
-│  │  ├─ Events/                           # 🔔 领域事件
-│  │  │  ├─ WorkflowCreatedEvent.cs
-│  │  │  ├─ TaskCompletedEvent.cs
-│  │  │  └─ WorkflowDeletedEvent.cs
-│  │  │
-│  │  ├─ EventHandlers/                    # 📡 事件处理
-│  │  │  ├─ WorkflowCreatedEventHandler.cs
-│  │  │  └─ TaskCompletedEventHandler.cs
-│  │  │
-│  │  ├─ Behaviors/                        # 🔧 管道行为
-│  │  │  ├─ ValidationBehavior.cs
-│  │  │  ├─ LoggingBehavior.cs
-│  │  │  ├─ CachingBehavior.cs
-│  │  │  └─ PerformanceBehavior.cs
-│  │  │
-│  │  ├─ Specifications/                   # 📋 查询规范
-│  │  │  ├─ WorkflowSpecification.cs
-│  │  │  ├─ TaskSpecification.cs
-│  │  │  └─ UserSpecification.cs
-│  │  │
-│  │  └─ Agent.Application.csproj
-│  │
-│  ├─ Agent.Core/                          # 💎 核心业务逻辑
-│  │  ├─ Authorization/                    # 🔐 授权模块
-│  │  │  ├─ Handlers/
-│  │  │  │  ├─ RoleBasedHandler.cs
-│  │  │  │  ├─ PolicyBasedHandler.cs
-│  │  │  │  └─ ClaimBasedHandler.cs
-│  │  │  ├─ Policies/
-│  │  │  │  ├─ AdminOnlyPolicy.cs
-│  │  │  │  ├─ WorkflowOwnerPolicy.cs
-│  │  │  │  └─ RateLimitPolicy.cs
-│  │  │  └─ Requirements/
-│  │  │     └─ CustomRequirement.cs
-│  │  │
-│  │  ├─ WorkflowAndTask/                  # ⚙️ 工作流与任务
-│  │  │  ├─ Services/
-│  │  │  │  ├─ IWorkflowService.cs
-│  │  │  │  ├─ WorkflowService.cs
-│  │  │  │  ├─ ITaskService.cs
-│  │  │  │  ├─ TaskService.cs
-│  │  │  │  ├─ StateManager.cs
-│  │  │  │  └─ ExecutionContext.cs
-│  │  │  └─ Models/
-│  │  │     ├─ WorkflowModel.cs
-│  │  │     └─ TaskModel.cs
-│  │  │
-│  │  ├─ SystemMonitoring/                 # 🔍 系统监控
-│  │  │  ├─ Services/
-│  │  │  │  ├─ IEbpfService.cs
-│  │  │  │  ├─ EbpfService.cs
-│  │  │  │  ├─ ProcessMonitor.cs
-│  │  │  │  ├─ SecurityDetector.cs
-│  │  │  │  └─ HealthChecker.cs
-│  │  │  └─ Scripts/
-│  │  │     ├─ process_monitor.c
-│  │  │     └─ security_check.c
-│  │  │
-│  │  ├─ Data/                             # 💾 数据访问
-│  │  │  ├─ Contexts/
-│  │  │  │  ├─ ApplicationDbContext.cs
-│  │  │  │  └─ SeedData.cs
-│  │  │  ├─ Entities/
-│  │  │  │  ├─ User.cs
-│  │  │  │  ├─ Workflow.cs
-│  │  │  │  ├─ Task.cs
-│  │  │  │  ├─ Document.cs
-│  │  │  │  └─ AuditLog.cs
-│  │  │  ├─ Repositories/
-│  │  │  │  ├─ IRepository.cs
-│  │  │  │  ├─ Repository.cs
-│  │  │  │  ├─ WorkflowRepository.cs
-│  │  │  │  ├─ TaskRepository.cs
-│  │  │  │  └─ DocumentRepository.cs
-│  │  │  ├─ Migrations/
-│  │  │  │  └─ [EF Core 迁移文件]
-│  │  │  └─ Seeds/
-│  │  │     └─ DataSeeder.cs
-│  │  │
-│  │  ├─ RealTimeComm/                     # ⚡ 实时通信
-│  │  │  ├─ Hubs/
-│  │  │  │  ├─ IHubClient.cs
-│  │  │  │  ├─ WorkflowHub.cs
-│  │  │  │  ├─ TaskHub.cs
-│  │  │  │  └─ NotificationHub.cs
-│  │  │  └─ Services/
-│  │  │     ├─ INotificationService.cs
-│  │  │     ├─ NotificationService.cs
-│  │  │     └─ ConnectionManager.cs
-│  │  │
-│  │  ├─ Gateway/                          # 🚪 网关与路由
-│  │  │  ├─ Services/
-│  │  │  │  ├─ IRouteService.cs
-│  │  │  │  └─ RouteService.cs
-│  │  │  └─ Configuration/
-│  │  │     ├─ YarpConfiguration.cs
-│  │  │     └─ CircuitBreakerPolicy.cs
-│  │  │
-│  │  ├─ ExceptionAndLogging/              # ⚠️ 异常与日志
-│  │  │  ├─ Handlers/
-│  │  │  │  ├─ GlobalExceptionHandler.cs
-│  │  │  │  ├─ ValidationExceptionHandler.cs
-│  │  │  │  └─ BusinessExceptionHandler.cs
-│  │  │  ├─ Exceptions/
-│  │  │  │  ├─ ApplicationException.cs
-│  │  │  │  ├─ BusinessException.cs
-│  │  │  │  ├─ ValidationException.cs
-│  │  │  │  └─ ResourceNotFoundException.cs
-│  │  │  ├─ Middlewares/
-│  │  │  │  ├─ ErrorHandlingMiddleware.cs
-│  │  │  │  ├─ LoggingMiddleware.cs
-│  │  │  │  ├─ CorrelationIdMiddleware.cs
-│  │  │  │  └─ RequestTimingMiddleware.cs
-│  │  │  └─ Logging/
-│  │  │     ├─ ILogger.cs
-│  │  │     └─ LoggerImpl.cs
-│  │  │
-│  │  ├─ Identity/                         # 👤 身份管理
-│  │  │  ├─ Entities/
-│  │  │  │  ├─ ApplicationUser.cs
-│  │  │  │  ├─ ApplicationRole.cs
-│  │  │  │  └─ ApplicationUserRole.cs
-│  │  │  ├─ Services/
-│  │  │  │  ├─ IIdentityService.cs
-│  │  │  │  ├─ IdentityService.cs
-│  │  │  │  ├─ ITokenService.cs
-│  │  │  │  └─ TokenService.cs
-│  │  │  └─ Options/
-│  │  │     ├─ JwtOptions.cs
-│  │  │     └─ IdentityOptions.cs
-│  │  │
-│  │  ├─ Extensions/
-│  │  │  ├─ ServiceCollectionExtensions.cs
-│  │  │  ├─ AuthorizationExtensions.cs
-│  │  │  ├─ DataAccessExtensions.cs
-│  │  │  └─ TelemetryExtensions.cs
-│  │  │
-│  │  └─ Agent.Core.csproj
-│  │
-│  └─ Agent.McpGateway/                    # 🤖 AI 编排引擎
-│     ├─ LLMIntegration/                    # 🧠 LLM 集成与管理
-│     │  ├─ SemanticKernelService/
-│     │  │  ├─ ISemanticKernelService.cs
-│     │  │  ├─ SemanticKernelService.cs
-│     │  │  ├─ PluginManager.cs
-│     │  │  ├─ PromptOptimizer.cs
-│     │  │  └─ ModelRouter.cs
-│     │  └─ Models/
-│     │     └─ LLMConfig.cs
-│     │
-│     ├─ KnowledgeBase/                     # 📚 知识库与 RAG
-│     │  ├─ RagService/
-│     │  │  ├─ IRagService.cs
-│     │  │  ├─ RagService.cs
-│     │  │  ├─ DocumentProcessor.cs
-│     │  │  ├─ EmbeddingGenerator.cs
-│     │  │  ├─ SimilaritySearcher.cs
-│     │  │  └─ ChunkingStrategy.cs
-│     │  ├─ VectorDatabase/
-│     │  │  ├─ IVectorDatabaseService.cs
-│     │  │  ├─ ChromaDBClient.cs
-│     │  │  ├─ EmbeddingCache.cs
-│     │  │  ├─ IndexManager.cs
-│     │  │  └─ VectorQueryBuilder.cs
-│     │  └─ Models/
-│     │     ├─ Document.cs
-│     │     └─ Embedding.cs
-│     │
-│     ├─ WorkflowOrchestration/             # 🔄 工作流编排
-│     │  ├─ WorkflowService/
-│     │  │  ├─ IWorkflowService.cs
-│     │  │  ├─ WorkflowService.cs
-│     │  │  ├─ WorkflowExecutor.cs
-│     │  │  ├─ WorkflowParser.cs
-│     │  │  ├─ StateManager.cs
-│     │  │  └─ ExecutionContext.cs
-│     │  └─ Models/
-│     │     └─ WorkflowDefinition.cs
-│     │
-│     ├─ PromptEngineering/                 # 📝 提示与模板
-│     │  ├─ PromptService/
-│     │  │  ├─ IPromptService.cs
-│     │  │  ├─ PromptService.cs
-│     │  │  ├─ TemplateEngine.cs
-│     │  │  ├─ VariableResolver.cs
-│     │  │  └─ PromptCache.cs
-│     │  └─ Templates/
-│     │     └─ PromptTemplate.cs
-│     │
-│     ├─ SandboxExecution/                  # 🔒 沙箱隔离执行
-│     │  ├─ SandboxService/
-│     │  │  ├─ ISandboxService.cs
-│     │  │  ├─ SandboxService.cs
-│     │  │  ├─ ProcessExecutor.cs
-│     │  │  ├─ EnvironmentManager.cs
-│     │  │  └─ SecurityManager.cs
-│     │  └─ Policies/
-│     │     └─ SandboxPolicy.cs
-│     │
-│     ├─ SearchAndIntegration/              # 🔍 搜索与集成
-│     │  ├─ WebSearch/
-│     │  │  ├─ IWebSearchService.cs
-│     │  │  ├─ WebSearchService.cs
-│     │  │  ├─ SearXngClient.cs
-│     │  │  ├─ SerpApiClient.cs
-│     │  │  └─ SearchResultProcessor.cs
-│     │  ├─ McpTools/
-│     │  │  ├─ IMcpTool.cs
-│     │  │  ├─ ToolRegistry.cs
-│     │  │  ├─ MusicTool.cs
-│     │  │  ├─ WeatherTool.cs
-│     │  │  └─ CustomTool.cs
-│     │  ├─ FileUpload/
-│     │  │  ├─ IFileUploadService.cs
-│     │  │  ├─ FileUploadService.cs
-│     │  │  ├─ FileValidator.cs
-│     │  │  ├─ StorageManager.cs
-│     │  │  └─ VirusScanner.cs
-│     │  └─ UserInput/
-│     │     ├─ IUserInputService.cs
-│     │     ├─ UserInputService.cs
-│     │     ├─ InputValidator.cs
-│     │     └─ ContextAnalyzer.cs
-│     │
-│     ├─ ModelFinetuning/                   # 🎓 模型微调
-│     │  ├─ FinetuneService/
-│     │  │  ├─ IFinetuneService.cs
-│     │  │  ├─ FinetuneService.cs
-│     │  │  ├─ DatasetPreparer.cs
-│     │  │  ├─ ModelTrainer.cs
-│     │  │  └─ MetricsCalculator.cs
-│     │  └─ Models/
-│     │     └─ FinetuneConfig.cs
-│     │
-│     ├─ Observability/                     # 📊 可观测性
-│     │  ├─ TelemetryService/
-│     │  │  ├─ ITelemetryService.cs
-│     │  │  ├─ OpenTelemetryService.cs
-│     │  │  ├─ MetricsCollector.cs
-│     │  │  └─ TraceExporter.cs
-│     │  └─ Metrics/
-│     │     └─ PerformanceMetrics.cs
-│     │
-│     ├─ Common/
-│     │  ├─ Models/
-│     │  │  ├─ ExecutionResult.cs
-│     │  │  ├─ SearchResult.cs
-│     │  │  └─ EmbeddingModel.cs
-│     │  └─ Extensions/
-│     │     └─ ServiceCollectionExtensions.cs
-│     │
-│     └─ Agent.McpGateway.csproj
+├─ agent-api/                         # 🔧 后端 API 服务
+│  ├─ Agent.Api/                      # 🎯 应用启动与配置
+│  ├─ Agent.Application/              # 💼 应用编排层
+│  ├─ Agent.Core/                     # 💎 核心业务逻辑
+│  └─ Agent.McpGateway/               # 🤖 AI 编排引擎
 │
-└─ agent-ui/                               # 🎨 React 前端
-   ├─ public/                              # 📊 静态资源
-   │  ├─ index.html
-   │  ├─ favicon.ico
-   │  └─ manifest.json
-   │
-   ├─ src/                                 # 💻 源代码
-   │  ├─ index.tsx
-   │  ├─ App.tsx
-   │  ├─ App.css
-   │  ├─ components/
-   │  │  ├─ Layout/ (Header, Sidebar, Footer, LayoutWrapper)
-   │  │  ├─ Workflow/ (List, Editor, Viewer, Node)
-   │  │  ├─ Task/ (Board, Card, Modal, Form)
-   │  │  ├─ AI/ (ChatBox, PromptEditor, ResultDisplay, ModelSelector)
-   │  │  └─ Common/ (Button, Modal, Notification, Loading, ErrorBoundary)
-   │  ├─ pages/ (Dashboard, Workflows, Tasks, AIChat, Settings, Search)
-   │  ├─ services/ (api, workflowApi, taskApi, aiApi, searchApi, authApi)
-   │  ├─ hooks/ (useWorkflows, useTasks, useAuth, useSignalR, useNotification)
-   │  ├─ store/ (Redux slices, store.ts)
-   │  ├─ styles/ (variables.css, themes.css, responsive.css)
-   │  ├─ utils/ (formatters, validators, constants, storage, logger)
-   │  └─ types/ (workflow, task, api, user)
-   │
-   ├─ package.json
-   ├─ tsconfig.json
-   ├─ vite.config.ts
-   ├─ .env.example
-   └─ .eslintrc.json
+├─ agent-ui/                          # 🎨 React 前端应用
+│  ├─ public/                         # 📊 静态资源
+│  └─ src/                            # 💻 源代码
+│     ├─ components/                  # 🧩 可复用 UI 组件
+│     ├─ pages/                       # 📄 应用页面
+│     ├─ services/                    # 🔌 API 服务
+│     ├─ hooks/                       # ⚛️ 自定义 React Hooks
+│     ├─ store/                       # 🗄️ 状态管理
+│     ├─ styles/                      # 🎨 CSS 样式
+│     ├─ utils/                       # 🛠️ 工具函数
+│     └─ types/                       # 📋 TypeScript 类型
+│
+├─ agent-ops-ui/                      # 📈 运维监控 UI
+│  └─ ...                             # 系统指标仪表板
+│
+├─ agent-ops/                         # 🔍 运维服务
+│  └─ Agent.Metering/                 # 📊 用量计量与计费
+│
+└─ agent-tools/                       # 🛠️ 实用工具与脚本
+    └─ ...                            # Python 工具集合
 ```
 
 ### docs/ - 文档
 
 ```
 docs/
-├─ README.md
-├─ Architecture/
-│  ├─ system-architecture.md
-│  ├─ components-overview.md
-│  └─ data-flow.md
-├─ Setup/
-│  ├─ docker-deployment.md
-│  ├─ kubernetes-deployment.md
-│  ├─ helm-deployment.md
-│  └─ configuration-guide.md
-├─ Features/
-│  ├─ chromadb_integration.md
-│  ├─ ebpf_integration.md
-│  ├─ identity_signalr_integration.md
-│  ├─ mlflow_integration.md
-│  ├─ rag_prompt_engineering.md
-│  ├─ sandbox_terminal_integration.md
-│  ├─ semantic_kernel_examples.md
-│  ├─ workflow_integration.md
-│  └─ yarp_gateway_integration.md
-├─ API/
-│  ├─ workflow-api.md
-│  ├─ task-api.md
-│  ├─ ai-api.md
-│  └─ search-api.md
-├─ Development/
-│  ├─ getting-started.md
-│  ├─ development-setup.md
-│  ├─ code-structure.md
-│  ├─ coding-standards.md
-│  └─ testing-guide.md
-└─ CHANGELOG.md
+├─ api_documentation.md               # 📚 API 文档
+├─ api_documentation.zh_CN.md         # 📚 API 文档(中文)
+├─ chromadb_integration.md            # 🔍 ChromaDB 配置指南
+├─ chromadb_integration.zh_CN.md      # 🔍 ChromaDB 配置(中文)
+├─ clickhouse_integration.md          # 💾 ClickHouse 集成
+├─ clickhouse_integration.zh_CN.md    # 💾 ClickHouse 集成(中文)
+├─ docker_quickstart.md               # 🐳 Docker 快速入门
+├─ docker_quickstart.zh_CN.md         # 🐳 Docker 快速入门(中文)
+├─ ebpf_integration.md                # 🔒 eBPF 安全模块
+├─ environment_setup.md               # ⚙️ 环境配置
+├─ environment_setup.zh_CN.md         # ⚙️ 环境配置(中文)
+├─ grafana_integration.md             # 📊 Grafana 仪表板
+├─ grafana_integration.zh_CN.md       # 📊 Grafana 仪表板(中文)
+├─ helm_installation.md               # ⎈ Helm 图表指南
+├─ identity_signalr_integration.md    # 🔐 认证与实时通信
+├─ kubernetes_istio_grayscale_release.zh_CN.md  # ☸️ K8s 部署
+├─ mcp_integration_guide.zh_CN.md     # 🔌 MCP 集成指南
+├─ mlflow_integration.md              # 📈 MLflow 实验追踪
+├─ mlflow_integration.zh_CN.md        # 📈 MLflow 实验追踪(中文)
+├─ prometheus_integration.md          # 📉 Prometheus 监控
+├─ prometheus_integration.zh_CN.md    # 📉 Prometheus 监控(中文)
+├─ rag_prompt_engineering.md          # 🤖 RAG 与提示工程
+├─ sandbox_terminal_integration.md    # 🔒 沙箱环境
+├─ semantic_kernel_examples.md        # 🧠 Semantic Kernel 示例
+├─ ssh_setup.md                       # 🔑 SSH 配置
+├─ ssh_setup.zh_CN.md                 # 🔑 SSH 配置(中文)
+├─ unsloth_lora_finetuning.md         # 🎓 模型微调
+├─ unsloth_lora_finetuning.zh_CN.md   # 🎓 模型微调(中文)
+├─ vllm_integration.md                # ⚡ vLLM 集成
+├─ vllm_integration.zh_CN.md          # ⚡ vLLM 集成(中文)
+├─ workflow_integration.md            # 🔄 工作流引擎
+├─ yarp_gateway_integration.md        # 🚪 YARP 网关
+└─ ...
 ```
 
 ### infra/ - 基础设施
 
 ```
 infra/
-├─ docker/
-│  ├─ Dockerfile.webapi
-│  ├─ Dockerfile.react
-│  ├─ docker-compose.yml
-│  ├─ docker-compose.dev.yml
-│  ├─ docker-compose.prod.yml
-│  ├─ nginx.conf
-│  ├─ nginx.ssl.conf
-│  ├─ .dockerignore
-│  └─ examples/
-├─ kubernetes/
+├─ cicd/                              # 🔄 CI/CD 流水线配置
+│  └─ ...                             # GitHub Actions、Jenkins
+│
+├─ docker/                            # 🐳 Docker 配置
+│  ├─ Dockerfile.webapi               # 后端 Dockerfile
+│  ├─ Dockerfile.react                # 前端 Dockerfile
+│  ├─ docker-compose.yml              # Compose 编排
+│  ├─ nginx.conf                      # Nginx 配置
+│  └─ ...
+│
+├─ envsetup/                          # 🛠️ 环境设置脚本
+│  ├─ install_dependencies.sh         # 安装依赖
+│  ├─ setup_database.sh               # 数据库设置
+│  └─ ...
+│
+├─ helm/                              # ⎈ Helm 图表
+│  └─ agent-project/                  # K8s 部署图表
+│     ├─ Chart.yaml
+│     ├─ values.yaml
+│     └─ templates/
+│
+├─ kubernetes/                        # ☸️ K8s 原始清单
 │  ├─ namespace.yaml
-│  ├─ configmap.yaml
-│  ├─ secrets.yaml
 │  ├─ deployments.yaml
 │  ├─ services.yaml
 │  ├─ ingress.yaml
-│  ├─ persistentvolumes.yaml
-│  ├─ hpa.yaml
-│  └─ rbac.yaml
-├─ helm/
-│  └─ manus-project/
-│     ├─ Chart.yaml
-│     ├─ values.yaml
-│     ├─ values.dev.yaml
-│     ├─ values.prod.yaml
-│     ├─ values.staging.yaml
-│     └─ templates/
-└─ envsetup/
-   ├─ install_dependencies.sh
-   ├─ download_model.sh
-   ├─ setup_database.sh
-   ├─ configure_ssl.sh
-   ├─ health_check.sh
-   └─ monitoring_setup.sh
+│  └─ ...
+│
+└─ git_ci.yml                         # 🔧 GitHub Actions 工作流
 ```
 
-### llm/ - ML 组件
+### llm/ - 机器学习组件
 
 ```
 llm/
-├─ deploy/
-│  ├─ model_server.py
-│  ├─ api_examples.py
+├─ deploy/                            # 🚀 模型部署
+│  ├─ model_server.py                 # 模型服务 API
 │  ├─ requirements.txt
 │  └─ Dockerfile
-└─ finetune/
-   ├─ train.py
-   ├─ evaluate.py
-   ├─ dataset_loader.py
-   ├─ utils.py
-   ├─ install_dependencies.sh
-   └─ config.yaml
+│
+└─ finetune/                          # 🎓 模型微调
+   ├─ train.py                        # 训练脚本
+   ├─ evaluate.py                     # 评估脚本
+   ├─ dataset_loader.py               # 数据加载工具
+   ├─ config.yaml                     # 训练配置
+   └─ ...
 ```
 
-### test/ - 测试
+### test/ - 测试套件
 
 ```
 test/
-└─ Agent.Core.Tests/
-   ├─ Unit/
-   │  ├─ Services/
-   │  │  ├─ WorkflowServiceTests.cs
-   │  │  ├─ RAGServiceTests.cs
-   │  │  └─ PromptServiceTests.cs
-   │  ├─ Controllers/
-   │  │  ├─ WorkflowControllerTests.cs
-   │  │  └─ TaskControllerTests.cs
-   │  └─ Repositories/
-   │     └─ WorkflowRepositoryTests.cs
-   ├─ Integration/
+├─ Agent.Api.Tests/                   # 🧪 API 层测试
+│  └─ ...                             # 控制器和端点测试
+│
+└─ Agent.Core.Tests/                  # 🧪 核心业务逻辑测试
+   ├─ Unit/                           # 单元测试
+   │  ├─ Services/                    # 服务层测试
+   │  ├─ Repositories/                # 数据访问测试
+   │  └─ ...
+   ├─ Integration/                    # 集成测试
    │  ├─ ApiIntegrationTests.cs
    │  ├─ DatabaseIntegrationTests.cs
    │  └─ WorkflowIntegrationTests.cs
-   ├─ MockData/
-   │  ├─ TestDataFactory.cs
-   │  └─ MockServices.cs
-   └─ Agent.Core.Tests.csproj
+   └─ MockData/                       # 测试数据工厂
+      ├─ TestDataFactory.cs
+      └─ MockServices.cs
 ```
-
----
 
 ## 🚀 快速开始
 
@@ -848,7 +517,7 @@ test/
 
 ```bash
 # 克隆仓库
-git clone https://github.com/DrDrZ95/ManusProject.git
+git clone https://github.com/DrDrZ95/AgentProject.git
 cd AgentProject
 
 # 进入 Docker 目录
@@ -877,7 +546,7 @@ docker-compose down
 
 ```bash
 # 克隆仓库
-git clone https://github.com/DrDrZ95/ManusProject.git
+git clone https://github.com/DrDrZ95/AgentProject.git
 cd AgentProject
 
 # 1. 配置后端
@@ -990,16 +659,16 @@ ELASTICSEARCH_ENDPOINT=http://elasticsearch:9200 (可选)
 
 ### 生产部署检查清单
 
-- [ ] 配置 HTTPS/TLS 证书
-- [ ] 设置数据库备份和点对点复制
-- [ ] 配置外部身份认证 (OIDC/LDAP)
-- [ ] 启用审计日志记录
-- [ ] 部署监控告警系统
-- [ ] 配置日志聚合和分析
-- [ ] 测试灾难恢复程序
-- [ ] 建立 CI/CD 自动化管道
-- [ ] 性能和压力测试
-- [ ] 安全审计和渗透测试
+1. 配置 HTTPS/TLS 证书
+2. 设置数据库备份和点对点复制
+3. 配置外部身份认证 (OIDC/LDAP)
+4. 启用审计日志记录
+5. 部署监控告警系统
+6. 配置日志聚合和分析
+7. 测试灾难恢复程序
+8. 建立 CI/CD 自动化管道
+9. 性能和压力测试
+10. 安全审计和渗透测试
 
 ---
 
@@ -1039,20 +708,28 @@ ELASTICSEARCH_ENDPOINT=http://elasticsearch:9200 (可选)
 
 ## 📚 文档资源
 
-| 文档 | 说明 |
-|------|------|
-| `chromadb_integration.md` | 向量数据库设置、RAG 配置 |
-| `ebpf_integration.md` | eBPF 模块、系统监控 |
-| `identity_signalr_integration.md` | 身份认证、实时通信 |
-| `kubernetes_istio_grayscale_release.md` | K8s 灰度发布策略 |
-| `mlflow_integration.md` | 实验追踪、模型管理 |
-| `rag_prompt_engineering.md` | 提示优化、RAG 最佳实践 |
-| `sandbox_terminal_integration.md` | 沙箱执行、安全隔离 |
-| `semantic_kernel_examples.md` | LLM 集成示例 |
-| `workflow_integration.md` | 工作流设计和实现 |
-| `yarp_gateway_integration.md` | 网关配置、路由管理 |
-
----
+| 文档 | 说明 | 链接 |
+|------|------|------|
+| `api_documentation.md` | 完整 API 参考与示例 | [查看](./docs/api_documentation.zh_CN.md) |
+| `chromadb_integration.md` | 向量数据库设置与 RAG 配置 | [查看](./docs/chromadb_integration.zh_CN.md) |
+| `clickhouse_integration.md` | ClickHouse 分析数据库集成 | [查看](./docs/clickhouse_integration.zh_CN.md) |
+| `docker_quickstart.md` | Docker 部署快速入门 | [查看](./docs/docker_quickstart.zh_CN.md) |
+| `ebpf_integration.md` | eBPF 安全模块与系统监控 | [查看](./docs/ebpf_integration.md) |
+| `environment_setup.md` | 开发环境配置指南 | [查看](./docs/environment_setup.zh_CN.md) |
+| `grafana_integration.md` | Grafana 仪表板与可视化 | [查看](./docs/grafana_integration.zh_CN.md) |
+| `helm_installation.md` | Helm 图表 K8s 部署 | [查看](./docs/helm_installation.md) |
+| `identity_signalr_integration.md` | 身份认证与实时通信 | [查看](./docs/identity_signalr_integration.md) |
+| `mcp_integration_guide.zh_CN.md` | 模型上下文协议集成指南 | [查看](./docs/mcp_integration_guide.zh_CN.md) |
+| `mlflow_integration.md` | MLflow 实验追踪与模型管理 | [查看](./docs/mlflow_integration.zh_CN.md) |
+| `prometheus_integration.md` | Prometheus 指标与监控 | [查看](./docs/prometheus_integration.zh_CN.md) |
+| `rag_prompt_engineering.md` | RAG 实现与提示优化 | [查看](./docs/rag_prompt_engineering.md) |
+| `sandbox_terminal_integration.md` | 安全沙箱执行环境 | [查看](./docs/sandbox_terminal_integration.md) |
+| `semantic_kernel_examples.md` | Semantic Kernel 使用示例 | [查看](./docs/semantic_kernel_examples.md) |
+| `ssh_setup.md` | SSH 远程访问配置 | [查看](./docs/ssh_setup.zh_CN.md) |
+| `unsloth_lora_finetuning.md` | Unsloth LoRA 模型微调 | [查看](./docs/unsloth_lora_finetuning.zh_CN.md) |
+| `vllm_integration.md` | vLLM 高性能推理 | [查看](./docs/vllm_integration.zh_CN.md) |
+| `workflow_integration.md` | 工作流引擎设计与实现 | [查看](./docs/workflow_integration.md) |
+| `yarp_gateway_integration.md` | YARP 反向代理与网关 | [查看](./docs/yarp_gateway_integration.md) |
 
 ## 👨‍💻 开发指南
 
@@ -1163,7 +840,7 @@ MIT License 允许：
 - [Kubernetes 文档](https://kubernetes.io/zh-cn/docs/)
 
 ### 参考链接
-- **GitHub 仓库**：https://github.com/DrDrZ95/ManusProject
+- **GitHub 仓库**：https://github.com/DrDrZ95/AgentProject
 
 ---
 
@@ -1172,9 +849,9 @@ MIT License 允许：
 ### 获取帮助
 
 - 📖 查看 [完整文档](./docs/)
-- 🐛 [报告 Bug](https://github.com/DrDrZ95/ManusProject/issues)
-- 💡 [请求功能](https://github.com/DrDrZ95/ManusProject/issues)
-- 💬 [讨论问题](https://github.com/DrDrZ95/ManusProject/discussions)
+- 🐛 [报告 Bug](https://github.com/DrDrZ95/AgentProject/issues)
+- 💡 [请求功能](https://github.com/DrDrZ95/AgentProject/issues)
+- 💬 [讨论问题](https://github.com/DrDrZ95/AgentProject/discussions)
 
 ### 社区支持
 
@@ -1196,26 +873,39 @@ MIT License 允许：
 
 ## 🎯 路线图
 
-### Q1 已完成 ✅
-- 核心 AI 代理框架
-- 工作流管理系统
-- RAG 实现
-- Docker 部署支持
-- 系统架构优化
-- 模块化重构
+### 第一阶段 已完成 ✅
+- ✅ 基于 .NET 8.0 的核心 AI 代理框架
+- ✅ 带可视化编辑器的工作流管理系统
+- ✅ RAG (检索增强生成) 实现
+- ✅ 支持多容器编排的 Docker 部署
+- ✅ 分层架构设计的系统优化
+- ✅ 遵循整洁架构原则的模块化重构
+- ✅ 带统一响应模型的 OpenAPI 文档
+- ✅ 全面的单元测试和集成测试覆盖
 
-### Q1-Q2 进行中 🚀
-- 高级缓存策略优化
-- WebSearch 增强和扩展
-- 模型微调工具完善
-- 性能基准测试
+### 第二阶段 进行中 🚀
+- 🔄 高级缓存策略优化 (Redis 集成)
+- 🔄 WebSearch 增强和扩展 (多提供商支持)
+- 🔄 带 MLflow 集成的模型微调工具完善
+- 🔄 性能基准测试和优化
+- 🔄 基于 YARP 的 API 网关增强
+- 🔄 实时协作功能
 
-### Q2-Q3 计划中 🔮
-- 多语言支持（中英日韩）
-- 更多 LLM 集成
-- 社区插件系统
-- 桌面客户端 (Electron)
-- 移动应用支持 (React Native)
-- GraphQL API 层
+### 第三阶段 计划中 🔮
+- 🔮 多语言支持 (中、英、日、韩)
+- 🔮 更多 LLM 集成 (Claude、Gemini、本地模型)
+- 🔮 带市场的社区插件系统
+- 🔮 桌面客户端 (基于 Electron)
+- 🔮 移动应用支持 (React Native)
+- 🔮 与 REST 并存的 GraphQL API 层
+- 🔮 高级分析仪表板
+- 🔮 企业 SSO 集成 (SAML/OIDC)
+
+### 第四阶段 未来愿景 🔭
+- 🔭 AI 驱动的代码生成助手
+- 🔭 自动化工作流优化
+- 🔭 多租户 SaaS 架构
+- 🔭 高级安全合规 (SOC 2、GDPR)
+- 🔭 云原生无服务器部署选项
 
 ---

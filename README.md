@@ -12,10 +12,9 @@ This project is continuously being optimized, and the author strives for 3+ upda
 ## 2026-02-01 Reminder
 Due to Manus' recent reduction of key functions and the increasingly serious problems exposed in its Reddit community, the author's expectations for Manus have been declining. 
 
-Because it has become more oriented towards non-professional users, both the loopholes in the payment system and the efficiency of integrating the model for project modifications have become increasingly poor.
-I began to miss the version that was released not long ago.
+Because it has become more user-friendly for non-professionals, whether it is the loopholes in the subscription payment system or the fact that the existing integration model has become increasingly difficult to use for project modification efficiency and context management, there are more and more strict policies after its acquisition by Meta.
 
-This has forced the author to rethink and switch to more professional platforms and tools such as Cursor / Claude Code / Antigravity / Codex in order to continue the project. 
+This has forced the author to rethink and switch to more professional platforms and tools such as Cursor / Claude Code / Codex in order to continue the project. 
 
 **Not only this was disappointing:**
 
@@ -59,10 +58,11 @@ AgentProject is an enterprise-grade AI agent framework that combines cutting-edg
 ## ✨ Key Features
 
 ### 🤖 AI & LLM Capabilities
-- **Semantic Kernel Integration** - Unified LLM abstraction layer supporting multiple model providers
+- **Semantic Kernel Integration** - Unified LLM abstraction layer supporting multiple model providers (OpenAI, DeepSeek, Kimi, Llama 4)
+- **Model Context Protocol (MCP)** - Standardized tool integration framework for seamless AI tool interoperability
 - **Retrieval-Augmented Generation (RAG)** - Intelligent knowledge base with ChromaDB and custom vector store integration
 - **Advanced Prompt Engineering** - Prompt system with dynamic variable substitution and template management
-- **Model Fine-tuning Tools** - Complete scripts and utilities for custom model adaptation
+- **Model Fine-tuning Tools** - Complete scripts and utilities for custom model adaptation with MLflow tracking
 
 ### ⚙️ Workflow & Automation
 - **Intelligent Workflow Engine** - Orchestration and execution of complex multi-step tasks
@@ -371,55 +371,133 @@ Redis            6.0+ (for caching)
 
 ```
 apps/
-├─ agent-api/
-│  ├─ Agent.Api/                      # Startup & Configuration
-│  ├─ Agent.Application/              # Application Orchestration
-│  ├─ Agent.Core/                     # Core Business Logic
-│  └─ Agent.McpGateway/               # AI Orchestration Engine
-└─ agent-ui/                          # React Frontend
+├─ agent-api/                         # 🔧 Backend API Services
+│  ├─ Agent.Api/                      # 🎯 Application Startup & Configuration
+│  ├─ Agent.Application/              # 💼 Application Orchestration Layer
+│  ├─ Agent.Core/                     # 💎 Core Business Logic
+│  └─ Agent.McpGateway/               # 🤖 AI Orchestration Engine
+│
+├─ agent-ui/                          # 🎨 React Frontend Application
+│  ├─ public/                         # 📊 Static Assets
+│  └─ src/                            # 💻 Source Code
+│     ├─ components/                  # 🧩 Reusable UI Components
+│     ├─ pages/                       # 📄 Application Pages
+│     ├─ services/                    # 🔌 API Services
+│     ├─ hooks/                       # ⚛️ Custom React Hooks
+│     ├─ store/                       # 🗄️ State Management
+│     ├─ styles/                      # 🎨 CSS Styles
+│     ├─ utils/                       # 🛠️ Utility Functions
+│     └─ types/                       # 📋 TypeScript Types
+│
+├─ agent-ops-ui/                      # 📈 Operations & Monitoring UI
+│  └─ ...                             # Dashboard for system metrics
+│
+├─ agent-ops/                         # 🔍 Operational Services
+│  └─ Agent.Metering/                 # 📊 Usage Metering & Billing
+│
+└─ agent-tools/                       # 🛠️ Utility Tools & Scripts
+    └─ ...                            # Python-based tool collection
 ```
 
 ### docs/ - Documentation
 
 ```
 docs/
-├─ Architecture/                      # Architecture Docs
-├─ Setup/                             # Deployment Guides
-├─ Features/                          # Feature Documentation
-├─ API/                               # API Documentation
-├─ Development/                       # Development Guides
-└─ CHANGELOG.md                       # Change Log
+├─ api_documentation.md               # 📚 API Documentation
+├─ chromadb_integration.md            # 🔍 ChromaDB Setup Guide
+├─ clickhouse_integration.md          # 💾 ClickHouse Integration
+├─ docker_quickstart.md               # 🐳 Docker Quick Start
+├─ ebpf_integration.md                # 🔒 eBPF Security Module
+├─ environment_setup.md               # ⚙️ Environment Configuration
+├─ grafana_integration.md             # 📊 Grafana Dashboard Setup
+├─ helm_installation.md               # ⎈ Helm Charts Guide
+├─ identity_signalr_integration.md    # 🔐 Auth & Real-time Comm
+├─ kubernetes_istio_grayscale_release.zh_CN.md  # ☸️ K8s Deployment
+├─ mcp_integration_guide.zh_CN.md     # 🔌 MCP Integration
+├─ mlflow_integration.md              # 📈 MLflow Experiment Tracking
+├─ prometheus_integration.md          # 📉 Prometheus Monitoring
+├─ rag_prompt_engineering.md          # 🤖 RAG & Prompt Engineering
+├─ sandbox_terminal_integration.md    # 🔒 Sandbox Environment
+├─ semantic_kernel_examples.md        # 🧠 Semantic Kernel Guide
+├─ ssh_setup.md                       # 🔑 SSH Configuration
+├─ unsloth_lora_finetuning.md         # 🎓 Model Fine-tuning
+├─ vllm_integration.md                # ⚡ vLLM Integration
+├─ workflow_integration.md            # 🔄 Workflow Engine Guide
+└─ yarp_gateway_integration.md        # 🚪 YARP Gateway Setup
 ```
 
 ### infra/ - Infrastructure
 
 ```
 infra/
-├─ docker/                            # Docker Configuration
-├─ kubernetes/                        # Kubernetes Manifests
-├─ helm/                              # Helm Charts
-└─ envsetup/                          # Environment Scripts
+├─ cicd/                              # 🔄 CI/CD Pipeline Configs
+│  └─ ...                             # GitHub Actions, Jenkins
+│
+├─ docker/                            # 🐳 Docker Configuration
+│  ├─ Dockerfile.webapi               # Backend Dockerfile
+│  ├─ Dockerfile.react                # Frontend Dockerfile
+│  ├─ docker-compose.yml              # Compose orchestration
+│  ├─ nginx.conf                      # Nginx configuration
+│  └─ ...
+│
+├─ envsetup/                          # 🛠️ Environment Setup Scripts
+│  ├─ install_dependencies.sh
+│  ├─ setup_database.sh
+│  └─ ...
+│
+├─ helm/                              # ⎈ Helm Charts
+│  └─ agent-project/                  # Kubernetes deployment charts
+│     ├─ Chart.yaml
+│     ├─ values.yaml
+│     └─ templates/
+│
+├─ kubernetes/                        # ☸️ Raw K8s Manifests
+│  ├─ namespace.yaml
+│  ├─ deployments.yaml
+│  ├─ services.yaml
+│  ├─ ingress.yaml
+│  └─ ...
+│
+└─ git_ci.yml                         # 🔧 GitHub Actions Workflow
 ```
 
-### llm/ - ML Components
+### llm/ - Machine Learning Components
 
 ```
 llm/
-├─ deploy/                            # Model Deployment
-└─ finetune/                          # Model Fine-tuning
+├─ deploy/                            # 🚀 Model Deployment
+│  ├─ model_server.py                 # Model serving API
+│  ├─ requirements.txt
+│  └─ Dockerfile
+│
+└─ finetune/                          # 🎓 Model Fine-tuning
+   ├─ train.py                        # Training scripts
+   ├─ evaluate.py                     # Evaluation scripts
+   ├─ dataset_loader.py               # Data loading utilities
+   ├─ config.yaml                     # Training configuration
+   └─ ...
 ```
 
-### test/ - Tests
+### test/ - Test Suites
 
 ```
 test/
-└─ Agent.Core.Tests/                  # Test Suite
+├─ Agent.Api.Tests/                   # 🧪 API Layer Tests
+│  └─ ...                             # Controller & Endpoint tests
+│
+└─ Agent.Core.Tests/                  # 🧪 Core Business Logic Tests
    ├─ Unit/                           # Unit Tests
+   │  ├─ Services/                    # Service layer tests
+   │  ├─ Repositories/                # Data access tests
+   │  └─ ...
    ├─ Integration/                    # Integration Tests
-   └─ MockData/                       # Test Data
+   │  ├─ ApiIntegrationTests.cs
+   │  ├─ DatabaseIntegrationTests.cs
+   │  └─ WorkflowIntegrationTests.cs
+   └─ MockData/                       # Test Data Factories
+      ├─ TestDataFactory.cs
+      └─ MockServices.cs
 ```
-
----
 
 ## 🚀 Quick Start
 
@@ -427,7 +505,7 @@ test/
 
 ```bash
 # Clone repository
-git clone https://github.com/DrDrZ95/ManusProject.git
+git clone https://github.com/DrDrZ95/AgentProject.git
 cd AgentProject
 
 # Navigate to Docker directory
@@ -456,7 +534,7 @@ docker-compose down
 
 ```bash
 # Clone repository
-git clone https://github.com/DrDrZ95/ManusProject.git
+git clone https://github.com/DrDrZ95/AgentProject.git
 cd AgentProject
 
 # 1. Configure backend
@@ -556,16 +634,16 @@ ENABLE_MLFLOW=true
 
 ### Production Deployment Checklist
 
-- [ ] Configure HTTPS/TLS certificates
-- [ ] Setup database backups and replication
-- [ ] Configure external authentication (OIDC/LDAP)
-- [ ] Enable audit logging
-- [ ] Deploy monitoring and alerting system
-- [ ] Configure log aggregation
-- [ ] Test disaster recovery procedures
-- [ ] Establish CI/CD automation pipeline
-- [ ] Perform performance and load testing
-- [ ] Conduct security audit
+1. Configure HTTPS/TLS certificates
+2. Setup database backups and replication
+3. Configure external authentication (OIDC/LDAP)
+4. Enable audit logging
+5. Deploy monitoring and alerting system
+6. Configure log aggregation
+7. Test disaster recovery procedures
+8. Establish CI/CD automation pipeline
+9. Perform performance and load testing
+10. Conduct security audit
 
 ---
 
@@ -605,20 +683,28 @@ ENABLE_MLFLOW=true
 
 ## 📚 Documentation
 
-| Document | Description |
-|----------|-------------|
-| `chromadb_integration.md` | Vector database setup, RAG configuration |
-| `ebpf_integration.md` | eBPF module setup, system monitoring |
-| `identity_signalr_integration.md` | Authentication, real-time communication |
-| `kubernetes_istio_grayscale_release.md` | Advanced Kubernetes deployment |
-| `mlflow_integration.md` | Experiment tracking, model management |
-| `rag_prompt_engineering.md` | Prompt optimization, RAG best practices |
-| `sandbox_terminal_integration.md` | Sandbox execution, security isolation |
-| `semantic_kernel_examples.md` | LLM integration examples |
-| `workflow_integration.md` | Workflow design and implementation |
-| `yarp_gateway_integration.md` | Gateway configuration, route management |
-
----
+| Document | Description | Link |
+|----------|-------------|------|
+| `api_documentation.md` | Complete API reference with examples | [View](./docs/api_documentation.md) |
+| `chromadb_integration.md` | Vector database setup and RAG configuration | [View](./docs/chromadb_integration.md) |
+| `clickhouse_integration.md` | ClickHouse analytics database integration | [View](./docs/clickhouse_integration.md) |
+| `docker_quickstart.md` | Quick start guide for Docker deployment | [View](./docs/docker_quickstart.md) |
+| `ebpf_integration.md` | eBPF security module and system monitoring | [View](./docs/ebpf_integration.md) |
+| `environment_setup.md` | Development environment configuration | [View](./docs/environment_setup.md) |
+| `grafana_integration.md` | Grafana dashboard and visualization setup | [View](./docs/grafana_integration.md) |
+| `helm_installation.md` | Helm charts for Kubernetes deployment | [View](./docs/helm_installation.md) |
+| `identity_signalr_integration.md` | Authentication and real-time communication | [View](./docs/identity_signalr_integration.md) |
+| `mcp_integration_guide.zh_CN.md` | Model Context Protocol integration guide | [View](./docs/mcp_integration_guide.zh_CN.md) |
+| `mlflow_integration.md` | MLflow experiment tracking and model management | [View](./docs/mlflow_integration.md) |
+| `prometheus_integration.md` | Prometheus metrics and monitoring | [View](./docs/prometheus_integration.md) |
+| `rag_prompt_engineering.md` | RAG implementation and prompt optimization | [View](./docs/rag_prompt_engineering.md) |
+| `sandbox_terminal_integration.md` | Secure sandbox execution environment | [View](./docs/sandbox_terminal_integration.md) |
+| `semantic_kernel_examples.md` | Semantic Kernel usage examples | [View](./docs/semantic_kernel_examples.md) |
+| `ssh_setup.md` | SSH configuration for remote access | [View](./docs/ssh_setup.md) |
+| `unsloth_lora_finetuning.md` | Model fine-tuning with Unsloth LoRA | [View](./docs/unsloth_lora_finetuning.md) |
+| `vllm_integration.md` | vLLM high-performance inference | [View](./docs/vllm_integration.md) |
+| `workflow_integration.md` | Workflow engine design and implementation | [View](./docs/workflow_integration.md) |
+| `yarp_gateway_integration.md` | YARP reverse proxy and gateway | [View](./docs/yarp_gateway_integration.md) |
 
 ## 👨‍💻 Development Guide
 
@@ -729,7 +815,7 @@ Conditions:
 - [Kubernetes Documentation](https://kubernetes.io/docs/)
 
 ### Reference Links
-- **GitHub Repository**: https://github.com/DrDrZ95/ManusProject
+- **GitHub Repository**: https://github.com/DrDrZ95/AgentProject
 
 ---
 
@@ -738,9 +824,9 @@ Conditions:
 ### Getting Help
 
 - 📖 Check [complete documentation](./docs/)
-- 🐛 [Report Bug](https://github.com/DrDrZ95/ManusProject/issues)
-- 💡 [Request Feature](https://github.com/DrDrZ95/ManusProject/issues)
-- 💬 [Discuss Issues](https://github.com/DrDrZ95/ManusProject/discussions)
+- 🐛 [Report Bug](https://github.com/DrDrZ95/AgentProject/issues)
+- 💡 [Request Feature](https://github.com/DrDrZ95/AgentProject/issues)
+- 💬 [Discuss Issues](https://github.com/DrDrZ95/AgentProject/discussions)
 
 ### Community Support
 
@@ -752,37 +838,52 @@ Conditions:
 
 ## 📊 Project Statistics
 
-- **Programming Languages**: C#, TypeScript, Python
-- **Framework Versions**: .NET 8.0, React 18+
-- **Lines of Code**: 15,000+
-- **Module Count**: 20+
+- **Programming Languages**: C# (66.8%), TypeScript (28.0%), Python (3.1%)
+- **Framework Versions**: .NET 8.0, React 18+, ASP.NET Core 8.0
+- **Lines of Code**: 20,000+
+- **Module Count**: 25+
 - **Documentation Pages**: 60+
+- **Test Coverage**: 80%+
+- **Commits**: 166+
+- **Stars**: 21+
 
 ---
 
 ## 🎯 Roadmap
 
-### Q1 Completed ✅
-- Core AI agent framework
-- Workflow management system
-- RAG implementation
-- Docker deployment support
-- System architecture optimization
-- Modularization refactor
+### Phase 1 Completed ✅
+- ✅ Core AI agent framework with .NET 8.0
+- ✅ Workflow management system with visual editor
+- ✅ RAG (Retrieval-Augmented Generation) implementation
+- ✅ Docker deployment support with multi-container orchestration
+- ✅ System architecture optimization with layered design
+- ✅ Modularization refactor with clean architecture principles
+- ✅ OpenAPI documentation with unified response models
+- ✅ Comprehensive unit and integration test coverage
 
-### Q1-Q2 In Progress 🚀
-- Advanced caching strategy optimization
-- WebSearch enhancement and expansion
-- Model fine-tuning tool refinement
-- Performance benchmark testing
+### Phase 2 In Progress 🚀
+- 🔄 Advanced caching strategy optimization (Redis integration)
+- 🔄 WebSearch enhancement and expansion (multi-provider support)
+- 🔄 Model fine-tuning tool refinement with MLflow integration
+- 🔄 Performance benchmark testing and optimization
+- 🔄 API gateway enhancements with YARP
+- 🔄 Real-time collaboration features
 
-### Q2-Q3 Planned 🔮
-- Multi-language support (Chinese, English, Japanese, Korean)
-- Additional LLM integrations
-- Community plugin system
-- Desktop client (Electron)
-- Mobile app support (React Native)
-- GraphQL API layer
+### Phase 3 Planned 🔮
+- 🔮 Multi-language support (Chinese, English, Japanese, Korean)
+- 🔮 Additional LLM integrations (Claude, Gemini, local models)
+- 🔮 Community plugin system with marketplace
+- 🔮 Desktop client (Electron-based)
+- 🔮 Mobile app support (React Native)
+- 🔮 GraphQL API layer alongside REST
+- 🔮 Advanced analytics dashboard
+- 🔮 Enterprise SSO integration (SAML/OIDC)
+
+### Phase 4 Future Vision 🔭
+- 🔭 AI-powered code generation assistant
+- 🔭 Automated workflow optimization
+- 🔭 Multi-tenant SaaS architecture
+- 🔭 Advanced security compliance (SOC 2, GDPR)
+- 🔭 Cloud-native serverless deployment options
 
 ---
-
