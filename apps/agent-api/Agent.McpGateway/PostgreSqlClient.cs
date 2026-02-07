@@ -1,10 +1,5 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Text.Json;
-using Agent.McpGateway.UniversalMcp;
 
-namespace Agent.McpGateway
-{
+namespace Agent.McpGateway;
     /// <summary>
     /// PostgreSQL MCP 客户端实现
     /// PostgreSQL MCP Client Implementation
@@ -58,5 +53,5 @@ namespace Agent.McpGateway
             return Task.FromResult(true);
         }
     }
-}
+
 

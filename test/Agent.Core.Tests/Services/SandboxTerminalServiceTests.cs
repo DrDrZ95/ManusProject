@@ -1,13 +1,4 @@
-using Agent.Application.Services.Sandbox;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Moq;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Xunit;
-
-namespace Agent.Core.Tests.Services
-{
+namespace Agent.Core.Tests.Services;
     /// <summary>
     /// Unit tests for SandboxTerminalService
     /// SandboxTerminalService 单元测试
@@ -131,4 +122,4 @@ namespace Agent.Core.Tests.Services
             Assert.DoesNotContain("blocked", result.StandardError);
         }
     }
-}
+

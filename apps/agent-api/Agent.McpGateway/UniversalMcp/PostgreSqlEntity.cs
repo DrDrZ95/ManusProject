@@ -1,5 +1,4 @@
-namespace Agent.McpGateway.UniversalMcp
-{
+namespace Agent.McpGateway.UniversalMcp;
     /// <summary>
     /// PostgreSQL 实体
     /// PostgreSQL Entity
@@ -12,5 +11,5 @@ namespace Agent.McpGateway.UniversalMcp
         public string ConnectionString { get; set; } = string.Empty;
         public string DatabaseName { get; set; } = string.Empty;
     }
-}
+
 

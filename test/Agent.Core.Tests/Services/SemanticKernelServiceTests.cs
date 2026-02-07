@@ -1,20 +1,4 @@
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Embeddings;
-using Microsoft.Extensions.Logging;
-using Moq;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Xunit;
-using Agent.Application.Services.SemanticKernel;
-using Agent.Application.Services.VectorDatabase;
-using Agent.Application.Services.SemanticKernel.Planner;
-using Agent.Core.Cache;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
-
-namespace Agent.Core.Tests.Services
-{
+namespace Agent.Core.Tests.Services;
     /// <summary>
     /// SemanticKernelService 核心逻辑单元测试
     /// Unit tests for SemanticKernelService core logic
@@ -164,4 +148,4 @@ namespace Agent.Core.Tests.Services
                 Times.Once);
         }
     }
-}
+

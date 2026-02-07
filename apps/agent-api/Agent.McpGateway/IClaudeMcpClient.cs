@@ -1,8 +1,5 @@
-using System.Threading.Tasks;
-using Agent.McpGateway.UniversalMcp;
 
-namespace Agent.McpGateway
-{
+namespace Agent.McpGateway;
     /// <summary>
     /// Claude MCP 客户端接口
     /// Claude MCP Client Interface
@@ -34,5 +31,5 @@ namespace Agent.McpGateway
         /// <returns>消息列表</returns>
         Task<string> GetThreadMessages(string threadId);
     }
-}
+
 

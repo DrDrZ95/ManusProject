@@ -1,5 +1,4 @@
-namespace Agent.McpGateway.UniversalMcp
-{
+namespace Agent.McpGateway.UniversalMcp;
     /// <summary>
     /// 通用 MCP 实体接口
     /// Universal MCP Entity Interface
@@ -18,5 +17,5 @@ namespace Agent.McpGateway.UniversalMcp
         /// </summary>
         string Name { get; set; }
     }
-}
+
 

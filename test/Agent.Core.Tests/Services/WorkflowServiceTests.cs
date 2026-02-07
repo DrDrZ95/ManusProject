@@ -1,18 +1,4 @@
-using Xunit;
-using Moq;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Agent.Core.Workflow;
-using Agent.Core.Data.Repositories;
-using Agent.Core.Data.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Agent.Core.Tests.Services
-{
+namespace Agent.Core.Tests.Services;
     /// <summary>
     /// WorkflowService 扩展单元测试 - 包含并发、状态机路径、人工干预和性能测试
     /// Extended unit tests for WorkflowService - including concurrency, state machine paths, manual intervention, and performance tests
@@ -158,4 +144,4 @@ namespace Agent.Core.Tests.Services
             _mockLogger.LogInformation("Executed 1000 workflow transitions in {Duration}ms", duration.TotalMilliseconds);
         }
     }
-}
+

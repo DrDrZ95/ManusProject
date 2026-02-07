@@ -1,17 +1,4 @@
-using Agent.Application.Services.Prompts;
-using Agent.Application.Services.RAG;
-using Agent.Application.Services.Sandbox;
-using Agent.Application.Services.SemanticKernel;
-using Agent.Application.Services.UserInput;
-using Agent.Application.Services.Workflow;
-using Microsoft.Extensions.Logging;
-using Moq;
-using System;
-using System.Threading.Tasks;
-using Xunit;
-
-namespace Agent.Core.Tests.Services
-{
+namespace Agent.Core.Tests.Services;
     /// <summary>
     /// Unit tests for UserInputService
     /// UserInputService 单元测试
@@ -169,4 +156,4 @@ namespace Agent.Core.Tests.Services
             Assert.Equal(finalResponse, result);
         }
     }
-}
+

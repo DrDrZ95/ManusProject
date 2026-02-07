@@ -1,8 +1,6 @@
 
-using System.Threading.Tasks;
 
-namespace Agent.McpGateway
-{
+namespace Agent.McpGateway;
     /// <summary>
     /// 通用 MCP 客户端基类
     /// Universal MCP Client Base Class
@@ -66,5 +64,5 @@ namespace Agent.McpGateway
         /// <returns>操作结果</returns>
         public abstract Task<bool> DeleteAsync(string id);
     }
-}
+
 

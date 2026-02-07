@@ -1,8 +1,5 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
-namespace Agent.McpGateway
-{
+namespace Agent.McpGateway;
     /// <summary>
     /// MCP 客户端接口
     /// MCP Client Interface
@@ -64,5 +61,5 @@ namespace Agent.McpGateway
         /// <returns>操作结果</returns>
         Task<bool> DeleteAsync(string id);
     }
-}
+
 

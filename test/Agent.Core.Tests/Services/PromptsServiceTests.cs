@@ -1,14 +1,4 @@
-using Agent.Application.Services.Prompts;
-using Agent.Core.Models.Common;
-using Microsoft.Extensions.Logging;
-using Moq;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Xunit;
-
-namespace Agent.Core.Tests.Services
-{
+namespace Agent.Core.Tests.Services;
     /// <summary>
     /// Unit tests for PromptsService
     /// PromptsService 单元测试
@@ -237,4 +227,4 @@ namespace Agent.Core.Tests.Services
             Assert.Contains(result, p => p.Name == "document_analysis");
         }
     }
-}
+

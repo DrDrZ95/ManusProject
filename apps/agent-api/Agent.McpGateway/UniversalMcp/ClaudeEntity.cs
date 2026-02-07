@@ -1,5 +1,4 @@
-namespace Agent.McpGateway.UniversalMcp
-{
+namespace Agent.McpGateway.UniversalMcp;
     /// <summary>
     /// Claude 实体
     /// Claude Entity
@@ -12,5 +11,5 @@ namespace Agent.McpGateway.UniversalMcp
         public string ThreadId { get; set; } = string.Empty;
         public string LastMessage { get; set; } = string.Empty;
     }
-}
+
 

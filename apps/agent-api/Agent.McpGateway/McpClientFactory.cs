@@ -1,8 +1,5 @@
-using System;
-using Agent.McpGateway.UniversalMcp;
 
-namespace Agent.McpGateway
-{
+namespace Agent.McpGateway;
     /// <summary>
     /// MCP 客户端工厂实现
     /// MCP Client Factory Implementation
@@ -37,5 +34,5 @@ namespace Agent.McpGateway
             }
         }
     }
-}
+
 

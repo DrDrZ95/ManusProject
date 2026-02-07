@@ -1,7 +1,5 @@
-using Agent.McpGateway.UniversalMcp;
 
-namespace Agent.McpGateway
-{
+namespace Agent.McpGateway;
     /// <summary>
     /// MCP 客户端工厂接口
     /// MCP Client Factory Interface
@@ -17,5 +15,5 @@ namespace Agent.McpGateway
         /// <returns>MCP 客户端实例</returns>
         IMcpClient<TEntity> CreateClient<TEntity>(string clientType) where TEntity : IMcpEntity;
     }
-}
+
 

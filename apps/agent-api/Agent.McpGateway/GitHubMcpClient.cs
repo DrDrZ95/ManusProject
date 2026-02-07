@@ -1,11 +1,5 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Text.Json;
-using Agent.McpGateway.UniversalMcp;
-using Newtonsoft.Json.Linq;
 
-namespace Agent.McpGateway
-{
+namespace Agent.McpGateway;
     /// <summary>
     /// GitHub MCP 客户端实现
     /// GitHub MCP Client Implementation
@@ -141,5 +135,5 @@ namespace Agent.McpGateway
             return Task.FromResult(true);
         }
     }
-}
+
 
