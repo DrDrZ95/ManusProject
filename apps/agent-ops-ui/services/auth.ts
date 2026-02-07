@@ -1,3 +1,4 @@
+
 /**
  * Auth Service - 身份认证与用户会话管理
  * 
@@ -27,8 +28,8 @@ interface AuthResponse {
 
 class AuthService {
   private static instance: AuthService;
-  private tokenKey = 'manusproject_access_token';
-  private userKey = 'manusproject_user_profile';
+  private tokenKey = 'agentproject_access_token';
+  private userKey = 'agentproject_user_profile';
 
   private constructor() {}
 

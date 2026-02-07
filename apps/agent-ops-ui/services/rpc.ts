@@ -1,3 +1,4 @@
+
 /**
  * RPC Client - 远程过程调用服务 (Simulation)
  * 
@@ -28,7 +29,7 @@ class RPCClient {
   private endpoint: string;
 
   constructor() {
-    this.endpoint = process.env.RPC_URL || 'https://rpc.manusproject.io';
+    this.endpoint = process.env.RPC_URL || 'https://rpc.agentproject.io';
   }
 
   /**

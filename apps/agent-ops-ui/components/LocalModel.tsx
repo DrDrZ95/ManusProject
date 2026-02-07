@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Upload, Database, Zap, Send, Check, Activity, Search, RefreshCw, Layers, BrainCircuit, ShieldCheck, TrendingUp
@@ -22,7 +23,7 @@ const LocalModel: React.FC<LocalModelProps> = ({ lang }) => {
     setDeployingId(id);
     setTimeout(() => {
       setDeployingId(null);
-      alert("Deployment Successful! Service is live at localhost:8080");
+      alert("AgentProject Deployment Successful! Service is live at api.agentproject.local:8080");
     }, 2000);
   };
 
@@ -181,7 +182,7 @@ const LocalModel: React.FC<LocalModelProps> = ({ lang }) => {
                    <div className="w-24 h-24 bg-nexus-accent/10 rounded-[2rem] flex items-center justify-center mx-auto mb-8 group-hover/upload:scale-110 group-hover/upload:bg-nexus-accent group-hover/upload:text-white transition-all shadow-inner">
                       <Upload size={48} className="text-nexus-accent group-hover/upload:text-white" />
                    </div>
-                   <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Intelligence Feed</h3>
+                   <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">AgentProject Intelligence Feed</h3>
                    <p className="text-slate-500 dark:text-nexus-400 mt-3 text-sm font-medium leading-relaxed">Drag & drop your datasets (CSV, JSONL, Parquet) to initialize the fine-tuning pipeline.</p>
                    <button className="mt-8 px-8 py-3 bg-nexus-accent text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-blue-600 transition-all shadow-xl shadow-nexus-accent/25 active:scale-95">Browse Intelligence Files</button>
                 </div>
@@ -232,7 +233,7 @@ const LocalModel: React.FC<LocalModelProps> = ({ lang }) => {
                    <div className="space-y-4 mb-10">
                       <div className="bg-slate-50/50 dark:bg-nexus-900/50 p-5 rounded-2xl border border-slate-100 dark:border-nexus-700/50 shadow-inner">
                          <label className="text-[9px] text-slate-400 dark:text-nexus-500 uppercase font-black tracking-[0.2em]">Target RPC Host</label>
-                         <div className="text-xs font-mono font-bold text-slate-800 dark:text-white mt-2 truncate">grpc://mesh.nexus.internal:50051</div>
+                         <div className="text-xs font-mono font-bold text-slate-800 dark:text-white mt-2 truncate">grpc://mesh.agentproject.internal:50051</div>
                       </div>
                       <div className="bg-slate-50/50 dark:bg-nexus-900/50 p-5 rounded-2xl border border-slate-100 dark:border-nexus-700/50 shadow-inner">
                          <label className="text-[9px] text-slate-400 dark:text-nexus-500 uppercase font-black tracking-[0.2em]">Accelerator Clusters</label>
@@ -263,7 +264,7 @@ const LocalModel: React.FC<LocalModelProps> = ({ lang }) => {
                     <div className="absolute top-4 right-6 text-[9px] font-black text-nexus-700 uppercase tracking-widest">Inference_Engine_Log</div>
                     <div className="text-nexus-500 mb-4 flex items-center">
                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2"></div>
-                       ROOT@NEXUS_OS ~ % /usr/bin/deploy_svc
+                       ROOT@AGENTPROJECT_OS ~ % /usr/bin/deploy_svc
                     </div>
                     <div className="text-nexus-300 space-y-1.5 h-32 overflow-y-auto custom-scrollbar">
                        <div>[INFO] Initializing Weight_Loader... <span className="text-green-500">DONE</span></div>

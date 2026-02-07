@@ -1,3 +1,4 @@
+
 /**
  * WebSocket Service - 实时通信服务
  * 
@@ -15,7 +16,7 @@ type EventHandler = (data: any) => void;
 class WebSocketService {
   private static instance: WebSocketService;
   private socket: WebSocket | null = null;
-  private url: string = 'wss://api.manusproject.io/ws'; // 网关 WS 地址
+  private url: string = 'wss://api.agentproject.io/ws'; // 网关 WS 地址
   private listeners: Map<string, Set<EventHandler>> = new Map();
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;

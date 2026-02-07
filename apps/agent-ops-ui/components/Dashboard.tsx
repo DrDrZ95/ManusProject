@@ -104,7 +104,7 @@ const Dashboard: React.FC<DashboardProps> = ({ lang }) => {
          <div className="relative">
             <div className="absolute -left-6 top-1 bottom-1 w-1.5 bg-nexus-accent rounded-full hidden md:block opacity-50"></div>
             <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter flex items-center">
-              Manus<span className="text-nexus-accent font-light mx-2">Project</span> 
+              Agent<span className="text-nexus-accent font-light mx-2">Project</span> 
               <span className="text-slate-200 dark:text-nexus-800 mx-4 font-thin">/</span> 
               <span className="text-slate-400 dark:text-nexus-500 font-bold text-xl uppercase tracking-[0.3em]">Intelligence Hub</span>
             </h2>

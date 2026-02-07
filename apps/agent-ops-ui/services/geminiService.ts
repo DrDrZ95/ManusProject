@@ -11,7 +11,7 @@ import { GoogleGenAI } from "@google/genai";
 export const analyzeCommand = async (command: string, context: string): Promise<string> => {
   // Ensure the API key is available
   if (!process.env.API_KEY) {
-    return "ManusProject AI: API Key not configured. Using offline mode.";
+    return "AgentProject AI: API Key not configured. Using offline mode.";
   }
 
   // Always initialize right before making an API call
@@ -23,7 +23,7 @@ export const analyzeCommand = async (command: string, context: string): Promise<
     const response = await ai.models.generateContent({
       model,
       contents: `
-        You are an intelligent MLOps terminal assistant for ManusProject.
+        You are an intelligent MLOps terminal assistant for AgentProject.
         The user typed: "${command}".
         Current Context: ${context}.
         
@@ -37,6 +37,6 @@ export const analyzeCommand = async (command: string, context: string): Promise<
     return response.text || "No output generated.";
   } catch (error) {
     console.error("Gemini API Error:", error);
-    return "Error communicating with ManusProject Intelligence Core.";
+    return "Error communicating with AgentProject Intelligence Core.";
   }
 };

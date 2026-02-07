@@ -13,7 +13,7 @@ interface TerminalProps {
 
 const Terminal: React.FC<TerminalProps> = ({ isOpen, onToggle }) => {
   const [lines, setLines] = useState<TerminalLine[]>([
-    { id: 'init', type: 'system', content: 'ManusProject Core Terminal v4.2.0 initialized...', timestamp: Date.now() },
+    { id: 'init', type: 'system', content: 'AgentProject Core Terminal v4.2.0 initialized...', timestamp: Date.now() },
     { id: 'init2', type: 'system', content: 'Secure Tunnel established via AES-256-GCM.', timestamp: Date.now() },
     { id: 'init3', type: 'system', content: 'Type "mcp status" to check agent orchestration.', timestamp: Date.now() },
   ]);
@@ -169,7 +169,7 @@ const Terminal: React.FC<TerminalProps> = ({ isOpen, onToggle }) => {
              <div className="p-1.5 bg-nexus-accent rounded-lg shadow-sm">
                 <TerminalIcon size={14} className="text-white" />
              </div>
-             <span className="text-[10px] font-mono font-black tracking-[0.2em] uppercase text-slate-700 dark:text-nexus-300">ManusProject_Console_v1</span>
+             <span className="text-[10px] font-mono font-black tracking-[0.2em] uppercase text-slate-700 dark:text-nexus-300">AgentProject_Console_v1</span>
            </div>
            
            <div className="relative">

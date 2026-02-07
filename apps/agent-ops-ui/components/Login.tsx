@@ -52,7 +52,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, lang }) => {
                <Globe size={64} className="text-nexus-accent drop-shadow-sm" />
             </div>
             <h1 className="text-5xl font-extrabold tracking-tight text-slate-900">
-               ManusProject <span className="text-nexus-accent font-light">Control Plane</span>
+               AgentProject <span className="text-nexus-accent font-light">Control Plane</span>
             </h1>
             <p className="text-lg text-slate-600 font-medium leading-relaxed max-w-lg mx-auto">
                Next-generation unified management for MLOps pipelines, Kubernetes clusters, and distributed data systems. 
@@ -93,7 +93,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, lang }) => {
                         <input 
                           type="text" 
                           className="w-full bg-slate-50 dark:bg-nexus-900 border border-slate-200 dark:border-nexus-600 rounded-xl py-3.5 pl-11 pr-4 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-nexus-accent focus:ring-2 focus:ring-nexus-accent/20 transition-all font-medium"
-                          placeholder="admin@manusproject.io"
+                          placeholder="admin@agentproject.io"
                           value={username}
                           onChange={(e) => setUsername(e.target.value)}
                         />
@@ -132,7 +132,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, lang }) => {
             </form>
 
             <div className="text-center text-xs font-medium text-slate-400 dark:text-nexus-500 mt-8">
-               &copy; {new Date().getFullYear()} ManusProject Inc. All rights reserved.
+               &copy; {new Date().getFullYear()} AgentProject Inc. All rights reserved.
             </div>
          </div>
       </div>

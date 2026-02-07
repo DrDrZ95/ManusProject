@@ -49,10 +49,10 @@ public static class SwaggerExtensions
             {
                 var info = new OpenApiInfo()
                 {
-                    Title = "ManusProject API",
+                    Title = "AgentProject API",
                     Version = description.ApiVersion.ToString(),
-                    Description = "The core API for the ManusProject AI Agent system. This API provides all necessary endpoints for agent management, RAG operations, fine-tuning, and monitoring.",
-                    Contact = new OpenApiContact() { Name = "Manus Team", Email = "support@manus.im" },
+                    Description = "The core API for the AgentProject AI Agent system. This API provides all necessary endpoints for agent management, RAG operations, fine-tuning, and monitoring.",
+                    Contact = new OpenApiContact() { Name = "Agent Team", Email = "support@agent.im" },
                     License = new OpenApiLicense() { Name = "MIT", Url = new Uri("https://opensource.org/licenses/MIT") }
                 };
 

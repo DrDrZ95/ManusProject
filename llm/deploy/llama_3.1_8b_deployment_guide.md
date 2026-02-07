@@ -1,6 +1,6 @@
 # Meta Llama 3.1 8B 本地部署指南 (Local Deployment Guide)
 
-**作者 (Author)**: Manus AI
+**作者 (Author)**: DrDrZ95
 **日期 (Date)**: 2025-12-31
 
 ## 1. 模型简介 (Model Introduction)
