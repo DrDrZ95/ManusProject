@@ -1,4 +1,5 @@
-namespace Agent.Core.Tests.Services;
+namespace Agent.Core.Tests.Services
+{
     /// <summary>
     /// RagService 核心逻辑单元测试
     /// Unit tests for RagService core logic
@@ -326,4 +327,4 @@ namespace Agent.Core.Tests.Services;
             };
         }
     }
-
+}

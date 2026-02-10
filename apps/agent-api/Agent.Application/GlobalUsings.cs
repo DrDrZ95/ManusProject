@@ -1,5 +1,6 @@
 global using Agent.Application.Hubs;
 global using Agent.Application.Services.Finetune;
+global using Agent.Application.Services.Memory;
 global using Agent.Application.Services.Multimodal;
 global using Agent.Application.Services.PostgreSQL;
 global using Agent.Application.Services.Prompts;
@@ -14,6 +15,7 @@ global using Agent.Core.Cache;
 global using Agent.Core.Data.Entities;
 global using Agent.Core.Data.Repositories;
 global using Agent.Core.Identity;
+global using Agent.Core.Memory.Interfaces;
 global using Agent.Core.Models;
 global using Agent.Core.Notifications;
 global using Agent.Core.Utils;

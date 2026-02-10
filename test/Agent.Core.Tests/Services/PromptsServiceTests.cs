@@ -1,4 +1,5 @@
-namespace Agent.Core.Tests.Services;
+namespace Agent.Core.Tests.Services
+{
     /// <summary>
     /// Unit tests for PromptsService
     /// PromptsService 单元测试
@@ -227,4 +228,4 @@ namespace Agent.Core.Tests.Services;
             Assert.Contains(result, p => p.Name == "document_analysis");
         }
     }
-
+}

@@ -1,4 +1,5 @@
-namespace Agent.Core.Tests.Services;
+namespace Agent.Core.Tests.Services
+{
     /// <summary>
     /// WorkflowService 扩展单元测试 - 包含并发、状态机路径、人工干预和性能测试
     /// Extended unit tests for WorkflowService - including concurrency, state machine paths, manual intervention, and performance tests
@@ -144,4 +145,4 @@ namespace Agent.Core.Tests.Services;
             _mockLogger.LogInformation("Executed 1000 workflow transitions in {Duration}ms", duration.TotalMilliseconds);
         }
     }
-
+}

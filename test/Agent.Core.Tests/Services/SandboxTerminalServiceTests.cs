@@ -1,4 +1,5 @@
-namespace Agent.Core.Tests.Services;
+namespace Agent.Core.Tests.Services
+{
     /// <summary>
     /// Unit tests for SandboxTerminalService
     /// SandboxTerminalService 单元测试
@@ -122,4 +123,4 @@ namespace Agent.Core.Tests.Services;
             Assert.DoesNotContain("blocked", result.StandardError);
         }
     }
-
+}

@@ -1,4 +1,5 @@
-namespace Agent.Core.Tests.Services;
+namespace Agent.Core.Tests.Services
+{
     /// <summary>
     /// SemanticKernelService 核心逻辑单元测试
     /// Unit tests for SemanticKernelService core logic
@@ -148,4 +149,4 @@ namespace Agent.Core.Tests.Services;
                 Times.Once);
         }
     }
-
+}
