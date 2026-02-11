@@ -31,6 +31,12 @@ public class ApiResponse<T>
     /// </summary>
     public string RequestId { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Error code for business logic errors
+    /// 业务逻辑错误码
+    /// </summary>
+    public string? ErrorCode { get; set; }
+
     public ApiResponse() { }
 
     public ApiResponse(T data, string message = "Success")

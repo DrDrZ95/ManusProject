@@ -9,10 +9,6 @@ public class GlobalExceptionMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger<GlobalExceptionMiddleware> _logger;
 
-    // The user wants to use threads for streaming collection for future Elastic integration.
-    // We will use a simple background thread to process a queue of exceptions.
-    // This is a placeholder to show the idea.
-
     public GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger)
     {
         _next = next;
@@ -21,14 +17,7 @@ public class GlobalExceptionMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     { 
-        // 1. Capture request body for context if needed (e.g., for logging/tracing)
-        // 捕获请求体以获取上下文信息（例如，用于日志/跟踪）
-        // This is a placeholder for the user's requirement to add context information to the collection pipeline.
-        // This pattern is typically used in a separate logging/tracing middleware *before* the exception handler.
-        // For a simple exception handler, we'll focus on the response stream.
-
-        // 2. Ensure the response body is readable for logging/tracing in case of an exception
-        // 确保响应体在发生异常时可读，以便进行日志/跟踪
+        // 1. 确保响应体在发生异常时可写且可控
         var originalBodyStream = context.Response.Body;
         using var responseBody = new MemoryStream();
         context.Response.Body = responseBody;
@@ -43,10 +32,10 @@ public class GlobalExceptionMiddleware
         }
         finally
         {
-            // 3. Restore the original stream and copy the response content back
-            // 恢复原始流并复制响应内容
-            responseBody.Seek(0, SeekOrigin.Begin); // Refer to stream.Seek(0, SeekOrigin.Begin);
+            // 2. 恢复原始流并复制响应内容
+            responseBody.Seek(0, SeekOrigin.Begin);
             await responseBody.CopyToAsync(originalBodyStream);
+            context.Response.Body = originalBodyStream;
         }
     }
 
@@ -56,34 +45,60 @@ public class GlobalExceptionMiddleware
 
         var (statusCode, errorCode, message) = CategorizeException(exception);
 
-        _logger.LogError(exception, "An unhandled exception has occurred. Error Code: {ErrorCode}, Message: {Message}", errorCode, message);
+        // 记录详细日志
+        _logger.LogError(exception, 
+            "Unhandled exception occurred. [TraceId: {TraceId}] [ErrorCode: {ErrorCode}] [StatusCode: {StatusCode}] [Message: {Message}]", 
+            context.TraceIdentifier, errorCode, (int)statusCode, message);
 
-        // Elastic APM Integration:
-            // The Elastic.Apm SDK is now included. For full APM integration, the agent needs to be started
-            // in Program.cs. For now, we will use the SDK to manually capture the exception.
-            // Agent.Tracer.CaptureException(exception); // Manual capture for demonstration.
+        // Elastic APM 集成（如果已安装 SDK）
+        // Elastic.Apm.Agent.Tracer.CurrentTransaction?.CaptureException(exception);
 
-            // Future Elastic integration idea (User's requirement):
-        // 1. Create a concurrent queue to hold exception data (e.g., request/response context, exception details).
-        // 2. A background thread would dequeue items and send them to Elastic Search in batches.
-        // 3. This decouples the request pipeline from the logging infrastructure, improving performance.
-        // 4. The use of threads for streaming collection is a key part of this future integration. (This is where the APM agent's background thread would handle the data transmission.)
-        //    Example: Task.Run(() => ElasticClient.IndexDocument(exceptionContext));
+        // 异步后台收集异常上下文信息（如 UserAgent, RequestPath, UserID 等）
+        // 此处体现了用户要求的 "threads for streaming collection" 思想
+        _ = Task.Run(() => CollectExceptionContextAsync(context, exception));
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
 
-        var response = new
+        var response = new ApiResponse<object>
         {
-            error = new
-            {
-                code = errorCode,
-                message = message,
-                details = exception.Message
-            }
+            Success = false,
+            Message = message,
+            ErrorCode = errorCode,
+            Data = exception is AggregateException ae ? ae.Flatten().Message : exception.Message
         };
 
+        // 如果是开发环境，可以返回更详细的堆栈信息
+        // if (env.IsDevelopment()) { ... }
+
         await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+    }
+
+    private async Task CollectExceptionContextAsync(HttpContext context, Exception ex)
+    {
+        try
+        {
+            // 这里可以实现更复杂的流式收集逻辑，发送到 Kafka/Elastic/ClickHouse
+            // 目前仅作为占位符，模拟后台线程处理
+            var contextInfo = new
+            {
+                Timestamp = DateTime.UtcNow,
+                Path = context.Request.Path.Value,
+                Method = context.Request.Method,
+                Query = context.Request.QueryString.Value,
+                User = context.User?.Identity?.Name ?? "Anonymous",
+                TraceId = context.TraceIdentifier,
+                ExceptionType = ex.GetType().Name
+            };
+            
+            // 模拟流式处理延迟
+            await Task.Delay(10); 
+            // _logger.LogDebug("Exception context collected: {Context}", JsonSerializer.Serialize(contextInfo));
+        }
+        catch
+        {
+            // 采集过程本身不应抛出异常影响主流程
+        }
     }
 
     private void RecordExceptionSpan(Exception exception)
@@ -92,17 +107,44 @@ public class GlobalExceptionMiddleware
         if (activity != null)
         {
             activity.RecordException(exception);
-            activity.SetStatus(ActivityStatusCode.Error, "An unhandled exception has occurred.");
+            activity.SetStatus(ActivityStatusCode.Error, exception.Message);
         }
     }
 
-    private (HttpStatusCode, string, string) CategorizeException(Exception exception)
+    private (HttpStatusCode statusCode, string errorCode, string message) CategorizeException(Exception exception)
     {
         return exception switch
         {
-            ArgumentException _ => (HttpStatusCode.BadRequest, "INVALID_ARGUMENT", "Invalid argument provided."),
-            UnauthorizedAccessException _ => (HttpStatusCode.Unauthorized, "UNAUTHORIZED", "Unauthorized access."),
-            _ => (HttpStatusCode.InternalServerError, "INTERNAL_SERVER_ERROR", "An internal server error has occurred.")
+            // 参数错误：通常由请求校验失败引发
+            ArgumentException or ArgumentNullException => 
+                (HttpStatusCode.BadRequest, "BAD_REQUEST_PARAMS", "请求参数无效"),
+
+            // 认证错误：未登录或 Token 失效
+            UnauthorizedAccessException => 
+                (HttpStatusCode.Unauthorized, "UNAUTHORIZED_ACCESS", "未授权访问，请重新登录"),
+
+            // 权限错误：已登录但无权访问该资源
+            SecurityException => 
+                (HttpStatusCode.Forbidden, "FORBIDDEN_ACCESS", "权限不足，拒绝访问"),
+
+            // 资源未找到
+            KeyNotFoundException => 
+                (HttpStatusCode.NotFound, "RESOURCE_NOT_FOUND", "请求的资源不存在"),
+
+            // 业务逻辑冲突：如重复注册、状态不符合操作要求
+            InvalidOperationException => 
+                (HttpStatusCode.Conflict, "BUSINESS_CONFLICT", "操作冲突或当前状态不允许该操作"),
+
+            // 数据库并发/约束错误
+            DbUpdateException => 
+                (HttpStatusCode.InternalServerError, "DATABASE_ERROR", "数据持久化失败，请检查约束条件"),
+
+            // 超时错误：下游服务或数据库响应过慢
+            TimeoutException => 
+                (HttpStatusCode.GatewayTimeout, "SERVICE_TIMEOUT", "系统响应超时，请稍后重试"),
+
+            // 其他未知内部错误
+            _ => (HttpStatusCode.InternalServerError, "INTERNAL_SERVER_ERROR", "系统内部异常，请联系管理员")
         };
     }
 }

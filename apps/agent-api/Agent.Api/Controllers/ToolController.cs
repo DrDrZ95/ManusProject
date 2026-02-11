@@ -1,11 +1,5 @@
 namespace Agent.Api.Controllers;
 
-using Agent.Core.Authorization;
-using Agent.Core.Data.Entities;
-using Agent.Core.Tools.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using Swashbuckle.AspNetCore.Annotations;
-
 /// <summary>
 /// Tool Registry management controller
 /// 工具注册中心管理控制器
@@ -39,16 +33,8 @@ public class ToolController : ControllerBase
     [SwaggerOperation(Summary = "Register a new tool", Tags = new[] { "ToolRegistry" })]
     public async Task<ActionResult<ToolMetadataEntity>> RegisterTool([FromBody] ToolMetadataEntity metadata)
     {
-        try
-        {
-            var result = await _registryService.RegisterToolAsync(metadata);
-            return CreatedAtAction(nameof(GetTool), new { version = "1.0", name = result.Name }, result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error registering tool");
-            return StatusCode(500, "Internal server error");
-        }
+        var result = await _registryService.RegisterToolAsync(metadata);
+        return CreatedAtAction(nameof(GetTool), new { version = "1.0", name = result.Name }, result);
     }
 
     /// <summary>
@@ -98,9 +84,9 @@ public class ToolController : ControllerBase
     [HttpPost("hot-load")]
     [RequirePermission("system.admin")]
     [SwaggerOperation(Summary = "Trigger hot-load", Tags = new[] { "ToolRegistry" })]
-    public async Task<IActionResult> HotLoad()
+    public async Task<IActionResult> TriggerHotLoad()
     {
         await _registryService.HotLoadToolsAsync();
-        return Ok("Hot-load initiated");
+        return Ok(new { message = "Hot-load triggered successfully" });
     }
 }
