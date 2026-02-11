@@ -44,6 +44,11 @@ public class AgentDbContext : DbContext
     public DbSet<AuditLogEntity> AuditLogs { get; set; }
 
     /// <summary>
+    /// Tool metadata table - 工具元数据表
+    /// </summary>
+    public DbSet<ToolMetadataEntity> ToolMetadata { get; set; }
+
+    /// <summary>
     /// Finetune records table - 微调记录表
     /// </summary>
     public DbSet<FinetuneRecordEntity> FinetuneRecords { get; set; }
@@ -112,7 +117,7 @@ public class AgentDbContext : DbContext
         modelBuilder.Entity<ChatMessageEntity>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Role).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.Role).HasMaxLength(50).IsRequired();
             entity.Property(e => e.Content).IsRequired();
             entity.Property(e => e.Metadata).HasColumnType("jsonb");
             entity.HasIndex(e => e.SessionId);
@@ -139,6 +144,23 @@ public class AgentDbContext : DbContext
             entity.HasIndex(e => e.EntityType);
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.Timestamp);
+        });
+
+        // 配置工具元数据实体 - Configure tool metadata entity
+        modelBuilder.Entity<ToolMetadataEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.Version).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.ParameterSchema).HasColumnType("jsonb");
+            entity.Property(e => e.Permissions).HasColumnType("jsonb");
+            entity.Property(e => e.CostInfo).HasColumnType("jsonb");
+            entity.Property(e => e.ReliabilityMetrics).HasColumnType("jsonb");
+            entity.Property(e => e.Dependencies).HasColumnType("jsonb");
+            entity.Property(e => e.Configuration).HasColumnType("jsonb");
+            entity.HasIndex(e => e.Name);
+            entity.HasIndex(e => e.IsEnabled);
         });
 
         // 配置微调记录实体 - Configure finetune record entity

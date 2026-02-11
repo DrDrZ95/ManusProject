@@ -25,6 +25,7 @@ global using Agent.Core.Identity;
 global using Agent.Core.Models.Common;
 global using Agent.Core.Models.Finetune;
 global using Agent.Core.Models.Identity;
+global using Agent.Core.Tools.Interfaces;
 global using Agent.Core.Workflow;
 global using Agent.McpGateway;
 global using Agent.McpGateway.UniversalMcp;

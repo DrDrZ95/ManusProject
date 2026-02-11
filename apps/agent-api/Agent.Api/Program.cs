@@ -14,6 +14,7 @@ var services = builder.Services;
 
 // Create the WebApplicationBuilder - Builder Pattern
 // 创建WebApplicationBuilder - 构建器模式
+services.AddHttpContextAccessor();
 services.AddAgentTelemetry("AI-Agent.WebApi"); // Centralized telemetry provider
 services.AddApiVersioningServices();
 services.AddSwaggerDocumentation();
@@ -54,6 +55,14 @@ using (var activity = telemetryProvider.StartSpan("AI-Agent.ApplicationStartup")
     // Initialize Identity database
     // 初始化Identity数据库
     await app.InitializeIdentityDatabaseAsync();
+
+    // Hot-load tools from registry
+    // 从注册中心热加载工具
+    using (var scope = app.Services.CreateScope())
+    {
+        var toolRegistry = scope.ServiceProvider.GetRequiredService<IToolRegistryService>();
+        await toolRegistry.HotLoadToolsAsync();
+    }
 
     // 3. Simulate a typical Agent application execution sequence
     // 模拟典型的Agent应用程序执行序列

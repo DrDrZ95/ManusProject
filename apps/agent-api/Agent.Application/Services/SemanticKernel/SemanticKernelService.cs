@@ -1,5 +1,15 @@
 namespace Agent.Application.Services.SemanticKernel;
 
+using System.Security.Claims;
+using Agent.Core.Authorization;
+using Agent.Core.Cache;
+using Agent.Core.Models.Memory;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Embeddings;
+
 /// <summary>
 /// Semantic Kernel service implementation
 /// 语义内核服务实现
@@ -17,6 +27,8 @@ public class SemanticKernelService : ISemanticKernelService
     private readonly IPostgreSQLPlanner _postgreSqlPlanner;
     private readonly IClickHousePlanner _clickHousePlanner;
     private readonly IAgentCacheService _cacheService;
+    private readonly IPermissionService _permissionService;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public SemanticKernelService(
         Kernel kernel,
@@ -29,7 +41,9 @@ public class SemanticKernelService : ISemanticKernelService
         IKubernetesPlanner kubernetesPlanner,
         IIstioPlanner istioPlanner,
         IPostgreSQLPlanner postgreSqlPlanner,
-        IClickHousePlanner clickHousePlanner)
+        IClickHousePlanner clickHousePlanner,
+        IPermissionService permissionService,
+        IHttpContextAccessor httpContextAccessor)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         _chatService = chatService ?? throw new ArgumentNullException(nameof(chatService));
@@ -42,6 +56,8 @@ public class SemanticKernelService : ISemanticKernelService
         _istioPlanner = istioPlanner ?? throw new ArgumentNullException(nameof(istioPlanner));
         _postgreSqlPlanner = postgreSqlPlanner ?? throw new ArgumentNullException(nameof(postgreSqlPlanner));
         _clickHousePlanner = clickHousePlanner ?? throw new ArgumentNullException(nameof(clickHousePlanner));
+        _permissionService = permissionService ?? throw new ArgumentNullException(nameof(permissionService));
+        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
 
         // Register planners as plugins
         _kernel.Plugins.AddFromObject(_kubernetesPlanner, "KubernetesPlanner");
@@ -241,29 +257,8 @@ public class SemanticKernelService : ISemanticKernelService
         {
             _logger.LogInformation("Invoking function: {FunctionName}", functionName);
 
-            // Implement role-based access control here
-            // For demonstration, let's assume a simple check based on function name
-            // In a real application, you would get the user's role from the current context
-            // and check against a predefined set of permissions.
-            if (functionName.StartsWith("KubernetesPlanner.") || functionName.StartsWith("IstioPlanner."))
-            {
-                // Example: Only 'highest permission' role can access Kubernetes/Istio functions
-                // This is a placeholder. You would replace 'CheckUserRole' with actual auth logic.
-                // if (!CheckUserRole("highest permission"))
-                // {
-                //     throw new UnauthorizedAccessException($"User does not have 'highest permission' to invoke {functionName}");
-                // }
-                _logger.LogWarning("Access control check for {FunctionName}: Requires 'highest permission'. (Simulated)", functionName);
-            }
-            else if (functionName.StartsWith("PostgreSQLPlanner.") || functionName.StartsWith("ClickHousePlanner."))
-            {
-                // Example: Only 'DBA' role can access database functions
-                // if (!CheckUserRole("DBA"))
-                // {
-                //     throw new UnauthorizedAccessException($"User does not have 'DBA' permission to invoke {functionName}");
-                // }
-                _logger.LogWarning("Access control check for {FunctionName}: Requires 'DBA' permission. (Simulated)", functionName);
-            }
+            // Check permissions before invocation
+            await CheckFunctionPermissionAsync(functionName);
 
             var kernelArguments = new KernelArguments();
             if (arguments != null)
@@ -297,15 +292,8 @@ public class SemanticKernelService : ISemanticKernelService
             _logger.LogInformation("Invoking function: {FunctionName} with return type: {ReturnType}", 
                 functionName, typeof(T).Name);
 
-            // Implement role-based access control here (similar to the non-generic InvokeFunctionAsync)
-            if (functionName.StartsWith("KubernetesPlanner.") || functionName.StartsWith("IstioPlanner."))
-            {
-                _logger.LogWarning("Access control check for {FunctionName}: Requires 'highest permission'. (Simulated)", functionName);
-            }
-            else if (functionName.StartsWith("PostgreSQLPlanner.") || functionName.StartsWith("ClickHousePlanner."))
-            {
-                _logger.LogWarning("Access control check for {FunctionName}: Requires 'DBA' permission. (Simulated)", functionName);
-            }
+            // Check permissions before invocation
+            await CheckFunctionPermissionAsync(functionName);
 
             var kernelArguments = new KernelArguments();
             if (arguments != null)
@@ -337,6 +325,45 @@ public class SemanticKernelService : ISemanticKernelService
         {
             _logger.LogError(ex, "Failed to invoke function: {FunctionName}", functionName);
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Check if the current user has permission to invoke the function
+    /// 检查当前用户是否有权调用该函数
+    /// </summary>
+    private async Task CheckFunctionPermissionAsync(string functionName)
+    {
+        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        // If no user context (e.g. background task), we might want to allow or check a system policy
+        if (string.IsNullOrEmpty(userId))
+        {
+            _logger.LogWarning("No user context found for function invocation: {FunctionName}. Proceeding with system-level access.", functionName);
+            return;
+        }
+
+        string? requiredPermission = null;
+
+        if (functionName.StartsWith("KubernetesPlanner.") || functionName.StartsWith("IstioPlanner."))
+        {
+            requiredPermission = "system.admin";
+        }
+        else if (functionName.StartsWith("PostgreSQLPlanner.") || functionName.StartsWith("ClickHousePlanner."))
+        {
+            requiredPermission = "system.config";
+        }
+        else
+        {
+            // Default permission for other tools
+            requiredPermission = "tool.execute";
+        }
+
+        if (!await _permissionService.UserHasPermissionAsync(userId, requiredPermission))
+        {
+            _logger.LogError("User {UserId} denied access to function {FunctionName}. Required permission: {Permission}", 
+                userId, functionName, requiredPermission);
+            throw new UnauthorizedAccessException($"User does not have permission '{requiredPermission}' to invoke {functionName}");
         }
     }
 
@@ -536,9 +563,22 @@ public class SemanticKernelService : ISemanticKernelService
         }
     }
 
-    public Task<string> ExecutePromptAsync(string initialLlmInteractionFor)
+    /// <summary>
+    /// Execute a prompt directly
+    /// 直接执行提示词
+    /// </summary>
+    public async Task<string> ExecutePromptAsync(string prompt)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var result = await _kernel.InvokePromptAsync(prompt);
+            return result.ToString();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to execute prompt");
+            throw;
+        }
     }
 
     #endregion

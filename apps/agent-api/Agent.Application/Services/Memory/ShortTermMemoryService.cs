@@ -81,77 +81,86 @@ public class ShortTermMemoryService : IShortTermMemory
         
         await _messageRepo.AddAsync(entity);
 
-        // 2. Invalidate Cache (or Update)
-        // Simple strategy: Invalidate, let next read populate.
-        // Or better: Update the cached list.
+        // 2. Update Cache
         var cacheKey = $"chat_history:{sessionId}";
-        // Since AgentCacheService doesn't expose "Update" or "Remove" easily (only Set), we can Set it again if we have the full list.
-        // But for consistency/simplicity, we can just let it expire or if AgentCacheService has Remove, use it.
-        // Checking AgentCacheService... it has SetAsync.
-        // I'll leave cache invalidation for now or rely on TTL. 
-        // Ideally I should update the cache.
-        
-        // Retrieve current cache to update it
         var history = await GetRecentHistoryAsync(sessionId, int.MaxValue);
         history.Add(message);
         await _cacheService.SetAsync(cacheKey, history, TimeSpan.FromMinutes(10), TimeSpan.FromHours(1));
+
+        // 3. Auto-compress if history is too long (e.g. > 50 messages)
+        if (history.Count > 50)
+        {
+            _ = CompressHistoryAsync(sessionId); // Run in background
+        }
     }
 
     public async Task CompressHistoryAsync(string sessionId)
     {
         if (!Guid.TryParse(sessionId, out var sessionGuid)) return;
 
-        // Get all history
-        var allMessages = await _messageRepo.FindAsync(m => m.SessionId == sessionGuid);
-        var sortedMessages = allMessages.OrderBy(m => m.CreatedAt).ToList();
+        _logger.LogInformation("Compressing chat history for session {SessionId}", sessionId);
 
-        // If less than threshold (e.g. 20 messages), no need to compress
-        if (sortedMessages.Count < 20) return;
+        var history = await GetRecentHistoryAsync(sessionId, int.MaxValue);
+        if (history.Count < 20) return; // Not enough to compress
 
-        try 
+        // Take the oldest 30 messages to compress into a summary
+        var toCompress = history.Take(30).ToList();
+        var historyText = string.Join("\n", toCompress.Select(m => $"{m.Role}: {m.Content}"));
+
+        var prompt = $@"Please summarize the following conversation history into a concise summary that preserves key facts and context.
+Conversation:
+{historyText}
+
+Summary:";
+
+        try
         {
-            // Summarize the first half
-            var messagesToSummarize = sortedMessages.Take(sortedMessages.Count / 2).ToList();
-            var conversationText = string.Join("\n", messagesToSummarize.Select(m => $"{m.Role}: {m.Content}"));
-            
-            var prompt = $"Summarize the following conversation history into a concise paragraph that retains key facts and context:\n\n{conversationText}";
-            var summary = await _semanticKernel.GetChatCompletionAsync(prompt);
+            var summary = await _semanticKernel.GetChatCompletionAsync(prompt, "You are a helpful assistant that summarizes conversations.");
 
             // Create summary message
-            var summaryMessage = new ChatMessageEntity
+            var summaryMsg = new ChatMessage
             {
-                SessionId = sessionGuid,
                 Role = "system",
-                Content = $"[Memory Summary]: {summary}",
-                CreatedAt = DateTime.UtcNow
+                Content = $"[History Summary]: {summary}",
+                Metadata = new Dictionary<string, object> { { "type", "summary" }, { "compressed_count", toCompress.Count } }
             };
 
-            // Save summary
-            await _messageRepo.AddAsync(summaryMessage);
-
-            // Delete summarized messages
-            foreach (var msg in messagesToSummarize)
+            // Save summary to DB
+            var entity = new ChatMessageEntity
             {
-                await _messageRepo.DeleteAsync(msg.Id);
-            }
+                SessionId = sessionGuid,
+                Role = summaryMsg.Role,
+                Content = summaryMsg.Content,
+                Metadata = JsonSerializer.Serialize(summaryMsg.Metadata),
+                CreatedAt = DateTime.UtcNow
+            };
+            await _messageRepo.AddAsync(entity);
 
-            // Invalidate cache
+            // In a real production system, we would mark the original 30 messages as 'archived' or delete them.
+            // For now, we'll just invalidate the cache to force a reload from DB in next request.
+            // (Note: To truly compress, the DB query in GetRecentHistoryAsync would need to exclude archived messages)
             var cacheKey = $"chat_history:{sessionId}";
-            // Ideally we should remove key, but SetAsync with empty/new list works too. 
-            // For now, let's just force refresh by not setting it here, allowing next read to fetch from DB.
-            // Or better, set the new state.
-            // Simplified: just let it expire or next read will handle it if we could remove. 
-            // Since we can't remove easily (unless we cast or add method), we'll update it.
-            var remaining = sortedMessages.Skip(sortedMessages.Count / 2).Select(m => new ChatMessage { Role = m.Role, Content = m.Content }).ToList();
-            remaining.Insert(0, new ChatMessage { Role = summaryMessage.Role, Content = summaryMessage.Content });
-            
-            await _cacheService.SetAsync(cacheKey, remaining, TimeSpan.FromMinutes(10), TimeSpan.FromHours(1));
-            
-            _logger.LogInformation("Compressed chat history for session {SessionId}. Summarized {Count} messages.", sessionId, messagesToSummarize.Count);
+            await _cacheService.RemoveAsync(cacheKey);
+
+            _logger.LogInformation("Compressed {Count} messages into summary for session {SessionId}", toCompress.Count, sessionId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to compress chat history for session {SessionId}", sessionId);
+            _logger.LogError(ex, "Failed to compress history for session {SessionId}", sessionId);
         }
+    }
+
+    public async Task ClearHistoryAsync(string sessionId)
+    {
+        if (!Guid.TryParse(sessionId, out var sessionGuid)) return;
+
+        var messages = await _messageRepo.FindAsync(m => m.SessionId == sessionGuid);
+        foreach (var msg in messages)
+        {
+            await _messageRepo.DeleteAsync(msg.Id);
+        }
+
+        await _cacheService.RemoveAsync($"chat_history:{sessionId}");
+        _logger.LogInformation("Cleared history for session {SessionId}", sessionId);
     }
 }

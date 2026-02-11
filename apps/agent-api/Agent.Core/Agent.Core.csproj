@@ -54,7 +54,7 @@
     <!-- Microsoft Semantic Kernel -->
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.68.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.Chroma" Version="1.68.0-alpha" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.68.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Plugins.OpenApi" Version="1.68.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Plugins.Memory" Version="1.68.0-alpha" />
     
     <!-- OpenTelemetry SDK -->

@@ -225,7 +225,15 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             // API访问权限
             new Permission { Id = 15, Code = "api.read", Category = "API Access", Description = "Read access to API endpoints", IsSystemPermission = true },
             new Permission { Id = 16, Code = "api.write", Category = "API Access", Description = "Write access to API endpoints", IsSystemPermission = true },
-            new Permission { Id = 17, Code = "api.admin", Category = "API Access", Description = "Administrative access to API endpoints", IsSystemPermission = true }
+            new Permission { Id = 17, Code = "api.admin", Category = "API Access", Description = "Administrative access to API endpoints", IsSystemPermission = true },
+            
+            // Tool Registry Permissions
+            // 工具注册中心权限
+            new Permission { Id = 18, Code = "tool.read", Category = "Tool Registry", Description = "Read tool metadata", IsSystemPermission = true },
+            new Permission { Id = 19, Code = "tool.create", Category = "Tool Registry", Description = "Register new tools", IsSystemPermission = true },
+            new Permission { Id = 20, Code = "tool.update", Category = "Tool Registry", Description = "Update tool metadata", IsSystemPermission = true },
+            new Permission { Id = 21, Code = "tool.delete", Category = "Tool Registry", Description = "Delete tools", IsSystemPermission = true },
+            new Permission { Id = 22, Code = "tool.execute", Category = "Tool Registry", Description = "Execute tools", IsSystemPermission = true }
         );
 
         // Seed role permissions
@@ -250,6 +258,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             new RolePermission { RoleId = adminRoleId, PermissionId = 15 },
             new RolePermission { RoleId = adminRoleId, PermissionId = 16 },
             new RolePermission { RoleId = adminRoleId, PermissionId = 17 },
+            new RolePermission { RoleId = adminRoleId, PermissionId = 18 },
+            new RolePermission { RoleId = adminRoleId, PermissionId = 19 },
+            new RolePermission { RoleId = adminRoleId, PermissionId = 20 },
+            new RolePermission { RoleId = adminRoleId, PermissionId = 21 },
+            new RolePermission { RoleId = adminRoleId, PermissionId = 22 },
             
             // User gets basic permissions
             // 用户获得基本权限
@@ -257,6 +270,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             new RolePermission { RoleId = userRoleId, PermissionId = 9 }, // file.upload
             new RolePermission { RoleId = userRoleId, PermissionId = 10 }, // file.download
             new RolePermission { RoleId = userRoleId, PermissionId = 15 }, // api.read
+            new RolePermission { RoleId = userRoleId, PermissionId = 22 }, // tool.execute
             
             // Moderator gets elevated permissions
             // 版主获得提升权限
@@ -268,7 +282,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             new RolePermission { RoleId = moderatorRoleId, PermissionId = 11 }, // file.delete
             new RolePermission { RoleId = moderatorRoleId, PermissionId = 13 }, // system.monitor
             new RolePermission { RoleId = moderatorRoleId, PermissionId = 15 }, // api.read
-            new RolePermission { RoleId = moderatorRoleId, PermissionId = 16 } // api.write
+            new RolePermission { RoleId = moderatorRoleId, PermissionId = 16 }, // api.write
+            new RolePermission { RoleId = moderatorRoleId, PermissionId = 18 }, // tool.read
+            new RolePermission { RoleId = moderatorRoleId, PermissionId = 22 } // tool.execute
         );
     }
 }
