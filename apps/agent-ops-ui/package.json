@@ -16,7 +16,11 @@
     "lucide-react": "^0.560.0",
     "clsx": "^2.1.0",
     "axios": "1.6.7",
-    "jsrsasign": "11.1.0"
+    "jsrsasign": "11.1.0",
+    "reactflow": "^11.10.1",
+    "@microsoft/signalr": "^8.0.0",
+    "zustand": "^4.5.2",
+    "tailwind-merge": "^2.2.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
