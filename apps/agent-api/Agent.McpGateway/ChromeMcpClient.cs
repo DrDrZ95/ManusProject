@@ -1,5 +1,5 @@
-
 namespace Agent.McpGateway;
+
 /// <summary>
 /// Chrome MCP 客户端实现
 /// Chrome MCP Client Implementation
@@ -153,5 +153,4 @@ public class ChromeMcpClient : McpBaseClient<ChromeEntity>
         return Task.FromResult(true);
     }
 }
-
 

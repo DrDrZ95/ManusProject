@@ -1,5 +1,15 @@
 namespace Agent.Core.Tests.Services
 {
+    using Microsoft.AspNetCore.Http;
+    using Agent.Application.Services.SemanticKernel;
+    using Agent.Application.Services.SemanticKernel.Planner;
+    using Agent.Core.Cache;
+    using Agent.Application.Services.Telemetry;
+    using Agent.Application.Services.Prometheus;
+    using Agent.Core.Authorization;
+    using Agent.Application.Services.VectorDatabase;
+    using Microsoft.SemanticKernel.ChatCompletion;
+    using Microsoft.SemanticKernel.Embeddings;
     /// <summary>
     /// SemanticKernelService 核心逻辑单元测试
     /// Unit tests for SemanticKernelService core logic
@@ -36,7 +46,11 @@ namespace Agent.Core.Tests.Services
                 new Mock<IKubernetesPlanner>().Object,
                 new Mock<IIstioPlanner>().Object,
                 new Mock<IPostgreSQLPlanner>().Object,
-                new Mock<IClickHousePlanner>().Object
+                new Mock<IClickHousePlanner>().Object,
+                new Mock<IPermissionService>().Object,
+                new Mock<IHttpContextAccessor>().Object,
+                new Mock<IPrometheusService>().Object,
+                new Mock<IAgentTelemetryProvider>().Object
             );
         }
 
@@ -51,11 +65,11 @@ namespace Agent.Core.Tests.Services
             var prompt = "Hello";
             var expectedResponse = "Hi there!";
             var mockContent = new ChatMessageContent(AuthorRole.Assistant, expectedResponse);
-            
+
             _mockChatService.Setup(s => s.GetChatMessageContentAsync(
-                It.IsAny<ChatHistory>(), 
-                It.IsAny<PromptExecutionSettings>(), 
-                It.IsAny<Kernel>(), 
+                It.IsAny<ChatHistory>(),
+                It.IsAny<PromptExecutionSettings>(),
+                It.IsAny<Kernel>(),
                 default))
                 .ReturnsAsync(mockContent);
 
@@ -108,7 +122,8 @@ namespace Agent.Core.Tests.Services
                 It.IsAny<string>(),
                 It.IsAny<Func<Task<float[]>>>(),
                 It.IsAny<TimeSpan?>(),
-                It.IsAny<TimeSpan?>()))
+                It.IsAny<TimeSpan?>(),
+                It.IsAny<CancellationToken>()))
                 .ReturnsAsync(cachedEmbedding);
 
             // Act
@@ -120,7 +135,8 @@ namespace Agent.Core.Tests.Services
                 It.Is<string>(s => s.StartsWith("embedding:")),
                 It.IsAny<Func<Task<float[]>>>(),
                 It.IsAny<TimeSpan?>(),
-                It.IsAny<TimeSpan?>()), Times.Once);
+                It.IsAny<TimeSpan?>(),
+                It.IsAny<CancellationToken>()), Times.Once);
         }
 
         /// <summary>
@@ -133,7 +149,7 @@ namespace Agent.Core.Tests.Services
             // Arrange
             var plugin = "TestPlugin";
             var function = "TestFunction";
-            
+
             // Act
             // 注意：InvokeFunctionAsync 在实现中包含权限检查日志 (Note: InvokeFunctionAsync includes auth check logs)
             await _service.InvokeFunctionAsync(plugin, function);
@@ -150,3 +166,4 @@ namespace Agent.Core.Tests.Services
         }
     }
 }
+

@@ -1,4 +1,3 @@
-
 namespace Agent.Application.Services.SemanticKernel.Planner;
 
 /// <summary>
@@ -69,5 +68,4 @@ public class IstioPlanner : IIstioPlanner
         return Task.FromResult(System.Text.Json.JsonSerializer.Serialize(gatewayStatus));
     }
 }
-
 

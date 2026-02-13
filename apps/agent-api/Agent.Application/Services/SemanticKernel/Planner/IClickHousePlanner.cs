@@ -54,4 +54,3 @@ public interface IClickHousePlanner
         [Description("The name of the table.")] string tableName);
 }
 
-

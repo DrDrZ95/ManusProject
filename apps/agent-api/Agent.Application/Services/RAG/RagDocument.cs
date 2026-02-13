@@ -46,3 +46,4 @@ public class RagDocument
     /// </summary>
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
+

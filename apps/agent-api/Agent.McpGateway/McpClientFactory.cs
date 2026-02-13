@@ -1,5 +1,5 @@
-
 namespace Agent.McpGateway;
+
 /// <summary>
 /// MCP 客户端工厂实现
 /// MCP Client Factory Implementation
@@ -34,5 +34,4 @@ public class McpClientFactory : IMcpClientFactory
         }
     }
 }
-
 

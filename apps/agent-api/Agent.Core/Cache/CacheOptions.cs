@@ -55,3 +55,4 @@ public class CacheOptions
     /// </summary>
     public TimeSpan DocumentVectorMetadataTtl { get; set; } = TimeSpan.FromDays(365 * 10); // 模拟永久
 }
+

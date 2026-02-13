@@ -7,18 +7,27 @@ namespace Agent.Core.Tests.Services
     public class WorkflowServiceTests
     {
         private readonly Mock<ILogger<WorkflowService>> _mockLogger;
+        private readonly Mock<ILoggerFactory> _mockLoggerFactory;
         private readonly Mock<IOptions<WorkflowOptions>> _mockOptions;
         private readonly Mock<IWorkflowRepository> _mockRepository;
+        private readonly Mock<IWorkflowNotificationService> _mockNotificationService;
         private readonly WorkflowService _workflowService;
 
         public WorkflowServiceTests()
         {
             _mockLogger = new Mock<ILogger<WorkflowService>>();
+            _mockLoggerFactory = new Mock<ILoggerFactory>();
             _mockOptions = new Mock<IOptions<WorkflowOptions>>();
-            _mockOptions.Setup(o => o.Value).Returns(new WorkflowOptions { WorkflowsDirectory = "/tmp/workflows" });
+            _mockOptions.Setup(o => o.Value).Returns(new WorkflowOptions { DefaultToDoDirectory = "/tmp/workflows" });
             _mockRepository = new Mock<IWorkflowRepository>();
-            
-            _workflowService = new WorkflowService(_mockLogger.Object, _mockOptions.Object, _mockRepository.Object);
+            _mockNotificationService = new Mock<IWorkflowNotificationService>();
+
+            _workflowService = new WorkflowService(
+                _mockLogger.Object,
+                _mockLoggerFactory.Object,
+                _mockOptions.Object,
+                _mockRepository.Object,
+                _mockNotificationService.Object);
         }
 
         /// <summary>
@@ -31,7 +40,8 @@ namespace Agent.Core.Tests.Services
             // Arrange
             var request = new CreatePlanRequest { Title = "Concurrent Plan", Steps = new List<string> { "Step 1" } };
             _mockRepository.Setup(r => r.AddPlanAsync(It.IsAny<WorkflowPlanEntity>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((WorkflowPlanEntity e, CancellationToken ct) => {
+                .ReturnsAsync((WorkflowPlanEntity e, CancellationToken ct) =>
+                {
                     e.Id = Guid.NewGuid();
                     return e;
                 });
@@ -54,20 +64,26 @@ namespace Agent.Core.Tests.Services
         public async Task WorkflowExecutionEngine_StateTransitions_ShouldFollowOptimizationDoc()
         {
             // Arrange
-            var engine = new WorkflowExecutionEngine(12345);
+            var planId = Guid.NewGuid();
+            var engine = new WorkflowExecutionEngine(
+                planId,
+                WorkflowState.Idle,
+                _mockNotificationService.Object,
+                _mockRepository.Object,
+                new Mock<ILogger<WorkflowExecutionEngine>>().Object);
 
             // Act & Assert: Idle -> Initializing -> Planning -> Executing -> Completed
             Assert.Equal(WorkflowState.Idle, engine.CurrentState);
-            
+
             await engine.TriggerEventAsync(WorkflowEvent.StartTask);
             Assert.Equal(WorkflowState.Initializing, engine.CurrentState);
-            
+
             await engine.TriggerEventAsync(WorkflowEvent.InitializationComplete);
             Assert.Equal(WorkflowState.Planning, engine.CurrentState);
-            
+
             await engine.TriggerEventAsync(WorkflowEvent.PlanReady);
             Assert.Equal(WorkflowState.Executing, engine.CurrentState);
-            
+
             await engine.TriggerEventAsync(WorkflowEvent.ExecutionComplete);
             Assert.Equal(WorkflowState.Completed, engine.CurrentState);
         }
@@ -80,7 +96,14 @@ namespace Agent.Core.Tests.Services
         public async Task WorkflowExecutionEngine_ManualIntervention_ShouldTransitionCorrectly()
         {
             // Arrange
-            var engine = new WorkflowExecutionEngine(67890);
+            var planId = Guid.NewGuid();
+            var engine = new WorkflowExecutionEngine(
+                planId,
+                WorkflowState.Idle,
+                _mockNotificationService.Object,
+                _mockRepository.Object,
+                new Mock<ILogger<WorkflowExecutionEngine>>().Object);
+
             await engine.TriggerEventAsync(WorkflowEvent.StartTask);
             await engine.TriggerEventAsync(WorkflowEvent.InitializationComplete);
             await engine.TriggerEventAsync(WorkflowEvent.PlanReady); // Now in Executing
@@ -88,7 +111,7 @@ namespace Agent.Core.Tests.Services
             // Act: Executing -> ManualIntervention
             var interventionInfo = new ManualInterventionInfo { Reason = "Sensitive Action: System Shutdown" };
             await engine.TriggerEventAsync(WorkflowEvent.NeedIntervention, interventionInfo);
-            
+
             // Assert
             Assert.Equal(WorkflowState.ManualIntervention, engine.CurrentState);
             Assert.Equal("Sensitive Action: System Shutdown", engine.GetContext().InterventionInfo?.Reason);
@@ -106,9 +129,16 @@ namespace Agent.Core.Tests.Services
         public async Task WorkflowExecutionEngine_ErrorRecovery_ShouldAllowRestartFromIdle()
         {
             // Arrange
-            var engine = new WorkflowExecutionEngine(11111);
+            var planId = Guid.NewGuid();
+            var engine = new WorkflowExecutionEngine(
+                planId,
+                WorkflowState.Idle,
+                _mockNotificationService.Object,
+                _mockRepository.Object,
+                new Mock<ILogger<WorkflowExecutionEngine>>().Object);
+
             await engine.TriggerEventAsync(WorkflowEvent.StartTask);
-            
+
             // Act: Initializing -> Failed
             await engine.TriggerEventAsync(WorkflowEvent.InitializationFailed);
             Assert.Equal(WorkflowState.Failed, engine.CurrentState);
@@ -126,11 +156,18 @@ namespace Agent.Core.Tests.Services
         public async Task WorkflowExecutionEngine_Performance_1000Workflows()
         {
             // Arrange
-            var engines = Enumerable.Range(0, 1000).Select(i => new WorkflowExecutionEngine(i)).ToList();
+            var engines = Enumerable.Range(0, 1000).Select(i => 
+                new WorkflowExecutionEngine(
+                    Guid.NewGuid(),
+                    WorkflowState.Idle,
+                    _mockNotificationService.Object,
+                    _mockRepository.Object,
+                    new Mock<ILogger<WorkflowExecutionEngine>>().Object)).ToList();
             var startTime = DateTime.UtcNow;
 
             // Act
-            var tasks = engines.Select(async engine => {
+            var tasks = engines.Select(async engine =>
+            {
                 await engine.TriggerEventAsync(WorkflowEvent.StartTask);
                 await engine.TriggerEventAsync(WorkflowEvent.InitializationComplete);
                 await engine.TriggerEventAsync(WorkflowEvent.PlanReady);
@@ -142,7 +179,8 @@ namespace Agent.Core.Tests.Services
 
             // Assert
             Assert.All(engines, e => Assert.Equal(WorkflowState.Completed, e.CurrentState));
-            _mockLogger.LogInformation("Executed 1000 workflow transitions in {Duration}ms", duration.TotalMilliseconds);
+            _mockLogger.Object.LogInformation("Executed 1000 workflow transitions in {Duration}ms", duration.TotalMilliseconds);
         }
     }
 }
+

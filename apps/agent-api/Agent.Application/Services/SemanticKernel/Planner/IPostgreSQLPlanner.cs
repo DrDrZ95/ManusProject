@@ -54,4 +54,3 @@ public interface IPostgreSQLPlanner
         [Description("The path to save the backup file.")] string backupPath);
 }
 
-

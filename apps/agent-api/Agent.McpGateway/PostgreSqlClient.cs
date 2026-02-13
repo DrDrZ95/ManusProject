@@ -1,5 +1,5 @@
-
 namespace Agent.McpGateway;
+
 /// <summary>
 /// PostgreSQL MCP 客户端实现
 /// PostgreSQL MCP Client Implementation
@@ -53,5 +53,4 @@ public class PostgreSqlClient : McpBaseClient<PostgreSqlEntity>
         return Task.FromResult(true);
     }
 }
-
 

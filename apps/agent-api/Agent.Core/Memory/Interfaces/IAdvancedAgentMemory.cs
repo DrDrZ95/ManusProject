@@ -10,3 +10,4 @@ public interface IAdvancedAgentMemory : IAgentMemory
     ILongTermMemory LongTerm { get; }
     ITaskMemory Task { get; }
 }
+

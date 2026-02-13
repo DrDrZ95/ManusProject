@@ -61,15 +61,10 @@ global using Yarp.ReverseProxy.Health;
 global using Yarp.ReverseProxy.LoadBalancing;
 global using Yarp.ReverseProxy.SessionAffinity;
 
-//可能存在功能不完善,不使用但保留
-//global using ChromaDB.Client;
-//global using ChromaDB.Client.Models;
-
 global using PromCounter = Prometheus.Counter;
 global using PromHistogram = Prometheus.Histogram;
 
 namespace Agent.Core;
-
 /// <summary>
 /// Chat message for conversation history
 /// 对话历史的聊天消息
@@ -88,3 +83,4 @@ public class ChatMessage
 
     public Dictionary<string, object>? Metadata { get; set; }
 }
+

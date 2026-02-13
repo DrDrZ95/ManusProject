@@ -75,3 +75,4 @@ public class MemoryUpdate
     /// </summary>
     public string? AbilityLog { get; set; }
 }
+

@@ -110,3 +110,4 @@ public class RagResponse
     public string Summary { get; set; }
     public string AnalysisResult { get; set; }
 }
+

@@ -1,6 +1,5 @@
 namespace Agent.Core.Tools.Interfaces;
 
-
 /// <summary>
 /// 工具注册中心接口 (Tool Registry Interface)
 /// 负责工具元数据的 CRUD、版本管理、以及动态加载支持。
@@ -42,3 +41,4 @@ public interface IToolRegistryService
     /// </summary>
     Task HotLoadToolsAsync();
 }
+

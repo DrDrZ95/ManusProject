@@ -64,3 +64,4 @@ public class PrometheusService : IPrometheusService
         ToolTokenCounter.WithLabels(pluginName, functionName, tokenType).Inc(count);
     }
 }
+

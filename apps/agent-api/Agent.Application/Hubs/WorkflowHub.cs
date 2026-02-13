@@ -57,3 +57,4 @@ public class WorkflowHub : Hub
     // TODO: 实现基于用户ID的推送，需要集成身份验证系统 (Implement user ID based push, requires authentication system integration)
     // public async Task NotifyUser(string userId, string message) { ... }
 }
+

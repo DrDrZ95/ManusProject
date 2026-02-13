@@ -1,4 +1,3 @@
-
 namespace Agent.Application.Services.SemanticKernel.Planner;
 
 /// <summary>
@@ -72,5 +71,4 @@ public class KubernetesPlanner : IKubernetesPlanner
         return Task.FromResult($"Command '{command}' executed in pod '{podName}' (namespace: {namespaceName}). Output: Simulated output for '{command}'.");
     }
 }
-
 

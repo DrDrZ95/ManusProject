@@ -1,5 +1,9 @@
 namespace Agent.Core.Tests.Services
 {
+    using Agent.Application.Services.RAG;
+    using Agent.Application.Services.VectorDatabase;
+    using Agent.Application.Services.SemanticKernel;
+    using Agent.Core.Cache;
     /// <summary>
     /// RagService 核心逻辑单元测试
     /// Unit tests for RagService core logic
@@ -20,10 +24,10 @@ namespace Agent.Core.Tests.Services
             _mockSemanticKernel = new Mock<ISemanticKernelService>();
             _mockLogger = new Mock<ILogger<RagService>>();
             _mockCacheService = new Mock<IAgentCacheService>();
-            
+
             _ragService = new RagService(
-                _mockVectorDb.Object, 
-                _mockSemanticKernel.Object, 
+                _mockVectorDb.Object,
+                _mockSemanticKernel.Object,
                 _mockLogger.Object,
                 _mockCacheService.Object);
         }
@@ -70,7 +74,7 @@ namespace Agent.Core.Tests.Services
             // 验证是否为摘要生成了嵌入 (Verify embedding generated for summary)
             _mockSemanticKernel.Verify(s => s.GenerateEmbeddingAsync(doc.Summary), Times.Once);
         }
-        
+
         /// <summary>
         /// 测试向量维度正确性
         /// Test vector dimension correctness
@@ -88,7 +92,7 @@ namespace Agent.Core.Tests.Services
             await _ragService.AddDocumentAsync("test-collection", doc);
 
             // Assert
-            _mockVectorDb.Verify(v => v.AddDocumentsAsync("test-collection", 
+            _mockVectorDb.Verify(v => v.AddDocumentsAsync("test-collection",
                 It.Is<IEnumerable<VectorDocument>>(docs => docs.All(d => d.Embedding.Length == expectedDimension))), Times.Once);
         }
 
@@ -153,7 +157,7 @@ namespace Agent.Core.Tests.Services
             await _ragService.AddDocumentAsync("test-collection", doc);
 
             // Assert
-            _mockVectorDb.Verify(v => v.AddDocumentsAsync("test-collection", 
+            _mockVectorDb.Verify(v => v.AddDocumentsAsync("test-collection",
                 It.Is<IEnumerable<VectorDocument>>(docs => docs.Any(d => d.Content.Contains("😊")))), Times.Once);
         }
 
@@ -166,11 +170,11 @@ namespace Agent.Core.Tests.Services
         {
             // Arrange
             int concurrency = 10;
-            var docs = Enumerable.Range(0, concurrency).Select(i => new RagDocument 
-            { 
-                Id = $"doc-{i}", 
-                Content = $"Content {i}", 
-                Title = $"Title {i}" 
+            var docs = Enumerable.Range(0, concurrency).Select(i => new RagDocument
+            {
+                Id = $"doc-{i}",
+                Content = $"Content {i}",
+                Title = $"Title {i}"
             }).ToList();
 
             _mockSemanticKernel.Setup(s => s.GenerateEmbeddingAsync(It.IsAny<string>()))
@@ -198,11 +202,11 @@ namespace Agent.Core.Tests.Services
             // Arrange
             var collectionName = "test-collection";
             var query = new RagQuery { Text = "test query", TopK = 5 };
-            
+
             // Mock Vector Search
             _mockSemanticKernel.Setup(s => s.GenerateEmbeddingAsync(query.Text))
                 .ReturnsAsync(new float[1536]);
-            
+
             var vectorMatches = new List<VectorSearchMatch>
             {
                 new VectorSearchMatch { Id = "chunk1", Score = 0.9f, Content = "Content 1", Metadata = new Dictionary<string, object> { ["document_id"] = "doc1" } }
@@ -238,12 +242,12 @@ namespace Agent.Core.Tests.Services
             // Arrange
             var collectionName = "test-collection";
             var query = new RagQuery { Text = "cached query" };
-            var cachedResult = new RagRetrievalResult 
-            { 
-                Chunks = new List<RagRetrievedChunk> { new RagRetrievedChunk { Score = 1.0f } } 
+            var cachedResult = new RagRetrievalResult
+            {
+                Chunks = new List<RagRetrievedChunk> { new RagRetrievedChunk { Score = 1.0f } }
             };
 
-            _mockCacheService.Setup(c => c.GetAsync<RagRetrievalResult>(It.IsAny<string>()))
+            _mockCacheService.Setup(c => c.GetAsync<RagRetrievalResult>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(cachedResult);
 
             // Act
@@ -328,3 +332,4 @@ namespace Agent.Core.Tests.Services
         }
     }
 }
+

@@ -1,4 +1,3 @@
-
 namespace Agent.Core.Memory.Interfaces;
 
 /// <summary>
@@ -25,3 +24,4 @@ public interface ITaskMemory
     /// </summary>
     Task RecordToolCallAsync(string workflowId, string toolName, string parameters, string result);
 }
+

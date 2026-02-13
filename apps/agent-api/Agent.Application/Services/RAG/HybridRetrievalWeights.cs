@@ -21,3 +21,4 @@ public class HybridRetrievalWeights
     /// </summary>
     public float SemanticWeight { get; set; } = 0.1f;
 }
+

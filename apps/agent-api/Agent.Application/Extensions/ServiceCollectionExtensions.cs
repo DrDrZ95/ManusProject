@@ -1,7 +1,4 @@
-
-
 namespace Agent.Application.Extensions;
-
 
 public static class ServiceCollectionExtensions
 {
@@ -22,3 +19,4 @@ public static class ServiceCollectionExtensions
         return services;
     }
 }
+

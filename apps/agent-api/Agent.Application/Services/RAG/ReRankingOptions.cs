@@ -26,3 +26,4 @@ public class ReRankingOptions
     /// </summary>
     public float Threshold { get; set; } = 0.5f;
 }
+

@@ -122,3 +122,4 @@ public interface ITelemetryService
     T TraceActivity<T>(string name, Func<T> action, params (string Key, object Value)[] tags);
     Task<T> TraceActivityAsync<T>(string name, Func<Task<T>> action, params (string Key, object Value)[] tags);
 }
+

@@ -125,5 +125,3 @@ public static class AuthExtensions
     }
 }
 
-
-

@@ -16,3 +16,4 @@ public interface IWorkflowPlanRepository : IRepository<WorkflowPlanEntity, strin
     /// </summary>
     Task<WorkflowPlanEntity?> GetPlanWithStepsAsync(string planId, CancellationToken cancellationToken = default);
 }
+

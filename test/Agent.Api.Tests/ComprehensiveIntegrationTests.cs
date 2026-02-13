@@ -1,4 +1,3 @@
-
 namespace Agent.Api.Tests;
 
 public class ComprehensiveIntegrationTests : IntegrationTestBase
@@ -64,3 +63,4 @@ public class ComprehensiveIntegrationTests : IntegrationTestBase
         Assert.Contains(plan.Id.ToString(), receivedMessage);
     }
 }
+

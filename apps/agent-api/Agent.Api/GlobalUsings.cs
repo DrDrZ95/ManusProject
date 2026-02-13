@@ -88,3 +88,4 @@ public class AddDocumentsRequest
     public IEnumerable<string>? Ids { get; set; }
     public IEnumerable<Dictionary<string, object>>? Metadatas { get; set; }
 }
+

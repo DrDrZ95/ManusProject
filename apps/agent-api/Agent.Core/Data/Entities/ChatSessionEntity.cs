@@ -23,3 +23,4 @@ public class ChatSessionEntity
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
+

@@ -30,3 +30,4 @@ public record InterventionNotificationDto(
     /// </summary>
     int TimeoutMinutes
 );
+

@@ -47,3 +47,4 @@ public static class DbContextOptionsExtensions
 {
     public static DbContextOptionsBuilder<T> UseNpgsql<T>(this DbContextOptionsBuilder<T> builder, string? connectionString, Action<object>? optionsAction = null) where T : DbContext => builder;
 }
+

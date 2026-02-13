@@ -1,6 +1,5 @@
 namespace Agent.Core.Data.Entities;
 
-
 /// <summary>
 /// 工具元数据实体 (Tool Metadata Entity)
 /// 用于在 PostgreSQL 中存储工具的定义、配置、权限和指标。
@@ -95,3 +94,4 @@ public class ToolMetadataEntity
     /// </summary>
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
+

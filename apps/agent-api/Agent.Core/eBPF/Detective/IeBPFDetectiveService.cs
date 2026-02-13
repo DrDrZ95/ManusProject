@@ -42,4 +42,3 @@ public interface IeBPFDetectiveService
     IAsyncEnumerable<string> MonitorProcessActivityAsync(string processName, int durationSeconds);
 }
 
-

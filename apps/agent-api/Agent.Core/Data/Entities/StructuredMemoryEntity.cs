@@ -29,3 +29,4 @@ public class StructuredMemoryEntity
 
     public DateTime? LastAccessedAt { get; set; }
 }
+

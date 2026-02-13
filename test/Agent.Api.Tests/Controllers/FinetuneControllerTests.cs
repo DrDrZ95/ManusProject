@@ -17,7 +17,7 @@ namespace Agent.Api.Tests.Controllers
             _mockService = new Mock<IPythonFinetuneService>();
             _mockLogger = new Mock<ILogger<FinetuneController>>();
             _mockTelemetry = new Mock<IAgentTelemetryProvider>();
-            
+
             // Mock telemetry span
             var mockSpan = new Mock<IAgentSpan>();
             _mockTelemetry.Setup(t => t.StartSpan(It.IsAny<string>(), It.IsAny<SpanKind>()))
@@ -53,11 +53,11 @@ namespace Agent.Api.Tests.Controllers
         public async Task StartFinetune_LargeDatasetPath_ReturnsOk()
         {
             // Arrange
-            var request = new FinetuneRequest 
-            { 
-                JobName = "large-file-job", 
+            var request = new FinetuneRequest
+            {
+                JobName = "large-file-job",
                 DatasetPath = new string('a', 1024 * 10), // 模拟超长路径 - Simulate very long path
-                OutputDir = "out" 
+                OutputDir = "out"
             };
             _mockService.Setup(s => s.StartFinetuningAsync(It.IsAny<FinetuneRequest>()))
                 .ReturnsAsync("job-123");
@@ -108,9 +108,9 @@ namespace Agent.Api.Tests.Controllers
         {
             // Arrange
             var jobId = "job-recovery-123";
-            var expectedRecord = new FinetuneRecordEntity 
-            { 
-                Id = jobId, 
+            var expectedRecord = new FinetuneRecordEntity
+            {
+                Id = jobId,
                 JobName = "recovery-test",
                 Status = FinetuneStatus.Running,
                 Progress = 45,
@@ -163,3 +163,4 @@ namespace Agent.Api.Tests.Controllers
         }
     }
 }
+

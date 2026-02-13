@@ -1,4 +1,3 @@
-
 namespace Agent.Api.Tests.Integration;
 
 /// <summary>
@@ -8,7 +7,7 @@ namespace Agent.Api.Tests.Integration;
 public class SignalRIntegrationTests
 {
     // 假设Hub的URL和名称 - Assume the Hub URL and name
-    private const string HubUrl = "http://localhost:5000/agentHub"; 
+    private const string HubUrl = "http://localhost:5000/agentHub";
     private const string MethodName = "ReceiveMessage";
 
     /// <summary>
@@ -36,12 +35,12 @@ public class SignalRIntegrationTests
         try
         {
             // await connection.StartAsync();
-            
+
             // 模拟服务器端发送消息 - Simulate the server sending a message
             // Note: In a real test, you would call a controller or service method that triggers the hub.
             // Since we don't have the server side code here, we'll assume a direct call for demonstration.
             // await connection.InvokeAsync("SendMessageToAll", expectedMessage); 
-            
+
             // For this mock test, we'll just check the connection status
             // Assert.Equal(HubConnectionState.Connected, connection.State);
             Assert.NotNull(connection);
@@ -59,6 +58,4 @@ public class SignalRIntegrationTests
     // TODO: 补充授权、断开连接和特定消息类型的测试
     // TODO: Supplement tests for authorization, disconnection, and specific message types
 }
-
-
 

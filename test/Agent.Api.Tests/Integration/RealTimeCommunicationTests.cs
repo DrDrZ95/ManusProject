@@ -1,4 +1,3 @@
-
 namespace Agent.Api.Tests.Integration;
 
 /// <summary>
@@ -13,7 +12,8 @@ public class RealTimeCommunicationTests : IClassFixture<ApiTestFixture>
     private readonly ApiTestFixture _fixture;
 
     public RealTimeCommunicationTests(ApiTestFixture fixture)
-    {        _fixture = fixture;
+    {
+        _fixture = fixture;
     }
 
     /// <summary>
@@ -52,10 +52,10 @@ public class RealTimeCommunicationTests : IClassFixture<ApiTestFixture>
             // 模拟服务器端发送消息 (Simulate server-side sending a message)
             // 实际应用中，这需要通过一个内部服务调用 HubContext.Clients.All.SendAsync
             // In a real app, this requires an internal service call to HubContext.Clients.All.SendAsync
-            
+
             // 由于无法直接模拟服务器发送，我们只验证连接逻辑和订阅设置
             // Since we cannot directly simulate server sending, we only validate connection logic and subscription setup
-            
+
             // 验证连接对象是否创建成功 (Verify connection object is created successfully)
             Assert.NotNull(connection);
             Assert.Equal(HubConnectionState.Disconnected, connection.State);
@@ -75,21 +75,21 @@ public class RealTimeCommunicationTests : IClassFixture<ApiTestFixture>
     {
         // 1. 配置 Hangfire 使用内存存储进行测试 (Configure Hangfire to use in-memory storage for testing)
         GlobalConfiguration.Configuration.UseMemoryStorage();
-        
+
         // 2. 模拟一个简单的后台任务服务 (Simulate a simple background task service)
         var taskExecuted = false;
         var mockService = new MockHangfireService(() => taskExecuted = true);
 
         // 3. 调度一个一次性任务 (Schedule a one-time job)
         var jobId = BackgroundJob.Enqueue(() => mockService.ExecuteOnce());
-        
+
         // 4. 验证任务是否被调度 (Verify the job is scheduled)
         Assert.NotNull(jobId);
-        
+
         // 5. 模拟 Hangfire 服务器执行任务 (Simulate Hangfire server executing the job)
         // 在单元测试环境中，我们不能运行完整的Hangfire服务器，但可以验证调度逻辑
         // In a unit test environment, we cannot run a full Hangfire server, but we can validate the scheduling logic
-        
+
         // 6. 调度一个重复性任务 (Schedule a recurring job)
     }
 }
@@ -104,3 +104,4 @@ public class MockHangfireService
 public static class GlobalConfiguration { public static dynamic Configuration { get; set; } = new { UseMemoryStorage = new Action(() => { }) }; }
 public static class BackgroundJob { public static string Enqueue(System.Linq.Expressions.Expression<Action> action) => "job-id"; }
 public static class HangfireExtensions { public static void UseMemoryStorage(this object obj) { } }
+

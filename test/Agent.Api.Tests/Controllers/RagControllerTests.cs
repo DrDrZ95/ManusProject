@@ -1,4 +1,3 @@
-
 namespace Agent.Api.Tests.Controllers;
 
 public class RagControllerTests : IClassFixture<WebApplicationFactory<Program>>
@@ -21,7 +20,7 @@ public class RagControllerTests : IClassFixture<WebApplicationFactory<Program>>
                 // Add mocked services
                 _mockRagService = new Mock<IRagService>();
                 _mockTelemetryProvider = new Mock<IAgentTelemetryProvider>();
-                
+
                 services.AddSingleton(_mockRagService.Object);
                 services.AddSingleton(_mockTelemetryProvider.Object);
             });
@@ -153,10 +152,10 @@ public class RagControllerTests : IClassFixture<WebApplicationFactory<Program>>
         {
             Chunks = new List<RagRetrievedChunk>
             {
-                new RagRetrievedChunk 
-                { 
+                new RagRetrievedChunk
+                {
                     Chunk = new RagDocumentChunk { DocumentId = "doc1", Content = "content1" },
-                    Score = 0.9f 
+                    Score = 0.9f
                 }
             }
         };
@@ -188,10 +187,10 @@ public class RagControllerTests : IClassFixture<WebApplicationFactory<Program>>
         {
             Chunks = new List<RagRetrievedChunk>
             {
-                new RagRetrievedChunk 
-                { 
+                new RagRetrievedChunk
+                {
                     Chunk = new RagDocumentChunk { DocumentId = "doc1", Content = "content1" },
-                    Score = 0.85f 
+                    Score = 0.85f
                 }
             }
         };
@@ -223,10 +222,10 @@ public class RagControllerTests : IClassFixture<WebApplicationFactory<Program>>
         {
             Chunks = new List<RagRetrievedChunk>
             {
-                new RagRetrievedChunk 
-                { 
+                new RagRetrievedChunk
+                {
                     Chunk = new RagDocumentChunk { DocumentId = "doc1", Content = "content1" },
-                    Score = 0.75f 
+                    Score = 0.75f
                 }
             }
         };
@@ -258,10 +257,10 @@ public class RagControllerTests : IClassFixture<WebApplicationFactory<Program>>
         {
             Chunks = new List<RagRetrievedChunk>
             {
-                new RagRetrievedChunk 
-                { 
+                new RagRetrievedChunk
+                {
                     Chunk = new RagDocumentChunk { DocumentId = "doc1", Content = "content1" },
-                    Score = 0.95f 
+                    Score = 0.95f
                 }
             }
         };
@@ -314,3 +313,4 @@ public class RagControllerTests : IClassFixture<WebApplicationFactory<Program>>
         _mockRagService.Verify(s => s.GenerateResponseAsync(collectionName, request), Times.Once);
     }
 }
+

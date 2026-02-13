@@ -1,4 +1,3 @@
-
 namespace Agent.Core.Data.Entities;
 
 /// <summary>
@@ -81,3 +80,4 @@ public class PromptExecutionLogEntity
     // Navigation property could be added here if needed, but keeping it simple as requested
     // public virtual PromptTemplateEntity PromptTemplate { get; set; }
 }
+

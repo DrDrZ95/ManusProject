@@ -9,3 +9,4 @@ public interface IWorkflowNotificationService
     Task NotifyInterventionRequired(string planId, InterventionNotificationDto notification);
     Task BroadcastStateChange(string planId, StateChangeNotificationDto notification);
 }
+

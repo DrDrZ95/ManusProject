@@ -1,5 +1,5 @@
-
 namespace Agent.McpGateway;
+
 /// <summary>
 /// Claude MCP 客户端接口
 /// Claude MCP Client Interface
@@ -31,5 +31,4 @@ public interface IClaudeMcpClient : IMcpClient<ClaudeEntity>
     /// <returns>消息列表</returns>
     Task<string> GetThreadMessages(string threadId);
 }
-
 

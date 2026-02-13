@@ -31,3 +31,4 @@ public class VectorDocumentEntity
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
+

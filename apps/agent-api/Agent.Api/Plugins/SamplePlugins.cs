@@ -1,5 +1,3 @@
-
-
 namespace Agent.Api.Plugins;
 
 /// <summary>

@@ -25,3 +25,4 @@ public class ChatMessageEntity
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
+

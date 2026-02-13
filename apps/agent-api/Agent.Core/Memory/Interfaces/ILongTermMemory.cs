@@ -1,4 +1,3 @@
-
 namespace Agent.Core.Memory.Interfaces;
 
 /// <summary>
@@ -31,3 +30,4 @@ public interface ILongTermMemory
     /// </summary>
     Task ArchiveMemoriesAsync(string userId, double importanceThreshold = 0.2);
 }
+

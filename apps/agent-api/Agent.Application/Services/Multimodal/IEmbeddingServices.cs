@@ -44,3 +44,4 @@ public interface ISpeechToTextService
     /// <returns>The transcribed text.</returns>
     Task<string> TranscribeAsync(string audioPath);
 }
+

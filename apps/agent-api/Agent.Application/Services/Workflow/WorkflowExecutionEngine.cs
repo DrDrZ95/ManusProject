@@ -1,4 +1,3 @@
-
 namespace Agent.Application.Services.Workflow;
 
 /// <summary>
@@ -333,3 +332,4 @@ public class WorkflowExecutionEngine : IWorkflowEngine
     /// <inheritdoc />
     public WorkflowContext GetContext() => _context;
 }
+

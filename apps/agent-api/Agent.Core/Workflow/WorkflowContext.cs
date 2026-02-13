@@ -74,3 +74,4 @@ public class ManualInterventionInfo
     /// </summary>
     public string AgentThoughts { get; set; } = string.Empty;
 }
+

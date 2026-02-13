@@ -48,4 +48,3 @@ public interface IKubernetesPlanner
         [Description("The command to execute.")] string command);
 }
 
-

@@ -1,4 +1,3 @@
-
 namespace Agent.Api.Tests;
 
 public abstract class IntegrationTestBase : IAsyncLifetime
@@ -43,7 +42,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         await _redisContainer.StartAsync();
     }
 
-        protected async Task ResetDatabaseAsync()
+    protected async Task ResetDatabaseAsync()
     {
         using var scope = Factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AgentDbContext>();
@@ -76,3 +75,4 @@ public class ChromaDbInitializer : IHostedService
         return Task.CompletedTask;
     }
 }
+

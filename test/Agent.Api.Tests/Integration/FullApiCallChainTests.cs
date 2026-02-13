@@ -26,7 +26,7 @@ public class FullApiCallChainTests : IClassFixture<ApiTestFixture>
         // 实际应用中，这里会调用 /api/auth/login 或类似端点
         // In a real application, this would call /api/auth/login or similar endpoint
         var jwtToken = "mock_jwt_token_for_authz"; // 假设我们有一个有效的mock token (Assume we have a valid mock token)
-        
+
         var client = _fixture.CreateClient();
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {jwtToken}");
 
@@ -45,7 +45,7 @@ public class FullApiCallChainTests : IClassFixture<ApiTestFixture>
 
         // 假设工作流创建端点是 /api/workflow/plan
         var response = await client.PostAsJsonAsync("/api/workflow/plan", createRequest);
-        
+
         // 验证响应状态码 (Verify response status code)
         Assert.True(response.IsSuccessStatusCode, $"Workflow creation failed with status: {response.StatusCode}");
 
@@ -53,7 +53,7 @@ public class FullApiCallChainTests : IClassFixture<ApiTestFixture>
         Assert.NotNull(createdPlan);
         Assert.Equal(createRequest.Title, createdPlan.Title);
         Assert.Equal(2, createdPlan.Steps.Count);
-        
+
         var planId = createdPlan.Id;
 
         // 4. 数据持久化 (Data Persistence) - 验证工作流是否被存储 (在内存或数据库中)
@@ -88,27 +88,28 @@ public class FullApiCallChainTests : IClassFixture<ApiTestFixture>
     public async Task MemoryModule_BasicOperations_ShouldSucceed()
     {
         var client = _fixture.CreateClient();
-        
+
         // 1. 模拟创建新的会话 (Simulate creating a new conversation)
         // 假设会话创建端点是 /api/memory/conversation
         var conversationId = 12345;
         var conversation = new Conversation { Id = conversationId, Title = "Test Conversation" };
-        
+
         // 实际应用中，这可能是一个内部服务调用，这里我们模拟一个端点
         // In a real app, this might be an internal service call, here we mock an endpoint
-        
+
         // 2. 模拟保存消息 (Simulate saving a message)
         // 假设我们有一个保存消息的端点 /api/memory/conversation/{id}/message
-        var message = new ConversationMessage 
-        { 
-            ConversationId = conversationId, 
-            Content = "Hello, this is a test message.", 
-            Role = "User" 
+        var message = new ConversationMessage
+        {
+            ConversationId = conversationId,
+            Content = "Hello, this is a test message.",
+            Role = "User"
         };
-        
+
         // 由于我们没有实际的API端点，这里我们只验证模型和逻辑的可用性
         // Since we don't have actual API endpoints, we only validate the model and logic availability
         Assert.NotNull(message);
         Assert.Equal("User", message.Role);
     }
 }
+

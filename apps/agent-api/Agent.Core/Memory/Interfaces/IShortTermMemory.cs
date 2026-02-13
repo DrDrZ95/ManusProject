@@ -24,3 +24,4 @@ public interface IShortTermMemory
     /// </summary>
     Task CompressHistoryAsync(string sessionId);
 }
+

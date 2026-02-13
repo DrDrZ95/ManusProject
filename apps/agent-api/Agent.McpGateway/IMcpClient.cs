@@ -1,5 +1,5 @@
-
 namespace Agent.McpGateway;
+
 /// <summary>
 /// MCP 客户端接口
 /// MCP Client Interface
@@ -61,5 +61,4 @@ public interface IMcpClient<TEntity>
     /// <returns>操作结果</returns>
     Task<bool> DeleteAsync(string id);
 }
-
 

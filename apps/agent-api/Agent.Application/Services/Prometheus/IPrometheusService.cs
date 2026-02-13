@@ -11,3 +11,4 @@ public interface IPrometheusService
     void RecordToolCost(string pluginName, string functionName, double cost, string unit);
     void RecordToolTokens(string pluginName, string functionName, string tokenType, int count);
 }
+

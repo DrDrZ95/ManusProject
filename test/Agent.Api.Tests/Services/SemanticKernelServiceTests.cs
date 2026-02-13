@@ -1,6 +1,5 @@
 namespace Agent.Api.Tests.Services;
 
-
 public class SemanticKernelServiceTests
 {
     private readonly Mock<Kernel> _mockKernel;
@@ -66,9 +65,9 @@ public class SemanticKernelServiceTests
         var prompt = "Hello, how are you?";
         var chatMessageContent = new ChatMessageContent(AuthorRole.Assistant, "I am fine, thank you.");
         _mockChatService.Setup(s => s.GetChatMessageContentAsync(
-            It.IsAny<ChatHistory>(), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.IsAny<ChatHistory>(),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(chatMessageContent);
 
@@ -78,9 +77,9 @@ public class SemanticKernelServiceTests
         // Assert
         Assert.Equal("I am fine, thank you.", result);
         _mockChatService.Verify(s => s.GetChatMessageContentAsync(
-            It.Is<ChatHistory>(h => h.Last().Content == prompt && h.Count == 1), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.Is<ChatHistory>(h => h.Last().Content == prompt && h.Count == 1),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -92,9 +91,9 @@ public class SemanticKernelServiceTests
         var systemMessage = "You are a helpful AI assistant.";
         var chatMessageContent = new ChatMessageContent(AuthorRole.Assistant, "My purpose is to assist you.");
         _mockChatService.Setup(s => s.GetChatMessageContentAsync(
-            It.IsAny<ChatHistory>(), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.IsAny<ChatHistory>(),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(chatMessageContent);
 
@@ -104,9 +103,9 @@ public class SemanticKernelServiceTests
         // Assert
         Assert.Equal("My purpose is to assist you.", result);
         _mockChatService.Verify(s => s.GetChatMessageContentAsync(
-            It.Is<ChatHistory>(h => h.Any(m => m.Role == AuthorRole.System && m.Content == systemMessage)), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.Is<ChatHistory>(h => h.Any(m => m.Role == AuthorRole.System && m.Content == systemMessage)),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -116,9 +115,9 @@ public class SemanticKernelServiceTests
         // Arrange
         var prompt = "Test prompt";
         _mockChatService.Setup(s => s.GetChatMessageContentAsync(
-            It.IsAny<ChatHistory>(), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.IsAny<ChatHistory>(),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Chat service error"));
 
@@ -133,9 +132,9 @@ public class SemanticKernelServiceTests
         var prompt = "";
         var chatMessageContent = new ChatMessageContent(AuthorRole.Assistant, "");
         _mockChatService.Setup(s => s.GetChatMessageContentAsync(
-            It.IsAny<ChatHistory>(), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.IsAny<ChatHistory>(),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(chatMessageContent);
 
@@ -157,9 +156,9 @@ public class SemanticKernelServiceTests
         var prompt = "Tell me a story.";
         var streamingContents = new List<string> { "Once ", "upon ", "a time." };
         _mockChatService.Setup(s => s.GetStreamingChatMessageContentsAsync(
-            It.IsAny<ChatHistory>(), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.IsAny<ChatHistory>(),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()))
             .Returns(streamingContents.Select(c => new StreamingChatMessageContent(AuthorRole.Assistant, c)).ToAsyncEnumerable());
 
@@ -173,9 +172,9 @@ public class SemanticKernelServiceTests
         // Assert
         Assert.Equal(streamingContents, result);
         _mockChatService.Verify(s => s.GetStreamingChatMessageContentsAsync(
-            It.Is<ChatHistory>(h => h.Last().Content == prompt && h.Count == 1), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.Is<ChatHistory>(h => h.Last().Content == prompt && h.Count == 1),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -187,9 +186,9 @@ public class SemanticKernelServiceTests
         var systemMessage = "You are a storyteller.";
         var streamingContents = new List<string> { "Once ", "upon ", "a time." };
         _mockChatService.Setup(s => s.GetStreamingChatMessageContentsAsync(
-            It.IsAny<ChatHistory>(), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.IsAny<ChatHistory>(),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()))
             .Returns(streamingContents.Select(c => new StreamingChatMessageContent(AuthorRole.Assistant, c)).ToAsyncEnumerable());
 
@@ -203,9 +202,9 @@ public class SemanticKernelServiceTests
         // Assert
         Assert.Equal(streamingContents, result);
         _mockChatService.Verify(s => s.GetStreamingChatMessageContentsAsync(
-            It.Is<ChatHistory>(h => h.First().Content == systemMessage && h.Last().Content == prompt && h.Count == 2), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.Is<ChatHistory>(h => h.First().Content == systemMessage && h.Last().Content == prompt && h.Count == 2),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -215,9 +214,9 @@ public class SemanticKernelServiceTests
         // Arrange
         var prompt = "Test prompt";
         _mockChatService.Setup(s => s.GetStreamingChatMessageContentsAsync(
-            It.IsAny<ChatHistory>(), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.IsAny<ChatHistory>(),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()))
             .Throws(new InvalidOperationException("Streaming chat service error"));
 
@@ -247,9 +246,9 @@ public class SemanticKernelServiceTests
         };
         var chatMessageContent = new ChatMessageContent(AuthorRole.Assistant, "I am good.");
         _mockChatService.Setup(s => s.GetChatMessageContentAsync(
-            It.IsAny<ChatHistory>(), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.IsAny<ChatHistory>(),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(chatMessageContent);
 
@@ -259,9 +258,9 @@ public class SemanticKernelServiceTests
         // Assert
         Assert.Equal("I am good.", result);
         _mockChatService.Verify(s => s.GetChatMessageContentAsync(
-            It.Is<ChatHistory>(h => h.Count == 3 && h[0].Content == "Hi" && h[1].Content == "Hello!" && h[2].Content == "How are you?"), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.Is<ChatHistory>(h => h.Count == 3 && h[0].Content == "Hi" && h[1].Content == "Hello!" && h[2].Content == "How are you?"),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -276,9 +275,9 @@ public class SemanticKernelServiceTests
         };
         var chatMessageContent = new ChatMessageContent(AuthorRole.Assistant, "I am a bot.");
         _mockChatService.Setup(s => s.GetChatMessageContentAsync(
-            It.IsAny<ChatHistory>(), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.IsAny<ChatHistory>(),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(chatMessageContent);
 
@@ -288,9 +287,9 @@ public class SemanticKernelServiceTests
         // Assert
         Assert.Equal("I am a bot.", result);
         _mockChatService.Verify(s => s.GetChatMessageContentAsync(
-            It.Is<ChatHistory>(h => h.Count == 2 && h[0].Content == "You are a bot." && h[1].Content == "What is your name?"), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.Is<ChatHistory>(h => h.Count == 2 && h[0].Content == "You are a bot." && h[1].Content == "What is your name?"),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -301,9 +300,9 @@ public class SemanticKernelServiceTests
         var chatHistory = new List<ChatMessage>();
         var chatMessageContent = new ChatMessageContent(AuthorRole.Assistant, "");
         _mockChatService.Setup(s => s.GetChatMessageContentAsync(
-            It.IsAny<ChatHistory>(), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.IsAny<ChatHistory>(),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(chatMessageContent);
 
@@ -313,9 +312,9 @@ public class SemanticKernelServiceTests
         // Assert
         Assert.Equal(string.Empty, result);
         _mockChatService.Verify(s => s.GetChatMessageContentAsync(
-            It.Is<ChatHistory>(h => !h.Any()), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.Is<ChatHistory>(h => !h.Any()),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -330,9 +329,9 @@ public class SemanticKernelServiceTests
         };
         var chatMessageContent = new ChatMessageContent(AuthorRole.Assistant, "Hi there.");
         _mockChatService.Setup(s => s.GetChatMessageContentAsync(
-            It.IsAny<ChatHistory>(), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.IsAny<ChatHistory>(),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(chatMessageContent);
 
@@ -348,9 +347,9 @@ public class SemanticKernelServiceTests
             It.IsAny<Exception>(),
             It.Is<Func<It.IsAnyType, Exception, string>>((v, t) => true)), Times.Once);
         _mockChatService.Verify(s => s.GetChatMessageContentAsync(
-            It.Is<ChatHistory>(h => h.Count == 1 && h.First().Content == "Hello"), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.Is<ChatHistory>(h => h.Count == 1 && h.First().Content == "Hello"),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -360,9 +359,9 @@ public class SemanticKernelServiceTests
         // Arrange
         var chatHistory = new List<ChatMessage> { new ChatMessage { Role = "user", Content = "Hi" } };
         _mockChatService.Setup(s => s.GetChatMessageContentAsync(
-            It.IsAny<ChatHistory>(), 
-            It.IsAny<PromptExecutionSettings>(), 
-            It.IsAny<Kernel>(), 
+            It.IsAny<ChatHistory>(),
+            It.IsAny<PromptExecutionSettings>(),
+            It.IsAny<Kernel>(),
             It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Chat service error"));
 
@@ -479,9 +478,9 @@ public class SemanticKernelServiceTests
         var expectedResult = "Function executed.";
         var mockFunction = KernelFunctionFactory.CreateFromMethod(() => expectedResult, functionName);
         _mockKernel.Setup(k => k.InvokeAsync(
-            pluginName, 
-            functionName, 
-            It.IsAny<KernelArguments>(), 
+            pluginName,
+            functionName,
+            It.IsAny<KernelArguments>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(new FunctionResult(mockFunction, expectedResult));
 
@@ -502,9 +501,9 @@ public class SemanticKernelServiceTests
         var expectedResult = "Function with args executed.";
         var mockFunction = KernelFunctionFactory.CreateFromMethod(() => expectedResult, functionName);
         _mockKernel.Setup(k => k.InvokeAsync(
-            pluginName, 
-            functionName, 
-            It.Is<KernelArguments>(ka => ka["input"].ToString() == "value"), 
+            pluginName,
+            functionName,
+            It.Is<KernelArguments>(ka => ka["input"].ToString() == "value"),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(new FunctionResult(mockFunction, expectedResult));
 
@@ -524,9 +523,9 @@ public class SemanticKernelServiceTests
         var expectedResult = "Deployment initiated.";
         var mockFunction = KernelFunctionFactory.CreateFromMethod(() => expectedResult, functionName);
         _mockKernel.Setup(k => k.InvokeAsync(
-            pluginName, 
-            functionName, 
-            It.IsAny<KernelArguments>(), 
+            pluginName,
+            functionName,
+            It.IsAny<KernelArguments>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(new FunctionResult(mockFunction, expectedResult));
 
@@ -550,9 +549,9 @@ public class SemanticKernelServiceTests
         var pluginName = "NonExistentPlugin";
         var functionName = "NonExistentFunction";
         _mockKernel.Setup(k => k.InvokeAsync(
-            pluginName, 
-            functionName, 
-            It.IsAny<KernelArguments>(), 
+            pluginName,
+            functionName,
+            It.IsAny<KernelArguments>(),
             It.IsAny<CancellationToken>()))
             .ThrowsAsync(new KernelException("Function not found"));
 
@@ -573,9 +572,9 @@ public class SemanticKernelServiceTests
         var expectedResult = "Typed string result.";
         var mockFunction = KernelFunctionFactory.CreateFromMethod(() => expectedResult, functionName);
         _mockKernel.Setup(k => k.InvokeAsync(
-            pluginName, 
-            functionName, 
-            It.IsAny<KernelArguments>(), 
+            pluginName,
+            functionName,
+            It.IsAny<KernelArguments>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(new FunctionResult(mockFunction, expectedResult));
 
@@ -595,9 +594,9 @@ public class SemanticKernelServiceTests
         var expectedResult = "Status: Running.";
         var mockFunction = KernelFunctionFactory.CreateFromMethod(() => expectedResult, functionName);
         _mockKernel.Setup(k => k.InvokeAsync(
-            pluginName, 
-            functionName, 
-            It.IsAny<KernelArguments>(), 
+            pluginName,
+            functionName,
+            It.IsAny<KernelArguments>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(new FunctionResult(mockFunction, expectedResult));
 
@@ -623,9 +622,9 @@ public class SemanticKernelServiceTests
         var mockFunction = KernelFunctionFactory.CreateFromMethod(() => "not an int", functionName);
         var kernelResult = new FunctionResult(mockFunction, "not an int");
         _mockKernel.Setup(k => k.InvokeAsync(
-            pluginName, 
-            functionName, 
-            It.IsAny<KernelArguments>(), 
+            pluginName,
+            functionName,
+            It.IsAny<KernelArguments>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(kernelResult);
 
@@ -640,9 +639,9 @@ public class SemanticKernelServiceTests
         var pluginName = "TestPlugin";
         var functionName = "FailingFunction";
         _mockKernel.Setup(k => k.InvokeAsync(
-            pluginName, 
-            functionName, 
-            It.IsAny<KernelArguments>(), 
+            pluginName,
+            functionName,
+            It.IsAny<KernelArguments>(),
             It.IsAny<CancellationToken>()))
             .ThrowsAsync(new KernelException("Kernel execution error"));
 
@@ -947,5 +946,4 @@ public class SemanticKernelServiceTests
 }
 
 // Removed local ChatMessage class to use Agent.Core.ChatMessage
-
 

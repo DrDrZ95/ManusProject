@@ -22,3 +22,4 @@ public class SerpApiSearch
         return result.ToString();
     }
 }
+

@@ -1,4 +1,3 @@
-
 namespace Agent.Application.Services.Workflow;
 
 /// <summary>
@@ -864,3 +863,4 @@ public class WorkflowService : IWorkflowService
         return match.Success ? match.Groups[1].Value.ToUpperInvariant() : null;
     }
 }
+

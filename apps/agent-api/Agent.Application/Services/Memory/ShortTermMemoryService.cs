@@ -164,3 +164,4 @@ Summary:";
         _logger.LogInformation("Cleared history for session {SessionId}", sessionId);
     }
 }
+

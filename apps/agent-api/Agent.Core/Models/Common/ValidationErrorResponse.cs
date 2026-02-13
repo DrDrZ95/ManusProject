@@ -18,3 +18,4 @@ public class ValidationErrorResponse : ErrorResponse
         Message = "One or more validation errors occurred.";
     }
 }
+

@@ -25,3 +25,4 @@ public record StateChangeNotificationDto(
     /// </summary>
     DateTime Timestamp
 );
+

@@ -45,3 +45,4 @@ public class Conversation
     public ICollection<ConversationSnapshot> Snapshots { get; set; } = new List<ConversationSnapshot>();
     public ICollection<ConversationAbilityLog> AbilityLogs { get; set; } = new List<ConversationAbilityLog>();
 }
+

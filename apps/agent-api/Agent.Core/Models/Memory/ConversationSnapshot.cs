@@ -42,3 +42,4 @@ public class ConversationSnapshot
     [ForeignKey(nameof(ConversationId))]
     public Conversation Conversation { get; set; } = null!;
 }
+

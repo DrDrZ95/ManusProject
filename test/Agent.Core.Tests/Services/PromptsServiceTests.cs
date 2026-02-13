@@ -219,7 +219,7 @@ namespace Agent.Core.Tests.Services
         {
             // Arrange
             // "document_analysis" has title "Document Analysis and Summarization"
-            
+
             // Act
             var result = await _promptsService.SearchPromptsAsync("analysis summarization");
 
@@ -229,3 +229,4 @@ namespace Agent.Core.Tests.Services
         }
     }
 }
+

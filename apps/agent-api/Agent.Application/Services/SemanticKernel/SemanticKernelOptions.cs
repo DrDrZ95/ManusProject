@@ -92,3 +92,4 @@ public class MemoryResult
     public float Relevance { get; set; }
     public Dictionary<string, object>? Metadata { get; set; }
 }
+

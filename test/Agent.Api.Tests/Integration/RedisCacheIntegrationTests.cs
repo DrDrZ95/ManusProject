@@ -1,4 +1,3 @@
-
 namespace Agent.Api.Tests.Integration;
 
 /// <summary>
@@ -18,16 +17,16 @@ public class RedisCacheIntegrationTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 // 假设Redis连接字符串 - Assume Redis connection string
-                {"ConnectionStrings:Redis", "localhost:6379"} 
+                {"ConnectionStrings:Redis", "localhost:6379"}
             })
             .Build();
 
         services.AddSingleton<IConfiguration>(configuration);
-        
+
         // 使用内存分布式缓存作为替代，因为真正的Redis连接需要外部服务
         // Use in-memory distributed cache as a substitute, as a real Redis connection requires an external service
-        services.AddDistributedMemoryCache(); 
-        
+        services.AddDistributedMemoryCache();
+
         var serviceProvider = services.BuildServiceProvider();
         _cache = serviceProvider.GetRequiredService<IDistributedCache>();
     }
@@ -98,5 +97,4 @@ public class RedisCacheIntegrationTests
     // TODO: 补充过期时间、滑动过期等高级缓存功能的测试
     // TODO: Supplement tests for advanced cache features like expiration time, sliding expiration, etc.
 }
-
 

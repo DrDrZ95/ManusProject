@@ -20,3 +20,4 @@ public static class MapsterConfig
         //    .Map(dest => dest.LastName, src => src.FullName.Split(' ')[1]);
     }
 }
+

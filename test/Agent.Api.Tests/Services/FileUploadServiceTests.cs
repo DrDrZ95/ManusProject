@@ -24,7 +24,7 @@ namespace Agent.Api.Tests.Services
 
             // Act & Assert
             await Assert.ThrowsAsync<SecurityException>(() => _mockFileUploadService.Object.ValidateFileAsync(invalidFile.Object));
-            
+
             _mockFileUploadService.Verify(s => s.ValidateFileAsync(
                 invalidFile.Object), Times.Once);
         }

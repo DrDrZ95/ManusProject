@@ -41,3 +41,4 @@ public class RagRetrievedChunk
     /// </summary>
     public string? HighlightedContent { get; set; }
 }
+

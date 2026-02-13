@@ -56,3 +56,4 @@ public class VectorMemoryMode : BaseAgentMemory
         return Task.CompletedTask;
     }
 }
+

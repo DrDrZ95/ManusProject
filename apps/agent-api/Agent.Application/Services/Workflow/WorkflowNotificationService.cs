@@ -26,3 +26,4 @@ public class WorkflowNotificationService : IWorkflowNotificationService
         await _hubContext.Clients.Group(planId).SendAsync("ReceiveStateChange", notification);
     }
 }
+

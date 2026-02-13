@@ -31,3 +31,4 @@ public interface IFileOperationService
     /// <returns>A task representing the asynchronous operation.</returns>
     Task DeleteFileAsync(string path, CancellationToken cancellationToken = default);
 }
+

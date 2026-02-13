@@ -1,4 +1,3 @@
-
 namespace Agent.Api.Tests.BusinessScenarios;
 
 public class FinancialRiskAnalysisTests
@@ -33,3 +32,4 @@ public class FinancialRiskAnalysisTests
         Assert.True(true);
     }
 }
+

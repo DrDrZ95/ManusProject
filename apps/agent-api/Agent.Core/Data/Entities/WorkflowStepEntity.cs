@@ -91,3 +91,4 @@ public class WorkflowStepEntity
     [ForeignKey(nameof(PlanId))]
     public WorkflowPlanEntity Plan { get; set; } = null!;
 }
+

@@ -53,3 +53,4 @@ public class JobLogsResponse
     public string JobId { get; set; } = string.Empty;
     public IEnumerable<string> Logs { get; set; } = new List<string>();
 }
+

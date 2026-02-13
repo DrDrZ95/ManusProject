@@ -1,4 +1,3 @@
-
 namespace Agent.Core.Data.Entities;
 
 /// <summary>
@@ -89,3 +88,4 @@ public class PromptTemplateEntity
     [Column("is_active")]
     public bool IsActive { get; set; }
 }
+

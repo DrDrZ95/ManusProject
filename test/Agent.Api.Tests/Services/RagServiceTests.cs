@@ -24,7 +24,7 @@ namespace Agent.Api.Tests.Services
             // Arrange
             var collectionName = "accuracy-test-collection";
             var query = new RagQuery { Text = "What is AI Agent?" };
-            
+
             var mockResults = new RagRetrievalResult
             {
                 Chunks = new List<RagRetrievedChunk>
@@ -64,15 +64,15 @@ namespace Agent.Api.Tests.Services
             // 模拟更新过程 - Simulate update process
             _mockRagService.Setup(s => s.UpdateDocumentAsync(collectionName, updatedDoc))
                 .Returns(Task.CompletedTask);
-            
+
             // 模拟更新后的检索结果 - Simulate retrieval result after update
             _mockRagService.Setup(s => s.VectorRetrievalAsync(collectionName, "Updated", It.IsAny<int>()))
-                .ReturnsAsync(new RagRetrievalResult 
-                { 
-                    Chunks = new List<RagRetrievedChunk> 
-                    { 
-                        new RagRetrievedChunk { Chunk = new RagDocumentChunk { DocumentId = docId, Content = "Updated Content" }, Score = 0.99f } 
-                    } 
+                .ReturnsAsync(new RagRetrievalResult
+                {
+                    Chunks = new List<RagRetrievedChunk>
+                    {
+                        new RagRetrievedChunk { Chunk = new RagDocumentChunk { DocumentId = docId, Content = "Updated Content" }, Score = 0.99f }
+                    }
                 });
 
             // Act
@@ -108,3 +108,4 @@ namespace Agent.Api.Tests.Services
         }
     }
 }
+

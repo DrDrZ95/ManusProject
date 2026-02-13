@@ -154,3 +154,4 @@ public enum SummaryStyle
     Technical,   // 技术性
     Casual       // 随意
 }
+

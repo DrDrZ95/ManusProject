@@ -198,4 +198,3 @@ public static class SemanticKernelExtensions
     }
 }
 
-

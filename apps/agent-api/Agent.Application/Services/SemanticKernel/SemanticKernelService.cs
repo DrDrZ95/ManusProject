@@ -1,6 +1,5 @@
 namespace Agent.Application.Services.SemanticKernel;
 
-
 /// <summary>
 /// Semantic Kernel service implementation
 /// 语义内核服务实现
@@ -724,5 +723,4 @@ public class SemanticKernelService : ISemanticKernelService
 
     #endregion
 }
-
 

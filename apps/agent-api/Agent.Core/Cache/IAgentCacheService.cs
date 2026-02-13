@@ -58,3 +58,4 @@ public interface IAgentCacheService
     /// <param name="cancellationToken">取消令牌 (Cancellation token)</param>
     Task RemoveAsync(string key, CancellationToken cancellationToken = default);
 }
+

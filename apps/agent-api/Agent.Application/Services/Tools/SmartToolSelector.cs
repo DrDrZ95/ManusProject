@@ -1,6 +1,5 @@
 namespace Agent.Application.Services.Tools;
 
-
 /// <summary>
 /// Smart Tool Selector Implementation
 /// 智能工具选择引擎实现：基于语义理解和历史指标进行工具推荐。
@@ -115,3 +114,4 @@ Respond with ONLY a JSON array of tool IDs, e.g., [""guid1"", ""guid2""].";
         return 0.1;
     }
 }
+

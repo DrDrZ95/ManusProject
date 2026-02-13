@@ -36,11 +36,3 @@ public interface IRagService
     Task<string> RetrieveAndGenerateAsync(string input);
 }
 
-
-
-
-
-
-
-
-

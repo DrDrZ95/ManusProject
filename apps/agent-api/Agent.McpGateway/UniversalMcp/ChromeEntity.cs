@@ -1,4 +1,5 @@
 namespace Agent.McpGateway.UniversalMcp;
+
 /// <summary>
 /// Chrome 实体
 /// Chrome Entity
@@ -11,5 +12,4 @@ public class ChromeEntity : IMcpEntity
     public string Url { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
 }
-
 

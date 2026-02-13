@@ -1,6 +1,5 @@
 namespace Agent.Core.Tools.Interfaces;
 
-
 /// <summary>
 /// 智能工具选择引擎接口 (Smart Tool Selector Interface)
 /// 负责基于任务需求和元数据指标选择最优工具。
@@ -25,3 +24,4 @@ public interface ISmartToolSelector
     /// </summary>
     Task EvaluateToolPerformanceAsync(Guid toolId, bool success, TimeSpan latency);
 }
+

@@ -1,5 +1,5 @@
-
 namespace Agent.McpGateway;
+
 /// <summary>
 /// Claude MCP 客户端实现
 /// Claude MCP Client Implementation
@@ -104,5 +104,4 @@ public class ClaudeMcpClient : McpBaseClient<ClaudeEntity>, IClaudeMcpClient
         return Task.FromResult(true);
     }
 }
-
 

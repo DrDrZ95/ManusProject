@@ -101,3 +101,4 @@ public class WorkflowContextSnapshot
     public Dictionary<string, object> IntermediateResults { get; set; } = new();
     public string? CurrentPlan { get; set; }
 }
+

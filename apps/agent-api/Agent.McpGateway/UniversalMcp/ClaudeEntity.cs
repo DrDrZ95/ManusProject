@@ -1,4 +1,5 @@
 namespace Agent.McpGateway.UniversalMcp;
+
 /// <summary>
 /// Claude 实体
 /// Claude Entity
@@ -11,5 +12,4 @@ public class ClaudeEntity : IMcpEntity
     public string ThreadId { get; set; } = string.Empty;
     public string LastMessage { get; set; } = string.Empty;
 }
-
 

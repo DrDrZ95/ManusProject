@@ -6,3 +6,4 @@ public class MetricEntry
     public long Value { get; set; }
     public DateTime Timestamp { get; set; }
 }
+

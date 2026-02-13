@@ -1,6 +1,5 @@
-
-
 namespace Agent.McpGateway;
+
 /// <summary>
 /// 通用 MCP 客户端基类
 /// Universal MCP Client Base Class
@@ -64,5 +63,4 @@ public abstract class McpBaseClient<TEntity> : IMcpClient<TEntity>
     /// <returns>操作结果</returns>
     public abstract Task<bool> DeleteAsync(string id);
 }
-
 

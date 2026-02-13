@@ -23,3 +23,4 @@ public class SearXNGSearch
         return result.ToString();
     }
 }
+

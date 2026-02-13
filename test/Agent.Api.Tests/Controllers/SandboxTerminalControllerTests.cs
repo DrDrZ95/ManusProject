@@ -71,13 +71,13 @@ namespace Agent.Api.Tests.Controllers
         public async Task ExecuteCommand_WithTimeout_PassedToService()
         {
             // Arrange
-            var request = new ExecuteCommandRequest 
-            { 
-                Command = "sleep 100", 
+            var request = new ExecuteCommandRequest
+            {
+                Command = "sleep 100",
                 Timeout = 5 // 5 seconds timeout
             };
             var expectedResult = new SandboxCommandResult { ExitCode = -1, StandardOutput = "", StandardError = "Timed out" };
-            
+
             _mockService.Setup(s => s.ExecuteCommandAsync(request.Command, null, 5, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(expectedResult);
 
@@ -113,3 +113,4 @@ namespace Agent.Api.Tests.Controllers
         }
     }
 }
+

@@ -1,4 +1,3 @@
-
 namespace Agent.Application.Services.SemanticKernel.Planner;
 
 /// <summary>
@@ -86,5 +85,4 @@ public class PostgreSQLPlanner : IPostgreSQLPlanner
         return await Task.FromResult($"Simulated PostgreSQL database backup to \'{backupPath}\' completed.");
     }
 }
-
 

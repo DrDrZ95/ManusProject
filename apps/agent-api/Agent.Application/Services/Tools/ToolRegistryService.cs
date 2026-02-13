@@ -1,6 +1,5 @@
 namespace Agent.Application.Services.Tools;
 
-
 /// <summary>
 /// Tool Registry Service Implementation
 /// 工具注册中心实现：负责元数据持久化和内核插件动态管理。
@@ -249,3 +248,4 @@ public class ToolRegistryService : IToolRegistryService
         public string? OutputVariable { get; set; }
     }
 }
+

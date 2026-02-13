@@ -33,3 +33,4 @@ public class AuditLogEntity
 
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 }
+

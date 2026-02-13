@@ -36,3 +36,4 @@ public class RagDocumentChunk
     /// </summary>
     public float[]? Embedding { get; set; }
 }
+

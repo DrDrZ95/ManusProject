@@ -14,3 +14,4 @@ public interface IAgentSpan : IDisposable
     void SetStatus(ActivityStatusCode statusCode, string? description = null);
     void AddEvent(string name, object? data = null);
 }
+

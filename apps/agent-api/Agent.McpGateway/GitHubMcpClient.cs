@@ -1,5 +1,5 @@
-
 namespace Agent.McpGateway;
+
 /// <summary>
 /// GitHub MCP 客户端实现
 /// GitHub MCP Client Implementation
@@ -135,5 +135,4 @@ public class GitHubMcpClient : McpBaseClient<GitHubEntity>
         return Task.FromResult(true);
     }
 }
-
 

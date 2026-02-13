@@ -9,3 +9,4 @@ public interface IHdfsService
     Task<bool> FileExistsAsync(string remotePath);
     Task<bool> DeleteFileAsync(string remotePath);
 }
+

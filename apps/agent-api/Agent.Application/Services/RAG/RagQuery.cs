@@ -78,3 +78,4 @@ public class RagRetrievalResult
 
     public IEnumerable<string>? RetrievedDocuments { get; set; }
 }
+

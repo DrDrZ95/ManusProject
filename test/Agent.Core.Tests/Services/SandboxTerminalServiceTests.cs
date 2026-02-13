@@ -15,15 +15,15 @@ namespace Agent.Core.Tests.Services
         {
             _mockLogger = new Mock<ILogger<SandboxTerminalService>>();
             _mockOptions = new Mock<IOptions<SandboxTerminalOptions>>();
-            
+
             _options = new SandboxTerminalOptions
             {
                 DefaultWorkingDirectory = System.IO.Path.GetTempPath(),
                 BlockedCommands = new List<string> { "rm -rf", "mkfs" }
             };
-            
+
             _mockOptions.Setup(o => o.Value).Returns(_options);
-            
+
             _service = new SandboxTerminalService(_mockOptions.Object, _mockLogger.Object);
         }
 
@@ -112,9 +112,9 @@ namespace Agent.Core.Tests.Services
             // SandboxTerminalService implementation uses "cmd /c" or "/bin/bash -c" usually?
             // Let's check CreateProcessStartInfo implementation if possible, but it's private.
             // Assuming it handles it.
-            
+
             // We just ensure it doesn't return security error.
-            
+
             // Act
             var result = await _service.ExecuteCommandAsync(command);
 
@@ -124,3 +124,4 @@ namespace Agent.Core.Tests.Services
         }
     }
 }
+

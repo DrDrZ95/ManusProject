@@ -63,3 +63,4 @@ public interface IMcpServerHostService
     IHostBuilder CreateMcpServerHost(string[] args);
     Task RunMcpServerHostAsync(IHostBuilder hostBuilder);
 }
+

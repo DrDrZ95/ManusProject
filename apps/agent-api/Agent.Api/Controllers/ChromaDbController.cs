@@ -336,3 +336,4 @@ public class QueryRequest
     public int NResults { get; set; } = 10;
     public Dictionary<string, object>? Where { get; set; }
 }
+

@@ -1,4 +1,3 @@
-
 namespace Agent.Core.Data.Entities;
 
 /// <summary>
@@ -118,3 +117,4 @@ public class ApiKeyPoolEntity
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
+

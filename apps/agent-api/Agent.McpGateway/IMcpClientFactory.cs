@@ -1,5 +1,5 @@
-
 namespace Agent.McpGateway;
+
 /// <summary>
 /// MCP 客户端工厂接口
 /// MCP Client Factory Interface
@@ -15,5 +15,4 @@ public interface IMcpClientFactory
     /// <returns>MCP 客户端实例</returns>
     IMcpClient<TEntity> CreateClient<TEntity>(string clientType) where TEntity : IMcpEntity;
 }
-
 

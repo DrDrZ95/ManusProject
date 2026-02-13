@@ -46,4 +46,3 @@ public interface IIstioPlanner
     Task<string> GetGatewayStatus([Description("The namespace to check.")] string namespaceName);
 }
 
-

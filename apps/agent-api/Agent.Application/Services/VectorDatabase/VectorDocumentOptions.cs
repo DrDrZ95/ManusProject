@@ -301,3 +301,4 @@ public enum DistanceMetric
     Manhattan,
     DotProduct
 }
+

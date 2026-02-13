@@ -1,4 +1,3 @@
-
 namespace Agent.Core.Data.Entities;
 
 /// <summary>
@@ -96,3 +95,4 @@ public class ApiKeyUsageLogEntity
     // Navigation property could be added here
     // public virtual ApiKeyPoolEntity ApiKeyPool { get; set; }
 }
+

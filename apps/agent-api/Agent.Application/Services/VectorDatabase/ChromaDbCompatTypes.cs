@@ -108,3 +108,4 @@ public sealed class GetResponse
     public IReadOnlyList<IReadOnlyDictionary<string, object>>? Metadatas { get; init; }
     public IReadOnlyList<float[]?>? Embeddings { get; init; }
 }
+

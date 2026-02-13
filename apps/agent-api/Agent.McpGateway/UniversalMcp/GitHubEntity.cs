@@ -1,4 +1,5 @@
 namespace Agent.McpGateway.UniversalMcp;
+
 /// <summary>
 /// GitHub 实体
 /// GitHub Entity
@@ -11,5 +12,4 @@ public class GitHubEntity : IMcpEntity
     public string RepositoryName { get; set; } = string.Empty;
     public string Owner { get; set; } = string.Empty;
 }
-
 

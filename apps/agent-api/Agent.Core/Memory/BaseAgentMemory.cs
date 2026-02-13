@@ -28,3 +28,4 @@ public abstract class BaseAgentMemory : IAgentMemory
     /// <inheritdoc />
     public abstract Task ClearAsync();
 }
+

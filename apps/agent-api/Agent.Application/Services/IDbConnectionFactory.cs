@@ -13,3 +13,4 @@ public interface IDbConnectionFactory
     /// <returns>An open database connection.</returns>
     Task<DbConnection> CreateConnectionAsync(string connectionName, CancellationToken cancellationToken = default);
 }
+

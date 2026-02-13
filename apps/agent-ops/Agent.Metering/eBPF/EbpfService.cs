@@ -1,4 +1,3 @@
-
 namespace Agent.Metering.eBPF;
 
 /// <summary> 

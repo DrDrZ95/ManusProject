@@ -87,3 +87,4 @@ public class UserInputRequest
     [Required]
     public string Input { get; set; } = string.Empty;
 }
+

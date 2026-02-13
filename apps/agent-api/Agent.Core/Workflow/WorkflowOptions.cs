@@ -36,3 +36,4 @@ public class WorkflowOptions
     /// </summary>
     public bool EnableDetailedLogging { get; set; } = true;
 }
+
