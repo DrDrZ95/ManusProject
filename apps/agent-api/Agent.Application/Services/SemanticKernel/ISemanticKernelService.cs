@@ -16,8 +16,8 @@ public interface ISemanticKernelService
     Task<IEnumerable<float[]>> GenerateEmbeddingsAsync(IEnumerable<string> texts);
 
     // Kernel Functions - 内核函数
-    Task<string> InvokeFunctionAsync(string plugName, string functionName, Dictionary<string, object>? arguments = null);
-    Task<T> InvokeFunctionAsync<T>(string plugName, string functionName, Dictionary<string, object>? arguments = null);
+    Task<string> InvokeFunctionAsync(string plugName, string functionName, Dictionary<string, object>? arguments = null, string? fallbackPlugin = null, string? fallbackFunction = null);
+    Task<T> InvokeFunctionAsync<T>(string plugName, string functionName, Dictionary<string, object>? arguments = null, string? fallbackPlugin = null, string? fallbackFunction = null);
 
     // Plugin Management - 插件管理
     void AddPlugin(object plugin, string? pluginName = null);

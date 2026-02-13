@@ -65,6 +65,20 @@ public class SemanticKernelOptions
     /// 嵌入结果缓存 TTL (Embedding Results Cache TTL) - 24 小时
     /// </summary>
     public TimeSpan EmbeddingResultsTtl { get; set; } = TimeSpan.FromHours(24);
+
+    /// <summary>
+    /// Tool call budget limit - 工具调用预算限制
+    /// </summary>
+    public double ToolBudgetLimit { get; set; } = 100.0; // $100.00 default
+
+    /// <summary>
+    /// Cost per 1k tokens for the model (simplified) - 每个1k token的成本（简化）
+    /// </summary>
+    public Dictionary<string, double> ModelCosts { get; set; } = new Dictionary<string, double>
+    {
+        { "gpt-3.5-turbo", 0.002 },
+        { "gpt-4", 0.03 }
+    };
 }
 
 /// <summary>

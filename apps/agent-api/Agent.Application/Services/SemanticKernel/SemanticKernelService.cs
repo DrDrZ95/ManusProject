@@ -1,14 +1,11 @@
 namespace Agent.Application.Services.SemanticKernel;
 
-using System.Security.Claims;
-using Agent.Core.Authorization;
-using Agent.Core.Cache;
-using Agent.Core.Models.Memory;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Embeddings;
+using Agent.Application.Services.Prometheus;
+using Agent.Application.Services.Telemetry;
+using OpenTelemetry.Trace;
+using Polly;
+using Polly.CircuitBreaker;
+using Polly.Retry;
 
 /// <summary>
 /// Semantic Kernel service implementation
@@ -29,6 +26,11 @@ public class SemanticKernelService : ISemanticKernelService
     private readonly IAgentCacheService _cacheService;
     private readonly IPermissionService _permissionService;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IPrometheusService _prometheusService;
+    private readonly IAgentTelemetryProvider _telemetryProvider;
+
+    private readonly ResiliencePipeline _resiliencePipeline;
+    private double _totalCost = 0;
 
     public SemanticKernelService(
         Kernel kernel,
@@ -43,7 +45,9 @@ public class SemanticKernelService : ISemanticKernelService
         IPostgreSQLPlanner postgreSqlPlanner,
         IClickHousePlanner clickHousePlanner,
         IPermissionService permissionService,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        IPrometheusService prometheusService,
+        IAgentTelemetryProvider telemetryProvider)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         _chatService = chatService ?? throw new ArgumentNullException(nameof(chatService));
@@ -58,6 +62,38 @@ public class SemanticKernelService : ISemanticKernelService
         _clickHousePlanner = clickHousePlanner ?? throw new ArgumentNullException(nameof(clickHousePlanner));
         _permissionService = permissionService ?? throw new ArgumentNullException(nameof(permissionService));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        _prometheusService = prometheusService ?? throw new ArgumentNullException(nameof(prometheusService));
+        _telemetryProvider = telemetryProvider ?? throw new ArgumentNullException(nameof(telemetryProvider));
+
+        // Initialize resilience pipeline - 初始化弹性管道
+        _resiliencePipeline = new ResiliencePipelineBuilder()
+            .AddRetry(new RetryStrategyOptions
+            {
+                MaxRetryAttempts = 3,
+                BackoffType = DelayBackoffType.Exponential,
+                UseJitter = true,
+                Delay = TimeSpan.FromSeconds(1),
+                OnRetry = args =>
+                {
+                    _logger.LogWarning("Retrying tool call. Attempt: {Attempt}, Error: {Error}", 
+                        args.AttemptNumber, args.Outcome.Exception?.Message);
+                    return default;
+                }
+            })
+            .AddCircuitBreaker(new CircuitBreakerStrategyOptions
+            {
+                FailureRatio = 0.5,
+                SamplingDuration = TimeSpan.FromMinutes(1),
+                MinimumThroughput = 5,
+                BreakDuration = TimeSpan.FromSeconds(30),
+                OnOpened = args =>
+                {
+                    _logger.LogError("Circuit breaker opened for tool calls. Duration: {Duration}", args.BreakDuration);
+                    return default;
+                }
+            })
+            .AddTimeout(TimeSpan.FromSeconds(60))
+            .Build();
 
         // Register planners as plugins
         _kernel.Plugins.AddFromObject(_kubernetesPlanner, "KubernetesPlanner");
@@ -251,11 +287,23 @@ public class SemanticKernelService : ISemanticKernelService
     /// Invoke a kernel function
     /// 调用内核函数
     /// </summary>
-    public async Task<string> InvokeFunctionAsync(string plugName, string functionName, Dictionary<string, object>? arguments = null)
+    public async Task<string> InvokeFunctionAsync(string plugName, string functionName, Dictionary<string, object>? arguments = null, string? fallbackPlugin = null, string? fallbackFunction = null)
     {
+        var stopwatch = Stopwatch.StartNew();
+        using var span = _telemetryProvider.StartSpan($"Tool.{plugName}.{functionName}");
+        span.SetAttribute("tool.plugin", plugName);
+        span.SetAttribute("tool.function", functionName);
+
         try
         {
             _logger.LogInformation("Invoking function: {FunctionName}", functionName);
+
+            // Check budget before invocation
+            if (_totalCost >= _options.ToolBudgetLimit)
+            {
+                _logger.LogWarning("Tool call budget exceeded: {TotalCost} >= {BudgetLimit}. Fallback or stopping.", _totalCost, _options.ToolBudgetLimit);
+                throw new InvalidOperationException($"Tool call budget exceeded: {_totalCost}");
+            }
 
             // Check permissions before invocation
             await CheckFunctionPermissionAsync(functionName);
@@ -269,15 +317,47 @@ public class SemanticKernelService : ISemanticKernelService
                 }
             }
 
-            var result = await _kernel.InvokeAsync(plugName, functionName, kernelArguments);
-            
+            // Use resilience pipeline for the call
+            var resultValue = await _resiliencePipeline.ExecuteAsync(async (ct) =>
+            {
+                try
+                {
+                    var result = await _kernel.InvokeAsync(plugName, functionName, kernelArguments, ct);
+                    _prometheusService.IncrementToolCallCounter(plugName, functionName, "success");
+                    return result.ToString();
+                }
+                catch (Exception ex) when (!string.IsNullOrEmpty(fallbackPlugin) && !string.IsNullOrEmpty(fallbackFunction))
+                {
+                    _logger.LogWarning(ex, "Tool call failed, falling back to {FallbackPlugin}.{FallbackFunction}", fallbackPlugin, fallbackFunction);
+                    _prometheusService.IncrementToolCallCounter(plugName, functionName, "fallback");
+                    var fallbackResult = await _kernel.InvokeAsync(fallbackPlugin, fallbackFunction, kernelArguments, ct);
+                    return fallbackResult.ToString();
+                }
+            });
+
             _logger.LogInformation("Function {FunctionName} invoked successfully", functionName);
-            return result.ToString();
+            
+            // Record metrics
+            _prometheusService.ObserveToolCallDuration(plugName, functionName, stopwatch.Elapsed.TotalSeconds);
+            
+            // Simplified cost tracking for demonstration (in real scenario, get from LLM response metadata)
+            var estimatedCost = 0.0001; // $0.0001 per call as placeholder
+            _totalCost += estimatedCost;
+            _prometheusService.RecordToolCost(plugName, functionName, estimatedCost, "USD");
+            
+            return resultValue;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to invoke function: {FunctionName}", functionName);
+            _prometheusService.IncrementToolCallCounter(plugName, functionName, "error");
+            span.RecordException(ex);
+            span.SetStatus(ActivityStatusCode.Error, ex.Message);
             throw;
+        }
+        finally
+        {
+            stopwatch.Stop();
         }
     }
 
@@ -285,12 +365,25 @@ public class SemanticKernelService : ISemanticKernelService
     /// Invoke a kernel function with typed return value
     /// 调用内核函数并返回类型化的值
     /// </summary>
-    public async Task<T> InvokeFunctionAsync<T>(string plugName, string functionName, Dictionary<string, object>? arguments = null)
+    public async Task<T> InvokeFunctionAsync<T>(string plugName, string functionName, Dictionary<string, object>? arguments = null, string? fallbackPlugin = null, string? fallbackFunction = null)
     {
+        var stopwatch = Stopwatch.StartNew();
+        using var span = _telemetryProvider.StartSpan($"Tool.{plugName}.{functionName}");
+        span.SetAttribute("tool.plugin", plugName);
+        span.SetAttribute("tool.function", functionName);
+        span.SetAttribute("tool.return_type", typeof(T).Name);
+
         try
         {
             _logger.LogInformation("Invoking function: {FunctionName} with return type: {ReturnType}", 
                 functionName, typeof(T).Name);
+
+            // Check budget before invocation
+            if (_totalCost >= _options.ToolBudgetLimit)
+            {
+                _logger.LogWarning("Tool call budget exceeded: {TotalCost} >= {BudgetLimit}. Fallback or stopping.", _totalCost, _options.ToolBudgetLimit);
+                throw new InvalidOperationException($"Tool call budget exceeded: {_totalCost}");
+            }
 
             // Check permissions before invocation
             await CheckFunctionPermissionAsync(functionName);
@@ -304,11 +397,34 @@ public class SemanticKernelService : ISemanticKernelService
                 }
             }
             
-            var result = await _kernel.InvokeAsync(plugName, functionName, kernelArguments);
+            // Use resilience pipeline for the call
+            var resultValue = await _resiliencePipeline.ExecuteAsync(async (ct) =>
+            {
+                try
+                {
+                    var result = await _kernel.InvokeAsync(plugName, functionName, kernelArguments, ct);
+                    _prometheusService.IncrementToolCallCounter(plugName, functionName, "success");
+                    return result;
+                }
+                catch (Exception ex) when (!string.IsNullOrEmpty(fallbackPlugin) && !string.IsNullOrEmpty(fallbackFunction))
+                {
+                    _logger.LogWarning(ex, "Tool call failed, falling back to {FallbackPlugin}.{FallbackFunction}", fallbackPlugin, fallbackFunction);
+                    _prometheusService.IncrementToolCallCounter(plugName, functionName, "fallback");
+                    return await _kernel.InvokeAsync(fallbackPlugin, fallbackFunction, kernelArguments, ct);
+                }
+            });
             
             _logger.LogInformation("Function {FunctionName} invoked successfully", functionName);
             
-            if (result is T typedResult)
+            // Record metrics
+            _prometheusService.ObserveToolCallDuration(plugName, functionName, stopwatch.Elapsed.TotalSeconds);
+
+            // Simplified cost tracking for demonstration
+            var estimatedCost = 0.0001; 
+            _totalCost += estimatedCost;
+            _prometheusService.RecordToolCost(plugName, functionName, estimatedCost, "USD");
+
+            if (resultValue is T typedResult)
             {
                 return typedResult;
             }
@@ -316,7 +432,7 @@ public class SemanticKernelService : ISemanticKernelService
             // Try to convert the result - 尝试转换结果
             if (typeof(T) == typeof(string))
             {
-                return (T)(object)result.ToString();
+                return (T)(object)resultValue.ToString();
             }
             
             throw new InvalidCastException($"Cannot convert result to type {typeof(T).Name}");
@@ -324,7 +440,14 @@ public class SemanticKernelService : ISemanticKernelService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to invoke function: {FunctionName}", functionName);
+            _prometheusService.IncrementToolCallCounter(plugName, functionName, "error");
+            span.RecordException(ex);
+            span.SetStatus(ActivityStatusCode.Error, ex.Message);
             throw;
+        }
+        finally
+        {
+            stopwatch.Stop();
         }
     }
 

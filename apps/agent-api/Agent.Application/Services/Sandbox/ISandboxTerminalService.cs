@@ -230,5 +230,29 @@ public class SandboxTerminalOptions
     /// 启用命令清理
     /// </summary>
     public bool EnableSanitization { get; set; } = true;
+
+    /// <summary>
+    /// Resource limit: Maximum memory in MB
+    /// 资源限制：最大内存（MB）
+    /// </summary>
+    public long MaxMemoryMB { get; set; } = 512;
+
+    /// <summary>
+    /// Resource limit: Maximum CPU percentage (0-100)
+    /// 资源限制：最大CPU百分比（0-100）
+    /// </summary>
+    public int MaxCpuPercent { get; set; } = 50;
+
+    /// <summary>
+    /// Resource limit: Allow network access
+    /// 资源限制：是否允许网络访问
+    /// </summary>
+    public bool AllowNetwork { get; set; } = false;
+
+    /// <summary>
+    /// Resource limit: Maximum output size in characters
+    /// 资源限制：最大输出大小（字符数）
+    /// </summary>
+    public int MaxOutputSize { get; set; } = 10000;
 }
 

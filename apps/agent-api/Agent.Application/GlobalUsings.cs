@@ -11,6 +11,7 @@ global using Agent.Application.Services.SemanticKernel.Planner;
 global using Agent.Application.Services.VectorDatabase;
 global using Agent.Application.Services.Workflow;
 global using Agent.Core;
+global using Agent.Core.Authorization;
 global using Agent.Core.Cache;
 global using Agent.Core.Data.Entities;
 global using Agent.Core.Data.Repositories;

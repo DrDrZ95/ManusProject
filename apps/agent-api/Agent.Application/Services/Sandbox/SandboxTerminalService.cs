@@ -70,6 +70,9 @@ public class SandboxTerminalService : ISandboxTerminalService
             _logger.LogInformation("Executing command: {Command} in directory: {WorkingDirectory}", 
                 sanitizedCommand, effectiveWorkingDir);
 
+            // Audit the input - 审计输入
+            AuditCommandCall(sanitizedCommand, effectiveWorkingDir, "INPUT");
+
             // 创建进程配置 - Create process configuration
             var processStartInfo = CreateProcessStartInfo(sanitizedCommand, effectiveWorkingDir);
             
@@ -82,7 +85,14 @@ public class SandboxTerminalService : ISandboxTerminalService
             {
                 if (e.Data != null)
                 {
-                    outputBuilder.AppendLine(e.Data);
+                    if (outputBuilder.Length < _options.MaxOutputSize)
+                    {
+                        outputBuilder.AppendLine(e.Data);
+                    }
+                    else if (!outputBuilder.ToString().EndsWith("... [Output Truncated]"))
+                    {
+                        outputBuilder.AppendLine("... [Output Truncated]");
+                    }
                 }
             };
 
@@ -90,24 +100,47 @@ public class SandboxTerminalService : ISandboxTerminalService
             {
                 if (e.Data != null)
                 {
-                    errorBuilder.AppendLine(e.Data);
+                    if (errorBuilder.Length < _options.MaxOutputSize)
+                    {
+                        errorBuilder.AppendLine(e.Data);
+                    }
+                    else if (!errorBuilder.ToString().EndsWith("... [Output Truncated]"))
+                    {
+                        errorBuilder.AppendLine("... [Output Truncated]");
+                    }
                 }
             };
 
-            var processTask = process.WaitForExitAsync(cancellationToken);;
-            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(timeout), cancellationToken);
-            var completed = await Task.WhenAny(processTask, timeoutTask);
-            
             // 启动进程 - Start process
             process.Start();
+
+            // Apply resource limits (simplified) - 应用资源限制（简化）
+            try
+            {
+                if (_options.MaxCpuPercent < 100)
+                {
+                    process.PriorityClass = ProcessPriorityClass.BelowNormal;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to set process priority for sandbox command");
+            }
+
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
 
-            // 等待完成或超时 - Wait for completion or timeout
-            var timeoutMs = Math.Min(timeout * 1000, _options.MaxTimeout * 1000);
+            var processTask = process.WaitForExitAsync(cancellationToken);
+            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(timeout), cancellationToken);
             
+            // Monitor memory in background - 在后台监控内存
+            using var memoryCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var memoryMonitorTask = MonitorMemoryAsync(process, _options.MaxMemoryMB, memoryCts.Token);
 
-            if (!completed.IsCompleted && !completed.IsCompletedSuccessfully)
+            var completed = await Task.WhenAny(processTask, timeoutTask);
+            memoryCts.Cancel(); // Stop memory monitoring
+            
+            if (completed == timeoutTask)
             {
                 // 超时处理 - Timeout handling
                 _logger.LogWarning("Command timed out after {Timeout}s: {Command}", timeout, command);
@@ -136,6 +169,9 @@ public class SandboxTerminalService : ISandboxTerminalService
                 StandardError = errorBuilder.ToString().Trim(),
                 ExecutionTimeMs = stopwatch.ElapsedMilliseconds
             };
+
+            // Audit the output - 审计输出
+            AuditCommandCall(sanitizedCommand, effectiveWorkingDir, "OUTPUT", result);
 
             _logger.LogInformation("Command completed with exit code {ExitCode} in {ExecutionTime}ms", 
                 result.ExitCode, result.ExecutionTimeMs);
@@ -196,11 +232,27 @@ public class SandboxTerminalService : ISandboxTerminalService
 
         _logger.LogInformation("Executing streaming command: {Command}", sanitizedCommand);
 
+        // Audit the input - 审计输入
+        AuditCommandCall(sanitizedCommand, effectiveWorkingDir, "INPUT_STREAM");
+
         var processStartInfo = CreateProcessStartInfo(sanitizedCommand, effectiveWorkingDir);
         
         using var process = new Process { StartInfo = processStartInfo };
         
         process.Start();
+
+        // Apply resource limits (simplified) - 应用资源限制（简化）
+        try
+        {
+            if (_options.MaxCpuPercent < 100)
+            {
+                process.PriorityClass = ProcessPriorityClass.BelowNormal;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to set process priority for sandbox streaming command");
+        }
 
         // 创建读取任务 - Create reading tasks
         var outputTask = ReadStreamAsync(process.StandardOutput, "STDOUT", cancellationToken);
@@ -250,6 +302,9 @@ public class SandboxTerminalService : ISandboxTerminalService
             _logger.LogError(completedTask.Exception, "Failed to execute streaming command: {Command}", command);
             yield return $"Error: {completedTask.Exception.Message}";
         }
+
+        // Audit the completion - 审计完成
+        AuditCommandCall(sanitizedCommand, effectiveWorkingDir, "OUTPUT_STREAM_COMPLETED");
     }
 
     /// <summary>
@@ -315,6 +370,17 @@ public class SandboxTerminalService : ISandboxTerminalService
         {
             if (lowerCommand.Contains(blockedCommand.ToLowerInvariant()))
             {
+                return false;
+            }
+        }
+
+        // 检查网络命令 - Check network commands if network is not allowed
+        if (!_options.AllowNetwork)
+        {
+            var networkCommands = new[] { "curl", "wget", "ping", "ssh", "scp", "ftp", "telnet", "nc", "netcat", "nslookup", "dig" };
+            if (networkCommands.Any(nc => lowerCommand.Split(' ', StringSplitOptions.RemoveEmptyEntries).Contains(nc)))
+            {
+                _logger.LogWarning("Network access is disabled, blocked command: {Command}", command);
                 return false;
             }
         }
@@ -467,6 +533,55 @@ public class SandboxTerminalService : ISandboxTerminalService
         
         return !sensitiveDirectories.Any(sensitive => 
             fullPath.StartsWith(sensitive, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Audit command call - 审计命令调用
+    /// </summary>
+    private void AuditCommandCall(string command, string workingDir, string type, SandboxCommandResult? result = null)
+    {
+        if (!_options.EnableLogging) return;
+
+        var auditInfo = new
+        {
+            Timestamp = DateTime.UtcNow,
+            Type = type,
+            Command = command,
+            WorkingDirectory = workingDir,
+            User = Environment.UserName,
+            Result = result != null ? new { result.ExitCode, result.ExecutionTimeMs } : null
+        };
+
+        _logger.LogInformation("[SANDBOX AUDIT] {AuditInfo}", JsonSerializer.Serialize(auditInfo));
+    }
+
+    /// <summary>
+    /// Monitor process memory usage - 监控进程内存使用情况
+    /// </summary>
+    private async Task MonitorMemoryAsync(Process process, long maxMemoryMB, CancellationToken ct)
+    {
+        try
+        {
+            while (!process.HasExited && !ct.IsCancellationRequested)
+            {
+                process.Refresh();
+                var currentMemoryMB = process.WorkingSet64 / (1024 * 1024);
+
+                if (currentMemoryMB > maxMemoryMB)
+                {
+                    _logger.LogWarning("Process {ProcessId} exceeded memory limit: {CurrentMB}MB > {MaxMB}MB. Killing process.", 
+                        process.Id, currentMemoryMB, maxMemoryMB);
+                    process.Kill(true);
+                    break;
+                }
+
+                await Task.Delay(1000, ct); // Check every second
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "Error monitoring process memory");
+        }
     }
 
     /// <summary>
