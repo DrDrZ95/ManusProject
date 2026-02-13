@@ -39,35 +39,51 @@ public static class ApplicationExtensions
 public static class ApplicationPipelineExtensions
 {
     /// <summary>
+    /// Configures the full application request pipeline.
+    /// 配置完整的应用程序请求管道。
+    /// </summary>
+    public static void UseFullApplicationPipeline(this WebApplication app, IConfiguration configuration)
+    {
+        app.UseSwaggerDocumentation();
+        app.ConfigureApplicationPipeline();
+        app.UseFileUploadSecurity();
+        app.UseIdentityServices();
+        app.UseSignalRServices(configuration);
+        app.UseAiAgentYarp();
+        app.UsePrometheusMetrics();
+        app.UseHangfireDashboard();
+        app.MapControllers();
+    }
+
+    /// <summary>
     /// Configures the application's HTTP request pipeline.
     /// 配置应用程序的HTTP请求管道。
     /// </summary>
     /// <param name="app">The WebApplication instance. WebApplication实例。</param>
     public static void ConfigureApplicationPipeline(this WebApplication app)
     {
-        // Configure development environment - Strategy Pattern
-        // 配置开发环境 - 策略模式
-        //app.ConfigureDevelopmentEnvironment();
-
-        // Configure static files - Chain of Responsibility Pattern
-        // 配置静态文件 - 责任链模式
-        //app.ConfigureStaticFiles();
-
-        // Configure MCP endpoints - Facade Pattern
-        // 配置MCP端点 - 外观模式
-        //app.ConfigureMcpEndpoints();
-
-        // Configure development test endpoints - Command Pattern
-        // 配置开发测试端点 - 命令模式
-        //app.ConfigureDevTestEndpoints();
-
-        // Configure Dapr middleware // 配置全局异常处理中间件 - Middleware Pattern
         // Configure global exception handling middleware - 中间件模式
         app.UseMiddleware<Middleware.GlobalExceptionMiddleware>();
 
         // 配置Dapr中间件 - Middleware Pattern
         // 配置Dapr中间件 - 中间件模式
         app.UseDaprMiddleware();
+    }
+}
+
+public static class ToolRegistryExtensions
+{
+    /// <summary>
+    /// Hot-loads tools from the registry.
+    /// 从注册中心热加载工具。
+    /// </summary>
+    public static async Task HotLoadToolsAsync(this IHost app)
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var toolRegistry = scope.ServiceProvider.GetRequiredService<IToolRegistryService>();
+            await toolRegistry.HotLoadToolsAsync();
+        }
     }
 }
 
