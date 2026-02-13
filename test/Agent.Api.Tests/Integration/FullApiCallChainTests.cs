@@ -1,11 +1,3 @@
-using Xunit;
-using System.Threading.Tasks;
-using Agent.Api.Tests.Integration.Fixtures;
-using System.Net.Http.Json;
-using Agent.Core.Models.Memory;
-using Agent.Core.Workflow.Models;
-using Agent.Core.Workflow;
-
 namespace Agent.Api.Tests.Integration;
 
 /// <summary>

@@ -37,9 +37,9 @@ namespace Agent.Api.Tests.Services
             {
                 Chunks = new List<RagRetrievedChunk>
                 {
-                    new RagRetrievedChunk { DocumentId = "doc-low", Text = "Low relevance", Score = 0.45 },
-                    new RagRetrievedChunk { DocumentId = "doc-high", Text = "High relevance content", Score = 0.98 },
-                    new RagRetrievedChunk { DocumentId = "doc-mid", Text = "Medium relevance", Score = 0.75 }
+                    new RagRetrievedChunk { Chunk = new RagDocumentChunk { DocumentId = "doc-low", Content = "Low relevance" }, Score = 0.45f },
+                    new RagRetrievedChunk { Chunk = new RagDocumentChunk { DocumentId = "doc-high", Content = "High relevance content" }, Score = 0.98f },
+                    new RagRetrievedChunk { Chunk = new RagDocumentChunk { DocumentId = "doc-mid", Content = "Medium relevance" }, Score = 0.75f }
                 }
             };
 
@@ -52,8 +52,8 @@ namespace Agent.Api.Tests.Services
             // Assert
             Assert.NotNull(result);
             var sortedChunks = result.Chunks.OrderByDescending(c => c.Score).ToList();
-            Assert.Equal("doc-high", sortedChunks[0].DocumentId);
-            Assert.Equal(0.98, sortedChunks[0].Score);
+            Assert.Equal("doc-high", sortedChunks[0].Chunk.DocumentId);
+            Assert.Equal(0.98f, sortedChunks[0].Score);
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Agent.Api.Tests.Services
                 { 
                     Chunks = new List<RagRetrievedChunk> 
                     { 
-                        new RagRetrievedChunk { DocumentId = docId, Text = "Updated Content", Score = 0.99 } 
+                        new RagRetrievedChunk { Chunk = new RagDocumentChunk { DocumentId = docId, Content = "Updated Content" }, Score = 0.99f } 
                     } 
                 });
 
@@ -89,7 +89,7 @@ namespace Agent.Api.Tests.Services
 
             // Assert
             var chunk = Assert.Single(retrievalResult.Chunks);
-            Assert.Equal("Updated Content", chunk.Text);
+            Assert.Equal("Updated Content", chunk.Chunk.Content);
             _mockRagService.Verify(s => s.UpdateDocumentAsync(collectionName, updatedDoc), Times.Once);
         }
 
@@ -103,16 +103,16 @@ namespace Agent.Api.Tests.Services
             // Arrange
             var docIds = new List<string> { "doc1", "doc2" };
             var analysisQuery = "Summarize both";
-            var expectedAnswer = "Aggregated summary of doc1 and doc2";
+            var expectedResponse = "Aggregated summary of doc1 and doc2";
 
             _mockRagService.Setup(s => s.MultiDocumentAnalysisAsync("coll", docIds, analysisQuery))
-                .ReturnsAsync(new RagResponse { Answer = expectedAnswer });
+                .ReturnsAsync(new RagResponse { Response = expectedResponse });
 
             // Act
             var result = await _mockRagService.Object.MultiDocumentAnalysisAsync("coll", docIds, analysisQuery);
 
             // Assert
-            Assert.Equal(expectedAnswer, result.Answer);
+            Assert.Equal(expectedResponse, result.Response);
         }
     }
 }

@@ -68,6 +68,6 @@ public class ComprehensiveIntegrationTests : IntegrationTestBase
         await Client.PostAsync($"/api/v1/workflows/{plan.Id}/steps/1/complete", null);
 
         var receivedMessage = await messageReceived.Task;
-        Assert.Contains(plan.Id, receivedMessage);
+        Assert.Contains(plan.Id.ToString(), receivedMessage);
     }
 }

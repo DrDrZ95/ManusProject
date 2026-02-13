@@ -1,17 +1,19 @@
+using Agent.Application.Services.Multimodal;
 using Agent.Application.Services.VectorDatabase;
 using Agent.Core.Cache;
-using ChromaDB.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.SemanticKernel.Connectors.Chroma;
 using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Agent.Api.Tests.Integration
-{
+namespace Agent.Api.Tests.Integration;
+
     /// <summary>
     /// ChromaDB 集成测试 - 针对 SearchAsync, GetDocumentsAsync, 缓存失效和限制测试
     /// ChromaDB Integration Tests - for SearchAsync, GetDocumentsAsync, cache invalidation, and limit tests
@@ -55,8 +57,8 @@ namespace Agent.Api.Tests.Integration
             var collectionName = "test-collection";
             var request = new VectorSearchRequest 
             { 
-                Embeddings = new List<float[]> { new float[] { 0.1f, 0.2f } },
-                Limit = 5
+                QueryEmbedding = new float[] { 0.1f, 0.2f },
+                TopK = 5
             };
 
             // Act
@@ -65,7 +67,7 @@ namespace Agent.Api.Tests.Integration
             // Assert
             Assert.NotNull(result);
             // 验证是否调用了获取集合的方法 (Verify collection was retrieved)
-            _mockClient.Verify(c => c.GetCollectionAsync(collectionName, default), Times.Once);
+            _mockClient.Verify(c => c.GetCollectionAsync(collectionName, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         /// <summary>
@@ -85,7 +87,7 @@ namespace Agent.Api.Tests.Integration
             // Assert
             // 目前实现返回 null，集成测试应验证其行为或未来实现 (Current implementation returns null, test verifies behavior)
             Assert.Null(result);
-            _mockClient.Verify(c => c.GetCollectionAsync(collectionName, default), Times.Once);
+            _mockClient.Verify(c => c.GetCollectionAsync(collectionName, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         /// <summary>
@@ -102,8 +104,8 @@ namespace Agent.Api.Tests.Integration
             await _service.DeleteCollectionAsync(collectionName);
 
             // Assert
-            _mockCache.Verify(c => c.RemoveAsync($"vector:collection:{collectionName}"), Times.Once);
-            _mockCache.Verify(c => c.RemoveAsync("vector:collections"), Times.Once);
+            _mockCache.Verify(c => c.RemoveAsync($"vector:collection:{collectionName}", It.IsAny<CancellationToken>()), Times.Once);
+            _mockCache.Verify(c => c.RemoveAsync("vector:collections", It.IsAny<CancellationToken>()), Times.Once);
         }
 
         /// <summary>
@@ -121,26 +123,24 @@ namespace Agent.Api.Tests.Integration
             // 注意：ChromaVectorDatabaseService.GetCollectionAsync 内部使用 QueryEmbeddingsAsync 来计算数量
             _mockClient.Setup(c => c.QueryEmbeddingsAsync(
                 collectionName, 
-                It.IsAny<IEnumerable<ReadOnlyMemory<float>>>(), 
+                It.IsAny<ReadOnlyMemory<float>[]>(), 
                 It.IsAny<int>(), 
-                It.IsAny<IDictionary<string, object>>(), 
-                It.IsAny<IDictionary<string, object>>(), 
-                It.IsAny<IEnumerable<string>>(), 
-                default))
-                .ReturnsAsync(new QueryResponse { Ids = new List<List<string>> { new List<string> { "1", "2", "3" } } });
+                It.IsAny<string[]>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ChromaQueryResultModel { Ids = new List<List<string>> { new List<string> { "1", "2", "3" } } });
 
             _mockCache.Setup(c => c.GetOrCreateAsync(
                 cacheKey, 
                 It.IsAny<Func<Task<VectorCollection>>>(), 
                 It.IsAny<TimeSpan?>(), 
-                It.IsAny<TimeSpan?>()))
-                .Returns(async (string key, Func<Task<VectorCollection>> factory, TimeSpan? m, TimeSpan? d) => await factory());
+                It.IsAny<TimeSpan?>(),
+                It.IsAny<CancellationToken>()))
+                .Returns(async (string key, Func<Task<VectorCollection>> factory, TimeSpan? m, TimeSpan? d, CancellationToken ct) => await factory());
 
             // Act
             var collection = await _service.GetCollectionAsync(collectionName);
 
             // Assert
-            Assert.Equal(3, collection.DocumentCount);
-        }
+        Assert.Equal(3, collection.DocumentCount);
     }
 }

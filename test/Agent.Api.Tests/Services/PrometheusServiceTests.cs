@@ -1,65 +1,39 @@
-using Agent.Core.Services;
-using Moq;
-using System.Threading.Tasks;
-using Xunit;
-using Prometheus;
+namespace Agent.Api.Tests.Services;
 
-namespace Agent.Api.Tests.Services
+public class PrometheusServiceTests
 {
-    /// <summary>
-    /// PrometheusMetricService的单元测试
-    /// Unit tests for PrometheusMetricService
-    /// </summary>
-    public class PrometheusMetricServiceTests
+    private readonly Mock<IPrometheusService> _mockService;
+
+    public PrometheusServiceTests()
     {
-        private readonly Mock<IPrometheusMetricService> _mockMetricService;
+        _mockService = new Mock<IPrometheusService>();
+    }
 
-        public PrometheusMetricServiceTests()
-        {
-            _mockMetricService = new Mock<IPrometheusMetricService>();
-        }
+    [Fact]
+    public void IncrementRequestCounter_ShouldCallServiceMethod()
+    {
+        // Arrange
+        string endpoint = "/api/v1/test";
 
-        /// <summary>
-        /// 测试指标收集服务（例如，计数器递增）
-        /// Test metric collection service (e.g., counter increment)
-        /// </summary>
-        [Fact]
-        public void IncrementRequestCounter_ShouldCallServiceMethod()
-        {
-            // Arrange
-            string counterName = "http_requests_total";
-            string[] labels = { "get", "/api/v1/test" };
+        // Act
+        _mockService.Object.IncrementRequestCounter(endpoint);
 
-            // Act
-            _mockMetricService.Object.IncrementCounter(counterName, labels);
+        // Assert
+        _mockService.Verify(s => s.IncrementRequestCounter(endpoint), Times.Once);
+    }
 
-            // Assert
-            // 验证服务方法是否被调用 - Verify that the service method was called
-            _mockMetricService.Verify(s => s.IncrementCounter(counterName, labels), Times.Once);
-        }
+    [Fact]
+    public void ObserveRequestDuration_ShouldCallServiceMethod()
+    {
+        // Arrange
+        string endpoint = "/api/v1/test";
+        double duration = 0.5;
 
-        /// <summary>
-        /// 测试指标收集服务（例如，直方图观察）
-        /// Test metric collection service (e.g., histogram observation)
-        /// </summary>
-        [Fact]
-        public void ObserveRequestDuration_ShouldCallServiceMethod()
-        {
-            // Arrange
-            string histogramName = "http_request_duration_seconds";
-            double duration = 0.5;
-            string[] labels = { "get", "/api/v1/test" };
+        // Act
+        _mockService.Object.ObserveRequestDuration(endpoint, duration);
 
-            // Act
-            _mockMetricService.Object.ObserveHistogram(histogramName, duration, labels);
-
-            // Assert
-            // 验证服务方法是否被调用 - Verify that the service method was called
-            _mockMetricService.Verify(s => s.ObserveHistogram(histogramName, duration, labels), Times.Once);
-        }
-
-        // TODO: 补充其他指标类型的测试，例如Gauge、Summary等
-        // TODO: Supplement other metric type tests, such as Gauge, Summary, etc.
+        // Assert
+        _mockService.Verify(s => s.ObserveRequestDuration(endpoint, duration), Times.Once);
     }
 }
 

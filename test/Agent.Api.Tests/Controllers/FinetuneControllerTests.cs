@@ -2,6 +2,8 @@ using Agent.Api.Controllers;
 using Agent.Application.Services.Finetune;
 using Agent.Application.Services.Telemetry;
 using Agent.Core.Data.Entities;
+using Agent.Core.Models.Common;
+using Agent.Core.Models.Finetune;
 using Agent.Core.Workflow;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -32,8 +34,9 @@ namespace Agent.Api.Tests.Controllers
             _mockTelemetry = new Mock<IAgentTelemetryProvider>();
             
             // Mock telemetry span
-            var mockSpan = new Mock<IDisposable>();
-            _mockTelemetry.Setup(t => t.StartSpan(It.IsAny<string>())).Returns(mockSpan.Object);
+            var mockSpan = new Mock<IAgentSpan>();
+            _mockTelemetry.Setup(t => t.StartSpan(It.IsAny<string>(), It.IsAny<SpanKind>()))
+                .Returns(mockSpan.Object);
 
             _controller = new FinetuneController(_mockService.Object, _mockLogger.Object, _mockTelemetry.Object);
         }
@@ -53,7 +56,8 @@ namespace Agent.Api.Tests.Controllers
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
-            Assert.Contains("Job name is required", badRequestResult.Value.ToString());
+            var apiResponse = Assert.IsType<ApiResponse<StartFinetuneResponse>>(badRequestResult.Value);
+            Assert.Contains("Job name is required", apiResponse.Message);
         }
 
         /// <summary>
@@ -78,8 +82,8 @@ namespace Agent.Api.Tests.Controllers
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
-            var response = Assert.IsType<StartFinetuneResponse>(okResult.Value);
-            Assert.Equal("job-123", response.JobId);
+            var apiResponse = Assert.IsType<ApiResponse<StartFinetuneResponse>>(okResult.Value);
+            Assert.Equal("job-123", apiResponse.Data.JobId);
         }
 
         /// <summary>
@@ -95,7 +99,7 @@ namespace Agent.Api.Tests.Controllers
                 .ReturnsAsync((FinetuneRequest r) => Guid.NewGuid().ToString());
 
             // Act
-            var tasks = new List<Task<ActionResult<StartFinetuneResponse>>>();
+            var tasks = new List<Task<ActionResult<ApiResponse<StartFinetuneResponse>>>>();
             for (int i = 0; i < 10; i++)
             {
                 tasks.Add(_controller.StartFinetune(request));
@@ -124,7 +128,7 @@ namespace Agent.Api.Tests.Controllers
                 Id = jobId, 
                 JobName = "recovery-test",
                 Status = FinetuneStatus.Running,
-                Progress = 45.5f,
+                Progress = 45,
                 CurrentEpoch = 5,
                 TotalEpochs = 10
             };
@@ -136,9 +140,10 @@ namespace Agent.Api.Tests.Controllers
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
-            var response = Assert.IsType<FinetuneJobStatusResponse>(okResult.Value);
+            var apiResponse = Assert.IsType<ApiResponse<FinetuneJobStatusResponse>>(okResult.Value);
+            var response = apiResponse.Data;
             Assert.Equal(jobId, response.JobId);
-            Assert.Equal(45.5f, response.Progress);
+            Assert.Equal(45, response.Progress);
             Assert.Equal("Running", response.Status);
         }
 
@@ -160,6 +165,8 @@ namespace Agent.Api.Tests.Controllers
             // Assert
             var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
             Assert.Equal(500, statusCodeResult.StatusCode);
+            var apiResponse = Assert.IsType<ApiResponse<StartFinetuneResponse>>(statusCodeResult.Value);
+            Assert.Contains("GPU out of memory", apiResponse.Message);
             _mockLogger.Verify(
                 x => x.Log(
                     LogLevel.Error,

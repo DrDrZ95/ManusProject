@@ -118,6 +118,8 @@ using (var activity = telemetryProvider.StartSpan("AI-Agent.ApplicationStartup")
 // 运行应用程序
 app.Run();
 
+public partial class Program { }
+
 
 
 

@@ -40,6 +40,7 @@ global using Polly;
 global using Polly.CircuitBreaker;
 global using Polly.Retry;
 global using Prometheus;
+global using Stateless;
 global using System;
 global using System.Collections.Concurrent;
 global using System.Collections.Generic;

@@ -85,7 +85,7 @@ namespace Agent.Api.Tests.Controllers
                 Command = "sleep 100", 
                 Timeout = 5 // 5 seconds timeout
             };
-            var expectedResult = new SandboxCommandResult { ExitCode = -1, Stdout = "", Stderr = "Timed out" };
+            var expectedResult = new SandboxCommandResult { ExitCode = -1, StandardOutput = "", StandardError = "Timed out" };
             
             _mockService.Setup(s => s.ExecuteCommandAsync(request.Command, null, 5, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(expectedResult);
@@ -96,7 +96,7 @@ namespace Agent.Api.Tests.Controllers
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
             var response = Assert.IsType<SandboxCommandResult>(okResult.Value);
-            Assert.Equal("Timed out", response.Stderr);
+            Assert.Equal("Timed out", response.StandardError);
             _mockService.Verify(s => s.ExecuteCommandAsync("sleep 100", null, 5, It.IsAny<CancellationToken>()), Times.Once);
         }
 

@@ -24,6 +24,7 @@ global using Agent.Core.Workflow;
 global using Dapr.Client;
 global using Flurl;
 global using Flurl.Http;
+global using Stateless;
 global using Microsoft.AspNetCore.Authorization;
 global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.SignalR;

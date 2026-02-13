@@ -6,19 +6,22 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <NoWarn>$(NoWarn);SKEXP0020;SKEXP0001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Hangfire" Version="1.8.23" />
+    <PackageReference Include="Hangfire.MemoryStorage" Version="1.8.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="Moq" Version="4.20.70" />
-    <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.65.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.57.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.57.0" />
+    <PackageReference Include="ChromaDB.Client" Version="1.0.0" />
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.68.0" />
     <PackageReference Include="Testcontainers.PostgreSql" Version="3.8.0" />
     <PackageReference Include="Testcontainers.Redis" Version="3.8.0" />
     <PackageReference Include="xunit" Version="2.6.3" />
