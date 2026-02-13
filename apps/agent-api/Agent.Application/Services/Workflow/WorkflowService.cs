@@ -1,3 +1,12 @@
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Text.Json;
+using Agent.Core.Workflow;
+using Agent.Core.Data.Entities;
+using Agent.Core.Data.Repositories;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
 namespace Agent.Application.Services.Workflow;
 
 /// <summary>
@@ -10,6 +19,7 @@ namespace Agent.Application.Services.Workflow;
 public class WorkflowService : IWorkflowService
 {
     private readonly ILogger<WorkflowService> _logger;
+    private readonly ILoggerFactory _loggerFactory;
     private readonly WorkflowOptions _options;
     private readonly IWorkflowRepository _repository;
     private readonly IWorkflowNotificationService _notificationService; // 新增：通知服务
@@ -19,11 +29,13 @@ public class WorkflowService : IWorkflowService
 
     public WorkflowService(
         ILogger<WorkflowService> logger,
+        ILoggerFactory loggerFactory,
         IOptions<WorkflowOptions> options,
         IWorkflowRepository repository,
         IWorkflowNotificationService notificationService) // 注入通知服务
     {
         _logger = logger;
+        _loggerFactory = loggerFactory;
         _options = options.Value;
         _repository = repository;
         _notificationService = notificationService;
@@ -46,8 +58,29 @@ public class WorkflowService : IWorkflowService
             return null;
         }
 
-        // 使用当前持久化的状态初始化引擎 (Initialize engine with current persisted state)
-        var newEngine = new WorkflowExecutionEngine(planId, planEntity.CurrentState, _notificationService); // 传入通知服务
+        // 解析持久化的上下文 (Parse persisted context)
+        WorkflowContext? existingContext = null;
+        if (!string.IsNullOrEmpty(planEntity.ExecutionContextJson))
+        {
+            try
+            {
+                existingContext = JsonSerializer.Deserialize<WorkflowContext>(planEntity.ExecutionContextJson);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to deserialize execution context for plan {PlanId}", planId);
+            }
+        }
+
+        // 使用当前持久化的状态和上下文初始化引擎 (Initialize engine with current persisted state and context)
+        var newEngine = new WorkflowExecutionEngine(
+            planId, 
+            planEntity.CurrentState, 
+            _notificationService, 
+            _repository,
+            _loggerFactory.CreateLogger<WorkflowExecutionEngine>(),
+            existingContext); 
+        
         _engines[planId] = newEngine;
         return newEngine;
     }
@@ -99,10 +132,16 @@ public class WorkflowService : IWorkflowService
             var resultPlan = addedEntity.ToModel();
             
             // 5. 初始化并启动状态机 (Initialize and start the state machine)
-            var engine = new WorkflowExecutionEngine(resultPlan.Id, resultPlan.CurrentState, _notificationService); // 传入通知服务
+            var engine = new WorkflowExecutionEngine(
+                resultPlan.Id, 
+                resultPlan.CurrentState, 
+                _notificationService, 
+                _repository,
+                _loggerFactory.CreateLogger<WorkflowExecutionEngine>());
+            
             _engines[resultPlan.Id] = engine;
             await engine.TriggerEventAsync(WorkflowEvent.StartTask);
-            await PersistEngineStateAsync(resultPlan.Id, engine.CurrentState, null, cancellationToken);
+            // 注意：engine.TriggerEventAsync 内部已经调用了 SaveStateAndContextAsync，所以这里不需要手动 PersistEngineStateAsync
 
             _logger.LogInformation("Created workflow plan with ID: {PlanId}, Title: {Title}", resultPlan.Id, request.Title);
             
@@ -205,7 +244,6 @@ public class WorkflowService : IWorkflowService
         try
         {
             await engine.TriggerEventAsync(@event, new ManualInterventionInfo { Reason = interventionReason });
-            await PersistEngineStateAsync(id, engine.CurrentState, interventionReason, cancellationToken);
 
             _logger.LogInformation("Workflow {PlanId} transitioned to state {State} via event {Event}", 
                 planId, engine.CurrentState, @event);
@@ -225,6 +263,19 @@ public class WorkflowService : IWorkflowService
     }
     
     
+    /// <inheritdoc />
+    public async Task<IWorkflowContext?> GetWorkflowContextAsync(string planId)
+    {
+        if (!Guid.TryParse(planId, out var id))
+        {
+            _logger.LogWarning("Invalid Plan ID format: {PlanId}", planId);
+            return null;
+        }
+
+        var engine = await GetOrCreateEngineAsync(id, default);
+        return engine?.GetContext();
+    }
+
     /// <summary>
     /// Update step status in a plan
     /// 更新计划中的步骤状态
@@ -270,9 +321,11 @@ public class WorkflowService : IWorkflowService
 
             // 使用 Repository 的专用方法更新状态 (Use Repository's dedicated method to update status)
             await _repository.UpdateStepStatusAndResultAsync(
-                stepEntity.Id, 
+                id, 
+                stepIndex,
                 status, 
                 stepEntity.Result, // 保持 Result 不变
+                stepEntity.Error,  // 保持 Error 不变
                 startedAt, 
                 completedAt,
                 cancellationToken);
@@ -289,10 +342,36 @@ public class WorkflowService : IWorkflowService
         }
     }
 
-    public Task<bool> UpdateStepStatusAndResultAsync(string planId, int stepIndex, PlanStepStatus status,
+    /// <inheritdoc />
+    public async Task<bool> UpdateStepStatusAndResultAsync(
+        string planId, 
+        int stepIndex, 
+        PlanStepStatus status, 
+        string? result = null, 
+        string? error = null,
         CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        try
+        {
+            if (!Guid.TryParse(planId, out var id)) return false;
+
+            await _repository.UpdateStepStatusAndResultAsync(
+                id, 
+                stepIndex, 
+                status, 
+                result, 
+                error,
+                null, 
+                null, 
+                cancellationToken);
+            
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating step status and result for plan {PlanId}", planId);
+            return false;
+        }
     }
 
     /// <summary>
@@ -382,9 +461,11 @@ public class WorkflowService : IWorkflowService
 	            {
 	                // 使用 Repository 的专用方法更新结果 (Use Repository's dedicated method to update result)
 	                await _repository.UpdateStepStatusAndResultAsync(
-	                    stepEntity.Id, 
+	                    id, 
+	                    stepIndex,
 	                    PlanStepStatus.Completed, // 确保状态是 Completed
 	                    result, 
+	                    null,
 	                    null, 
 	                    DateTime.UtcNow,
 	                    cancellationToken);
@@ -441,9 +522,11 @@ public class WorkflowService : IWorkflowService
 	            {
 	                // 使用 Repository 的专用方法更新结果 (Use Repository's dedicated method to update result)
 	                await _repository.UpdateStepStatusAndResultAsync(
-	                    stepEntity.Id, 
+	                    id, 
+	                    stepIndex,
 	                    PlanStepStatus.Failed, 
-	                    reason ?? "Step failed without specific reason.", 
+	                    null, 
+	                    reason ?? "Step failed without specific reason.",
 	                    null, 
 	                    DateTime.UtcNow,
 	                    cancellationToken);
@@ -660,6 +743,122 @@ public class WorkflowService : IWorkflowService
     public Task<string> CreateWorkflowAsync(string llmResponse)
     {
         throw new NotImplementedException();
+    }
+
+    // --- Visualization & Debugging (可视化与调试) ---
+
+    /// <inheritdoc />
+    public async Task<bool> UpdateVisualGraphAsync(string planId, string visualGraphJson, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (!Guid.TryParse(planId, out var id)) return false;
+            var planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
+            if (planEntity == null) return false;
+
+            planEntity.VisualGraphJson = visualGraphJson;
+            planEntity.UpdatedAt = DateTime.UtcNow;
+
+            await _repository.UpdatePlanAsync(planEntity, cancellationToken);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating visual graph for plan {PlanId}", planId);
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> ToggleBreakpointAsync(string planId, int stepIndex, bool isBreakpoint, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (!Guid.TryParse(planId, out var id)) return false;
+            var success = await _repository.UpdateStepBreakpointAsync(id, stepIndex, isBreakpoint, cancellationToken);
+            return success;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error toggling breakpoint for plan {PlanId}, step {StepIndex}", planId, stepIndex);
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<WorkflowPerformanceReport> GetPerformanceReportAsync(string planId, CancellationToken cancellationToken = default)
+    {
+        var plan = await GetPlanAsync(planId, cancellationToken);
+        if (plan == null) throw new ArgumentException($"Plan not found: {planId}");
+
+        var report = new WorkflowPerformanceReport
+        {
+            PlanId = plan.Id.ToString(),
+            Title = plan.Title,
+            StepMetrics = plan.Steps.Select(s => new StepPerformanceMetric
+            {
+                Index = s.Index,
+                Text = s.Text,
+                Type = s.Type,
+                Status = s.Status,
+                Duration = (s.CompletedAt ?? DateTime.UtcNow) - (s.StartedAt ?? DateTime.UtcNow),
+                Cost = 0, // Placeholder
+                IsBottleneck = false
+            }).ToList()
+        };
+
+        report.TotalDuration = report.StepMetrics.Aggregate(TimeSpan.Zero, (sum, m) => sum + m.Duration);
+        var completedCount = plan.Steps.Count(s => s.Status == PlanStepStatus.Completed);
+        report.SuccessRate = plan.Steps.Count > 0 ? (double)completedCount / plan.Steps.Count : 0;
+
+        // Simple bottleneck identification: steps taking > 20% of total time
+        if (report.TotalDuration.TotalSeconds > 0)
+        {
+            foreach (var metric in report.StepMetrics)
+            {
+                if (metric.Duration.TotalSeconds / report.TotalDuration.TotalSeconds > 0.2)
+                {
+                    metric.IsBottleneck = true;
+                    report.OptimizationSuggestions.Add($"Step {metric.Index} ({metric.Text}) is a bottleneck. Consider parallelization or optimization.");
+                }
+            }
+        }
+
+        return report;
+    }
+
+    /// <inheritdoc />
+    public async Task<string> ExportWorkflowAsync(string planId, CancellationToken cancellationToken = default)
+    {
+        var plan = await GetPlanAsync(planId, cancellationToken);
+        if (plan == null) throw new ArgumentException($"Plan not found: {planId}");
+        return JsonSerializer.Serialize(plan, new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    /// <inheritdoc />
+    public async Task<WorkflowPlan> ImportWorkflowAsync(string jsonContent, CancellationToken cancellationToken = default)
+    {
+        var plan = JsonSerializer.Deserialize<WorkflowPlan>(jsonContent);
+        if (plan == null) throw new ArgumentException("Invalid JSON content");
+
+        var createRequest = new CreatePlanRequest
+        {
+            Title = plan.Title,
+            Description = plan.Description,
+            Steps = plan.Steps.Select(s => s.Text).ToList(),
+            ExecutorKeys = plan.ExecutorKeys,
+            Metadata = plan.Metadata
+        };
+
+        var newPlan = await CreatePlanAsync(createRequest, cancellationToken);
+        
+        // If the imported plan has visual data, update it
+        if (!string.IsNullOrEmpty(plan.VisualGraphJson))
+        {
+            await UpdateVisualGraphAsync(newPlan.Id.ToString(), plan.VisualGraphJson, cancellationToken);
+        }
+
+        return await GetPlanAsync(newPlan.Id.ToString(), cancellationToken) ?? newPlan;
     }
 
     /// <summary>

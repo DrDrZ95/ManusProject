@@ -62,9 +62,27 @@ public class WorkflowStepEntity
     /// 存储步骤执行后的输出或总结
     /// </summary>
     public string? Result { get; set; }
+
+    /// <summary>
+    /// 错误信息 (Error Message)
+    /// 存储执行失败时的错误详情
+    /// </summary>
+    public string? Error { get; set; }
     
     [Column(TypeName = "jsonb")]
     public string? Metadata { get; set; }
+
+    /// <summary>
+    /// 性能数据 (Performance Data)
+    /// 存储耗时、成本、成功率等指标
+    /// </summary>
+    [Column(TypeName = "jsonb")]
+    public string? PerformanceDataJson { get; set; }
+
+    /// <summary>
+    /// 是否设置了断点 (Is Breakpoint Set)
+    /// </summary>
+    public bool IsBreakpoint { get; set; } = false;
 
     // 导航属性 (Navigation Property)
     /// <summary>

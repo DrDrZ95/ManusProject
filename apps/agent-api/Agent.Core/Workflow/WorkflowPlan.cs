@@ -83,6 +83,11 @@ public class WorkflowPlan
     /// 连续失败次数 (Consecutive Failure Count)
     /// </summary>
     public int FailureCount { get; set; } = 0;
+
+    /// <summary>
+    /// 可视化图形数据 (Visual Graph Data)
+    /// </summary>
+    public string? VisualGraphJson { get; set; }
 }
 
 /// <summary>
@@ -103,6 +108,16 @@ public class WorkflowStep
     /// Step metadata - 步骤元数据（来自旧模型补齐）
     /// </summary>
     public Dictionary<string, object> Metadata { get; set; } = new();
+
+    /// <summary>
+    /// Performance metrics - 性能指标
+    /// </summary>
+    public Dictionary<string, object> PerformanceData { get; set; } = new();
+
+    /// <summary>
+    /// Is breakpoint set - 是否设置了断点
+    /// </summary>
+    public bool IsBreakpoint { get; set; }
 }
 
 /// <summary>
@@ -200,6 +215,35 @@ public class WorkflowProgress
 }
 
 /// <summary>
+/// Workflow performance report model
+/// 工作流性能报告模型
+/// </summary>
+public class WorkflowPerformanceReport
+{
+    public string PlanId { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public TimeSpan TotalDuration { get; set; }
+    public double SuccessRate { get; set; }
+    public List<StepPerformanceMetric> StepMetrics { get; set; } = new();
+    public List<string> OptimizationSuggestions { get; set; } = new();
+}
+
+/// <summary>
+/// Step performance metric model
+/// 步骤性能指标模型
+/// </summary>
+public class StepPerformanceMetric
+{
+    public int Index { get; set; }
+    public string Text { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public TimeSpan Duration { get; set; }
+    public double Cost { get; set; }
+    public PlanStepStatus Status { get; set; }
+    public bool IsBottleneck { get; set; }
+}
+
+/// <summary>
 /// 实体和模型转换扩展方法 (Entity and Model Conversion Extensions)
 /// </summary>
 public static class WorkflowPlanExtensions
@@ -220,7 +264,8 @@ public static class WorkflowPlanExtensions
             Status = entity.Status,
             Steps = entity.Steps.Select(s => s.ToModel()).ToList(),
             StepStatuses = entity.Steps.Select(s => s.Status).ToList(),
-            CurrentStepIndex = entity.Steps.FirstOrDefault(s => s.Status.IsActive())?.Index
+            CurrentStepIndex = entity.Steps.FirstOrDefault(s => s.Status.IsActive())?.Index,
+            VisualGraphJson = entity.VisualGraphJson
         };
         return model;
     }
@@ -235,7 +280,10 @@ public static class WorkflowPlanExtensions
             Status = entity.Status,
             StartedAt = entity.StartedAt,
             CompletedAt = entity.CompletedAt,
-            Result = entity.Result
+            Result = entity.Result,
+            Metadata = string.IsNullOrEmpty(entity.Metadata) ? new Dictionary<string, object>() : JsonSerializer.Deserialize<Dictionary<string, object>>(entity.Metadata) ?? new Dictionary<string, object>(),
+            PerformanceData = string.IsNullOrEmpty(entity.PerformanceDataJson) ? new Dictionary<string, object>() : JsonSerializer.Deserialize<Dictionary<string, object>>(entity.PerformanceDataJson) ?? new Dictionary<string, object>(),
+            IsBreakpoint = entity.IsBreakpoint
         };
     }
 
@@ -253,6 +301,7 @@ public static class WorkflowPlanExtensions
             CreatedAt = model.CreatedAt,
             UpdatedAt = model.UpdatedAt,
             Status = model.Status,
+            VisualGraphJson = model.VisualGraphJson,
             Steps = model.Steps.Select(s => s.ToEntity(model.Id)).ToList()
         };
         return entity;
@@ -269,7 +318,10 @@ public static class WorkflowPlanExtensions
             Status = model.Status,
             StartedAt = model.StartedAt,
             CompletedAt = model.CompletedAt,
-            Result = model.Result
+            Result = model.Result,
+            Metadata = JsonSerializer.Serialize(model.Metadata),
+            PerformanceDataJson = JsonSerializer.Serialize(model.PerformanceData),
+            IsBreakpoint = model.IsBreakpoint
         };
     }
 }

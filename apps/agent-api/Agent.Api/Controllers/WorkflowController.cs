@@ -489,9 +489,122 @@ public class WorkflowController : ControllerBase
             return StatusCode(500, ApiResponse<object>.Fail("Internal server error - 内部服务器错误"));
         }
     }
+
+    // --- Visualization & Debugging (可视化与调试) ---
+
+    /// <summary>
+    /// Update visual graph for a plan
+    /// 更新工作流的可视化图形数据
+    /// </summary>
+    [HttpPut("{planId}/visual-graph")]
+    [SwaggerOperation(Summary = "Update visual graph", Tags = new[] { "Workflow" })]
+    public async Task<IActionResult> UpdateVisualGraph(
+        string planId,
+        [FromBody] UpdateVisualGraphRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var success = await _workflowService.UpdateVisualGraphAsync(planId, request.VisualGraphJson, cancellationToken);
+        if (!success) return NotFound(ApiResponse<object>.Fail("Plan not found"));
+        return Ok(ApiResponse<object>.Ok(null, "Visual graph updated"));
+    }
+
+    /// <summary>
+    /// Toggle breakpoint for a step
+    /// 设置或取消步骤的断点
+    /// </summary>
+    [HttpPut("{planId}/step/{stepIndex}/breakpoint")]
+    [SwaggerOperation(Summary = "Toggle breakpoint", Tags = new[] { "Workflow" })]
+    public async Task<IActionResult> ToggleBreakpoint(
+        string planId,
+        int stepIndex,
+        [FromBody] ToggleBreakpointRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var success = await _workflowService.ToggleBreakpointAsync(planId, stepIndex, request.IsBreakpoint, cancellationToken);
+        if (!success) return NotFound(ApiResponse<object>.Fail("Plan or step not found"));
+        return Ok(ApiResponse<object>.Ok(null, "Breakpoint toggled"));
+    }
+
+    /// <summary>
+    /// Get performance report for a plan
+    /// 获取工作流性能报告
+    /// </summary>
+    [HttpGet("{planId}/performance")]
+    [SwaggerOperation(Summary = "Get performance report", Tags = new[] { "Workflow" })]
+    public async Task<ActionResult<ApiResponse<WorkflowPerformanceReport>>> GetPerformanceReport(
+        string planId,
+        CancellationToken cancellationToken = default)
+    {
+        try {
+            var report = await _workflowService.GetPerformanceReportAsync(planId, cancellationToken);
+            return Ok(ApiResponse<WorkflowPerformanceReport>.Ok(report));
+        } catch (ArgumentException ex) {
+            return NotFound(ApiResponse<object>.Fail(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Export workflow as JSON
+    /// 导出工作流为JSON
+    /// </summary>
+    [HttpGet("{planId}/export")]
+    [SwaggerOperation(Summary = "Export workflow", Tags = new[] { "Workflow" })]
+    public async Task<IActionResult> ExportWorkflow(
+        string planId,
+        CancellationToken cancellationToken = default)
+    {
+        try {
+            var json = await _workflowService.ExportWorkflowAsync(planId, cancellationToken);
+            return Content(json, "application/json");
+        } catch (ArgumentException ex) {
+            return NotFound(ApiResponse<object>.Fail(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Import workflow from JSON
+    /// 导入工作流JSON
+    /// </summary>
+    [HttpPost("import")]
+    [SwaggerOperation(Summary = "Import workflow", Tags = new[] { "Workflow" })]
+    public async Task<ActionResult<ApiResponse<WorkflowPlan>>> ImportWorkflow(
+        [FromBody] ImportWorkflowRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try {
+            var plan = await _workflowService.ImportWorkflowAsync(request.JsonContent, cancellationToken);
+            return Ok(ApiResponse<WorkflowPlan>.Ok(plan));
+        } catch (Exception ex) {
+            return BadRequest(ApiResponse<object>.Fail(ex.Message));
+        }
+    }
 }
 
 #region Request/Response Models
+
+/// <summary>
+/// Update visual graph request
+/// </summary>
+public class UpdateVisualGraphRequest
+{
+    public string VisualGraphJson { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Toggle breakpoint request
+/// </summary>
+public class ToggleBreakpointRequest
+{
+    public bool IsBreakpoint { get; set; }
+}
+
+/// <summary>
+/// Import workflow request
+/// </summary>
+public class ImportWorkflowRequest
+{
+    public string JsonContent { get; set; } = string.Empty;
+}
 
 /// <summary>
 /// Update step status request

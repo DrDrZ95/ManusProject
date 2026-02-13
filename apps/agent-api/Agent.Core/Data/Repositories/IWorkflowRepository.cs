@@ -34,6 +34,11 @@ public interface IWorkflowRepository
     Task<bool> UpdatePlanStateAsync(Guid planId, WorkflowState state, string? interventionReason, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// 更新工作流计划的执行上下文 (Update the execution context of a workflow plan)
+    /// </summary>
+    Task<bool> UpdatePlanContextAsync(Guid planId, string contextJson, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// 更新工作流计划的连续失败次数 (Update the consecutive failure count of a workflow plan)
     /// </summary>
     Task<bool> UpdatePlanFailureCountAsync(Guid planId, int failureCount, CancellationToken cancellationToken = default);
@@ -76,10 +81,31 @@ public interface IWorkflowRepository
     /// 更新单个步骤的状态和结果 (Update the status and result of a single step)
     /// </summary>
     Task UpdateStepStatusAndResultAsync(
-        Guid stepId, 
+        Guid planId, 
+        int stepIndex,
         PlanStepStatus status, 
         string? result, 
+        string? error,
         DateTime? startedAt, 
         DateTime? completedAt,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 更新步骤的性能数据 (Update the performance data for a step)
+    /// </summary>
+    Task UpdateStepPerformanceDataAsync(
+        Guid planId,
+        int stepIndex,
+        string performanceDataJson,
+        DateTime? completedAt,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 更新步骤的断点设置 (Update the breakpoint setting for a step)
+    /// </summary>
+    Task<bool> UpdateStepBreakpointAsync(
+        Guid planId,
+        int stepIndex,
+        bool isBreakpoint,
         CancellationToken cancellationToken = default);
 }

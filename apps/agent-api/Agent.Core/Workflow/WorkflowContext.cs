@@ -13,14 +13,44 @@ public class WorkflowContext : IWorkflowContext
     public string? CurrentPlan { get; set; }
 
     /// <inheritdoc />
+    public int CurrentStepIndex { get; set; }
+
+    /// <inheritdoc />
     public List<string> ExecutionHistory { get; } = new();
 
     /// <inheritdoc />
     public ManualInterventionInfo? InterventionInfo { get; set; }
 
+    /// <inheritdoc />
+    public Dictionary<string, object> InputParameters { get; } = new();
+
+    /// <inheritdoc />
+    public Dictionary<string, object> IntermediateResults { get; } = new();
+
+    /// <inheritdoc />
+    public List<ToolCallRecord> ToolCallHistory { get; } = new();
+
+    /// <inheritdoc />
+    public List<WorkflowError> Errors { get; } = new();
+
+    /// <inheritdoc />
+    public int Version { get; set; } = 1;
+
     public WorkflowContext(long taskId)
     {
         TaskId = taskId;
+    }
+
+    /// <inheritdoc />
+    public WorkflowContextSnapshot CreateSnapshot()
+    {
+        return new WorkflowContextSnapshot
+        {
+            Version = Version,
+            Timestamp = DateTime.UtcNow,
+            IntermediateResults = new Dictionary<string, object>(IntermediateResults),
+            CurrentPlan = CurrentPlan
+        };
     }
 }
 

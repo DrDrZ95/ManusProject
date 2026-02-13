@@ -96,6 +96,21 @@ public class WorkflowRepository : IWorkflowRepository
     }
 
     /// <summary>
+    /// 更新工作流计划的执行上下文 (Update the execution context of a workflow plan)
+    /// </summary>
+    public Task<bool> UpdatePlanContextAsync(Guid planId, string contextJson, CancellationToken cancellationToken = default)
+    {
+        if (_plans.ContainsKey(planId))
+        {
+            WorkflowPlanEntity plan = _plans[planId];
+            plan.ExecutionContextJson = contextJson;
+            plan.UpdatedAt = DateTime.UtcNow;
+            return Task.FromResult(true);
+        }
+        return Task.FromResult(false);
+    }
+
+    /// <summary>
     /// 更新工作流计划的连续失败次数 (Update the consecutive failure count of a workflow plan)
     /// </summary>
     public Task<bool> UpdatePlanFailureCountAsync(Guid planId, int failureCount, CancellationToken cancellationToken = default)
@@ -184,26 +199,67 @@ public class WorkflowRepository : IWorkflowRepository
     /// 更新单个步骤的状态和结果 (Update the status and result of a single step)
     /// </summary>
     public Task UpdateStepStatusAndResultAsync(
-        Guid stepId, 
+        Guid planId, 
+        int stepIndex,
         PlanStepStatus status, 
         string? result, 
+        string? error,
         DateTime? startedAt, 
         DateTime? completedAt,
         CancellationToken cancellationToken = default)
     {
-        // 实际EF Core实现: 查找步骤，更新字段，然后 SaveChangesAsync();
-        if (_steps.TryGetValue(stepId, out var step))
+        var step = _steps.Values.FirstOrDefault(s => s.PlanId == planId && s.Index == stepIndex);
+        if (step != null)
         {
             step.Status = status;
             step.Result = result;
+            step.Error = error;
             step.StartedAt = startedAt ?? step.StartedAt;
             step.CompletedAt = completedAt ?? step.CompletedAt;
-            // 确保更新父计划的 UpdatedAt (In a real scenario, this would be handled by EF Core change tracking or a separate update)
-            if (_plans.TryGetValue(step.PlanId, out var plan))
+            
+            if (_plans.TryGetValue(planId, out var plan))
             {
                 plan.UpdatedAt = DateTime.UtcNow;
             }
         }
         return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task UpdateStepPerformanceDataAsync(
+        Guid planId,
+        int stepIndex,
+        string performanceDataJson,
+        DateTime? completedAt,
+        CancellationToken cancellationToken = default)
+    {
+        var step = _steps.Values.FirstOrDefault(s => s.PlanId == planId && s.Index == stepIndex);
+        if (step != null)
+        {
+            step.PerformanceDataJson = performanceDataJson;
+            step.CompletedAt = completedAt ?? step.CompletedAt;
+            
+            if (_plans.TryGetValue(planId, out var plan))
+            {
+                plan.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task<bool> UpdateStepBreakpointAsync(
+        Guid planId,
+        int stepIndex,
+        bool isBreakpoint,
+        CancellationToken cancellationToken = default)
+    {
+        var step = _steps.Values.FirstOrDefault(s => s.PlanId == planId && s.Index == stepIndex);
+        if (step != null)
+        {
+            step.IsBreakpoint = isBreakpoint;
+            return Task.FromResult(true);
+        }
+        return Task.FromResult(false);
     }
 }

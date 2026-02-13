@@ -48,14 +48,22 @@ public interface IWorkflowService
     
     /// <summary>
     /// Update step status and result in a plan
-    /// 更新计划中的和结果
+    /// 更新计划中的步骤状态和结果
     /// </summary>
     /// <param name="planId">Plan ID - 计划ID</param>
     /// <param name="stepIndex">Step index - 步骤索引</param>
     /// <param name="status">New status - 新状态</param>
+    /// <param name="result">Step execution result - 步骤执行结果</param>
+    /// <param name="error">Step execution error - 步骤执行错误</param>
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>Success status - 成功状态</returns>
-    Task<bool> UpdateStepStatusAndResultAsync(string planId, int stepIndex, PlanStepStatus status, CancellationToken cancellationToken = default);
+    Task<bool> UpdateStepStatusAndResultAsync(
+        string planId, 
+        int stepIndex, 
+        PlanStepStatus status, 
+        string? result = null, 
+        string? error = null,
+        CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Get current active step in a plan
@@ -160,4 +168,39 @@ public interface IWorkflowService
     /// 触发状态转换 (Trigger a state transition)
     /// </summary>
     Task<bool> TriggerStateTransitionAsync(string planId, WorkflowEvent @event, string? interventionReason = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get workflow execution context
+    /// 获取工作流执行上下文
+    /// </summary>
+    /// <param name="planId">Plan ID - 计划ID</param>
+    /// <returns>Workflow context - 工作流上下文</returns>
+    Task<IWorkflowContext?> GetWorkflowContextAsync(string planId);
+
+    // --- Visualization & Debugging (可视化与调试) ---
+
+    /// <summary>
+    /// 更新工作流的可视化图形数据 (Update the visual graph data of the workflow)
+    /// </summary>
+    Task<bool> UpdateVisualGraphAsync(string planId, string visualGraphJson, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 设置或取消步骤的断点 (Set or cancel a breakpoint for a step)
+    /// </summary>
+    Task<bool> ToggleBreakpointAsync(string planId, int stepIndex, bool isBreakpoint, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 获取工作流性能报告 (Get workflow performance report)
+    /// </summary>
+    Task<WorkflowPerformanceReport> GetPerformanceReportAsync(string planId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 导出工作流为JSON (Export workflow as JSON)
+    /// </summary>
+    Task<string> ExportWorkflowAsync(string planId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 导入工作流JSON (Import workflow JSON)
+    /// </summary>
+    Task<WorkflowPlan> ImportWorkflowAsync(string jsonContent, CancellationToken cancellationToken = default);
 }

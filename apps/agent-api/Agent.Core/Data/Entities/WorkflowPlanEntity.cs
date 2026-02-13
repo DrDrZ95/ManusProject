@@ -53,9 +53,23 @@ public class WorkflowPlanEntity
     /// 存储额外的JSON格式数据，例如执行器键、用户ID等
     /// </summary>
     public string Metadata { get; set; } = "{}"; // 存储为JSON字符串
+
+    /// <summary>
+    /// 执行上下文 (Execution Context)
+    /// 存储 WorkflowContext 的 JSON 序列化数据
+    /// </summary>
+    [Column(TypeName = "jsonb")]
+    public string? ExecutionContextJson { get; set; }
     
     [Column(TypeName = "jsonb")]
     public string? ExecutorKeys { get; set; }
+
+    /// <summary>
+    /// 可视化图形数据 (Visual Graph Data)
+    /// 存储 React Flow 的节点和连线信息
+    /// </summary>
+    [Column(TypeName = "jsonb")]
+    public string? VisualGraphJson { get; set; }
     
     /// <summary>
     /// 创建时间 (Created At)
