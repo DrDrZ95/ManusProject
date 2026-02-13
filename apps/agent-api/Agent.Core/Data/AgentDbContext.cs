@@ -80,7 +80,7 @@ public class AgentDbContext : DbContext
             entity.Property(e => e.Metadata).HasColumnType("jsonb");
             entity.HasIndex(e => e.PlanId);
             entity.HasIndex(e => e.Status);
-            
+
             // 外键关系 - Foreign key relationship
             entity.HasOne<WorkflowPlanEntity>()
                   .WithMany()
@@ -122,7 +122,7 @@ public class AgentDbContext : DbContext
             entity.Property(e => e.Metadata).HasColumnType("jsonb");
             entity.HasIndex(e => e.SessionId);
             entity.HasIndex(e => e.CreatedAt);
-            
+
             // 外键关系 - Foreign key relationship
             entity.HasOne<ChatSessionEntity>()
                   .WithMany()
@@ -180,7 +180,7 @@ public class AgentDbContext : DbContext
             entity.Property(e => e.GpuDevices).HasMaxLength(100);
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.Tags).HasMaxLength(500);
-            
+
             // 索引配置 - Index configuration
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.BaseModel);

@@ -239,7 +239,7 @@ public class FinetuneProgress
     /// Log messages - 日志消息
     /// </summary>
     public List<string>? LogMessages { get; set; }
-    
+
     /// <summary>
     /// ProgressPercentage - 进度百分比
     /// </summary>

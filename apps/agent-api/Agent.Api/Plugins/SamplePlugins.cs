@@ -154,18 +154,18 @@ public class MathPlugin
         {
             throw new ArgumentException("Cannot calculate factorial of negative number - 不能计算负数的阶乘");
         }
-        
+
         if (n == 0 || n == 1)
         {
             return 1;
         }
-        
+
         long result = 1;
         for (int i = 2; i <= n; i++)
         {
             result *= i;
         }
-        
+
         return result;
     }
 
@@ -183,17 +183,17 @@ public class MathPlugin
         {
             return false;
         }
-        
+
         if (number == 2)
         {
             return true;
         }
-        
+
         if (number % 2 == 0)
         {
             return false;
         }
-        
+
         for (int i = 3; i * i <= number; i += 2)
         {
             if (number % i == 0)
@@ -201,7 +201,7 @@ public class MathPlugin
                 return false;
             }
         }
-        
+
         return true;
     }
 }
@@ -252,8 +252,8 @@ public class TextPlugin
         {
             return 0;
         }
-        
-        return text.Split(new char[] { ' ', '\t', '\n', '\r' }, 
+
+        return text.Split(new char[] { ' ', '\t', '\n', '\r' },
             StringSplitOptions.RemoveEmptyEntries).Length;
     }
 
@@ -271,7 +271,7 @@ public class TextPlugin
         {
             return string.Empty;
         }
-        
+
         char[] charArray = text.ToCharArray();
         Array.Reverse(charArray);
         return new string(charArray);
@@ -291,10 +291,10 @@ public class TextPlugin
         {
             return string.Empty;
         }
-        
+
         var emailPattern = @"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b";
         var matches = System.Text.RegularExpressions.Regex.Matches(text, emailPattern);
-        
+
         return string.Join(", ", matches.Cast<System.Text.RegularExpressions.Match>()
             .Select(m => m.Value));
     }
@@ -355,7 +355,7 @@ public class DateTimePlugin
         {
             return date.AddDays(days).ToString("yyyy-MM-dd");
         }
-        
+
         throw new ArgumentException("Invalid date format. Use YYYY-MM-DD - 无效的日期格式，请使用YYYY-MM-DD");
     }
 
@@ -371,12 +371,12 @@ public class DateTimePlugin
         [Description("The start date in YYYY-MM-DD format")] string startDate,
         [Description("The end date in YYYY-MM-DD format")] string endDate)
     {
-        if (DateTime.TryParse(startDate, out DateTime start) && 
+        if (DateTime.TryParse(startDate, out DateTime start) &&
             DateTime.TryParse(endDate, out DateTime end))
         {
             return (int)(end - start).TotalDays;
         }
-        
+
         throw new ArgumentException("Invalid date format. Use YYYY-MM-DD - 无效的日期格式，请使用YYYY-MM-DD");
     }
 
@@ -394,7 +394,7 @@ public class DateTimePlugin
         {
             return date.DayOfWeek.ToString();
         }
-        
+
         throw new ArgumentException("Invalid date format. Use YYYY-MM-DD - 无效的日期格式，请使用YYYY-MM-DD");
     }
 }

@@ -40,7 +40,7 @@ public class AIAgentHub : Hub
         var userRole = Context.User?.FindFirst(ClaimTypes.Role)?.Value;
         var jwtId = Context.User?.FindFirst("jti")?.Value; // JWT ID claim
 
-        _logger.LogInformation("User connected to AI-Agent hub with JWT - 用户通过JWT连接到AI-Agent集线器: {UserId} ({UserName}) with role {UserRole}, JWT ID: {JwtId}", 
+        _logger.LogInformation("User connected to AI-Agent hub with JWT - 用户通过JWT连接到AI-Agent集线器: {UserId} ({UserName}) with role {UserRole}, JWT ID: {JwtId}",
             userId, userName, userRole, jwtId);
 
         // Validate JWT claims
@@ -87,12 +87,12 @@ public class AIAgentHub : Hub
 
         if (exception != null)
         {
-            _logger.LogWarning(exception, "User disconnected from AI-Agent hub with error - 用户从AI-Agent集线器断开连接时出错: {UserId} ({UserName}), JWT ID: {JwtId}", 
+            _logger.LogWarning(exception, "User disconnected from AI-Agent hub with error - 用户从AI-Agent集线器断开连接时出错: {UserId} ({UserName}), JWT ID: {JwtId}",
                 userId, userName, jwtId);
         }
         else
         {
-            _logger.LogInformation("User disconnected from AI-Agent hub - 用户从AI-Agent集线器断开连接: {UserId} ({UserName}), JWT ID: {JwtId}", 
+            _logger.LogInformation("User disconnected from AI-Agent hub - 用户从AI-Agent集线器断开连接: {UserId} ({UserName}), JWT ID: {JwtId}",
                 userId, userName, jwtId);
         }
 

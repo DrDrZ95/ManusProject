@@ -42,7 +42,7 @@ public class SandboxTerminalService : ISandboxTerminalService
         CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
-        
+
         try
         {
             // 验证命令安全性 - Validate command safety
@@ -67,7 +67,7 @@ public class SandboxTerminalService : ISandboxTerminalService
                 Directory.CreateDirectory(effectiveWorkingDir);
             }
 
-            _logger.LogInformation("Executing command: {Command} in directory: {WorkingDirectory}", 
+            _logger.LogInformation("Executing command: {Command} in directory: {WorkingDirectory}",
                 sanitizedCommand, effectiveWorkingDir);
 
             // Audit the input - 审计输入
@@ -75,7 +75,7 @@ public class SandboxTerminalService : ISandboxTerminalService
 
             // 创建进程配置 - Create process configuration
             var processStartInfo = CreateProcessStartInfo(sanitizedCommand, effectiveWorkingDir);
-            
+
             using var process = new Process { StartInfo = processStartInfo };
             var outputBuilder = new StringBuilder();
             var errorBuilder = new StringBuilder();
@@ -132,19 +132,19 @@ public class SandboxTerminalService : ISandboxTerminalService
 
             var processTask = process.WaitForExitAsync(cancellationToken);
             var timeoutTask = Task.Delay(TimeSpan.FromSeconds(timeout), cancellationToken);
-            
+
             // Monitor memory in background - 在后台监控内存
             using var memoryCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var memoryMonitorTask = MonitorMemoryAsync(process, _options.MaxMemoryMB, memoryCts.Token);
 
             var completed = await Task.WhenAny(processTask, timeoutTask);
             memoryCts.Cancel(); // Stop memory monitoring
-            
+
             if (completed == timeoutTask)
             {
                 // 超时处理 - Timeout handling
                 _logger.LogWarning("Command timed out after {Timeout}s: {Command}", timeout, command);
-                
+
                 try
                 {
                     process.Kill(true); // Kill process tree
@@ -173,7 +173,7 @@ public class SandboxTerminalService : ISandboxTerminalService
             // Audit the output - 审计输出
             AuditCommandCall(sanitizedCommand, effectiveWorkingDir, "OUTPUT", result);
 
-            _logger.LogInformation("Command completed with exit code {ExitCode} in {ExecutionTime}ms", 
+            _logger.LogInformation("Command completed with exit code {ExitCode} in {ExecutionTime}ms",
                 result.ExitCode, result.ExecutionTimeMs);
 
             return result;
@@ -236,9 +236,9 @@ public class SandboxTerminalService : ISandboxTerminalService
         AuditCommandCall(sanitizedCommand, effectiveWorkingDir, "INPUT_STREAM");
 
         var processStartInfo = CreateProcessStartInfo(sanitizedCommand, effectiveWorkingDir);
-        
+
         using var process = new Process { StartInfo = processStartInfo };
-        
+
         process.Start();
 
         // Apply resource limits (simplified) - 应用资源限制（简化）
@@ -266,7 +266,7 @@ public class SandboxTerminalService : ISandboxTerminalService
         await foreach (var line in MergeStreams(outputTask, errorTask, cancellationToken))
         {
             yield return line;
-            
+
             // 检查进程是否完成 - Check if process completed
             if (process.HasExited)
             {
@@ -276,7 +276,7 @@ public class SandboxTerminalService : ISandboxTerminalService
 
         // 等待进程完成或超时 - Wait for completion or timeout
         var completedTask = await Task.WhenAny(processTask, timeoutTask);
-        
+
         if (completedTask == timeoutTask && !process.HasExited)
         {
             _logger.LogWarning("Streaming command timed out: {Command}", command);
@@ -290,7 +290,7 @@ public class SandboxTerminalService : ISandboxTerminalService
             }
             yield return "Error: Command timed out";
         }
-        
+
         if (!completedTask.IsCompletedSuccessfully)
         {
             _logger.LogInformation("Streaming command was cancelled: {Command}", command);
@@ -332,7 +332,7 @@ public class SandboxTerminalService : ISandboxTerminalService
             }
 
             var fullPath = Path.GetFullPath(path);
-            
+
             if (!Directory.Exists(fullPath))
             {
                 Directory.CreateDirectory(fullPath);
@@ -340,7 +340,7 @@ public class SandboxTerminalService : ISandboxTerminalService
 
             _currentWorkingDirectory = fullPath;
             _logger.LogInformation("Working directory changed to: {Path}", fullPath);
-            
+
             return await Task.FromResult(true);
         }
         catch (Exception ex)
@@ -392,7 +392,7 @@ public class SandboxTerminalService : ISandboxTerminalService
             if (commandParts.Length > 0)
             {
                 var baseCommand = commandParts[0];
-                return _options.AllowedCommands.Any(allowed => 
+                return _options.AllowedCommands.Any(allowed =>
                     baseCommand.Equals(allowed, StringComparison.OrdinalIgnoreCase));
             }
         }
@@ -530,8 +530,8 @@ public class SandboxTerminalService : ISandboxTerminalService
         // 检查绝对路径到敏感目录 - Check absolute paths to sensitive directories
         var sensitiveDirectories = new[] { "/etc", "/bin", "/sbin", "/usr/bin", "/usr/sbin", "/root" };
         var fullPath = Path.GetFullPath(path);
-        
-        return !sensitiveDirectories.Any(sensitive => 
+
+        return !sensitiveDirectories.Any(sensitive =>
             fullPath.StartsWith(sensitive, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -569,7 +569,7 @@ public class SandboxTerminalService : ISandboxTerminalService
 
                 if (currentMemoryMB > maxMemoryMB)
                 {
-                    _logger.LogWarning("Process {ProcessId} exceeded memory limit: {CurrentMB}MB > {MaxMB}MB. Killing process.", 
+                    _logger.LogWarning("Process {ProcessId} exceeded memory limit: {CurrentMB}MB > {MaxMB}MB. Killing process.",
                         process.Id, currentMemoryMB, maxMemoryMB);
                     process.Kill(true);
                     break;
@@ -591,7 +591,7 @@ public class SandboxTerminalService : ISandboxTerminalService
     private ProcessStartInfo CreateProcessStartInfo(string command, string workingDirectory)
     {
         var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        
+
         var startInfo = new ProcessStartInfo
         {
             WorkingDirectory = workingDirectory,
@@ -628,7 +628,7 @@ public class SandboxTerminalService : ISandboxTerminalService
     /// 异步读取流
     /// </summary>
     private async IAsyncEnumerable<string> ReadStreamAsync(
-        StreamReader reader, 
+        StreamReader reader,
         string prefix,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
     {

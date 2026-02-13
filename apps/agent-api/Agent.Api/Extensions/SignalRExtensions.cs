@@ -1,7 +1,3 @@
-using Agent.Application.Hubs; // 引入新的Hub命名空间
-using Agent.Core.Notifications; // 引入通知DTO命名空间
-using Agent.Core.Workflow; // 引入工作流相关命名空间
-using Microsoft.AspNetCore.SignalR; // 引入SignalR命名空间
 
 namespace Agent.Api.Extensions;
 
@@ -51,7 +47,7 @@ public static class SignalRExtensions
                         // If the request is for our hub...
                         // 如果请求是针对我们的hub...
                         var path = context.HttpContext.Request.Path;
-                        if (!string.IsNullOrEmpty(accessToken) && 
+                        if (!string.IsNullOrEmpty(accessToken) &&
                             (path.StartsWithSegments("/aiagentHub") || path.StartsWithSegments("/chathub")))
                         {
                             // Read the token out of the query string
@@ -96,11 +92,11 @@ public static class SignalRExtensions
             options.KeepAliveInterval = TimeSpan.FromSeconds(15);
             options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
             options.HandshakeTimeout = TimeSpan.FromSeconds(15);
-            
+
             // Maximum message size (1MB)
             // 最大消息大小 (1MB)
             options.MaximumReceiveMessageSize = 1024 * 1024;
-            
+
             // Stream buffer capacity
             // 流缓冲区容量
             options.StreamBufferCapacity = 10;
@@ -153,7 +149,7 @@ public static class SignalRExtensions
             // 为自动重连配置传输选项
             options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets |
                                 Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
-            
+
             // Configure automatic reconnection intervals
             // 配置自动重连间隔
             options.LongPolling.PollTimeout = TimeSpan.FromSeconds(90);
@@ -165,7 +161,7 @@ public static class SignalRExtensions
             // 为自动重连配置传输选项
             options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets |
                                 Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
-            
+
             // Configure automatic reconnection intervals
             // 配置自动重连间隔
             options.LongPolling.PollTimeout = TimeSpan.FromSeconds(90);

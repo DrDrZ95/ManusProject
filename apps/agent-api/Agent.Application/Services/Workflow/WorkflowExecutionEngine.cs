@@ -1,5 +1,3 @@
-using Agent.Core.Data.Repositories;
-using System.Text.Json;
 
 namespace Agent.Application.Services.Workflow;
 
@@ -22,8 +20,8 @@ public class WorkflowExecutionEngine : IWorkflowEngine
     public WorkflowState CurrentState => _stateMachine.State;
 
     public WorkflowExecutionEngine(
-        Guid planId, 
-        WorkflowState initialState, 
+        Guid planId,
+        WorkflowState initialState,
         IWorkflowNotificationService notificationService,
         IWorkflowRepository workflowRepository,
         ILogger<WorkflowExecutionEngine> logger,
@@ -34,7 +32,7 @@ public class WorkflowExecutionEngine : IWorkflowEngine
         _workflowRepository = workflowRepository;
         _logger = logger;
         _context = existingContext ?? new WorkflowContext(planId.GetHashCode());
-        
+
         _stateMachine = new StateMachine<WorkflowState, WorkflowEvent>(
             () => _context.TaskId == 0 ? initialState : (WorkflowState)initialState,
             s => { /* State is managed via _context or persistence if needed */ });
@@ -90,11 +88,11 @@ public class WorkflowExecutionEngine : IWorkflowEngine
 
     private async Task OnTransitioned(StateMachine<WorkflowState, WorkflowEvent>.Transition transition)
     {
-        _logger.LogInformation("[WorkflowEngine] State changed from {OldState} to {NewState} via event {Trigger}.", 
+        _logger.LogInformation("[WorkflowEngine] State changed from {OldState} to {NewState} via event {Trigger}.",
             transition.Source, transition.Destination, transition.Trigger);
-        
+
         _context.ExecutionHistory.Add($"[{DateTime.UtcNow:O}] {transition.Source} --({transition.Trigger})--> {transition.Destination}");
-        
+
         // Handle step performance recording
         if (transition.Source == WorkflowState.Executing)
         {
@@ -156,16 +154,16 @@ public class WorkflowExecutionEngine : IWorkflowEngine
     {
         _logger.LogInformation("Workflow {PlanId} executing step {StepIndex}...", _planId, _context.CurrentStepIndex);
         _stepStartTime = DateTime.UtcNow;
-        
+
         try
         {
             // Update step status to InProgress and set StartedAt
             await _workflowRepository.UpdateStepStatusAndResultAsync(
-                _planId, 
-                _context.CurrentStepIndex, 
-                PlanStepStatus.InProgress, 
-                null, 
-                null, 
+                _planId,
+                _context.CurrentStepIndex,
+                PlanStepStatus.InProgress,
+                null,
+                null,
                 _stepStartTime,
                 default);
 
@@ -184,7 +182,7 @@ public class WorkflowExecutionEngine : IWorkflowEngine
 
         var endTime = DateTime.UtcNow;
         var duration = endTime - _stepStartTime.Value;
-        
+
         // Simple cost estimation placeholder (e.g., based on duration or step type)
         double estimatedCost = 0.002; // Placeholder cost in USD
 
@@ -244,9 +242,9 @@ public class WorkflowExecutionEngine : IWorkflowEngine
         // This allows for "Rollback" or "Skip" recovery strategies via user action
         if (_context.Errors.Count >= 3)
         {
-            await TriggerEventAsync(WorkflowEvent.NeedIntervention, new ManualInterventionInfo 
-            { 
-                Reason = "Multiple consecutive errors detected. Manual intervention required for recovery." 
+            await TriggerEventAsync(WorkflowEvent.NeedIntervention, new ManualInterventionInfo
+            {
+                Reason = "Multiple consecutive errors detected. Manual intervention required for recovery."
             });
         }
         else
@@ -278,8 +276,9 @@ public class WorkflowExecutionEngine : IWorkflowEngine
         var notification = new InterventionNotificationDto(
             _planId.ToString(),
             reason,
-            JsonSerializer.Serialize(new { 
-                _context.InputParameters, 
+            JsonSerializer.Serialize(new
+            {
+                _context.InputParameters,
                 _context.IntermediateResults,
                 History = _context.ToolCallHistory.TakeLast(5)
             }),

@@ -1,4 +1,3 @@
-using Agent.Core.Data.Entities;
 
 namespace Agent.Core.Memory.Interfaces;
 
@@ -25,7 +24,7 @@ public interface ILongTermMemory
     /// 使用向量搜索检索相关知识
     /// </summary>
     Task<List<string>> RetrieveRelevantKnowledgeAsync(string query, int limit = 5, double minRelevance = 0.7);
-    
+
     /// <summary>
     /// Archive less important memories
     /// 归档不重要的记忆

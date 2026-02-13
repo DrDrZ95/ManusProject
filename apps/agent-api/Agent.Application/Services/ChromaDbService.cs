@@ -41,9 +41,9 @@ public class ChromaDbService : IChromaDbService
         try
         {
             _logger.LogInformation("Creating collection: {CollectionName}", name);
-            
+
             var collection = await _client.CreateCollectionAsync(name); // metadata
-            
+
             _logger.LogInformation("Successfully created collection: {CollectionName}", name);
             return collection;
         }
@@ -63,9 +63,9 @@ public class ChromaDbService : IChromaDbService
         try
         {
             _logger.LogInformation("Getting collection: {CollectionName}", name);
-            
+
             var collection = await _client.GetCollectionAsync(name);
-            
+
             _logger.LogInformation("Successfully retrieved collection: {CollectionName}", name);
             return collection;
         }
@@ -85,9 +85,9 @@ public class ChromaDbService : IChromaDbService
         try
         {
             _logger.LogInformation("Deleting collection: {CollectionName}", name);
-            
+
             await _client.DeleteCollectionAsync(name);
-            
+
             _logger.LogInformation("Successfully deleted collection: {CollectionName}", name);
             return true;
         }
@@ -107,9 +107,9 @@ public class ChromaDbService : IChromaDbService
         try
         {
             _logger.LogInformation("Listing all collections");
-            
+
             var collections = await _client.ListCollectionsAsync();
-            
+
             _logger.LogInformation("Successfully listed {Count} collections", collections.Count());
             return collections;
         }
@@ -135,7 +135,7 @@ public class ChromaDbService : IChromaDbService
         try
         {
             _logger.LogInformation("Adding documents to collection: {CollectionName}", collectionName);
-            
+
             // 获取或创建集合
             var collectionModel = await GetCollectionAsync(collectionName);
             //var collection = new ChromaCollectionClient(collectionModel, _chromaOptions, _httpClient);
@@ -146,7 +146,7 @@ public class ChromaDbService : IChromaDbService
             //    metadatas: metadatas?.ToList(),
             //    documents: documents.ToList()
             //);
-            
+
             _logger.LogInformation("Successfully added {Count} documents to collection: {CollectionName}", documents.Count(), collectionName);
         }
         catch (Exception ex)
@@ -165,10 +165,10 @@ public class ChromaDbService : IChromaDbService
         try
         {
             _logger.LogInformation("Querying collection: {CollectionName} with {Count} query texts", collectionName, queryTexts.Count());
-            
+
             var collection = await GetCollectionAsync(collectionName);
             //var result = await collection.QueryAsync(queryTexts, nResults, where);
-            
+
             _logger.LogInformation("Successfully queried collection: {CollectionName}", collectionName);
             return default!;
         }
@@ -188,10 +188,10 @@ public class ChromaDbService : IChromaDbService
         try
         {
             _logger.LogInformation("Getting documents from collection: {CollectionName}", collectionName);
-            
+
             var collection = await GetCollectionAsync(collectionName);
             //var result = await collection.Get(ids, where);
-            
+
             _logger.LogInformation("Successfully retrieved documents from collection: {CollectionName}", collectionName);
             return default!;
         }
@@ -211,10 +211,10 @@ public class ChromaDbService : IChromaDbService
         try
         {
             _logger.LogInformation("Updating documents in collection: {CollectionName}", collectionName);
-            
+
             var collection = await GetCollectionAsync(collectionName);
             //await collection.(ids, null, metadatas, documents);
-            
+
             _logger.LogInformation("Successfully updated documents in collection: {CollectionName}", collectionName);
         }
         catch (Exception ex)
@@ -233,7 +233,7 @@ public class ChromaDbService : IChromaDbService
         try
         {
             _logger.LogInformation("Deleting documents from collection: {CollectionName}", collectionName);
-            
+
             var collection = await GetCollectionAsync(collectionName);
             //await collection.DeleteAsync(ids, where);
             _logger.LogInformation("Successfully deleted documents from collection: {CollectionName}", collectionName);

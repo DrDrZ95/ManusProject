@@ -27,7 +27,7 @@ public class McpClientService : IMcpClientService
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Creating MCP client with name: {Name}, command: {Command}", name, command);
-        
+
         var clientTransport = new StdioClientTransport(new StdioClientTransportOptions
         {
             Name = name,
@@ -36,9 +36,9 @@ public class McpClientService : IMcpClientService
         });
 
         var client = await McpClientFactory.CreateAsync(clientTransport, cancellationToken: cancellationToken);
-        
+
         _logger.LogInformation("MCP client created successfully");
-        
+
         return client;
     }
 
@@ -53,11 +53,11 @@ public class McpClientService : IMcpClientService
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Listing tools from MCP client");
-        
+
         var tools = await client.ListToolsAsync();
-        
+
         _logger.LogInformation("Found {Count} tools from MCP client", tools.Count);
-        
+
         return tools;
     }
 
@@ -76,14 +76,14 @@ public class McpClientService : IMcpClientService
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Calling tool {ToolName} on MCP client", toolName);
-        
+
         var result = await client.CallToolAsync(
             toolName,
             parameters,
             cancellationToken: cancellationToken);
-        
+
         _logger.LogInformation("Tool {ToolName} called successfully", toolName);
-        
+
         return result;
     }
 }
@@ -98,11 +98,11 @@ public interface IMcpClientService
         string command,
         string[] arguments,
         CancellationToken cancellationToken = default);
-        
+
     Task<IList<McpClientTool>> ListToolsAsync(
         IMcpClient client,
         CancellationToken cancellationToken = default);
-        
+
     ValueTask<CallToolResult> CallToolAsync(
         IMcpClient client,
         string toolName,

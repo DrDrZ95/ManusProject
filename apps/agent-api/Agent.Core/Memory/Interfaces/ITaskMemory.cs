@@ -1,4 +1,3 @@
-using Agent.Core.Data.Entities;
 
 namespace Agent.Core.Memory.Interfaces;
 

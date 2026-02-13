@@ -22,7 +22,7 @@ public interface IWorkflowRepository
     /// 更新工作流计划 (Update a workflow plan)
     /// </summary>
     Task UpdatePlanAsync(WorkflowPlanEntity plan, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// 更新工作流计划的状态 (Update a status of workflow plan)
     /// </summary>
@@ -59,9 +59,9 @@ public interface IWorkflowRepository
     /// 根据状态过滤并分页获取工作流计划 (Get workflow plans filtered by status and with pagination)
     /// </summary>
     Task<List<WorkflowPlanEntity>> GetPlansByStatusAsync(
-        PlanStatus status, 
-        int pageNumber, 
-        int pageSize, 
+        PlanStatus status,
+        int pageNumber,
+        int pageSize,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -73,20 +73,20 @@ public interface IWorkflowRepository
     /// 根据计划ID和步骤索引获取特定步骤 (Get a specific step by plan ID and step index)
     /// </summary>
     Task<WorkflowStepEntity?> GetStepByPlanIdAndIndexAsync(
-        Guid planId, 
-        int stepIndex, 
+        Guid planId,
+        int stepIndex,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 更新单个步骤的状态和结果 (Update the status and result of a single step)
     /// </summary>
     Task UpdateStepStatusAndResultAsync(
-        Guid planId, 
+        Guid planId,
         int stepIndex,
-        PlanStepStatus status, 
-        string? result, 
+        PlanStepStatus status,
+        string? result,
         string? error,
-        DateTime? startedAt, 
+        DateTime? startedAt,
         DateTime? completedAt,
         CancellationToken cancellationToken = default);
 

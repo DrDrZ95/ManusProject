@@ -48,19 +48,19 @@ public static class ApplicationPipelineExtensions
         // Configure development environment - Strategy Pattern
         // 配置开发环境 - 策略模式
         //app.ConfigureDevelopmentEnvironment();
-        
+
         // Configure static files - Chain of Responsibility Pattern
         // 配置静态文件 - 责任链模式
         //app.ConfigureStaticFiles();
-        
+
         // Configure MCP endpoints - Facade Pattern
         // 配置MCP端点 - 外观模式
         //app.ConfigureMcpEndpoints();
-        
+
         // Configure development test endpoints - Command Pattern
         // 配置开发测试端点 - 命令模式
         //app.ConfigureDevTestEndpoints();
-        
+
         // Configure Dapr middleware // 配置全局异常处理中间件 - Middleware Pattern
         // Configure global exception handling middleware - 中间件模式
         app.UseMiddleware<Middleware.GlobalExceptionMiddleware>();

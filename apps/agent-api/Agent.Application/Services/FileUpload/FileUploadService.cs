@@ -40,63 +40,63 @@ public class FileUploadService : IFileUploadService
     // 允许的MIME类型（白名单方法 - OWASP推荐）
     private static readonly Dictionary<string, string[]> AllowedMimeTypes = new()
     {
-        [FileUploadCategories.Document] = new[] 
-        { 
-            "application/pdf", 
-            "application/msword", 
+        [FileUploadCategories.Document] = new[]
+        {
+            "application/pdf",
+            "application/msword",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "text/plain",
             "application/rtf",
             "application/vnd.oasis.opendocument.text"
         },
-        [FileUploadCategories.Image] = new[] 
-        { 
-            "image/jpeg", 
-            "image/png", 
-            "image/gif", 
-            "image/bmp", 
+        [FileUploadCategories.Image] = new[]
+        {
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/bmp",
             "image/webp",
             "image/svg+xml"
         },
-        [FileUploadCategories.Video] = new[] 
-        { 
-            "video/mp4", 
-            "video/avi", 
-            "video/quicktime", 
+        [FileUploadCategories.Video] = new[]
+        {
+            "video/mp4",
+            "video/avi",
+            "video/quicktime",
             "video/x-ms-wmv",
             "video/x-flv",
             "video/webm"
         },
-        [FileUploadCategories.Audio] = new[] 
-        { 
-            "audio/mpeg", 
-            "audio/wav", 
-            "audio/flac", 
+        [FileUploadCategories.Audio] = new[]
+        {
+            "audio/mpeg",
+            "audio/wav",
+            "audio/flac",
             "audio/aac",
             "audio/ogg",
             "audio/x-ms-wma"
         },
-        [FileUploadCategories.Archive] = new[] 
-        { 
-            "application/zip", 
-            "application/x-rar-compressed", 
+        [FileUploadCategories.Archive] = new[]
+        {
+            "application/zip",
+            "application/x-rar-compressed",
             "application/x-7z-compressed",
             "application/x-tar",
             "application/gzip"
         },
-        [FileUploadCategories.Text] = new[] 
-        { 
-            "text/plain", 
-            "text/csv", 
-            "application/json", 
+        [FileUploadCategories.Text] = new[]
+        {
+            "text/plain",
+            "text/csv",
+            "application/json",
             "application/xml",
             "application/x-yaml",
             "text/markdown"
         },
-        [FileUploadCategories.Data] = new[] 
-        { 
-            "application/json", 
-            "application/xml", 
+        [FileUploadCategories.Data] = new[]
+        {
+            "application/json",
+            "application/xml",
             "text/csv",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "application/vnd.ms-excel",
@@ -163,7 +163,7 @@ public class FileUploadService : IFileUploadService
             // 4. File extension validation (whitelist approach - OWASP recommended)
             // 文件扩展名验证（白名单方法）
             var fileExtension = Path.GetExtension(sanitizedFileName).ToLowerInvariant();
-            
+
             // Check for blocked extensions first
             // 首先检查被阻止的扩展名
             if (BlockedExtensions.Contains(fileExtension))
@@ -221,7 +221,7 @@ public class FileUploadService : IFileUploadService
             // All validations passed
             // 所有验证都通过
             result.IsValid = true;
-            _logger.LogInformation("File validation successful: {FileName}, Category: {Category}, Size: {Size} bytes", 
+            _logger.LogInformation("File validation successful: {FileName}, Category: {Category}, Size: {Size} bytes",
                 sanitizedFileName, category, file.Length);
 
         }
@@ -320,7 +320,7 @@ public class FileUploadService : IFileUploadService
         // - Third-party antivirus APIs
 
         await Task.Delay(100); // Simulate scan time
-        
+
         _logger.LogInformation("Malware scan completed for file: {FileName}", file.FileName);
         return true; // Assume file is clean for now
     }
@@ -334,7 +334,7 @@ public class FileUploadService : IFileUploadService
         var sanitizedFileName = SanitizeFileName(originalFileName);
         var fileExtension = Path.GetExtension(sanitizedFileName);
         var uniqueFileName = $"{Guid.NewGuid():N}{fileExtension}";
-        
+
         // Create secure directory structure
         // 创建安全的目录结构
         var datePath = DateTime.UtcNow.ToString("yyyy/MM/dd");
@@ -458,7 +458,7 @@ public class FileUploadService : IFileUploadService
             return true;
 
         // ZIP (for DOCX, etc.): 50 4B 03 04 or 50 4B 05 06 or 50 4B 07 08
-        if (buffer.Length >= 4 && buffer[0] == 0x50 && buffer[1] == 0x4B && 
+        if (buffer.Length >= 4 && buffer[0] == 0x50 && buffer[1] == 0x4B &&
             (buffer[2] == 0x03 || buffer[2] == 0x05 || buffer[2] == 0x07))
             return true;
 

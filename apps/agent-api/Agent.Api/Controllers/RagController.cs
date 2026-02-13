@@ -50,13 +50,14 @@ public class RagController : ControllerBase
             span.SetAttribute("rag.document_id", document.Id);
             try
             {
-                _logger.LogInformation("Adding document {DocumentId} to collection {CollectionName}", 
+                _logger.LogInformation("Adding document {DocumentId} to collection {CollectionName}",
                     document.Id, collectionName);
 
                 var documentId = await _ragService.AddDocumentAsync(collectionName, document);
                 span.SetAttribute("rag.document_added_id", documentId);
-                
-                return Ok(ApiResponse<object>.Ok(new { 
+
+                return Ok(ApiResponse<object>.Ok(new
+                {
                     documentId = documentId,
                     message = $"Document {documentId} added successfully to {collectionName}"
                 }));
@@ -100,8 +101,9 @@ public class RagController : ControllerBase
 
                 var documents = await _ragService.GetDocumentsAsync(collectionName, ids);
                 span.SetAttribute("rag.returned_documents_count", documents.Count());
-                
-                return Ok(ApiResponse<object>.Ok(new { 
+
+                return Ok(ApiResponse<object>.Ok(new
+                {
                     documents = documents,
                     count = documents.Count()
                 }));
@@ -143,14 +145,15 @@ public class RagController : ControllerBase
             try
             {
                 document.Id = documentId; // Ensure ID matches URL parameter
-                
-                _logger.LogInformation("Updating document {DocumentId} in collection {CollectionName}", 
+
+                _logger.LogInformation("Updating document {DocumentId} in collection {CollectionName}",
                     documentId, collectionName);
 
                 await _ragService.UpdateDocumentAsync(collectionName, document);
                 span.SetAttribute("rag.update_success", true);
-                
-                return Ok(ApiResponse<object>.Ok(new { 
+
+                return Ok(ApiResponse<object>.Ok(new
+                {
                     message = $"Document {documentId} updated successfully"
                 }));
             }
@@ -189,13 +192,14 @@ public class RagController : ControllerBase
             span.SetAttribute("rag.document_id", documentId);
             try
             {
-                _logger.LogInformation("Deleting document {DocumentId} from collection {CollectionName}", 
+                _logger.LogInformation("Deleting document {DocumentId} from collection {CollectionName}",
                     documentId, collectionName);
 
                 await _ragService.DeleteDocumentAsync(collectionName, documentId);
                 span.SetAttribute("rag.delete_success", true);
-                
-                return Ok(ApiResponse<object>.Ok(new { 
+
+                return Ok(ApiResponse<object>.Ok(new
+                {
                     message = $"Document {documentId} deleted successfully"
                 }));
             }
@@ -234,8 +238,9 @@ public class RagController : ControllerBase
             {
                 var count = await _ragService.GetDocumentCountAsync(collectionName);
                 span.SetAttribute("rag.document_count", count);
-                
-                return Ok(ApiResponse<object>.Ok(new { 
+
+                return Ok(ApiResponse<object>.Ok(new
+                {
                     collectionName = collectionName,
                     documentCount = count
                 }));
@@ -283,8 +288,9 @@ public class RagController : ControllerBase
 
                 var result = await _ragService.HybridRetrievalAsync(collectionName, query);
                 span.SetAttribute("rag.retrieval_result_count", result.RetrievedDocuments?.Count() ?? 0);
-                
-                return Ok(ApiResponse<object>.Ok(new { 
+
+                return Ok(ApiResponse<object>.Ok(new
+                {
                     result = result
                 }));
             }
@@ -328,8 +334,9 @@ public class RagController : ControllerBase
 
                 var result = await _ragService.VectorRetrievalAsync(collectionName, request.Query, request.TopK);
                 span.SetAttribute("rag.retrieval_result_count", result.RetrievedDocuments?.Count() ?? 0);
-                
-                return Ok(ApiResponse<object>.Ok(new { 
+
+                return Ok(ApiResponse<object>.Ok(new
+                {
                     result = result
                 }));
             }
@@ -373,8 +380,9 @@ public class RagController : ControllerBase
 
                 var result = await _ragService.KeywordRetrievalAsync(collectionName, request.Query, request.TopK);
                 span.SetAttribute("rag.retrieval_result_count", result.RetrievedDocuments?.Count() ?? 0);
-                
-                return Ok(ApiResponse<object>.Ok(new { 
+
+                return Ok(ApiResponse<object>.Ok(new
+                {
                     result = result
                 }));
             }
@@ -418,8 +426,9 @@ public class RagController : ControllerBase
 
                 var result = await _ragService.SemanticRetrievalAsync(collectionName, request.Query, request.TopK);
                 span.SetAttribute("rag.retrieval_result_count", result.RetrievedDocuments?.Count() ?? 0);
-                
-                return Ok(ApiResponse<object>.Ok(new { 
+
+                return Ok(ApiResponse<object>.Ok(new
+                {
                     result = result
                 }));
             }
@@ -466,8 +475,9 @@ public class RagController : ControllerBase
 
                 var response = await _ragService.GenerateResponseAsync(collectionName, request);
                 span.SetAttribute("rag.generated_response_length", response.Response?.Length);
-                
-                return Ok(ApiResponse<object>.Ok(new { 
+
+                return Ok(ApiResponse<object>.Ok(new
+                {
                     response = response
                 }));
             }
@@ -509,7 +519,7 @@ public class RagController : ControllerBase
                 _logger.LogInformation("Generating streaming RAG response for collection {CollectionName}", collectionName);
 
                 var responseStream = await _ragService.GenerateStreamingResponseAsync(collectionName, request);
-                
+
                 Response.Headers.Append("Content-Type", "text/event-stream");
                 Response.Headers.Append("Cache-Control", "no-cache");
                 Response.Headers.Append("Connection", "keep-alive");
@@ -561,16 +571,17 @@ public class RagController : ControllerBase
             span.SetAttribute("rag.question_length", request.Question?.Length);
             try
             {
-                _logger.LogInformation("Processing enterprise Q&A for knowledge base {KnowledgeBase}", 
+                _logger.LogInformation("Processing enterprise Q&A for knowledge base {KnowledgeBase}",
                     request.KnowledgeBase);
 
                 var response = await _ragService.EnterpriseQAAsync(
-                    request.KnowledgeBase, 
-                    request.Question, 
+                    request.KnowledgeBase,
+                    request.Question,
                     request.Options);
                 span.SetAttribute("rag.qa_response_length", response.Response?.Length);
-                
-                return Ok(ApiResponse<object>.Ok(new { 
+
+                return Ok(ApiResponse<object>.Ok(new
+                {
                     response = response,
                     knowledgeBase = request.KnowledgeBase
                 }));
@@ -611,13 +622,14 @@ public class RagController : ControllerBase
             span.SetAttribute("rag.document_id", documentId);
             try
             {
-                _logger.LogInformation("Summarizing document {DocumentId} in collection {CollectionName}", 
+                _logger.LogInformation("Summarizing document {DocumentId} in collection {CollectionName}",
                     documentId, collectionName);
 
                 var response = await _ragService.DocumentSummarizationAsync(collectionName, documentId, options);
                 span.SetAttribute("rag.summary_length", response.Summary?.Length);
-                
-                return Ok(ApiResponse<object>.Ok(new { 
+
+                return Ok(ApiResponse<object>.Ok(new
+                {
                     summary = response,
                     documentId = documentId
                 }));
@@ -658,16 +670,17 @@ public class RagController : ControllerBase
             span.SetAttribute("rag.analysis_query_length", request.AnalysisQuery?.Length);
             try
             {
-                _logger.LogInformation("Analyzing {DocumentCount} documents in collection {CollectionName}", 
+                _logger.LogInformation("Analyzing {DocumentCount} documents in collection {CollectionName}",
                     request.DocumentIds.Count(), collectionName);
 
                 var response = await _ragService.MultiDocumentAnalysisAsync(
-                    collectionName, 
-                    request.DocumentIds, 
+                    collectionName,
+                    request.DocumentIds,
                     request.AnalysisQuery);
                 span.SetAttribute("rag.analysis_result_length", response.AnalysisResult?.Length);
-                
-                return Ok(ApiResponse<object>.Ok(new { 
+
+                return Ok(ApiResponse<object>.Ok(new
+                {
                     analysis = response,
                     documentCount = request.DocumentIds.Count()
                 }));
@@ -713,8 +726,9 @@ public class RagController : ControllerBase
 
                 var collectionId = await _ragService.CreateKnowledgeBaseAsync(request.Name, request.Config);
                 span.SetAttribute("rag.created_collection_id", collectionId);
-                
-                return Ok(ApiResponse<object>.Ok(new { 
+
+                return Ok(ApiResponse<object>.Ok(new
+                {
                     collectionId = collectionId,
                     name = request.Name,
                     message = $"Knowledge base \'{request.Name}\' created successfully"
@@ -757,8 +771,9 @@ public class RagController : ControllerBase
 
                 await _ragService.DeleteKnowledgeBaseAsync(name);
                 span.SetAttribute("rag.delete_success", true);
-                
-                return Ok(ApiResponse<object>.Ok(new { 
+
+                return Ok(ApiResponse<object>.Ok(new
+                {
                     message = $"Knowledge base \'{name}\' deleted successfully"
                 }));
             }
@@ -797,8 +812,9 @@ public class RagController : ControllerBase
 
                 var knowledgeBases = await _ragService.ListKnowledgeBasesAsync();
                 span.SetAttribute("rag.knowledge_base_count", knowledgeBases.Count());
-                
-                return Ok(ApiResponse<object>.Ok(new { 
+
+                return Ok(ApiResponse<object>.Ok(new
+                {
                     knowledgeBases = knowledgeBases,
                     count = knowledgeBases.Count()
                 }));
@@ -840,7 +856,7 @@ public class RagController : ControllerBase
                 // Check if we can list knowledge bases - 检查是否可以列出知识库
                 var knowledgeBases = await _ragService.ListKnowledgeBasesAsync();
                 span.SetAttribute("rag.health_check_knowledge_base_count", knowledgeBases.Count());
-                
+
                 return Ok(ApiResponse<object>.Ok(new
                 {
                     status = "healthy",

@@ -42,7 +42,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
             // 设置Python路径 - Set Python path
             var pythonPath = _configuration["Python:ExecutablePath"] ?? "python";
             var pythonHome = _configuration["Python:Home"];
-            
+
             if (!string.IsNullOrEmpty(pythonHome))
             {
                 PythonEngine.PythonHome = pythonHome;
@@ -73,7 +73,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
         await InitializePythonAsync();
 
         var jobId = Guid.NewGuid().ToString();
-        
+
         try
         {
             _logger.LogInformation("Starting fine-tuning job: {JobName} - 启动微调任务: {JobName}", request.JobName);
@@ -111,7 +111,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to start fine-tuning job: {JobName} - 启动微调任务失败: {JobName}", request.JobName);
-            
+
             // 更新记录状态为失败 - Update record status to failed
             var record = await _repository.GetByIdAsync(jobId);
             if (record != null)
@@ -120,7 +120,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
                 record.ErrorMessage = ex.Message;
                 await _repository.UpdateAsync(record);
             }
-            
+
             throw;
         }
     }
@@ -132,7 +132,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
     private async Task ExecuteFinetuningAsync(string jobId, FinetuneRequest request)
     {
         Process? process = null;
-        
+
         try
         {
             // 更新状态为运行中 - Update status to running
@@ -150,7 +150,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
             );
 
             var arguments = BuildPythonArguments(request);
-            
+
             // 启动Python进程 - Start Python process
             var processStartInfo = new ProcessStartInfo
             {
@@ -170,7 +170,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
             }
 
             process = new Process { StartInfo = processStartInfo };
-            
+
             // 注册进程 - Register process
             lock (_lockObject)
             {
@@ -215,7 +215,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
                 record.CompletedAt = DateTime.UtcNow;
                 record.TotalTrainingTime = (int)(record.CompletedAt.Value - record.StartedAt!.Value).TotalSeconds;
                 record.Logs = outputBuilder.ToString();
-                
+
                 if (process.ExitCode == 0)
                 {
                     record.Status = FinetuneStatus.Completed;
@@ -226,7 +226,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
                 {
                     record.Status = FinetuneStatus.Failed;
                     record.ErrorMessage = errorBuilder.ToString();
-                    _logger.LogError("Fine-tuning job failed: {JobId}, Exit code: {ExitCode} - 微调任务失败: {JobId}, 退出代码: {ExitCode}", 
+                    _logger.LogError("Fine-tuning job failed: {JobId}, Exit code: {ExitCode} - 微调任务失败: {JobId}, 退出代码: {ExitCode}",
                         jobId, process.ExitCode);
                 }
 
@@ -236,7 +236,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during fine-tuning execution: {JobId} - 微调执行过程中出错: {JobId}", jobId);
-            
+
             // 更新错误状态 - Update error status
             var record = await _repository.GetByIdAsync(jobId);
             if (record != null)
@@ -254,7 +254,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
             {
                 _runningProcesses.Remove(jobId);
             }
-            
+
             process?.Dispose();
         }
     }
@@ -317,7 +317,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
                     {
                         var loss = double.Parse(lossMatch.Groups[1].Value);
                         record.CurrentLoss = loss;
-                        
+
                         if (record.BestLoss == null || loss < record.BestLoss)
                         {
                             record.BestLoss = loss;
@@ -395,7 +395,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
                 record.CompletedAt = DateTime.UtcNow;
                 record.UpdatedAt = DateTime.UtcNow;
                 await _repository.UpdateAsync(record);
-                
+
                 _logger.LogInformation("Fine-tuning job cancelled: {JobId} - 微调任务已取消: {JobId}", jobId);
                 return true;
             }
@@ -418,7 +418,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
         try
         {
             var query = await _repository.GetAllAsync();
-            
+
             if (status.HasValue)
             {
                 query = query.Where(x => x.Status == status.Value);
@@ -496,7 +496,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
     public async Task<PythonEnvironmentInfo> ValidatePythonEnvironmentAsync()
     {
         var info = new PythonEnvironmentInfo();
-        
+
         try
         {
             await InitializePythonAsync();
@@ -511,7 +511,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
                 // 检查必需的包 - Check required packages
                 var requiredPackages = new[]
                 {
-                    "torch", "transformers", "datasets", "accelerate", 
+                    "torch", "transformers", "datasets", "accelerate",
                     "peft", "bitsandbytes", "numpy", "pandas"
                 };
 
@@ -582,7 +582,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
         var models = new List<string>
         {
             "meta-llama/Llama-3.1-8B-Instruct",
-            "meta-llama/Llama-2-7b-chat-hf", 
+            "meta-llama/Llama-2-7b-chat-hf",
             "meta-llama/Llama-2-13b-chat-hf",
             "microsoft/DialoGPT-medium",
             "microsoft/DialoGPT-large",
@@ -592,7 +592,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
 
         // 缓存1小时 - Cache for 1 hour
         await _cache.SetStringAsync("available_models", JsonSerializer.Serialize(models), new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1) });
-        
+
         return models;
     }
 
@@ -620,7 +620,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
             var stepsPerEpoch = samplesPerEpoch / request.BatchSize;
             var totalSteps = stepsPerEpoch * request.Epochs;
             var secondsPerStep = GetSecondsPerStepEstimate(request.BaseModel);
-            
+
             estimation.EstimatedTrainingHours = (totalSteps * secondsPerStep) / 3600.0;
 
             // GPU推荐 - GPU recommendations
@@ -629,7 +629,7 @@ public class PythonFinetuneService : IPythonFinetuneService, IDisposable
             // 检查资源充足性 - Check resource sufficiency
             var envInfo = await ValidatePythonEnvironmentAsync();
             var availableGpuMemory = envInfo.AvailableGpus.Sum(g => g.TotalMemoryMb);
-            
+
             estimation.ResourcesSufficient = availableGpuMemory >= estimation.RequiredGpuMemoryMb;
 
             if (!estimation.ResourcesSufficient)

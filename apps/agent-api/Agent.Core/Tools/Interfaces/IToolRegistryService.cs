@@ -1,6 +1,5 @@
 namespace Agent.Core.Tools.Interfaces;
 
-using Agent.Core.Data.Entities;
 
 /// <summary>
 /// 工具注册中心接口 (Tool Registry Interface)

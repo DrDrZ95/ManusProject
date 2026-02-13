@@ -28,9 +28,9 @@ public class AgentCacheService : IAgentCacheService
     /// 尝试从缓存中获取数据，如果不存在则执行工厂函数并存入缓存
     /// </summary>
     public async Task<T> GetOrCreateAsync<T>(
-        string key, 
-        Func<Task<T>> factory, 
-        TimeSpan? memoryTtl = null, 
+        string key,
+        Func<Task<T>> factory,
+        TimeSpan? memoryTtl = null,
         TimeSpan? distributedTtl = null,
         CancellationToken cancellationToken = default) where T : class
     {
@@ -49,7 +49,7 @@ public class AgentCacheService : IAgentCacheService
             {
                 var json = System.Text.Encoding.UTF8.GetString(distributedValue);
                 result = JsonSerializer.Deserialize<T>(json);
-                
+
                 if (result != null)
                 {
                     _logger.LogDebug("Cache Hit (L2): {Key}", key);
@@ -98,7 +98,7 @@ public class AgentCacheService : IAgentCacheService
             {
                 var json = System.Text.Encoding.UTF8.GetString(distributedValue);
                 result = JsonSerializer.Deserialize<T>(json);
-                
+
                 if (result != null)
                 {
                     // L2 命中后，回填到 L1
@@ -120,9 +120,9 @@ public class AgentCacheService : IAgentCacheService
     /// 将数据存入缓存
     /// </summary>
     public async Task SetAsync<T>(
-        string key, 
-        T value, 
-        TimeSpan? memoryTtl = null, 
+        string key,
+        T value,
+        TimeSpan? memoryTtl = null,
         TimeSpan? distributedTtl = null,
         CancellationToken cancellationToken = default) where T : class
     {

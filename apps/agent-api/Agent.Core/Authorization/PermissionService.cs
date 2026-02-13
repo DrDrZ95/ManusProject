@@ -40,7 +40,7 @@ public class PermissionService : IPermissionService
             // Combine and return unique permissions
             // 合并并返回唯一权限
             var allPermissions = rolePermissions.Concat(directPermissions).Distinct();
-            
+
             _logger.LogInformation("Retrieved {Count} permissions for user {UserId}", allPermissions.Count(), userId);
             return allPermissions;
         }

@@ -34,7 +34,7 @@ public class ComprehensiveAgentMemory : IAdvancedAgentMemory
         // But IAgentMemory.InitializeAsync takes long conversationId.
         // My ShortTermMemory uses string sessionId.
         // I'll need to store conversationId.
-        
+
         // Placeholder return
         return new MemoryContext
         {

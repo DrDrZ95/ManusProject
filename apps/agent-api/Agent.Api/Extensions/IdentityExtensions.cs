@@ -17,7 +17,7 @@ public static class IdentityExtensions
     {
         // Add PostgreSQL DbContext
         // 添加PostgreSQL数据库上下文
-        var connectionString = configuration.GetConnectionString("DefaultConnection") 
+        var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? "Host=localhost;Database=Agent.ApiDb;Username=postgres;Password=postgres";
 
         services.AddDbContext<ApplicationDbContext>(options =>
@@ -30,7 +30,7 @@ public static class IdentityExtensions
                     maxRetryDelay: TimeSpan.FromSeconds(30),
                     errorCodesToAdd: null);
             });
-            
+
             // Enable sensitive data logging in development
             // 在开发环境中启用敏感数据日志记录
             if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")

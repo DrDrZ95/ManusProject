@@ -1,9 +1,3 @@
-using Agent.Application.Services.FileUpload;
-using Moq;
-using System.Threading.Tasks;
-using Xunit;
-using Microsoft.AspNetCore.Http;
-using System.Security;
 
 namespace Agent.Api.Tests.Services
 {
@@ -24,17 +18,15 @@ namespace Agent.Api.Tests.Services
             invalidFile.Setup(f => f.FileName).Returns("malicious.exe");
             invalidFile.Setup(f => f.ContentType).Returns("application/x-msdownload");
 
-            _mockFileUploadService.Setup(s => s.UploadFileAsync(
-                It.Is<IFormFile>(f => f.FileName.EndsWith(".exe")), 
-                It.IsAny<CancellationToken>()))
+            _mockFileUploadService.Setup(s => s.ValidateFileAsync(
+                It.Is<IFormFile>(f => f.FileName.EndsWith(".exe"))))
                 .ThrowsAsync(new SecurityException("File type not allowed by OWASP policy."));
 
             // Act & Assert
-            await Assert.ThrowsAsync<SecurityException>(() => _mockFileUploadService.Object.UploadFileAsync(invalidFile.Object, CancellationToken.None));
+            await Assert.ThrowsAsync<SecurityException>(() => _mockFileUploadService.Object.ValidateFileAsync(invalidFile.Object));
             
-            _mockFileUploadService.Verify(s => s.UploadFileAsync(
-                invalidFile.Object, 
-                CancellationToken.None), Times.Once);
+            _mockFileUploadService.Verify(s => s.ValidateFileAsync(
+                invalidFile.Object), Times.Once);
         }
     }
 }

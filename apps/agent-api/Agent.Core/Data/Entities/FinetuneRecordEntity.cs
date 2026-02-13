@@ -320,8 +320,8 @@ public static class FinetuneStatusExtensions
     /// </summary>
     public static bool IsActive(this FinetuneStatus status)
     {
-        return status == FinetuneStatus.Queued || 
-               status == FinetuneStatus.Running || 
+        return status == FinetuneStatus.Queued ||
+               status == FinetuneStatus.Running ||
                status == FinetuneStatus.Paused;
     }
 
@@ -331,9 +331,9 @@ public static class FinetuneStatusExtensions
     /// </summary>
     public static bool IsFinished(this FinetuneStatus status)
     {
-        return status == FinetuneStatus.Completed || 
-               status == FinetuneStatus.Failed || 
-               status == FinetuneStatus.Cancelled || 
+        return status == FinetuneStatus.Completed ||
+               status == FinetuneStatus.Failed ||
+               status == FinetuneStatus.Cancelled ||
                status == FinetuneStatus.Timeout;
     }
 

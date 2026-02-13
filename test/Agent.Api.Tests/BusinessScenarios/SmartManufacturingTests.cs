@@ -13,11 +13,11 @@ public class SmartManufacturingTests
     public async Task Manufacturing_AnomalousVibration_TriggersMaintenanceAlert()
     {
         // Arrange
-        _ebpfServiceMock.Setup(e => e.ExecuteScriptAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _ebpfServiceMock.Setup(e => e.RunBpftraceScriptAsync(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync("Vibration: High, Status: Alert");
 
         // Act
-        var result = await _ebpfServiceMock.Object.ExecuteScriptAsync("monitor_vibration.bt");
+        var result = await _ebpfServiceMock.Object.RunBpftraceScriptAsync("monitor_vibration.bt");
 
         // Assert
         Assert.Contains("Alert", result);

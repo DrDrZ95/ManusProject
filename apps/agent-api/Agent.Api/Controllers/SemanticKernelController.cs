@@ -49,7 +49,7 @@ public class SemanticKernelController : ControllerBase
             _logger.LogInformation("Processing chat completion request");
 
             var response = await _semanticKernelService.GetChatCompletionAsync(
-                request.Prompt, 
+                request.Prompt,
                 request.SystemMessage);
 
             return Ok(ApiResponse<ChatCompletionResponse>.Ok(new ChatCompletionResponse
@@ -88,7 +88,7 @@ public class SemanticKernelController : ControllerBase
             _logger.LogInformation("Processing streaming chat completion request");
 
             var responseStream = _semanticKernelService.GetStreamingChatCompletionAsync(
-                request.Prompt, 
+                request.Prompt,
                 request.SystemMessage);
 
             Response.Headers.Append("Content-Type", "text/event-stream");
@@ -101,7 +101,8 @@ public class SemanticKernelController : ControllerBase
                 await Response.Body.FlushAsync();
             }
 
-            return new ContentResult {
+            return new ContentResult
+            {
                 StatusCode = StatusCodes.Status200OK,
                 Content = string.Empty,
                 ContentType = "text/event-stream"
@@ -501,7 +502,7 @@ public class SemanticKernelController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Adding {Count} documents to collection: {CollectionName}", 
+            _logger.LogInformation("Adding {Count} documents to collection: {CollectionName}",
                 request.Documents.Count(), request.CollectionName);
 
             var vectorDocuments = new List<VectorDocument>();

@@ -47,7 +47,7 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
         return await _cacheService.GetOrCreateAsync(cacheKey, async () =>
         {
             _logger.LogInformation("Cache Miss: Getting vector collection: {CollectionName}", name);
-            
+
             var zeroEmbedding = new ReadOnlyMemory<float>(Enumerable.Repeat(0f, 0).ToArray());
             var queryResult = await _client.QueryEmbeddingsAsync(
                 collectionId: name,
@@ -55,7 +55,7 @@ public class ChromaVectorDatabaseService : IVectorDatabaseService
                 nResults: 100000,  // 设大值，确保覆盖集合（可根据你的集合规模调整）
                 include: Array.Empty<string>()  // 不返回 documents/metadatas/embeddings/distances，减少数据量
             );
-            
+
             int count = queryResult.Ids?[0]?.Count ?? 0;
             return new VectorCollection
             {

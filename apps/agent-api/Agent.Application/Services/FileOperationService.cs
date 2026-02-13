@@ -23,7 +23,7 @@ public class FileOperationService : IFileOperationService
     public async Task<string> ReadFileAsync(string path, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Reading file: {Path}", path);
-        
+
         if (!File.Exists(path))
         {
             throw new FileNotFoundException($"File not found: {path}", path);
@@ -43,7 +43,7 @@ public class FileOperationService : IFileOperationService
     public async Task WriteFileAsync(string path, string content, bool append, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Writing to file: {Path}, Append: {Append}", path, append);
-        
+
         // Ensure the directory exists
         var directory = Path.GetDirectoryName(path);
         if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
@@ -70,7 +70,7 @@ public class FileOperationService : IFileOperationService
     public Task DeleteFileAsync(string path, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Deleting file: {Path}", path);
-        
+
         if (!File.Exists(path))
         {
             throw new FileNotFoundException($"File not found: {path}", path);

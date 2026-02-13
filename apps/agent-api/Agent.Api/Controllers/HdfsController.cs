@@ -14,9 +14,9 @@ public class HdfsController : ControllerBase
     private readonly IAgentTelemetryProvider _telemetryProvider;
 
     public HdfsController(
-        IHdfsService hdfsService, 
+        IHdfsService hdfsService,
         IFileUploadService fileUploadService,
-        ILogger<HdfsController> logger, 
+        ILogger<HdfsController> logger,
         IAgentTelemetryProvider telemetryProvider)
     {
         _hdfsService = hdfsService;
@@ -52,16 +52,16 @@ public class HdfsController : ControllerBase
                 // OWASP Security Validation - OWASP安全验证
                 _logger.LogInformation("Starting OWASP security validation for file: {FileName}", file.FileName);
                 var validationResult = await _fileUploadService.ValidateFileAsync(file);
-                
+
                 if (!validationResult.IsValid)
                 {
-                    _logger.LogWarning("File validation failed for {FileName}: {Errors}", 
+                    _logger.LogWarning("File validation failed for {FileName}: {Errors}",
                         file.FileName, string.Join(", ", validationResult.ErrorMessages));
                     span.SetStatus(ActivityStatusCode.Error, "File validation failed");
-                    return BadRequest(new 
-                    { 
-                        Error = "File validation failed - 文件验证失败", 
-                        Details = validationResult.ErrorMessages 
+                    return BadRequest(new
+                    {
+                        Error = "File validation failed - 文件验证失败",
+                        Details = validationResult.ErrorMessages
                     });
                 }
 
@@ -71,7 +71,7 @@ public class HdfsController : ControllerBase
                 // Generate secure file path using OWASP-compliant service
                 // 使用符合OWASP的服务生成安全文件路径
                 var secureFilePath = _fileUploadService.GenerateSecureFilePath(
-                    validationResult.SanitizedFileName, 
+                    validationResult.SanitizedFileName,
                     validationResult.Category);
 
                 string remoteDirectory = Path.GetDirectoryName(secureFilePath).Replace('\\', '/') + "/";
@@ -91,13 +91,13 @@ public class HdfsController : ControllerBase
                     bool success = await _hdfsService.UploadFileAsync(remotePath, stream, validationResult.DetectedMimeType);
                     if (success)
                     {
-                        _logger.LogInformation("File {FileName} (sanitized: {SanitizedFileName}) uploaded to HDFS at {RemotePath}", 
+                        _logger.LogInformation("File {FileName} (sanitized: {SanitizedFileName}) uploaded to HDFS at {RemotePath}",
                             file.FileName, validationResult.SanitizedFileName, remotePath);
                         span.SetAttribute("hdfs.upload_success", true);
-                        
-                        return Ok(new 
-                        { 
-                            Message = "File uploaded successfully - 文件上传成功", 
+
+                        return Ok(new
+                        {
+                            Message = "File uploaded successfully - 文件上传成功",
                             Path = remotePath,
                             Category = validationResult.Category,
                             OriginalFileName = file.FileName,

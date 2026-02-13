@@ -20,9 +20,9 @@ public interface IAgentCacheService
     /// <param name="cancellationToken">取消令牌 (Cancellation token)</param>
     /// <returns>缓存或生成的数据 (Cached or generated data)</returns>
     Task<T> GetOrCreateAsync<T>(
-        string key, 
-        Func<Task<T>> factory, 
-        TimeSpan? memoryTtl = null, 
+        string key,
+        Func<Task<T>> factory,
+        TimeSpan? memoryTtl = null,
         TimeSpan? distributedTtl = null,
         CancellationToken cancellationToken = default) where T : class;
 
@@ -45,9 +45,9 @@ public interface IAgentCacheService
     /// <param name="distributedTtl">L2 分布式缓存的 TTL (TTL for L2 distributed cache)</param>
     /// <param name="cancellationToken">取消令牌 (Cancellation token)</param>
     Task SetAsync<T>(
-        string key, 
-        T value, 
-        TimeSpan? memoryTtl = null, 
+        string key,
+        T value,
+        TimeSpan? memoryTtl = null,
         TimeSpan? distributedTtl = null,
         CancellationToken cancellationToken = default) where T : class;
 

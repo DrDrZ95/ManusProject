@@ -109,10 +109,10 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
         try
         {
             _logger.LogDebug("Adding new entity of type {EntityType}", typeof(TEntity).Name);
-            
+
             var entry = await _dbSet.AddAsync(entity, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
-            
+
             _logger.LogInformation("Successfully added entity of type {EntityType}", typeof(TEntity).Name);
             return entry.Entity;
         }
@@ -132,10 +132,10 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
         {
             var entityList = entities.ToList();
             _logger.LogDebug("Adding {Count} entities of type {EntityType}", entityList.Count, typeof(TEntity).Name);
-            
+
             await _dbSet.AddRangeAsync(entityList, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
-            
+
             _logger.LogInformation("Successfully added {Count} entities of type {EntityType}", entityList.Count, typeof(TEntity).Name);
         }
         catch (Exception ex)
@@ -153,10 +153,10 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
         try
         {
             _logger.LogDebug("Updating entity of type {EntityType}", typeof(TEntity).Name);
-            
+
             _dbSet.Update(entity);
             await _context.SaveChangesAsync(cancellationToken);
-            
+
             _logger.LogInformation("Successfully updated entity of type {EntityType}", typeof(TEntity).Name);
             return entity;
         }
@@ -175,7 +175,7 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
         try
         {
             _logger.LogDebug("Deleting entity by ID: {Id}", id);
-            
+
             var entity = await GetByIdAsync(id, cancellationToken);
             if (entity == null)
             {
@@ -185,7 +185,7 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
 
             _dbSet.Remove(entity);
             await _context.SaveChangesAsync(cancellationToken);
-            
+
             _logger.LogInformation("Successfully deleted entity with ID: {Id}", id);
             return true;
         }
@@ -204,10 +204,10 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
         try
         {
             _logger.LogDebug("Deleting entity of type {EntityType}", typeof(TEntity).Name);
-            
+
             _dbSet.Remove(entity);
             await _context.SaveChangesAsync(cancellationToken);
-            
+
             _logger.LogInformation("Successfully deleted entity of type {EntityType}", typeof(TEntity).Name);
             return true;
         }
@@ -243,12 +243,12 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
         try
         {
             _logger.LogDebug("Counting entities of type {EntityType}", typeof(TEntity).Name);
-            
+
             if (predicate == null)
             {
                 return await _dbSet.CountAsync(cancellationToken);
             }
-            
+
             return await _dbSet.CountAsync(predicate, cancellationToken);
         }
         catch (Exception ex)
@@ -270,7 +270,7 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
     {
         try
         {
-            _logger.LogDebug("Getting paged results for type {EntityType}, Page: {PageNumber}, Size: {PageSize}", 
+            _logger.LogDebug("Getting paged results for type {EntityType}, Page: {PageNumber}, Size: {PageSize}",
                 typeof(TEntity).Name, pageNumber, pageSize);
 
             // 验证分页参数 - Validate paging parameters
@@ -309,7 +309,7 @@ public class Repository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntit
                 PageSize = pageSize
             };
 
-            _logger.LogDebug("Retrieved {ItemCount} items out of {TotalCount} for page {PageNumber}", 
+            _logger.LogDebug("Retrieved {ItemCount} items out of {TotalCount} for page {PageNumber}",
                 items.Count, totalCount, pageNumber);
 
             return result;

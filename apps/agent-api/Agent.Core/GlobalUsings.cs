@@ -65,7 +65,7 @@ global using Yarp.ReverseProxy.SessionAffinity;
 //global using ChromaDB.Client;
 //global using ChromaDB.Client.Models;
 
-global using PromCounter   = Prometheus.Counter;
+global using PromCounter = Prometheus.Counter;
 global using PromHistogram = Prometheus.Histogram;
 
 namespace Agent.Core;
@@ -85,6 +85,6 @@ public class ChatMessage
     /// Message content - 消息内容
     /// </summary>
     public string Content { get; set; } = string.Empty;
-    
+
     public Dictionary<string, object>? Metadata { get; set; }
 }

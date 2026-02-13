@@ -35,7 +35,7 @@ public class TelemetryService : ITelemetryService
     public T TraceActivity<T>(string name, Func<T> action, params (string Key, object Value)[] tags)
     {
         using var activity = StartActivity(name);
-        
+
         if (activity != null)
         {
             foreach (var (key, value) in tags)
@@ -47,12 +47,12 @@ public class TelemetryService : ITelemetryService
         try
         {
             var result = action();
-            
+
             if (activity != null)
             {
                 activity.SetStatus(ActivityStatusCode.Ok);
             }
-            
+
             return result;
         }
         catch (Exception ex)
@@ -62,7 +62,7 @@ public class TelemetryService : ITelemetryService
                 activity.SetStatus(ActivityStatusCode.Error, ex.Message);
                 activity.RecordException(ex);
             }
-            
+
             _logger.LogError(ex, "Error in activity {ActivityName}: {ErrorMessage}", name, ex.Message);
             throw;
         }
@@ -79,7 +79,7 @@ public class TelemetryService : ITelemetryService
     public async Task<T> TraceActivityAsync<T>(string name, Func<Task<T>> action, params (string Key, object Value)[] tags)
     {
         using var activity = StartActivity(name);
-        
+
         if (activity != null)
         {
             foreach (var (key, value) in tags)
@@ -91,12 +91,12 @@ public class TelemetryService : ITelemetryService
         try
         {
             var result = await action();
-            
+
             if (activity != null)
             {
                 activity.SetStatus(ActivityStatusCode.Ok);
             }
-            
+
             return result;
         }
         catch (Exception ex)
@@ -106,7 +106,7 @@ public class TelemetryService : ITelemetryService
                 activity.SetStatus(ActivityStatusCode.Error, ex.Message);
                 activity.RecordException(ex);
             }
-            
+
             _logger.LogError(ex, "Error in activity {ActivityName}: {ErrorMessage}", name, ex.Message);
             throw;
         }

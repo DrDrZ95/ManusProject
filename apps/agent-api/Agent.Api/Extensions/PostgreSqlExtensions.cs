@@ -22,7 +22,7 @@ public static class PostgreSqlExtensions
     {
         // 获取连接字符串 - Get connection string
         var connectionString = configuration.GetConnectionString("PostgreSQL");
-        
+
         if (string.IsNullOrEmpty(connectionString))
         {
             throw new InvalidOperationException(
@@ -39,7 +39,7 @@ public static class PostgreSqlExtensions
                     maxRetryCount: 3,
                     maxRetryDelay: TimeSpan.FromSeconds(30),
                     errorCodesToAdd: null);
-                
+
                 // 设置命令超时 - Set command timeout
                 npgsqlOptions.CommandTimeout(30);
             });
@@ -91,7 +91,7 @@ public static class PostgreSqlExtensions
                     maxRetryCount: 3,
                     maxRetryDelay: TimeSpan.FromSeconds(30),
                     errorCodesToAdd: null);
-                
+
                 // 设置命令超时 - Set command timeout
                 npgsqlOptions.CommandTimeout(30);
             });
@@ -127,12 +127,12 @@ public static class PostgreSqlExtensions
         {
             using var scope = app.ApplicationServices.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<AgentDbContext>();
-            
+
             try
             {
                 // 确保数据库已创建 - Ensure database is created
                 context.Database.EnsureCreated();
-                
+
                 // 应用待处理的迁移 - Apply pending migrations
                 if (context.Database.GetPendingMigrations().Any())
                 {
@@ -143,7 +143,7 @@ public static class PostgreSqlExtensions
             {
                 var logger = scope.ServiceProvider.GetRequiredService<ILogger<AgentDbContext>>();
                 logger.LogError(ex, "An error occurred while migrating the database");
-                
+
                 // 在开发环境中，我们可以选择继续运行而不是崩溃
                 // In development, we can choose to continue running instead of crashing
                 if (!isDevelopment)
@@ -174,7 +174,7 @@ public static class PostgreSqlExtensions
             if (!context.WorkflowPlans.Any())
             {
                 logger.LogInformation("Seeding initial workflow plan data");
-                
+
                 // 创建示例工作流计划 - Create sample workflow plan
                 var samplePlan = new WorkflowPlanEntity
                 {

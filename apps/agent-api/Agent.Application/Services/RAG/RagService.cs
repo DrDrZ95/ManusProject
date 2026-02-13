@@ -33,15 +33,15 @@ public class RagService : IRagService
     {
         try
         {
-            _logger.LogInformation("Adding document {DocumentId} to collection {CollectionName}", 
+            _logger.LogInformation("Adding document {DocumentId} to collection {CollectionName}",
                 document.Id, collectionName);
 
             // 1. Split document into chunks - 将文档分割成块
             var chunks = await SplitDocumentIntoChunksAsync(document);
-            
+
             // 2. Generate embeddings for chunks - 为块生成嵌入
             var vectorDocuments = new List<VectorDocument>();
-            
+
             foreach (var chunk in chunks)
             {
                 var embedding = await _semanticKernel.GenerateEmbeddingAsync(chunk.Content);
@@ -101,7 +101,7 @@ public class RagService : IRagService
             // 5. Update document with generated chunks - 用生成的块更新文档
             document.Chunks = chunks;
 
-            _logger.LogInformation("Successfully added document {DocumentId} with {ChunkCount} chunks", 
+            _logger.LogInformation("Successfully added document {DocumentId} with {ChunkCount} chunks",
                 document.Id, chunks.Count);
 
             // Invalidate retrieval and response caches for this collection - 使该集合的检索和响应缓存失效
@@ -112,7 +112,7 @@ public class RagService : IRagService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to add document {DocumentId} to collection {CollectionName}", 
+            _logger.LogError(ex, "Failed to add document {DocumentId} to collection {CollectionName}",
                 document.Id, collectionName);
             throw;
         }
@@ -138,7 +138,7 @@ public class RagService : IRagService
             }
 
             var vectorDocs = await _vectorDb.GetDocumentsAsync(collectionName, null, filter);
-            
+
             // Group by document ID and reconstruct RAG documents - 按文档ID分组并重构RAG文档
             var documentGroups = vectorDocs.GroupBy(d => d.Metadata?["document_id"]?.ToString() ?? "unknown");
             var ragDocuments = new List<RagDocument>();
@@ -150,9 +150,9 @@ public class RagService : IRagService
                 {
                     Id = group.Key,
                     Title = firstDoc.Metadata?["document_title"]?.ToString() ?? "",
-                    CreatedAt = DateTime.TryParse(firstDoc.Metadata?["created_at"]?.ToString(), out var created) 
+                    CreatedAt = DateTime.TryParse(firstDoc.Metadata?["created_at"]?.ToString(), out var created)
                         ? created : DateTime.UtcNow,
-                    UpdatedAt = DateTime.TryParse(firstDoc.Metadata?["updated_at"]?.ToString(), out var updated) 
+                    UpdatedAt = DateTime.TryParse(firstDoc.Metadata?["updated_at"]?.ToString(), out var updated)
                         ? updated : DateTime.UtcNow
                 };
 
@@ -182,7 +182,7 @@ public class RagService : IRagService
                 ragDocuments.Add(ragDoc);
             }
 
-            _logger.LogInformation("Retrieved {DocumentCount} documents from collection {CollectionName}", 
+            _logger.LogInformation("Retrieved {DocumentCount} documents from collection {CollectionName}",
                 ragDocuments.Count, collectionName);
 
             return ragDocuments;
@@ -202,7 +202,7 @@ public class RagService : IRagService
     {
         try
         {
-            _logger.LogInformation("Updating document {DocumentId} in collection {CollectionName}", 
+            _logger.LogInformation("Updating document {DocumentId} in collection {CollectionName}",
                 document.Id, collectionName);
 
             // Delete existing document chunks - 删除现有文档块
@@ -233,7 +233,7 @@ public class RagService : IRagService
     {
         try
         {
-            _logger.LogInformation("Deleting document {DocumentId} from collection {CollectionName}", 
+            _logger.LogInformation("Deleting document {DocumentId} from collection {CollectionName}",
                 documentId, collectionName);
 
             var filter = new VectorFilter
@@ -285,80 +285,80 @@ public class RagService : IRagService
     /// Hybrid retrieval combining vector, keyword, and semantic search
     /// 结合向量、关键词和语义搜索的混合检索
     /// </summary>
-        public async Task<RagRetrievalResult> HybridRetrievalAsync(string collectionName, RagQuery query)
+    public async Task<RagRetrievalResult> HybridRetrievalAsync(string collectionName, RagQuery query)
+    {
+        // 计算查询哈希值作为缓存键的一部分 (Calculate query hash as part of the cache key)
+        var queryHash = SecurityHelper.GetSha256Hash(JsonSerializer.Serialize(query) + collectionName);
+        // 缓存键: rag:retrieval:{集合名称}:{查询哈希} (Cache key: rag:retrieval:{collection_name}:{query_hash})
+        var cacheKey = $"rag:retrieval:{collectionName}:{queryHash}";
+
+        // 尝试从缓存中获取检索结果 (Try to get retrieval results from cache)
+        var cachedResult = await _cacheService.GetAsync<RagRetrievalResult>(cacheKey);
+        if (cachedResult != null)
         {
-            // 计算查询哈希值作为缓存键的一部分 (Calculate query hash as part of the cache key)
-            var queryHash = SecurityHelper.GetSha256Hash(JsonSerializer.Serialize(query) + collectionName);
-            // 缓存键: rag:retrieval:{集合名称}:{查询哈希} (Cache key: rag:retrieval:{collection_name}:{query_hash})
-            var cacheKey = $"rag:retrieval:{collectionName}:{queryHash}";
-
-            // 尝试从缓存中获取检索结果 (Try to get retrieval results from cache)
-            var cachedResult = await _cacheService.GetAsync<RagRetrievalResult>(cacheKey);
-            if (cachedResult != null)
-            {
-                _logger.LogInformation("Cache Hit (Retrieval): Retrieved {ChunkCount} chunks for query: {Query}", cachedResult.Chunks.Count(), query.Text);
-                return cachedResult;
-            }
-
-            var stopwatch = Stopwatch.StartNew();
-            
-            try
-            {
-                _logger.LogInformation("Cache Miss (Retrieval): Performing hybrid retrieval in collection {CollectionName} for query: {Query}", 
-                    collectionName, query.Text);        // 1. Parallel execution of different retrieval strategies - 并行执行不同的检索策略
-                var vectorTask = VectorRetrievalAsync(collectionName, query.Text, query.TopK * 2);
-                var keywordTask = KeywordRetrievalAsync(collectionName, query.Text, query.TopK * 2);
-                var semanticTask = SemanticRetrievalAsync(collectionName, query.Text, query.TopK * 2);
-
-                await Task.WhenAll(vectorTask, keywordTask, semanticTask);
-
-                var vectorResults = await vectorTask;
-                var keywordResults = await keywordTask;
-                var semanticResults = await semanticTask;
-
-                // 2. Merge and score results using hybrid weights - 使用混合权重合并和评分结果
-                var weights = query.Weights ?? new HybridRetrievalWeights();
-                var mergedResults = MergeRetrievalResults(vectorResults, keywordResults, semanticResults, weights);
-
-                // 3. Apply re-ranking if enabled - 如果启用，应用重排序
-                if (query.ReRanking?.Enabled == true)
-                {
-                    mergedResults = await ApplyReRankingAsync(query.Text, mergedResults, query.ReRanking);
-                }
-
-                // 4. Apply filters and limit results - 应用过滤器并限制结果
-                var filteredResults = ApplyFiltersAndLimit(mergedResults, query);
-
-                stopwatch.Stop();
-
-                var result = new RagRetrievalResult
-                {
-                    Chunks = filteredResults,
-                    TotalMatches = filteredResults.Count,
-                    ExecutionTimeMs = stopwatch.ElapsedMilliseconds,
-                    Strategy = RetrievalStrategy.Hybrid,
-                    Metadata = new Dictionary<string, object>
-                    {
-                        ["vector_results"] = vectorResults.TotalMatches,
-                        ["keyword_results"] = keywordResults.TotalMatches,
-                        ["semantic_results"] = semanticResults.TotalMatches,
-                        ["weights"] = JsonSerializer.Serialize(weights),
-                        ["reranking_enabled"] = query.ReRanking?.Enabled ?? false
-                    }
-                };
-
-                // 将结果存入缓存 (Cache the result)
-                // 默认缓存 30 分钟 (Default cache duration: 30 minutes)
-                await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromMinutes(30));
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to execute hybrid retrieval");
-                throw;
-            }
+            _logger.LogInformation("Cache Hit (Retrieval): Retrieved {ChunkCount} chunks for query: {Query}", cachedResult.Chunks.Count(), query.Text);
+            return cachedResult;
         }
+
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            _logger.LogInformation("Cache Miss (Retrieval): Performing hybrid retrieval in collection {CollectionName} for query: {Query}",
+                collectionName, query.Text);        // 1. Parallel execution of different retrieval strategies - 并行执行不同的检索策略
+            var vectorTask = VectorRetrievalAsync(collectionName, query.Text, query.TopK * 2);
+            var keywordTask = KeywordRetrievalAsync(collectionName, query.Text, query.TopK * 2);
+            var semanticTask = SemanticRetrievalAsync(collectionName, query.Text, query.TopK * 2);
+
+            await Task.WhenAll(vectorTask, keywordTask, semanticTask);
+
+            var vectorResults = await vectorTask;
+            var keywordResults = await keywordTask;
+            var semanticResults = await semanticTask;
+
+            // 2. Merge and score results using hybrid weights - 使用混合权重合并和评分结果
+            var weights = query.Weights ?? new HybridRetrievalWeights();
+            var mergedResults = MergeRetrievalResults(vectorResults, keywordResults, semanticResults, weights);
+
+            // 3. Apply re-ranking if enabled - 如果启用，应用重排序
+            if (query.ReRanking?.Enabled == true)
+            {
+                mergedResults = await ApplyReRankingAsync(query.Text, mergedResults, query.ReRanking);
+            }
+
+            // 4. Apply filters and limit results - 应用过滤器并限制结果
+            var filteredResults = ApplyFiltersAndLimit(mergedResults, query);
+
+            stopwatch.Stop();
+
+            var result = new RagRetrievalResult
+            {
+                Chunks = filteredResults,
+                TotalMatches = filteredResults.Count,
+                ExecutionTimeMs = stopwatch.ElapsedMilliseconds,
+                Strategy = RetrievalStrategy.Hybrid,
+                Metadata = new Dictionary<string, object>
+                {
+                    ["vector_results"] = vectorResults.TotalMatches,
+                    ["keyword_results"] = keywordResults.TotalMatches,
+                    ["semantic_results"] = semanticResults.TotalMatches,
+                    ["weights"] = JsonSerializer.Serialize(weights),
+                    ["reranking_enabled"] = query.ReRanking?.Enabled ?? false
+                }
+            };
+
+            // 将结果存入缓存 (Cache the result)
+            // 默认缓存 30 分钟 (Default cache duration: 30 minutes)
+            await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromMinutes(30));
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to execute hybrid retrieval");
+            throw;
+        }
+    }
 
     /// <summary>
     /// Vector similarity retrieval
@@ -367,7 +367,7 @@ public class RagService : IRagService
     public async Task<RagRetrievalResult> VectorRetrievalAsync(string collectionName, string query, int topK = 10)
     {
         var stopwatch = Stopwatch.StartNew();
-        
+
         try
         {
             _logger.LogInformation("Performing vector retrieval for query: {Query}", query);
@@ -376,7 +376,7 @@ public class RagService : IRagService
             var queryEmbedding = await _semanticKernel.GenerateEmbeddingAsync(query);
 
             // Search using vector similarity - 使用向量相似度搜索
-            var searchResult = await _vectorDb.SearchByEmbeddingAsync(collectionName, queryEmbedding, 
+            var searchResult = await _vectorDb.SearchByEmbeddingAsync(collectionName, queryEmbedding,
                 new VectorSearchOptions
                 {
                     MaxResults = topK,
@@ -432,24 +432,24 @@ public class RagService : IRagService
     public async Task<RagRetrievalResult> KeywordRetrievalAsync(string collectionName, string query, int topK = 10)
     {
         var stopwatch = Stopwatch.StartNew();
-        
+
         try
         {
             _logger.LogInformation("Performing keyword retrieval for query: {Query}", query);
 
             // Extract keywords from query - 从查询中提取关键词
             var keywords = ExtractKeywords(query);
-            
+
             // Get all documents for keyword matching - 获取所有文档进行关键词匹配
             var allDocs = await _vectorDb.GetDocumentsAsync(collectionName);
-            
+
             // Calculate keyword scores using BM25 algorithm - 使用BM25算法计算关键词分数
             var scoredChunks = new List<RagRetrievedChunk>();
-            
+
             foreach (var doc in allDocs)
             {
                 var keywordScore = CalculateBM25Score(doc.Content, keywords);
-                
+
                 if (keywordScore > 0)
                 {
                     scoredChunks.Add(new RagRetrievedChunk
@@ -506,25 +506,25 @@ public class RagService : IRagService
     public async Task<RagRetrievalResult> SemanticRetrievalAsync(string collectionName, string query, int topK = 10)
     {
         var stopwatch = Stopwatch.StartNew();
-        
+
         try
         {
             _logger.LogInformation("Performing semantic retrieval for query: {Query}", query);
 
             // First get candidates using vector search - 首先使用向量搜索获取候选
             var vectorResults = await VectorRetrievalAsync(collectionName, query, topK * 3);
-            
+
             // Apply semantic scoring using cross-encoder approach - 使用交叉编码器方法应用语义评分
             var semanticChunks = new List<RagRetrievedChunk>();
-            
+
             foreach (var chunk in vectorResults.Chunks)
             {
                 // Calculate semantic similarity using prompt-based approach - 使用基于提示的方法计算语义相似度
                 var semanticScore = await CalculateSemanticSimilarityAsync(query, chunk.Chunk.Content);
-                
+
                 chunk.SemanticScore = semanticScore;
                 chunk.Score = semanticScore; // Use semantic score as primary score
-                
+
                 semanticChunks.Add(chunk);
             }
 
@@ -565,24 +565,24 @@ public class RagService : IRagService
     /// 使用RAG和检索到的上下文生成响应
     /// </summary>
     public async Task<RagResponse> GenerateResponseAsync(string collectionName, RagGenerationRequest request)
+    {
+        // Layer 3: Response Cache - 第三层：完整响应缓存
+        var queryHash = SecurityHelper.GetSha256Hash(JsonSerializer.Serialize(request.RetrievalOptions));
+        var systemPromptHash = SecurityHelper.GetSha256Hash(request.SystemPrompt ?? "");
+        var cacheKey = $"rag:response:{collectionName}:{queryHash}:{systemPromptHash}";
+
+        var cachedResponse = await _cacheService.GetAsync<RagResponse>(cacheKey);
+        if (cachedResponse != null)
         {
-            // Layer 3: Response Cache - 第三层：完整响应缓存
-            var queryHash = SecurityHelper.GetSha256Hash(JsonSerializer.Serialize(request.RetrievalOptions));
-            var systemPromptHash = SecurityHelper.GetSha256Hash(request.SystemPrompt ?? "");
-            var cacheKey = $"rag:response:{collectionName}:{queryHash}:{systemPromptHash}";
+            _logger.LogInformation("Cache Hit (Response): Retrieved full response for query: {Query}", request.Query);
+            return cachedResponse;
+        }
 
-            var cachedResponse = await _cacheService.GetAsync<RagResponse>(cacheKey);
-            if (cachedResponse != null)
-            {
-                _logger.LogInformation("Cache Hit (Response): Retrieved full response for query: {Query}", request.Query);
-                return cachedResponse;
-            }
+        var stopwatch = Stopwatch.StartNew();
 
-            var stopwatch = Stopwatch.StartNew();
-            
-            try
-            {
-                _logger.LogInformation("Generating RAG response for query: {Query}", request.Query);
+        try
+        {
+            _logger.LogInformation("Generating RAG response for query: {Query}", request.Query);
 
             // 1. Retrieve relevant context - 检索相关上下文
             var retrievalQuery = request.RetrievalOptions ?? new RagQuery
@@ -602,7 +602,7 @@ public class RagService : IRagService
 
             // 4. Generate response using Semantic Kernel - 使用Semantic Kernel生成响应
             var generationOptions = request.GenerationOptions ?? new RagGenerationOptions();
-            
+
             string response;
             if (request.ConversationHistory?.Any() == true)
             {
@@ -610,7 +610,7 @@ public class RagService : IRagService
                 var chatHistory = request.ConversationHistory.ToList();
                 chatHistory.Insert(0, new ChatMessage { Role = "system", Content = systemPrompt });
                 chatHistory.Add(new ChatMessage { Role = "user", Content = request.Query });
-                
+
                 response = await _semanticKernel.GetChatCompletionWithHistoryAsync(chatHistory);
             }
             else
@@ -647,7 +647,7 @@ public class RagService : IRagService
                 memoryTtl: TimeSpan.FromMinutes(new Random().Next(15, 61)), // 15-60分钟动态 TTL
                 distributedTtl: TimeSpan.FromMinutes(new Random().Next(15, 61)));
 
-            _logger.LogInformation("RAG response generated in {ElapsedMs}ms with confidence {Confidence}", 
+            _logger.LogInformation("RAG response generated in {ElapsedMs}ms with confidence {Confidence}",
                 stopwatch.ElapsedMilliseconds, confidenceScore);
 
             return ragResponse;
@@ -707,7 +707,7 @@ public class RagService : IRagService
             _logger.LogInformation("Processing enterprise Q&A for knowledge base: {KnowledgeBase}", knowledgeBase);
 
             var ragOptions = options ?? new RagOptions();
-            
+
             // Build enterprise-specific retrieval query - 构建企业特定的检索查询
             var retrievalQuery = new RagQuery
             {
@@ -778,7 +778,7 @@ public class RagService : IRagService
     {
         try
         {
-            _logger.LogInformation("Summarizing document {DocumentId} in collection {CollectionName}", 
+            _logger.LogInformation("Summarizing document {DocumentId} in collection {CollectionName}",
                 documentId, collectionName);
 
             var summaryOptions = options ?? new RagSummaryOptions();
@@ -786,7 +786,7 @@ public class RagService : IRagService
             // Retrieve document chunks - 检索文档块
             var documents = await GetDocumentsAsync(collectionName, new[] { documentId });
             var document = documents.FirstOrDefault();
-            
+
             if (document == null)
             {
                 throw new ArgumentException($"Document {documentId} not found");
@@ -841,7 +841,7 @@ public class RagService : IRagService
 
             // Generate summary without retrieval (we already have the document) - 生成摘要而不检索（我们已经有文档）
             var response = await _semanticKernel.GetChatCompletionAsync(
-                generationRequest.Query, 
+                generationRequest.Query,
                 generationRequest.SystemPrompt);
 
             return new RagResponse
@@ -873,7 +873,7 @@ public class RagService : IRagService
     {
         try
         {
-            _logger.LogInformation("Performing multi-document analysis for {DocumentCount} documents", 
+            _logger.LogInformation("Performing multi-document analysis for {DocumentCount} documents",
                 documentIds.Count());
 
             // Retrieve all specified documents - 检索所有指定的文档
@@ -925,7 +925,7 @@ public class RagService : IRagService
             };
 
             var response = await _semanticKernel.GetChatCompletionAsync(
-                generationRequest.Query, 
+                generationRequest.Query,
                 generationRequest.SystemPrompt);
 
             // Create source references for all analyzed documents - 为所有分析的文档创建源引用
@@ -1004,7 +1004,7 @@ public class RagService : IRagService
             }
 
             var collection = await _vectorDb.CreateCollectionAsync(name, vectorConfig);
-            
+
             _logger.LogInformation("Successfully created knowledge base: {Name}", name);
             return collection.Id;
         }
@@ -1024,9 +1024,9 @@ public class RagService : IRagService
         try
         {
             _logger.LogInformation("Deleting knowledge base: {Name}", name);
-            
+
             await _vectorDb.DeleteCollectionAsync(name);
-            
+
             _logger.LogInformation("Successfully deleted knowledge base: {Name}", name);
         }
         catch (Exception ex)
@@ -1076,7 +1076,7 @@ public class RagService : IRagService
     {
         var chunks = new List<RagDocumentChunk>();
         var content = document.Content;
-        
+
         // Simple sentence-aware chunking - 简单的句子感知分块
         var sentences = content.Split(new[] { '.', '!', '?', '。', '！', '？' }, StringSplitOptions.RemoveEmptyEntries);
         var currentChunk = new StringBuilder();
@@ -1103,7 +1103,7 @@ public class RagService : IRagService
                         ["sentence_count"] = currentChunk.ToString().Split('.', '。').Length
                     }
                 };
-                
+
                 chunks.Add(chunk);
                 chunkIndex++;
 
@@ -1138,7 +1138,7 @@ public class RagService : IRagService
                     ["sentence_count"] = currentChunk.ToString().Split('.', '。').Length
                 }
             };
-            
+
             chunks.Add(finalChunk);
         }
 
@@ -1238,8 +1238,8 @@ public class RagService : IRagService
     /// 对检索结果应用重排序
     /// </summary>
     private async Task<List<RagRetrievedChunk>> ApplyReRankingAsync(
-        string query, 
-        List<RagRetrievedChunk> chunks, 
+        string query,
+        List<RagRetrievedChunk> chunks,
         ReRankingOptions options)
     {
         try
@@ -1252,7 +1252,7 @@ public class RagService : IRagService
             {
                 // Use semantic similarity for re-ranking - 使用语义相似度进行重排序
                 var reRankScore = await CalculateSemanticSimilarityAsync(query, chunk.Chunk.Content);
-                
+
                 if (reRankScore >= options.Threshold)
                 {
                     chunk.ReRankScore = reRankScore;
@@ -1291,8 +1291,8 @@ public class RagService : IRagService
         {
             foreach (var filter in query.Filters)
             {
-                filteredChunks = filteredChunks.Where(c => 
-                    c.Chunk.Metadata.ContainsKey(filter.Key) && 
+                filteredChunks = filteredChunks.Where(c =>
+                    c.Chunk.Metadata.ContainsKey(filter.Key) &&
                     c.Chunk.Metadata[filter.Key].Equals(filter.Value));
             }
         }
@@ -1310,12 +1310,12 @@ public class RagService : IRagService
         // Simple keyword extraction - remove stop words and short words
         // 简单的关键词提取 - 移除停用词和短词
         var stopWords = new HashSet<string> { "的", "是", "在", "有", "和", "与", "或", "但", "如果", "因为", "所以", "这", "那", "什么", "怎么", "为什么", "哪里", "谁", "when", "where", "what", "how", "why", "who", "the", "is", "are", "and", "or", "but", "if", "because", "so", "this", "that" };
-        
+
         var words = Regex.Split(text.ToLower(), @"\W+")
                          .Where(w => w.Length > 2 && !stopWords.Contains(w))
                          .Distinct()
                          .ToList();
-        
+
         return words;
     }
 
@@ -1331,12 +1331,12 @@ public class RagService : IRagService
         var docWords = Regex.Split(document.ToLower(), @"\W+").Where(w => w.Length > 0).ToList();
         var docLength = docWords.Count;
         var avgDocLength = 100f; // Assumed average document length
-        
+
         const float k1 = 1.2f;
         const float b = 0.75f;
-        
+
         float score = 0f;
-        
+
         foreach (var keyword in keywords)
         {
             var termFreq = docWords.Count(w => w.Contains(keyword));
@@ -1347,7 +1347,7 @@ public class RagService : IRagService
                 score += idf * tf;
             }
         }
-        
+
         return score;
     }
 
@@ -1358,14 +1358,14 @@ public class RagService : IRagService
     private string HighlightKeywords(string content, List<string> keywords)
     {
         var highlightedContent = content;
-        
+
         foreach (var keyword in keywords)
         {
             var pattern = $@"\b{Regex.Escape(keyword)}\b";
-            highlightedContent = Regex.Replace(highlightedContent, pattern, 
+            highlightedContent = Regex.Replace(highlightedContent, pattern,
                 $"**{keyword}**", RegexOptions.IgnoreCase);
         }
-        
+
         return highlightedContent;
     }
 
@@ -1388,12 +1388,12 @@ public class RagService : IRagService
 ";
 
             var response = await _semanticKernel.GetChatCompletionAsync(prompt);
-            
+
             if (float.TryParse(response.Trim(), out var score))
             {
                 return Math.Max(0f, Math.Min(1f, score));
             }
-            
+
             return 0.5f; // Default score if parsing fails
         }
         catch
@@ -1409,14 +1409,14 @@ public class RagService : IRagService
     private string BuildContextFromChunks(List<RagRetrievedChunk> chunks)
     {
         var context = new StringBuilder();
-        
+
         for (int i = 0; i < chunks.Count; i++)
         {
             var chunk = chunks[i];
             context.AppendLine($"[来源 {i + 1}] {chunk.Chunk.Content}");
             context.AppendLine();
         }
-        
+
         return context.ToString();
     }
 
@@ -1460,13 +1460,13 @@ public class RagService : IRagService
         var avgSourceScore = sources.Average(s => s.Score);
         var sourceCount = Math.Min(sources.Count, 5); // Cap at 5 for diminishing returns
         var sourceCountFactor = sourceCount / 5f;
-        
+
         // Response length factor (longer responses might be more comprehensive)
         // 响应长度因子（较长的响应可能更全面）
         var responseLengthFactor = Math.Min(response.Length / 1000f, 1f);
-        
+
         var confidence = (avgSourceScore * 0.6f) + (sourceCountFactor * 0.3f) + (responseLengthFactor * 0.1f);
-        
+
         return Math.Max(0.1f, Math.Min(1f, confidence));
     }
 

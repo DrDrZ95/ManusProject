@@ -30,9 +30,9 @@ public class PermissionAuthorizationPolicyProvider : IAuthorizationPolicyProvide
         if (policyName.StartsWith(PermissionPolicyConstants.PERMISSION_POLICY_PREFIX, StringComparison.OrdinalIgnoreCase))
         {
             var permissionCode = policyName.Substring(PermissionPolicyConstants.PERMISSION_POLICY_PREFIX.Length);
-            
+
             _logger.LogDebug("Creating permission policy for: {PermissionCode}", permissionCode);
-            
+
             var policy = new AuthorizationPolicyBuilder()
                 .AddAuthenticationSchemes("Bearer") // Require JWT Bearer authentication
                 .RequireAuthenticatedUser()

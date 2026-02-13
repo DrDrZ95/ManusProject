@@ -1,5 +1,3 @@
-using Microsoft.SemanticKernel;
-using System.ComponentModel;
 
 namespace Agent.Application.Services.SemanticKernel.Planner;
 

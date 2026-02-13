@@ -60,9 +60,9 @@ public class WorkflowController : ControllerBase
             }
 
             var plan = await _workflowService.CreatePlanAsync(request, cancellationToken);
-            
+
             _logger.LogInformation("Created workflow plan: {PlanId}", plan.Id);
-            
+
             return CreatedAtAction(
                 nameof(GetPlan),
                 new { version = "1.0", planId = plan.Id },
@@ -99,7 +99,7 @@ public class WorkflowController : ControllerBase
         try
         {
             var plan = await _workflowService.GetPlanAsync(planId, cancellationToken);
-            
+
             if (plan == null)
             {
                 return NotFound(ApiResponse<object>.Fail($"Plan not found: {planId} - 计划未找到"));
@@ -212,7 +212,7 @@ public class WorkflowController : ControllerBase
         try
         {
             var step = await _workflowService.GetCurrentStepAsync(planId, cancellationToken);
-            
+
             if (step == null)
             {
                 return NotFound(ApiResponse<object>.Fail($"No active step found for plan: {planId} - 计划中没有找到活动步骤"));
@@ -300,13 +300,13 @@ public class WorkflowController : ControllerBase
         try
         {
             var todoContent = await _workflowService.GenerateToDoListAsync(planId, cancellationToken);
-            
+
             // 根据Accept头返回不同格式 - Return different formats based on Accept header
             if (Request.Headers.Accept.Any(h => h.Contains("text/markdown")))
             {
                 return Content(todoContent, "text/markdown");
             }
-            
+
             return Ok(ApiResponse<object>.Ok(new { content = todoContent, planId }));
         }
         catch (ArgumentException ex)
@@ -359,8 +359,9 @@ public class WorkflowController : ControllerBase
                 return NotFound(ApiResponse<object>.Fail($"Plan not found or save failed - 计划未找到或保存失败"));
             }
 
-            return Ok(ApiResponse<object>.Ok(new { 
-                filePath = request.FilePath 
+            return Ok(ApiResponse<object>.Ok(new
+            {
+                filePath = request.FilePath
             }, "Todo list saved to file - 待办事项列表已保存到文件"));
         }
         catch (Exception ex)
@@ -407,9 +408,10 @@ public class WorkflowController : ControllerBase
                 return NotFound(ApiResponse<object>.Fail($"File not found or load failed - 文件未找到或加载失败"));
             }
 
-            return Ok(ApiResponse<object>.Ok(new { 
+            return Ok(ApiResponse<object>.Ok(new
+            {
                 planId,
-                filePath = request.FilePath 
+                filePath = request.FilePath
             }, "Todo list loaded from file - 待办事项列表已从文件加载"));
         }
         catch (Exception ex)
@@ -535,10 +537,13 @@ public class WorkflowController : ControllerBase
         string planId,
         CancellationToken cancellationToken = default)
     {
-        try {
+        try
+        {
             var report = await _workflowService.GetPerformanceReportAsync(planId, cancellationToken);
             return Ok(ApiResponse<WorkflowPerformanceReport>.Ok(report));
-        } catch (ArgumentException ex) {
+        }
+        catch (ArgumentException ex)
+        {
             return NotFound(ApiResponse<object>.Fail(ex.Message));
         }
     }
@@ -553,10 +558,13 @@ public class WorkflowController : ControllerBase
         string planId,
         CancellationToken cancellationToken = default)
     {
-        try {
+        try
+        {
             var json = await _workflowService.ExportWorkflowAsync(planId, cancellationToken);
             return Content(json, "application/json");
-        } catch (ArgumentException ex) {
+        }
+        catch (ArgumentException ex)
+        {
             return NotFound(ApiResponse<object>.Fail(ex.Message));
         }
     }
@@ -571,10 +579,13 @@ public class WorkflowController : ControllerBase
         [FromBody] ImportWorkflowRequest request,
         CancellationToken cancellationToken = default)
     {
-        try {
+        try
+        {
             var plan = await _workflowService.ImportWorkflowAsync(request.JsonContent, cancellationToken);
             return Ok(ApiResponse<WorkflowPlan>.Ok(plan));
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             return BadRequest(ApiResponse<object>.Fail(ex.Message));
         }
     }

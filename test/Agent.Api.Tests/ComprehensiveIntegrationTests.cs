@@ -1,10 +1,3 @@
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
-using Agent.Core.Models;
-using Microsoft.AspNetCore.SignalR.Client;
-using Xunit;
 
 namespace Agent.Api.Tests;
 

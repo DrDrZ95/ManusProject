@@ -1,10 +1,3 @@
-using Microsoft.AspNetCore.SignalR.Client;
-using Hangfire;
-using Hangfire.MemoryStorage;
-using Moq;
-using Xunit;
-using System.Threading.Tasks;
-using System;
 
 namespace Agent.Api.Tests.Integration;
 

@@ -46,7 +46,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             entity.Property(e => e.Department).HasMaxLength(100);
             entity.Property(e => e.JobTitle).HasMaxLength(100);
             entity.Property(e => e.ProfilePictureUrl).HasMaxLength(500);
-            
+
             // Index for performance
             // 性能索引
             entity.HasIndex(e => e.Email).IsUnique();
@@ -61,7 +61,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             entity.ToTable("Roles");
             entity.Property(e => e.Description).HasMaxLength(500);
             entity.Property(e => e.Category).HasMaxLength(50);
-            
+
             // Index for performance
             // 性能索引
             entity.HasIndex(e => e.Name).IsUnique();
@@ -77,7 +77,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             entity.Property(e => e.Code).HasMaxLength(100).IsRequired();
             entity.Property(e => e.Category).HasMaxLength(50).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(500).IsRequired();
-            
+
             // Index for performance
             // 性能索引
             entity.HasIndex(e => e.Code).IsUnique();
@@ -91,17 +91,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
         {
             entity.ToTable("RolePermissions");
             entity.HasKey(e => new { e.RoleId, e.PermissionId });
-            
+
             entity.HasOne(e => e.Role)
                 .WithMany(r => r.RolePermissions)
                 .HasForeignKey(e => e.RoleId)
                 .OnDelete(DeleteBehavior.Cascade);
-                
+
             entity.HasOne(e => e.Permission)
                 .WithMany(p => p.RolePermissions)
                 .HasForeignKey(e => e.PermissionId)
                 .OnDelete(DeleteBehavior.Cascade);
-                
+
             // Index for performance
             // 性能索引
             entity.HasIndex(e => e.RoleId);
@@ -114,17 +114,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
         {
             entity.ToTable("UserPermissions");
             entity.HasKey(e => new { e.UserId, e.PermissionId });
-            
+
             entity.HasOne(e => e.User)
                 .WithMany(u => u.UserPermissions)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
-                
+
             entity.HasOne(e => e.Permission)
                 .WithMany(p => p.UserPermissions)
                 .HasForeignKey(e => e.PermissionId)
                 .OnDelete(DeleteBehavior.Cascade);
-                
+
             // Index for performance
             // 性能索引
             entity.HasIndex(e => e.UserId);
@@ -201,32 +201,32 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             new Permission { Id = 2, Code = "user.read", Category = "User Management", Description = "View user information", IsSystemPermission = true },
             new Permission { Id = 3, Code = "user.update", Category = "User Management", Description = "Update user information", IsSystemPermission = true },
             new Permission { Id = 4, Code = "user.delete", Category = "User Management", Description = "Delete users", IsSystemPermission = true },
-            
+
             // Role Management Permissions
             // 角色管理权限
             new Permission { Id = 5, Code = "role.create", Category = "Role Management", Description = "Create new roles", IsSystemPermission = true },
             new Permission { Id = 6, Code = "role.read", Category = "Role Management", Description = "View role information", IsSystemPermission = true },
             new Permission { Id = 7, Code = "role.update", Category = "Role Management", Description = "Update role information", IsSystemPermission = true },
             new Permission { Id = 8, Code = "role.delete", Category = "Role Management", Description = "Delete roles", IsSystemPermission = true },
-            
+
             // File Operations Permissions
             // 文件操作权限
             new Permission { Id = 9, Code = "file.upload", Category = "File Operations", Description = "Upload files to the system", IsSystemPermission = true },
             new Permission { Id = 10, Code = "file.download", Category = "File Operations", Description = "Download files from the system", IsSystemPermission = true },
             new Permission { Id = 11, Code = "file.delete", Category = "File Operations", Description = "Delete files from the system", IsSystemPermission = true },
-            
+
             // System Administration Permissions
             // 系统管理权限
             new Permission { Id = 12, Code = "system.admin", Category = "System Administration", Description = "Full system administration access", IsSystemPermission = true },
             new Permission { Id = 13, Code = "system.monitor", Category = "System Administration", Description = "Monitor system performance and health", IsSystemPermission = true },
             new Permission { Id = 14, Code = "system.config", Category = "System Administration", Description = "Configure system settings", IsSystemPermission = true },
-            
+
             // API Access Permissions
             // API访问权限
             new Permission { Id = 15, Code = "api.read", Category = "API Access", Description = "Read access to API endpoints", IsSystemPermission = true },
             new Permission { Id = 16, Code = "api.write", Category = "API Access", Description = "Write access to API endpoints", IsSystemPermission = true },
             new Permission { Id = 17, Code = "api.admin", Category = "API Access", Description = "Administrative access to API endpoints", IsSystemPermission = true },
-            
+
             // Tool Registry Permissions
             // 工具注册中心权限
             new Permission { Id = 18, Code = "tool.read", Category = "Tool Registry", Description = "Read tool metadata", IsSystemPermission = true },
@@ -263,7 +263,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             new RolePermission { RoleId = adminRoleId, PermissionId = 20 },
             new RolePermission { RoleId = adminRoleId, PermissionId = 21 },
             new RolePermission { RoleId = adminRoleId, PermissionId = 22 },
-            
+
             // User gets basic permissions
             // 用户获得基本权限
             new RolePermission { RoleId = userRoleId, PermissionId = 2 }, // user.read
@@ -271,7 +271,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
             new RolePermission { RoleId = userRoleId, PermissionId = 10 }, // file.download
             new RolePermission { RoleId = userRoleId, PermissionId = 15 }, // api.read
             new RolePermission { RoleId = userRoleId, PermissionId = 22 }, // tool.execute
-            
+
             // Moderator gets elevated permissions
             // 版主获得提升权限
             new RolePermission { RoleId = moderatorRoleId, PermissionId = 2 }, // user.read

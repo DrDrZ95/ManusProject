@@ -1,4 +1,3 @@
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Agent.Api.Tests.Controllers;
 

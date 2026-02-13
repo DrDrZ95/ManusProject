@@ -1,3 +1,4 @@
+global using Agent.McpGateway;
 global using Agent.McpGateway.UniversalMcp;
 global using Newtonsoft.Json.Linq;
 global using System;

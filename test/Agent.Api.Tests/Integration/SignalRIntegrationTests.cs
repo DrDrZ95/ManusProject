@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Agent.Api.Tests.Integration;
 

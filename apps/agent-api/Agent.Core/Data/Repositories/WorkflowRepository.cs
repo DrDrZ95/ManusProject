@@ -63,7 +63,7 @@ public class WorkflowRepository : IWorkflowRepository
         }
         await Task.CompletedTask;
     }
-    
+
     /// <summary>
     /// 更新工作流计划的状态 (Update a status of workflow plan)
     /// </summary>
@@ -157,9 +157,9 @@ public class WorkflowRepository : IWorkflowRepository
     /// 根据状态过滤并分页获取工作流计划 (Get workflow plans filtered by status and with pagination)
     /// </summary>
     public Task<List<WorkflowPlanEntity>> GetPlansByStatusAsync(
-        PlanStatus status, 
-        int pageNumber, 
-        int pageSize, 
+        PlanStatus status,
+        int pageNumber,
+        int pageSize,
         CancellationToken cancellationToken = default)
     {
         // 实际EF Core实现: return _context.WorkflowPlans.Where(p => p.Status == status).Skip(...).Take(...).ToListAsync();
@@ -186,8 +186,8 @@ public class WorkflowRepository : IWorkflowRepository
     /// 根据计划ID和步骤索引获取特定步骤 (Get a specific step by plan ID and step index)
     /// </summary>
     public Task<WorkflowStepEntity?> GetStepByPlanIdAndIndexAsync(
-        Guid planId, 
-        int stepIndex, 
+        Guid planId,
+        int stepIndex,
         CancellationToken cancellationToken = default)
     {
         // 实际EF Core实现: return _context.WorkflowSteps.FirstOrDefaultAsync(s => s.PlanId == planId && s.Index == stepIndex);
@@ -199,12 +199,12 @@ public class WorkflowRepository : IWorkflowRepository
     /// 更新单个步骤的状态和结果 (Update the status and result of a single step)
     /// </summary>
     public Task UpdateStepStatusAndResultAsync(
-        Guid planId, 
+        Guid planId,
         int stepIndex,
-        PlanStepStatus status, 
-        string? result, 
+        PlanStepStatus status,
+        string? result,
         string? error,
-        DateTime? startedAt, 
+        DateTime? startedAt,
         DateTime? completedAt,
         CancellationToken cancellationToken = default)
     {
@@ -216,7 +216,7 @@ public class WorkflowRepository : IWorkflowRepository
             step.Error = error;
             step.StartedAt = startedAt ?? step.StartedAt;
             step.CompletedAt = completedAt ?? step.CompletedAt;
-            
+
             if (_plans.TryGetValue(planId, out var plan))
             {
                 plan.UpdatedAt = DateTime.UtcNow;
@@ -238,7 +238,7 @@ public class WorkflowRepository : IWorkflowRepository
         {
             step.PerformanceDataJson = performanceDataJson;
             step.CompletedAt = completedAt ?? step.CompletedAt;
-            
+
             if (_plans.TryGetValue(planId, out var plan))
             {
                 plan.UpdatedAt = DateTime.UtcNow;

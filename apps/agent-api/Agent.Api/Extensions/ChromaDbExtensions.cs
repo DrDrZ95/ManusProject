@@ -17,7 +17,7 @@ public static class ChromaDbExtensions
     {
         // Get ChromaDB configuration
         var chromaDbUrl = configuration.GetConnectionString("ChromaDb") ?? "http://localhost:8000";
-        
+
         // Register ChromaDB client as singleton
         services.AddSingleton<ChromaClient>(provider =>
         {
@@ -33,13 +33,13 @@ public static class ChromaDbExtensions
                 BaseAddress = new Uri(desultOptions.Url)
             });
         });
-        
+
         // Register ChromaDB service
         services.AddScoped<IChromaDbService, ChromaDbService>();
-        
+
         return services;
     }
-    
+
     /// <summary>
     /// Add ChromaDB services with custom configuration
     /// 使用自定义配置添加 ChromaDB 服务
@@ -51,14 +51,14 @@ public static class ChromaDbExtensions
     {
         var options = new ChromaDbOptions();
         configureOptions(options);
-        
+
         var desultOptions = new ChromaDbOptions();
         // Register ChromaDB client as singleton
         services.AddSingleton<ChromaClient>(provider =>
         {
             var logger = provider.GetRequiredService<ILogger<ChromaClient>>();
             logger.LogInformation("Initializing ChromaDB client with URL: {ChromaDbUrl}", options.Url);
-            
+
             return new ChromaClient(new ChromaConfigurationOptions
             {
                 ChromaToken = default
@@ -67,10 +67,10 @@ public static class ChromaDbExtensions
                 BaseAddress = new Uri(desultOptions.Url)
             });
         });
-        
+
         // Register ChromaDB service
         services.AddScoped<IChromaDbService, ChromaDbService>();
-        
+
         return services;
     }
 }
@@ -86,13 +86,13 @@ public class ChromaDbOptions
     /// ChromaDB 服务器 URL
     /// </summary>
     public string Url { get; set; } = "http://localhost:8000";
-    
+
     /// <summary>
     /// Connection timeout in seconds
     /// 连接超时时间（秒）
     /// </summary>
     public int TimeoutSeconds { get; set; } = 30;
-    
+
     /// <summary>
     /// Maximum retry attempts
     /// 最大重试次数

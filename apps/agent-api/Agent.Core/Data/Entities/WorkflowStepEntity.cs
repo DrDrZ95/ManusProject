@@ -68,7 +68,7 @@ public class WorkflowStepEntity
     /// 存储执行失败时的错误详情
     /// </summary>
     public string? Error { get; set; }
-    
+
     [Column(TypeName = "jsonb")]
     public string? Metadata { get; set; }
 

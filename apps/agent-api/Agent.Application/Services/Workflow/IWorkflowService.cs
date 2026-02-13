@@ -45,7 +45,7 @@ public interface IWorkflowService
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>Success status - 成功状态</returns>
     Task<bool> UpdateStepStatusAsync(string planId, int stepIndex, PlanStepStatus status, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Update step status and result in a plan
     /// 更新计划中的步骤状态和结果
@@ -58,13 +58,13 @@ public interface IWorkflowService
     /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
     /// <returns>Success status - 成功状态</returns>
     Task<bool> UpdateStepStatusAndResultAsync(
-        string planId, 
-        int stepIndex, 
-        PlanStepStatus status, 
-        string? result = null, 
+        string planId,
+        int stepIndex,
+        PlanStepStatus status,
+        string? result = null,
         string? error = null,
         CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Get current active step in a plan
     /// 获取计划中当前活动步骤

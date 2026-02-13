@@ -46,7 +46,7 @@ public class LongTermMemoryMode : BaseAgentMemory
         {
             // 模拟调用 LLM 服务生成新摘要 (Simulate calling LLM service to generate new summary)
             _currentSummary = await GenerateNewSummaryAsync(_currentSummary, _recentMessages);
-            
+
             // 模拟保存快照到 conversation_snapshot 表 (Simulate saving snapshot to conversation_snapshot table)
             Console.WriteLine($"[LongTermMemory] Snapshot saved for Conversation {ConversationId}. New Summary: {_currentSummary}");
 

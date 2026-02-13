@@ -73,9 +73,9 @@ public sealed class QueryResponse
 {
     public IReadOnlyList<IReadOnlyList<QueryHit>> Groups { get; init; } = Array.Empty<IReadOnlyList<QueryHit>>();
     public List<List<string>> Documents { get; set; }
-    
+
     // 可能是多个批次的 Id 列表
-    public List<List<string>> Ids { get; set; } 
+    public List<List<string>> Ids { get; set; }
 
     // 距离或相似度分数（二维：batch -> result）
     public List<List<float>>? Distances { get; set; }

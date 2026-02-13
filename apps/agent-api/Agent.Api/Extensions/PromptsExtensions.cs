@@ -60,7 +60,7 @@ public static class PromptsExtensions
         // 验证提示词服务是否正确注册 - Verify prompts service is properly registered
         using var scope = app.ApplicationServices.CreateScope();
         var promptsService = scope.ServiceProvider.GetService<IPromptsService>();
-        
+
         if (promptsService == null)
         {
             throw new InvalidOperationException(

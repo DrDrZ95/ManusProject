@@ -25,14 +25,14 @@ public class LongTermMemoryService : ILongTermMemory
     public async Task SaveStructuredMemoryAsync(StructuredMemoryEntity memory)
     {
         await _structuredRepo.AddAsync(memory);
-        
+
         // Also index in vector DB for semantic search if content is substantial
         if (!string.IsNullOrWhiteSpace(memory.Content))
         {
             try
             {
                 var embedding = await _semanticKernel.GenerateEmbeddingAsync(memory.Content);
-                
+
                 var doc = new VectorDocument
                 {
                     Id = memory.Id.ToString(),
@@ -45,7 +45,7 @@ public class LongTermMemoryService : ILongTermMemory
                         { "Importance", memory.ImportanceScore }
                     }
                 };
-                
+
                 // Assuming "knowledge_base" is the default collection or derived from userId
                 await _vectorDb.AddDocumentsAsync("knowledge_base", new[] { doc });
             }
@@ -61,9 +61,9 @@ public class LongTermMemoryService : ILongTermMemory
         // Simple DB search (exact match or like)
         // In real world, this should use Vector Search + DB Filtering
         // For now, simple implementation
-        return await _structuredRepo.FindAsync(m => 
-            (m.UserId == userId) && 
-            (type == null || m.Type == type) && 
+        return await _structuredRepo.FindAsync(m =>
+            (m.UserId == userId) &&
+            (type == null || m.Type == type) &&
             (m.Content.Contains(query)));
     }
 
@@ -71,12 +71,12 @@ public class LongTermMemoryService : ILongTermMemory
     {
         // Use Vector DB search
         // Need to define collection name, e.g., "global_knowledge" or user specific
-        string collectionName = "knowledge_base"; 
-        
+        string collectionName = "knowledge_base";
+
         try
         {
             var result = await _vectorDb.SearchByTextAsync(collectionName, query, new VectorSearchOptions { TopK = limit, MinSimilarity = (float)minRelevance });
-            
+
             return result.Matches
                 .Where(m => !string.IsNullOrEmpty(m.Content))
                 .Select(m => m.Content!)

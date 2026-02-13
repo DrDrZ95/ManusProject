@@ -1,6 +1,5 @@
 namespace Agent.Core.Tools.Interfaces;
 
-using Agent.Core.Data.Entities;
 
 /// <summary>
 /// 智能工具选择引擎接口 (Smart Tool Selector Interface)

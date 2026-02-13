@@ -55,7 +55,7 @@ public class UserInputController : ControllerBase
             return BadRequest(ApiResponse<string>.Fail("Input cannot be empty."));
         }
 
-        try 
+        try
         {
             // 处理用户输入 - Process user input
             var result = await _userInputService.ProcessUserInputAsync(request.Input);

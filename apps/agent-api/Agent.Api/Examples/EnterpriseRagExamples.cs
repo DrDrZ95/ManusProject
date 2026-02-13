@@ -27,7 +27,7 @@ public class EnterpriseRagExamples
 
             // 1. Create HR knowledge base if not exists - 如果不存在，创建HR知识库
             var hrKnowledgeBase = "hr_policies";
-            
+
             try
             {
                 await _ragService.CreateKnowledgeBaseAsync(hrKnowledgeBase, new RagCollectionConfig
@@ -802,7 +802,7 @@ public class EnterpriseRagExamples
                         - 验证码错误：确保输入完整的验证码
 
         """;
-                    var supportDocuments = new List<RagDocument>
+        var supportDocuments = new List<RagDocument>
                     {
                         new RagDocument
                         {
@@ -891,27 +891,27 @@ public class EnterpriseRagExamples
                             }
                         }
                     };
-            
-                    foreach (var doc in supportDocuments)
-                    {
-                        try
-                        {
-                            await _ragService.AddDocumentAsync(knowledgeBase, doc);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "Failed to add support document {DocumentId}", doc.Id);
-                        }
-                    }
-                }
-            
-                /// <summary>
-                /// Add sample research papers to knowledge base
-                /// 向知识库添加示例研究论文
-                /// </summary>
-                private async Task AddSampleResearchPapers(string knowledgeBase)
-                {
-                    var researchPapers = new List<RagDocument>
+
+        foreach (var doc in supportDocuments)
+        {
+            try
+            {
+                await _ragService.AddDocumentAsync(knowledgeBase, doc);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to add support document {DocumentId}", doc.Id);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Add sample research papers to knowledge base
+    /// 向知识库添加示例研究论文
+    /// </summary>
+    private async Task AddSampleResearchPapers(string knowledgeBase)
+    {
+        var researchPapers = new List<RagDocument>
                     {
                         new RagDocument
                         {
@@ -1027,21 +1027,20 @@ public class EnterpriseRagExamples
                             }
                         }
                     };
-            
-                    foreach (var doc in researchPapers)
-                    {
-                        try
-                        {
-                            await _ragService.AddDocumentAsync(knowledgeBase, doc);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "Failed to add research paper {DocumentId}", doc.Id);
-                        }
-                    }
-                }
-            
-                #endregion
-            }
 
-            
+        foreach (var doc in researchPapers)
+        {
+            try
+            {
+                await _ragService.AddDocumentAsync(knowledgeBase, doc);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to add research paper {DocumentId}", doc.Id);
+            }
+        }
+    }
+
+    #endregion
+}
+

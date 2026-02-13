@@ -1,10 +1,3 @@
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace Agent.Api.Tests.Integration;
 

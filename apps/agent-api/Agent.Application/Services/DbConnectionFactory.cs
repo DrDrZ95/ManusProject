@@ -23,19 +23,19 @@ public class DbConnectionFactory : IDbConnectionFactory
     public async Task<DbConnection> CreateConnectionAsync(string connectionName, CancellationToken cancellationToken = default)
     {
         var connectionString = _configuration.GetConnectionString(connectionName);
-        
+
         if (string.IsNullOrEmpty(connectionString))
         {
             throw new ArgumentException($"Connection string '{connectionName}' not found in configuration.", nameof(connectionName));
         }
 
         _logger.LogInformation("Creating database connection for {ConnectionName}", connectionName);
-        
+
         // Create the appropriate connection type based on the connection string
         // This example uses SQL Server, but could be extended for other database types
         DbConnection connection = new SqlConnection(connectionString);
-        
-        
+
+
         try
         {
             await connection.OpenAsync(cancellationToken);

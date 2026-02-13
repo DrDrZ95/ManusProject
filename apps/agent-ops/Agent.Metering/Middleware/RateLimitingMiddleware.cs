@@ -1,10 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Net;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
 
 namespace Agent.Metering.Middleware
 {

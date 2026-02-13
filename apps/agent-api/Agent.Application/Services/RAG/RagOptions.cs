@@ -14,7 +14,7 @@ public class RagOptions
     /// 热门 RAG 查询结果缓存 TTL (Popular RAG Query Results Cache TTL) - 1 小时
     /// </summary>
     public TimeSpan PopularRagQueryTtl { get; set; } = TimeSpan.FromHours(1);
-    
+
     /// <summary>
     /// Enable citation - 启用引用
     /// </summary>

@@ -13,8 +13,7 @@
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.7.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.7.0" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.7.0" />
-    <ProjectReference Include="../../Agent.Core/Agent.Core.csproj" />
-    <ProjectReference Include="..\Agent.Core\Agent.Core.csproj" />
+    <ProjectReference Include="..\..\agent-api\Agent.Core\Agent.Core.csproj" />
   </ItemGroup>
 
 </Project>

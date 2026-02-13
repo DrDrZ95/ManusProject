@@ -72,7 +72,7 @@ public class TaskMemoryService : ITaskMemory
         {
             try
             {
-                historyList = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(context.ToolCallHistory) 
+                historyList = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(context.ToolCallHistory)
                               ?? new List<Dictionary<string, string>>();
             }
             catch (JsonException)
@@ -93,7 +93,7 @@ public class TaskMemoryService : ITaskMemory
 
         // Serialize back
         context.ToolCallHistory = JsonSerializer.Serialize(historyList);
-        
+
         await SaveContextAsync(context);
     }
 }

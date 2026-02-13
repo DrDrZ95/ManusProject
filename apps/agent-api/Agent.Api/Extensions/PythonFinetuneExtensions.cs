@@ -20,16 +20,16 @@ public static class PythonFinetuneExtensions
     {
         // 注册微调记录仓储 - Register finetune record repository
         services.AddScoped<IRepository<FinetuneRecordEntity, string>, Repository<FinetuneRecordEntity, string>>();
-        
+
         // 注册Python微调服务 - Register Python finetune service
         services.AddScoped<IPythonFinetuneService, PythonFinetuneService>();
-        
+
         // 配置Python.NET设置 - Configure Python.NET settings
         services.Configure<PythonFinetuneOptions>(configuration.GetSection("Python"));
-        
+
         // 添加内存缓存（如果尚未添加） - Add memory cache if not already added
         services.AddMemoryCache();
-        
+
         return services;
     }
 
@@ -44,16 +44,16 @@ public static class PythonFinetuneExtensions
     {
         // 注册微调记录仓储 - Register finetune record repository
         services.AddScoped<IRepository<FinetuneRecordEntity, string>, Repository<FinetuneRecordEntity, string>>();
-        
+
         // 注册Python微调服务 - Register Python finetune service
         services.AddScoped<IPythonFinetuneService, PythonFinetuneService>();
-        
+
         // 配置选项 - Configure options
         services.Configure(configureOptions);
-        
+
         // 添加内存缓存（如果尚未添加） - Add memory cache if not already added
         services.AddMemoryCache();
-        
+
         return services;
     }
 
@@ -67,7 +67,7 @@ public static class PythonFinetuneExtensions
     {
         services.AddHealthChecks()
             .AddCheck<PythonFinetuneHealthCheck>("python_finetune", tags: new[] { "python", "finetune" });
-        
+
         return services;
     }
 }
@@ -154,7 +154,7 @@ public class PythonFinetuneHealthCheck : IHealthCheck
 
             // 验证Python环境 - Validate Python environment
             var envInfo = await _finetuneService.ValidatePythonEnvironmentAsync();
-            
+
             var data = new Dictionary<string, object>
             {
                 ["python_version"] = envInfo.PythonVersion,
@@ -175,21 +175,21 @@ public class PythonFinetuneHealthCheck : IHealthCheck
             {
                 var errorMessage = string.Join("; ", envInfo.ErrorMessages);
                 var missingPackages = string.Join(", ", envInfo.MissingPackages);
-                
+
                 _logger.LogWarning("Python.NET fine-tuning health check failed - Python.NET微调健康检查失败: {ErrorMessage}", errorMessage);
-                
+
                 return HealthCheckResult.Degraded(
-                    $"Python.NET fine-tuning environment has issues. Missing packages: {missingPackages}. Errors: {errorMessage}", 
+                    $"Python.NET fine-tuning environment has issues. Missing packages: {missingPackages}. Errors: {errorMessage}",
                     data: data);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Python.NET fine-tuning health check error - Python.NET微调健康检查错误");
-            
+
             return HealthCheckResult.Unhealthy(
-                "Python.NET fine-tuning health check failed with exception", 
-                ex, 
+                "Python.NET fine-tuning health check failed with exception",
+                ex,
                 new Dictionary<string, object> { ["exception"] = ex.Message });
         }
     }

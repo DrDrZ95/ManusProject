@@ -1,16 +1,3 @@
-using Agent.Application.Services.Multimodal;
-using Agent.Application.Services.VectorDatabase;
-using Agent.Core.Cache;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.SemanticKernel.Connectors.Chroma;
-using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace Agent.Api.Tests.Integration;
 
@@ -126,7 +113,8 @@ namespace Agent.Api.Tests.Integration;
                 It.IsAny<ReadOnlyMemory<float>[]>(), 
                 It.IsAny<int>(), 
                 It.IsAny<string[]>(),
-                It.IsAny<CancellationToken>()))
+                null,
+                default))
                 .ReturnsAsync(new ChromaQueryResultModel { Ids = new List<List<string>> { new List<string> { "1", "2", "3" } } });
 
             _mockCache.Setup(c => c.GetOrCreateAsync(

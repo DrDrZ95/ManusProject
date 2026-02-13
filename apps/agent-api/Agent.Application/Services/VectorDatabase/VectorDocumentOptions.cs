@@ -53,7 +53,7 @@ public class VectorSearchRequest
     /// Query text for text-based search - 基于文本搜索的查询文本
     /// </summary>
     public string? QueryText { get; set; }
-    
+
     /// <summary>
     /// 查询文本数组（例如，转录文本作为辅助查询）。
     /// </summary>
@@ -73,7 +73,7 @@ public class VectorSearchRequest
     /// Metadata filter - 元数据过滤器
     /// </summary>
     public VectorFilter? Filter { get; set; }
-    
+
     /// <summary>
     /// TopK - 返回结果的数量（Top K）。
     /// </summary>
@@ -152,12 +152,12 @@ public class VectorSearchOptions
     /// Include document content in results - 在结果中包含文档内容
     /// </summary>
     public bool IncludeContent { get; set; } = true;
-    
+
     /// <summary>
     /// Metadata filter - 元数据过滤器
     /// </summary>
     public VectorFilter? Filter { get; set; }
-    
+
     /// <summary>
     /// 返回结果的数量（Top K）。
     /// </summary>

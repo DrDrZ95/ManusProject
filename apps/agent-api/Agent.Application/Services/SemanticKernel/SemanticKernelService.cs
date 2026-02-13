@@ -1,11 +1,5 @@
 namespace Agent.Application.Services.SemanticKernel;
 
-using Agent.Application.Services.Prometheus;
-using Agent.Application.Services.Telemetry;
-using OpenTelemetry.Trace;
-using Polly;
-using Polly.CircuitBreaker;
-using Polly.Retry;
 
 /// <summary>
 /// Semantic Kernel service implementation
@@ -75,7 +69,7 @@ public class SemanticKernelService : ISemanticKernelService
                 Delay = TimeSpan.FromSeconds(1),
                 OnRetry = args =>
                 {
-                    _logger.LogWarning("Retrying tool call. Attempt: {Attempt}, Error: {Error}", 
+                    _logger.LogWarning("Retrying tool call. Attempt: {Attempt}, Error: {Error}",
                         args.AttemptNumber, args.Outcome.Exception?.Message);
                     return default;
                 }
@@ -115,13 +109,13 @@ public class SemanticKernelService : ISemanticKernelService
             _logger.LogInformation("Getting chat completion for prompt length: {PromptLength}", prompt.Length);
 
             var chatHistory = new ChatHistory();
-            
+
             // Add system message if provided - 如果提供了系统消息，则添加
             if (!string.IsNullOrEmpty(systemMessage))
             {
                 chatHistory.AddSystemMessage(systemMessage);
             }
-            
+
             chatHistory.AddUserMessage(prompt);
 
             var executionSettings = new OpenAIPromptExecutionSettings
@@ -131,10 +125,10 @@ public class SemanticKernelService : ISemanticKernelService
             };
 
             var result = await _chatService.GetChatMessageContentAsync(chatHistory, executionSettings);
-            
-            _logger.LogInformation("Chat completion successful, response length: {ResponseLength}", 
+
+            _logger.LogInformation("Chat completion successful, response length: {ResponseLength}",
                 result.Content?.Length ?? 0);
-            
+
             return result.Content ?? string.Empty;
         }
         catch (Exception ex)
@@ -153,12 +147,12 @@ public class SemanticKernelService : ISemanticKernelService
         _logger.LogInformation("Getting streaming chat completion for prompt length: {PromptLength}", prompt.Length);
 
         var chatHistory = new ChatHistory();
-        
+
         if (!string.IsNullOrEmpty(systemMessage))
         {
             chatHistory.AddSystemMessage(systemMessage);
         }
-        
+
         chatHistory.AddUserMessage(prompt);
 
         var executionSettings = new OpenAIPromptExecutionSettings
@@ -181,11 +175,11 @@ public class SemanticKernelService : ISemanticKernelService
     {
         try
         {
-            _logger.LogInformation("Getting chat completion with {MessageCount} messages in history", 
+            _logger.LogInformation("Getting chat completion with {MessageCount} messages in history",
                 chatHistory.Count());
 
             var kernelChatHistory = new ChatHistory();
-            
+
             foreach (var message in chatHistory)
             {
                 switch (message.Role.ToLowerInvariant())
@@ -212,7 +206,7 @@ public class SemanticKernelService : ISemanticKernelService
             };
 
             var result = await _chatService.GetChatMessageContentAsync(kernelChatHistory, executionSettings);
-            
+
             _logger.LogInformation("Chat completion with history successful");
             return result.Content ?? string.Empty;
         }
@@ -237,7 +231,7 @@ public class SemanticKernelService : ISemanticKernelService
         var contentHash = SecurityHelper.GetSha256Hash(text);
         // 缓存键: embedding:{模型名称}:{内容哈希} (Cache key: embedding:{model_name}:{content_hash})
         var cacheKey = $"embedding:{_options.EmbeddingModel}:{contentHash}";
-        
+
         // 使用 GetOrCreateAsync 尝试从缓存获取，否则生成并缓存 (Use GetOrCreateAsync to try cache, otherwise generate and cache)
         var embeddingArray = await _cacheService.GetOrCreateAsync<float[]>(
             cacheKey,
@@ -268,7 +262,7 @@ public class SemanticKernelService : ISemanticKernelService
 
             var embeddings = await _embeddingService.GenerateEmbeddingsAsync(textList);
             var result = embeddings.Select(e => e.ToArray()).ToList();
-            
+
             _logger.LogInformation("Embeddings generated successfully for {Count} texts", result.Count);
             return result;
         }
@@ -336,15 +330,15 @@ public class SemanticKernelService : ISemanticKernelService
             });
 
             _logger.LogInformation("Function {FunctionName} invoked successfully", functionName);
-            
+
             // Record metrics
             _prometheusService.ObserveToolCallDuration(plugName, functionName, stopwatch.Elapsed.TotalSeconds);
-            
+
             // Simplified cost tracking for demonstration (in real scenario, get from LLM response metadata)
             var estimatedCost = 0.0001; // $0.0001 per call as placeholder
             _totalCost += estimatedCost;
             _prometheusService.RecordToolCost(plugName, functionName, estimatedCost, "USD");
-            
+
             return resultValue;
         }
         catch (Exception ex)
@@ -375,7 +369,7 @@ public class SemanticKernelService : ISemanticKernelService
 
         try
         {
-            _logger.LogInformation("Invoking function: {FunctionName} with return type: {ReturnType}", 
+            _logger.LogInformation("Invoking function: {FunctionName} with return type: {ReturnType}",
                 functionName, typeof(T).Name);
 
             // Check budget before invocation
@@ -396,7 +390,7 @@ public class SemanticKernelService : ISemanticKernelService
                     kernelArguments[kvp.Key] = kvp.Value;
                 }
             }
-            
+
             // Use resilience pipeline for the call
             var resultValue = await _resiliencePipeline.ExecuteAsync(async (ct) =>
             {
@@ -413,14 +407,14 @@ public class SemanticKernelService : ISemanticKernelService
                     return await _kernel.InvokeAsync(fallbackPlugin, fallbackFunction, kernelArguments, ct);
                 }
             });
-            
+
             _logger.LogInformation("Function {FunctionName} invoked successfully", functionName);
-            
+
             // Record metrics
             _prometheusService.ObserveToolCallDuration(plugName, functionName, stopwatch.Elapsed.TotalSeconds);
 
             // Simplified cost tracking for demonstration
-            var estimatedCost = 0.0001; 
+            var estimatedCost = 0.0001;
             _totalCost += estimatedCost;
             _prometheusService.RecordToolCost(plugName, functionName, estimatedCost, "USD");
 
@@ -428,13 +422,13 @@ public class SemanticKernelService : ISemanticKernelService
             {
                 return typedResult;
             }
-            
+
             // Try to convert the result - 尝试转换结果
             if (typeof(T) == typeof(string))
             {
                 return (T)(object)resultValue.ToString();
             }
-            
+
             throw new InvalidCastException($"Cannot convert result to type {typeof(T).Name}");
         }
         catch (Exception ex)
@@ -458,7 +452,7 @@ public class SemanticKernelService : ISemanticKernelService
     private async Task CheckFunctionPermissionAsync(string functionName)
     {
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        
+
         // If no user context (e.g. background task), we might want to allow or check a system policy
         if (string.IsNullOrEmpty(userId))
         {
@@ -484,7 +478,7 @@ public class SemanticKernelService : ISemanticKernelService
 
         if (!await _permissionService.UserHasPermissionAsync(userId, requiredPermission))
         {
-            _logger.LogError("User {UserId} denied access to function {FunctionName}. Required permission: {Permission}", 
+            _logger.LogError("User {UserId} denied access to function {FunctionName}. Required permission: {Permission}",
                 userId, functionName, requiredPermission);
             throw new UnauthorizedAccessException($"User does not have permission '{requiredPermission}' to invoke {functionName}");
         }
@@ -506,7 +500,7 @@ public class SemanticKernelService : ISemanticKernelService
             _logger.LogInformation("Adding plugin: {PluginName}", name);
 
             _kernel.Plugins.AddFromObject(plugin, name);
-            
+
             _logger.LogInformation("Plugin {PluginName} added successfully", name);
         }
         catch (Exception ex)
@@ -529,8 +523,8 @@ public class SemanticKernelService : ISemanticKernelService
 
             var plugin = new T();
             _kernel.Plugins.AddFromObject(plugin, name);
-            
-            _logger.LogInformation("Plugin {PluginName} added successfully from type {PluginType}", 
+
+            _logger.LogInformation("Plugin {PluginName} added successfully from type {PluginType}",
                 name, typeof(T).Name);
         }
         catch (Exception ex)
@@ -549,7 +543,7 @@ public class SemanticKernelService : ISemanticKernelService
         try
         {
             var functions = new List<string>();
-            
+
             foreach (var plugin in _kernel.Plugins)
             {
                 foreach (var function in plugin)
@@ -557,7 +551,7 @@ public class SemanticKernelService : ISemanticKernelService
                     functions.Add($"{plugin.Name}.{function.Name}");
                 }
             }
-            
+
             _logger.LogInformation("Retrieved {Count} available functions", functions.Count);
             return functions;
         }
@@ -576,7 +570,7 @@ public class SemanticKernelService : ISemanticKernelService
     /// Save text to memory with vector database
     /// 使用向量数据库将文本保存到记忆中
     /// </summary>
-    public async Task SaveMemoryAsync(string collectionName, string text, string id, 
+    public async Task SaveMemoryAsync(string collectionName, string text, string id,
         Dictionary<string, object>? metadata = null)
     {
         try
@@ -614,7 +608,7 @@ public class SemanticKernelService : ISemanticKernelService
 
             // Add document to collection - 将文档添加到集合
             await _vectorDatabase.AddDocumentsAsync(collectionName, new[] { document });
-            
+
             _logger.LogInformation("Memory saved successfully to collection: {CollectionName}", collectionName);
         }
         catch (Exception ex)
@@ -628,16 +622,16 @@ public class SemanticKernelService : ISemanticKernelService
     /// Search memory using vector similarity
     /// 使用向量相似性搜索记忆
     /// </summary>
-    public async Task<IEnumerable<MemoryResult>> SearchMemoryAsync(string collectionName, string query, 
+    public async Task<IEnumerable<MemoryResult>> SearchMemoryAsync(string collectionName, string query,
         int limit = 10, float minRelevance = 0.7f)
     {
         try
         {
-            _logger.LogInformation("Searching memory in collection: {CollectionName}, query length: {QueryLength}", 
+            _logger.LogInformation("Searching memory in collection: {CollectionName}, query length: {QueryLength}",
                 collectionName, query.Length);
 
             // Search using vector database - 使用向量数据库搜索
-            var searchResult = await _vectorDatabase.SearchByTextAsync(collectionName, query, 
+            var searchResult = await _vectorDatabase.SearchByTextAsync(collectionName, query,
                 new VectorSearchOptions
                 {
                     MaxResults = limit,
@@ -676,7 +670,7 @@ public class SemanticKernelService : ISemanticKernelService
             _logger.LogInformation("Removing memory from collection: {CollectionName}, ID: {Id}", collectionName, id);
 
             await _vectorDatabase.DeleteDocumentsAsync(collectionName, new[] { id });
-            
+
             _logger.LogInformation("Memory removed successfully from collection: {CollectionName}", collectionName);
         }
         catch (Exception ex)
@@ -712,11 +706,11 @@ public class SemanticKernelService : ISemanticKernelService
     /// Get streaming response from chat service
     /// 从聊天服务获取流式响应
     /// </summary>
-    private async IAsyncEnumerable<string> GetStreamingResponseAsync(ChatHistory chatHistory, 
+    private async IAsyncEnumerable<string> GetStreamingResponseAsync(ChatHistory chatHistory,
         OpenAIPromptExecutionSettings executionSettings,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var streamingResult = _chatService.GetStreamingChatMessageContentsAsync(chatHistory, executionSettings, 
+        var streamingResult = _chatService.GetStreamingChatMessageContentsAsync(chatHistory, executionSettings,
             cancellationToken: cancellationToken);
 
         await foreach (var content in streamingResult.WithCancellation(cancellationToken))

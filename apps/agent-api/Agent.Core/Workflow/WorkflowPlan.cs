@@ -29,7 +29,7 @@ public enum PlanStepStatus
     /// </summary>
     [Description("Blocked")]
     Blocked,
-    
+
     /// <summary>
     /// Failed - 失败
     /// </summary>
@@ -257,7 +257,7 @@ public static class WorkflowPlanExtensions
             Description = entity.Description,
             // ExecutorKeys 和 Metadata 假设在 Entity 中是 string，需要反序列化，这里简化处理
             // In a real app, Metadata/ExecutorKeys would need JSON deserialization
-            ExecutorKeys = new List<string>(), 
+            ExecutorKeys = new List<string>(),
             Metadata = JsonSerializer.Deserialize<Dictionary<string, object>>(entity.Metadata),
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,

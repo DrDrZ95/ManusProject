@@ -1,16 +1,3 @@
-using Agent.Api;
-using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Containers;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Testcontainers.PostgreSql;
-using Testcontainers.Redis;
-using Agent.Core.Data;
-using Microsoft.EntityFrameworkCore;
-using Xunit;
 
 namespace Agent.Api.Tests;
 

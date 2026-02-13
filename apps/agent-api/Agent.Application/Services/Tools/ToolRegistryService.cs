@@ -1,12 +1,5 @@
 namespace Agent.Application.Services.Tools;
 
-using System.Text.Json;
-using Agent.Core.Data.Entities;
-using Agent.Core.Data.Repositories;
-using Agent.Core.Tools.Interfaces;
-using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Plugins.OpenApi;
 
 /// <summary>
 /// Tool Registry Service Implementation
@@ -37,36 +30,36 @@ public class ToolRegistryService : IToolRegistryService
     public async Task<ToolMetadataEntity> RegisterToolAsync(ToolMetadataEntity metadata)
     {
         _logger.LogInformation("Registering new tool: {ToolName} v{Version}", metadata.Name, metadata.Version);
-        
+
         metadata.CreatedAt = DateTime.UtcNow;
         metadata.UpdatedAt = DateTime.UtcNow;
-        
+
         var result = await _toolRepo.AddAsync(metadata);
-        
+
         // Index tool for semantic search
         await IndexToolAsync(result);
-        
+
         // Trigger hot load if it's a direct plugin or API
         if (metadata.IsEnabled)
         {
             await HotLoadToolsAsync();
         }
-        
+
         return result;
     }
 
     public async Task<ToolMetadataEntity> UpdateToolAsync(ToolMetadataEntity metadata)
     {
         _logger.LogInformation("Updating tool: {ToolName} (ID: {ToolId})", metadata.Name, metadata.Id);
-        
+
         metadata.UpdatedAt = DateTime.UtcNow;
         var result = await _toolRepo.UpdateAsync(metadata);
-        
+
         // Re-index tool
         await IndexToolAsync(result);
-        
+
         await HotLoadToolsAsync();
-        
+
         return result;
     }
 
@@ -121,16 +114,16 @@ public class ToolRegistryService : IToolRegistryService
             var rand = new Random().NextDouble();
             var cumulativeWeight = 0.0;
             var sortedVersions = versions.OrderByDescending(v => v.Version).ToList();
-            
+
             foreach (var v in sortedVersions)
             {
                 cumulativeWeight += v.ReleaseWeight;
                 if (rand <= cumulativeWeight) return v;
             }
-            
+
             return sortedVersions.First();
         }
-        
+
         return versions.FirstOrDefault(t => t.Version == version);
     }
 
@@ -142,12 +135,12 @@ public class ToolRegistryService : IToolRegistryService
     public async Task HotLoadToolsAsync()
     {
         _logger.LogInformation("Hot-loading tool plugins into Semantic Kernel...");
-        
+
         var activeTools = await GetActiveToolsAsync();
-        
+
         foreach (var tool in activeTools)
         {
-            try 
+            try
             {
                 if (tool.Type == "WebAPI" && !string.IsNullOrEmpty(tool.Configuration))
                 {
@@ -155,7 +148,7 @@ public class ToolRegistryService : IToolRegistryService
                     if (config != null && !string.IsNullOrEmpty(config.OpenApiUrl))
                     {
                         _logger.LogInformation("Loading WebAPI tool from OpenAPI: {ToolName} URL: {Url}", tool.Name, config.OpenApiUrl);
-                        
+
                         // Using Semantic Kernel OpenAPI plugin loader
                         await _kernel.ImportPluginFromOpenApiAsync(
                             pluginName: tool.Name,
@@ -171,7 +164,7 @@ public class ToolRegistryService : IToolRegistryService
                 else if (tool.Type == "Composite" && !string.IsNullOrEmpty(tool.Configuration))
                 {
                     _logger.LogInformation("Loading Composite tool: {ToolName}", tool.Name);
-                    
+
                     var compositeConfig = JsonSerializer.Deserialize<CompositeToolConfig>(tool.Configuration);
                     if (compositeConfig != null)
                     {
@@ -191,7 +184,7 @@ public class ToolRegistryService : IToolRegistryService
                                 foreach (var step in compositeConfig.Steps)
                                 {
                                     _logger.LogDebug("Executing step: {PluginName}.{FunctionName}", step.PluginName, step.FunctionName);
-                                    
+
                                     var stepArgs = new KernelArguments();
                                     foreach (var mapping in step.InputMapping)
                                     {

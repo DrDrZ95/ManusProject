@@ -108,5 +108,5 @@ public class RagResponse
     public long GenerationTimeMs { get; set; }
 
     public string Summary { get; set; }
-    public string  AnalysisResult { get; set; }
+    public string AnalysisResult { get; set; }
 }

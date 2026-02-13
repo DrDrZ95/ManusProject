@@ -37,15 +37,15 @@ public class DaprService : IDaprService
             async () =>
             {
                 _logger.LogInformation("Invoking method {MethodName} on app {AppId}", methodName, appId);
-                
+
                 var response = await _daprClient.InvokeMethodAsync<TRequest, TResponse>(
                     appId,
                     methodName,
                     request,
                     cancellationToken);
-                
+
                 _logger.LogInformation("Method {MethodName} on app {AppId} invoked successfully", methodName, appId);
-                
+
                 return response;
             },
             ("appId", appId),
@@ -72,15 +72,15 @@ public class DaprService : IDaprService
             async () =>
             {
                 _logger.LogInformation("Saving state with key {Key} to store {StoreName}", key, storeName);
-                
+
                 await _daprClient.SaveStateAsync(
                     storeName,
                     key,
                     value,
                     cancellationToken: cancellationToken);
-                
+
                 _logger.LogInformation("State with key {Key} saved to store {StoreName}", key, storeName);
-                
+
                 return true;
             },
             ("storeName", storeName),
@@ -105,14 +105,14 @@ public class DaprService : IDaprService
             async () =>
             {
                 _logger.LogInformation("Getting state with key {Key} from store {StoreName}", key, storeName);
-                
+
                 var result = await _daprClient.GetStateAsync<T>(
                     storeName,
                     key,
                     cancellationToken: cancellationToken);
-                
+
                 _logger.LogInformation("State with key {Key} retrieved from store {StoreName}", key, storeName);
-                
+
                 return result;
             },
             ("storeName", storeName),
@@ -139,15 +139,15 @@ public class DaprService : IDaprService
             async () =>
             {
                 _logger.LogInformation("Publishing event to topic {TopicName} on pubsub {PubsubName}", topicName, pubsubName);
-                
+
                 await _daprClient.PublishEventAsync(
                     pubsubName,
                     topicName,
                     eventData,
                     cancellationToken);
-                
+
                 _logger.LogInformation("Event published to topic {TopicName} on pubsub {PubsubName}", topicName, pubsubName);
-                
+
                 return true;
             },
             ("pubsubName", pubsubName),
@@ -165,18 +165,18 @@ public interface IDaprService
         string methodName,
         TRequest request,
         CancellationToken cancellationToken = default);
-        
+
     Task SaveStateAsync<T>(
         string storeName,
         string key,
         T value,
         CancellationToken cancellationToken = default);
-        
+
     Task<T> GetStateAsync<T>(
         string storeName,
         string key,
         CancellationToken cancellationToken = default);
-        
+
     Task PublishEventAsync<T>(
         string pubsubName,
         string topicName,

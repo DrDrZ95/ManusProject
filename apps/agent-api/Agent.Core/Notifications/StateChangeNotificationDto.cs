@@ -9,17 +9,17 @@ public record StateChangeNotificationDto(
     /// 工作流计划ID (Workflow Plan ID)
     /// </summary>
     string PlanId,
-    
+
     /// <summary>
     /// 旧状态 (Old State)
     /// </summary>
     string OldState,
-    
+
     /// <summary>
     /// 新状态 (New State)
     /// </summary>
     string NewState,
-    
+
     /// <summary>
     /// 状态变更时间戳 (State Change Timestamp)
     /// </summary>

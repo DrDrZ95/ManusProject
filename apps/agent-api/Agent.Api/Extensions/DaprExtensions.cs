@@ -14,10 +14,10 @@ public static class DaprExtensions
     {
         // Add Dapr client
         services.AddDaprClient();
-        
+
         // Add Dapr service
         services.AddScoped<IDaprService, DaprService>();
-        
+
         return services;
     }
 
@@ -30,10 +30,10 @@ public static class DaprExtensions
     {
         // Use Dapr cloud events middleware
         app.UseCloudEvents();
-        
+
         // Map Dapr subscriber endpoints
         //app.MapSubscribeHandler();
-        
+
         return app;
     }
 }

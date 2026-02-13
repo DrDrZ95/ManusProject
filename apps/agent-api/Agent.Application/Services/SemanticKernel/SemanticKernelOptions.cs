@@ -60,7 +60,7 @@ public class SemanticKernelOptions
     /// Memory collection name - 记忆集合名称
     /// </summary>
     public string DefaultMemoryCollection { get; set; } = "default";
-    
+
     /// <summary>
     /// 嵌入结果缓存 TTL (Embedding Results Cache TTL) - 24 小时
     /// </summary>

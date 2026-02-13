@@ -1,5 +1,3 @@
-using Agent.Metering.eBPF;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Agent.Metering.Extensions
 {
@@ -13,7 +11,7 @@ namespace Agent.Metering.Extensions
 
         public static void AddCoreServices(this IServiceCollection services)
         {
-            
+
         }
     }
 }

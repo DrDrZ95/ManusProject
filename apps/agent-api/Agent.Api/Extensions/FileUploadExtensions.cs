@@ -52,15 +52,15 @@ public static class FileUploadExtensions
             // Prevent MIME type sniffing (OWASP security measure)
             // 防止MIME类型嗅探（OWASP安全措施）
             context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
-            
+
             // Prevent clickjacking attacks
             // 防止点击劫持攻击
             context.Response.Headers.Append("X-Frame-Options", "DENY");
-            
+
             // Enable XSS protection
             // 启用XSS保护
             context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
-            
+
             await next();
         });
 

@@ -112,7 +112,7 @@ public class PromptsController : ControllerBase
         {
             _logger.LogInformation("Getting prompt: {Category}/{Name}", category, name);
             var prompt = await _promptsService.GetPromptAsync(category, name);
-            
+
             if (prompt == null)
             {
                 return NotFound(ApiResponse<PromptTemplate>.Fail($"Prompt not found: {category}/{name}"));
@@ -193,7 +193,7 @@ public class PromptsController : ControllerBase
             }
 
             _logger.LogInformation("Rendering prompt: {Category}/{Name}", request.Category, request.Name);
-            
+
             var template = await _promptsService.GetPromptAsync(request.Category, request.Name);
             if (template == null)
             {
@@ -239,7 +239,7 @@ public class PromptsController : ControllerBase
 
             _logger.LogInformation("Saving prompt: {Category}/{Name}", template.Category, template.Name);
             var success = await _promptsService.SavePromptAsync(template);
-            
+
             if (success)
             {
                 return Ok(ApiResponse<bool>.Ok(true));
@@ -281,7 +281,7 @@ public class PromptsController : ControllerBase
         {
             _logger.LogInformation("Deleting prompt: {Category}/{Name}", category, name);
             var success = await _promptsService.DeletePromptAsync(category, name);
-            
+
             if (success)
             {
                 return Ok(ApiResponse<bool>.Ok(true));
@@ -385,10 +385,10 @@ public class PromptsController : ControllerBase
         try
         {
             _logger.LogInformation("Getting prompt library statistics");
-            
+
             var categories = await _promptsService.GetCategoriesAsync();
             var toolTypes = await _promptsService.GetToolTypesAsync();
-            
+
             var statistics = new PromptLibraryStatistics
             {
                 TotalCategories = categories.Count,

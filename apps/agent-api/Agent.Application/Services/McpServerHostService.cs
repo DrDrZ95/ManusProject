@@ -20,22 +20,22 @@ public class McpServerHostService : IMcpServerHostService
     public IHostBuilder CreateMcpServerHost(string[] args)
     {
         _logger.LogInformation("Creating MCP server host");
-        
+
         var builder = Host.CreateApplicationBuilder(args);
-        
+
         builder.Logging.AddConsole(consoleLogOptions =>
         {
             // Configure all logs to go to stderr
             consoleLogOptions.LogToStandardErrorThreshold = LogLevel.Trace;
         });
-        
+
         builder.Services
             .AddMcpServer()
             .WithStdioServerTransport()
             .WithToolsFromAssembly();
-        
+
         _logger.LogInformation("MCP server host created successfully");
-        
+
         return default;
     }
 
@@ -47,10 +47,10 @@ public class McpServerHostService : IMcpServerHostService
     public async Task RunMcpServerHostAsync(IHostBuilder hostBuilder)
     {
         _logger.LogInformation("Running MCP server host");
-        
+
         var host = hostBuilder.Build();
         await host.RunAsync();
-        
+
         _logger.LogInformation("MCP server host stopped");
     }
 }

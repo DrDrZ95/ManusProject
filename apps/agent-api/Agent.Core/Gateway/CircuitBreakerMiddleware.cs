@@ -20,7 +20,7 @@ public class CircuitBreakerMiddleware
         _logger = logger;
         _options = options.Value;
         _pipelines = new Dictionary<string, ResiliencePipeline>();
-        
+
         // 初始化熔断器管道 - Initialize circuit breaker pipelines
         InitializePipelines();
     }
@@ -32,7 +32,7 @@ public class CircuitBreakerMiddleware
     {
         var path = context.Request.Path.Value?.ToLowerInvariant() ?? "";
         var pipelineKey = GetPipelineKey(path);
-        
+
         if (!_pipelines.TryGetValue(pipelineKey, out var pipeline))
         {
             // 如果没有匹配的管道，直接传递请求 - If no matching pipeline, pass through
@@ -46,7 +46,7 @@ public class CircuitBreakerMiddleware
             await pipeline.ExecuteAsync(async (cancellationToken) =>
             {
                 await _next(context);
-                
+
                 // 检查响应状态码 - Check response status code
                 if (context.Response.StatusCode >= 500)
                 {
@@ -57,9 +57,9 @@ public class CircuitBreakerMiddleware
         catch (BrokenCircuitException ex)
         {
             // 熔断器开启时的处理 - Handle when circuit breaker is open
-            _logger.LogWarning("Circuit breaker is open for {PipelineKey}: {Message}", 
+            _logger.LogWarning("Circuit breaker is open for {PipelineKey}: {Message}",
                 pipelineKey, ex.Message);
-            
+
             context.Response.StatusCode = 503; // Service Unavailable
             await context.Response.WriteAsync("Service temporarily unavailable due to circuit breaker");
         }

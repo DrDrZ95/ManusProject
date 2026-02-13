@@ -199,16 +199,16 @@ public class SandboxTerminalController : ControllerBase
             }
 
             var success = await _terminalService.SetWorkingDirectoryAsync(request.Path);
-            
+
             if (!success)
             {
                 return BadRequest(ApiResponse<SetWorkingDirectoryResponse>.Fail("The specified path is invalid or inaccessible"));
             }
 
-            return Ok(ApiResponse<SetWorkingDirectoryResponse>.Ok(new SetWorkingDirectoryResponse 
-            { 
-                Success = true, 
-                WorkingDirectory = await _terminalService.GetWorkingDirectoryAsync() 
+            return Ok(ApiResponse<SetWorkingDirectoryResponse>.Ok(new SetWorkingDirectoryResponse
+            {
+                Success = true,
+                WorkingDirectory = await _terminalService.GetWorkingDirectoryAsync()
             }));
         }
         catch (Exception ex)
@@ -245,9 +245,9 @@ public class SandboxTerminalController : ControllerBase
             }
 
             var isSafe = _terminalService.IsCommandSafe(request.Command);
-            
-            return Ok(ApiResponse<CommandSafetyResponse>.Ok(new CommandSafetyResponse 
-            { 
+
+            return Ok(ApiResponse<CommandSafetyResponse>.Ok(new CommandSafetyResponse
+            {
                 IsSafe = isSafe,
                 Command = request.Command,
                 Message = isSafe ? "Command is safe to execute" : "Command contains potentially dangerous operations"
@@ -308,7 +308,7 @@ public class SandboxTerminalController : ControllerBase
         {
             // 执行简单的健康检查命令 - Execute simple health check command
             var result = await _terminalService.ExecuteCommandAsync(
-                "echo 'health-check'", 
+                "echo 'health-check'",
                 timeout: 5,
                 cancellationToken: HttpContext.RequestAborted);
 

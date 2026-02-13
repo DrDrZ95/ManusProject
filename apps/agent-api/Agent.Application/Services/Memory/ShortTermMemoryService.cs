@@ -25,7 +25,7 @@ public class ShortTermMemoryService : IShortTermMemory
     public async Task<List<ChatMessage>> GetRecentHistoryAsync(string sessionId, int tokenLimit = 4000)
     {
         var cacheKey = $"chat_history:{sessionId}";
-        
+
         // Try to get from cache first (L1/L2)
         // We use a factory that loads from DB if cache miss
         var history = await _cacheService.GetOrCreateAsync(cacheKey, async () =>
@@ -44,7 +44,7 @@ public class ShortTermMemoryService : IShortTermMemory
         // Sliding window logic based on token limit (approximation)
         // Assuming 1 token ~= 4 chars for English, maybe 1 char for Chinese. 
         // A simple heuristic: take last N messages that fit.
-        
+
         var result = new List<ChatMessage>();
         int currentTokens = 0;
 
@@ -78,7 +78,7 @@ public class ShortTermMemoryService : IShortTermMemory
             Content = message.Content,
             CreatedAt = DateTime.UtcNow
         };
-        
+
         await _messageRepo.AddAsync(entity);
 
         // 2. Update Cache

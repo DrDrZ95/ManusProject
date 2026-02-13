@@ -18,7 +18,7 @@ public class PromptsService : IPromptsService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _prompts = new Dictionary<string, Dictionary<string, PromptTemplate>>();
         _toolExamples = new Dictionary<string, List<ToolExample>>();
-        
+
         // 初始化内置提示词和工具示例 - Initialize built-in prompts and tool examples
         InitializeBuiltInPrompts();
         InitializeToolExamples();
@@ -33,7 +33,7 @@ public class PromptsService : IPromptsService
         try
         {
             _logger.LogDebug("Getting prompt: {Category}/{Name}", category, name);
-            
+
             if (_prompts.TryGetValue(category, out var categoryPrompts) &&
                 categoryPrompts.TryGetValue(name, out var prompt))
             {
@@ -59,7 +59,7 @@ public class PromptsService : IPromptsService
         try
         {
             _logger.LogDebug("Getting prompts for category: {Category}", category);
-            
+
             if (_prompts.TryGetValue(category, out var categoryPrompts))
             {
                 return await Task.FromResult(categoryPrompts.Values.ToList());
@@ -100,9 +100,9 @@ public class PromptsService : IPromptsService
         try
         {
             _logger.LogDebug("Rendering prompt: {PromptName}", template.Name);
-            
+
             var rendered = template.Template;
-            
+
             // 替换模板变量 - Replace template variables
             foreach (var variable in variables)
             {
@@ -119,8 +119,8 @@ public class PromptsService : IPromptsService
                     .Select(m => m.Groups[1].Value)
                     .Distinct()
                     .ToList();
-                
-                _logger.LogWarning("Unreplaced variables in prompt {PromptName}: {Variables}", 
+
+                _logger.LogWarning("Unreplaced variables in prompt {PromptName}: {Variables}",
                     template.Name, string.Join(", ", unreplacedVars));
             }
 
@@ -142,7 +142,7 @@ public class PromptsService : IPromptsService
         try
         {
             _logger.LogDebug("Saving prompt: {Category}/{Name}", template.Category, template.Name);
-            
+
             if (!_prompts.ContainsKey(template.Category))
             {
                 _prompts[template.Category] = new Dictionary<string, PromptTemplate>();
@@ -150,7 +150,7 @@ public class PromptsService : IPromptsService
 
             template.UpdatedAt = DateTime.UtcNow;
             _prompts[template.Category][template.Name] = template;
-            
+
             _logger.LogInformation("Successfully saved prompt: {Category}/{Name}", template.Category, template.Name);
             return await Task.FromResult(true);
         }
@@ -170,7 +170,7 @@ public class PromptsService : IPromptsService
         try
         {
             _logger.LogDebug("Deleting prompt: {Category}/{Name}", category, name);
-            
+
             if (_prompts.TryGetValue(category, out var categoryPrompts) &&
                 categoryPrompts.Remove(name))
             {
@@ -197,7 +197,7 @@ public class PromptsService : IPromptsService
         try
         {
             _logger.LogDebug("Searching prompts with keywords: {Keywords}", keywords);
-            
+
             var results = new List<PromptTemplate>();
             var searchTerms = keywords.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
@@ -207,7 +207,7 @@ public class PromptsService : IPromptsService
                 {
                     // 在标题、描述、标签中搜索 - Search in title, description, tags
                     var searchText = $"{prompt.Title} {prompt.Description} {string.Join(" ", prompt.Tags)}".ToLowerInvariant();
-                    
+
                     if (searchTerms.Any(term => searchText.Contains(term)))
                     {
                         results.Add(prompt);
@@ -234,7 +234,7 @@ public class PromptsService : IPromptsService
         try
         {
             _logger.LogDebug("Getting tool examples for type: {ToolType}", toolType);
-            
+
             if (_toolExamples.TryGetValue(toolType, out var examples))
             {
                 return await Task.FromResult(examples);
@@ -584,7 +584,7 @@ public class PromptsService : IPromptsService
         _prompts["security"] = securityPrompts;
         _prompts["data_science"] = dataSciencePrompts;
 
-        _logger.LogInformation("Initialized {Count} prompt categories with {Total} total prompts", 
+        _logger.LogInformation("Initialized {Count} prompt categories with {Total} total prompts",
             _prompts.Count, _prompts.Values.Sum(p => p.Count));
     }
 
@@ -907,7 +907,7 @@ public class PromptsService : IPromptsService
         _toolExamples["cybersecurity"] = securityTools;
         _toolExamples["devops"] = devopsTools;
 
-        _logger.LogInformation("Initialized {Count} tool categories with {Total} total examples", 
+        _logger.LogInformation("Initialized {Count} tool categories with {Total} total examples",
             _toolExamples.Count, _toolExamples.Values.Sum(t => t.Count));
     }
 }

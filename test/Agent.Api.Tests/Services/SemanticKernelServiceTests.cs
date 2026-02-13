@@ -1,24 +1,5 @@
 namespace Agent.Api.Tests.Services;
 
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Agent.Core;
-using Agent.Application.Services.Prometheus;
-using Agent.Application.Services.SemanticKernel;
-using Agent.Application.Services.SemanticKernel.Planner;
-using Agent.Application.Services.Telemetry;
-using Agent.Application.Services.VectorDatabase;
-using Agent.Core.Authorization;
-using Agent.Core.Cache;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Embeddings;
-using Moq;
-using Xunit;
 
 public class SemanticKernelServiceTests
 {

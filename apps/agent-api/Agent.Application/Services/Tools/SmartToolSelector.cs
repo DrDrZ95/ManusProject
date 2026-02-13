@@ -1,10 +1,5 @@
 namespace Agent.Application.Services.Tools;
 
-using System.Text.Json;
-using Agent.Core.Data.Entities;
-using Agent.Core.Tools.Interfaces;
-using Agent.Application.Services.SemanticKernel;
-using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Smart Tool Selector Implementation
@@ -29,15 +24,15 @@ public class SmartToolSelector : ISmartToolSelector
     public async Task<IEnumerable<ToolMetadataEntity>> RecommendToolsAsync(string taskDescription, int limit = 3)
     {
         _logger.LogInformation("Recommending tools for task: {TaskDescription}", taskDescription);
-        
+
         var availableTools = await _registryService.GetActiveToolsAsync();
         if (!availableTools.Any()) return Enumerable.Empty<ToolMetadataEntity>();
 
-        try 
+        try
         {
             // 1. Try Semantic Search via Vector DB first
             var searchResults = await _skService.SearchMemoryAsync("Tools", taskDescription, limit: limit * 2);
-            
+
             if (searchResults.Any())
             {
                 var toolIds = searchResults
@@ -62,7 +57,7 @@ public class SmartToolSelector : ISmartToolSelector
             // 2. Fallback to LLM-based ranking if vector search finds nothing or not indexed
             _logger.LogInformation("Falling back to LLM-based ranking for tools");
             var toolListStr = string.Join("\n", availableTools.Select(t => $"- ID: {t.Id}, Name: {t.Name}, Description: {t.Description}"));
-            
+
             var prompt = $@"Given the following user task, identify the top {limit} most relevant tools from the list below.
 User Task: {taskDescription}
 
@@ -73,7 +68,7 @@ Respond with ONLY a JSON array of tool IDs, e.g., [""guid1"", ""guid2""].";
 
             var response = await _skService.GetChatCompletionAsync(prompt);
             var parsedIds = JsonSerializer.Deserialize<List<string>>(response.Trim());
-            
+
             if (parsedIds != null)
             {
                 return availableTools
@@ -110,7 +105,7 @@ Respond with ONLY a JSON array of tool IDs, e.g., [""guid1"", ""guid2""].";
     {
         if (string.IsNullOrEmpty(metricsJson)) return 0.5; // Neutral
         // Simplified: Parse JSON and extract success rate
-        return 0.8; 
+        return 0.8;
     }
 
     private double GetCostScore(string? costJson)

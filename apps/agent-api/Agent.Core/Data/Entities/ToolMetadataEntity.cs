@@ -1,7 +1,5 @@
 namespace Agent.Core.Data.Entities;
 
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 /// <summary>
 /// 工具元数据实体 (Tool Metadata Entity)

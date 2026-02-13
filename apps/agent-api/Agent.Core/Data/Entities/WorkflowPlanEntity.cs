@@ -60,7 +60,7 @@ public class WorkflowPlanEntity
     /// </summary>
     [Column(TypeName = "jsonb")]
     public string? ExecutionContextJson { get; set; }
-    
+
     [Column(TypeName = "jsonb")]
     public string? ExecutorKeys { get; set; }
 
@@ -70,7 +70,7 @@ public class WorkflowPlanEntity
     /// </summary>
     [Column(TypeName = "jsonb")]
     public string? VisualGraphJson { get; set; }
-    
+
     /// <summary>
     /// 创建时间 (Created At)
     /// </summary>

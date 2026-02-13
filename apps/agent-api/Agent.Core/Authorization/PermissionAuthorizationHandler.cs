@@ -33,7 +33,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
             // Get user ID from claims
             // 从声明中获取用户ID
             var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
+
             if (string.IsNullOrEmpty(userId))
             {
                 _logger.LogWarning("User ID not found in claims for permission check: {PermissionCode}", requirement.PermissionCode);
@@ -44,7 +44,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
             // Check if user has the required permission
             // 检查用户是否具有所需权限
             var hasPermission = await _permissionService.UserHasPermissionAsync(userId, requirement.PermissionCode);
-            
+
             if (hasPermission)
             {
                 _logger.LogDebug("User {UserId} has permission {PermissionCode}", userId, requirement.PermissionCode);
@@ -139,7 +139,7 @@ public class MultiplePermissionsAuthorizationHandler : AuthorizationHandler<Mult
             // Get user ID from claims
             // 从声明中获取用户ID
             var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
+
             if (string.IsNullOrEmpty(userId))
             {
                 _logger.LogWarning("User ID not found in claims for multiple permissions check");
@@ -151,17 +151,17 @@ public class MultiplePermissionsAuthorizationHandler : AuthorizationHandler<Mult
             // 检查用户是否具有所有所需权限
             var userPermissions = await _permissionService.GetUserPermissionsAsync(userId);
             var hasAllPermissions = requirement.PermissionCodes.All(code => userPermissions.Contains(code));
-            
+
             if (hasAllPermissions)
             {
-                _logger.LogDebug("User {UserId} has all required permissions: {PermissionCodes}", 
+                _logger.LogDebug("User {UserId} has all required permissions: {PermissionCodes}",
                     userId, string.Join(", ", requirement.PermissionCodes));
                 context.Succeed(requirement);
             }
             else
             {
                 var missingPermissions = requirement.PermissionCodes.Except(userPermissions);
-                _logger.LogWarning("User {UserId} is missing permissions: {MissingPermissions}", 
+                _logger.LogWarning("User {UserId} is missing permissions: {MissingPermissions}",
                     userId, string.Join(", ", missingPermissions));
                 context.Fail();
             }

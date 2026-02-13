@@ -47,7 +47,7 @@ public class FinetuneController : ControllerBase
         {
             span.SetAttribute("finetune.job_name", request.JobName);
             _logger.LogInformation("Starting fine-tuning job: {JobName} - 启动微调任务: {JobName}", request.JobName, request.JobName);
-            
+
             // 验证请求参数 - Validate request parameters
             if (string.IsNullOrWhiteSpace(request.JobName))
             {
@@ -73,7 +73,7 @@ public class FinetuneController : ControllerBase
                 var jobId = await _finetuneService.StartFinetuningAsync(request);
                 span.SetAttribute("finetune.job_id", jobId);
                 span.SetAttribute("finetune.status", "queued");
-                
+
                 var response = new StartFinetuneResponse
                 {
                     JobId = jobId,
@@ -118,7 +118,7 @@ public class FinetuneController : ControllerBase
         {
             span.SetAttribute("finetune.job_id", jobId);
             _logger.LogInformation("Getting job status: {JobId} - 获取任务状态: {JobId}", jobId, jobId);
-            
+
             if (string.IsNullOrWhiteSpace(jobId))
             {
                 span.SetStatus(ActivityStatusCode.Error, "Job ID is required");
@@ -192,7 +192,7 @@ public class FinetuneController : ControllerBase
         {
             span.SetAttribute("finetune.job_id", jobId);
             _logger.LogInformation("Cancelling job: {JobId} - 取消任务: {JobId}", jobId, jobId);
-            
+
             if (string.IsNullOrWhiteSpace(jobId))
             {
                 span.SetStatus(ActivityStatusCode.Error, "Job ID is required");
@@ -205,10 +205,11 @@ public class FinetuneController : ControllerBase
                 span.SetAttribute("finetune.cancel_success", success);
                 if (success)
                 {
-                    return Ok(ApiResponse<object>.Ok(new { 
-                        message = "Job cancelled successfully", 
+                    return Ok(ApiResponse<object>.Ok(new
+                    {
+                        message = "Job cancelled successfully",
                         chineseMessage = "任务取消成功",
-                        jobId 
+                        jobId
                     }));
                 }
                 else
@@ -246,16 +247,16 @@ public class FinetuneController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ApiResponse<List<FinetuneJobSummary>>>> GetJobs(
-        [FromQuery] FinetuneStatus? status = null, 
+        [FromQuery] FinetuneStatus? status = null,
         [FromQuery] int limit = 100)
     {
         using (var span = _telemetryProvider.StartSpan("FinetuneController.GetJobs"))
         {
             span.SetAttribute("finetune.filter_status", status?.ToString());
             span.SetAttribute("finetune.limit", limit);
-            _logger.LogInformation("Getting jobs with status: {Status}, limit: {Limit} - 获取任务列表，状态: {Status}, 限制: {Limit}", 
+            _logger.LogInformation("Getting jobs with status: {Status}, limit: {Limit} - 获取任务列表，状态: {Status}, 限制: {Limit}",
                 status, limit, status, limit);
-            
+
             if (limit <= 0 || limit > 1000)
             {
                 span.SetStatus(ActivityStatusCode.Error, "Limit must be between 1 and 1000");
@@ -266,7 +267,7 @@ public class FinetuneController : ControllerBase
             {
                 var records = await _finetuneService.GetJobsAsync(status, limit);
                 span.SetAttribute("finetune.job_count", records.Count);
-                
+
                 var jobs = records.Select(r => new FinetuneJobSummary
                 {
                     JobId = r.Id,
@@ -319,7 +320,7 @@ public class FinetuneController : ControllerBase
         {
             span.SetAttribute("finetune.job_id", jobId);
             _logger.LogInformation("Getting job logs: {JobId} - 获取任务日志: {JobId}", jobId, jobId);
-            
+
             if (string.IsNullOrWhiteSpace(jobId))
             {
                 span.SetStatus(ActivityStatusCode.Error, "Job ID is required");
@@ -374,7 +375,7 @@ public class FinetuneController : ControllerBase
         using (var span = _telemetryProvider.StartSpan("FinetuneController.ValidateEnvironment"))
         {
             _logger.LogInformation("Validating Python environment - 验证Python环境");
-            
+
             try
             {
                 var envInfo = await _finetuneService.ValidatePythonEnvironmentAsync();
@@ -412,7 +413,7 @@ public class FinetuneController : ControllerBase
         using (var span = _telemetryProvider.StartSpan("FinetuneController.GetAvailableModels"))
         {
             _logger.LogInformation("Getting available models - 获取可用模型");
-            
+
             try
             {
                 var models = await _finetuneService.GetAvailableModelsAsync();
@@ -452,7 +453,7 @@ public class FinetuneController : ControllerBase
         {
             span.SetAttribute("finetune.job_name", request.JobName);
             _logger.LogInformation("Estimating resources for job: {JobName} - 估算任务资源: {JobName}", request.JobName, request.JobName);
-            
+
             if (string.IsNullOrWhiteSpace(request.DatasetPath))
             {
                 span.SetStatus(ActivityStatusCode.Error, "Dataset path is required");
@@ -502,7 +503,7 @@ public class FinetuneController : ControllerBase
             span.SetAttribute("finetune.job_id", jobId);
             span.SetAttribute("finetune.progress_percentage", progress.ProgressPercentage);
             _logger.LogInformation("Updating job progress: {JobId} - 更新任务进度: {JobId}", jobId, jobId);
-            
+
             if (string.IsNullOrWhiteSpace(jobId))
             {
                 span.SetStatus(ActivityStatusCode.Error, "Job ID is required");
@@ -515,10 +516,11 @@ public class FinetuneController : ControllerBase
                 span.SetAttribute("finetune.update_success", success);
                 if (success)
                 {
-                    return Ok(ApiResponse<object>.Ok(new { 
-                        message = "Progress updated successfully", 
+                    return Ok(ApiResponse<object>.Ok(new
+                    {
+                        message = "Progress updated successfully",
                         chineseMessage = "进度更新成功",
-                        jobId 
+                        jobId
                     }));
                 }
                 else

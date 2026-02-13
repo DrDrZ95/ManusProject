@@ -29,7 +29,7 @@ public class HybridMemoryMode : BaseAgentMemory
     {
         // 从短期记忆加载最近消息 (Load recent messages from short-term memory)
         var shortTermContext = await _shortTermMemory.LoadContextAsync();
-        
+
         // 从长期记忆加载摘要 (Load summary from long-term memory)
         var longTermContext = await _longTermMemory.LoadContextAsync();
 
