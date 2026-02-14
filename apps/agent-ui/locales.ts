@@ -1,4 +1,5 @@
 
+
 export const translations = {
   en: {
     newChat: "New chat",
@@ -162,6 +163,9 @@ Type "help" for available commands.
 
     // Settings
     general: "General",
+    skills: "Skills",
+    modelConfig: "Model Config",
+    about: "About",
     streamResponses: "Stream Responses",
     streamDesc: "Show text as it is being generated",
     soundEffects: "Sound Effects",
@@ -171,6 +175,37 @@ Type "help" for available commands.
     trainingDesc: "Allow conversations to be used for training",
     clearData: "Clear All Data",
     done: "Done",
+    importSkill: "Import Custom Skill",
+    dropSkillHere: "Drag & drop JSON config or Python file",
+    browse: "Browse",
+
+    // Settings Detailed
+    systemInstructions: "System Instructions",
+    systemInstructionsDesc: "Define the persona and behavioral constraints of the agent.",
+    agentCapabilities: "Agent Capabilities",
+    agentCapabilitiesDesc: "Manage the tools available to your agent.",
+    creativity: "Creativity (Temperature)",
+    precise: "Precise",
+    balanced: "Balanced",
+    creative: "Creative",
+    modelAvailability: "Model Availability",
+    modelAvailabilityDesc: "You are currently using Kimi (Moonshot). Upgrade to Pro to unlock DeepSeek V3 and GPT-4o.",
+    version: "Version",
+    changelog: "Changelog",
+    privacyPolicy: "Privacy Policy",
+    aboutDesc: "Agent UI is an open-source interface designed for high-fidelity LLM interactions. Powered by React, Vite, and Tailwind CSS.",
+
+    // Skills
+    skill_web_browsing_name: "Web Browsing",
+    skill_web_browsing_desc: "Allows Agent to access real-time information from the internet.",
+    skill_python_interpreter_name: "Python Sandbox",
+    skill_python_interpreter_desc: "Execute Python code in a secure, isolated environment.",
+    skill_dalle_3_name: "Image Generation",
+    skill_dalle_3_desc: "Generate high-quality images using DALL-E 3.",
+    skill_memory_core_name: "Long-term Memory",
+    skill_memory_core_desc: "Enables Agent to remember context across different sessions.",
+    skill_code_analysis_name: "Repo Analysis",
+    skill_code_analysis_desc: "Deep scan and analyze GitHub repositories.",
 
     // Quota
     quotaTitle: "Project Quota Reached",
@@ -339,6 +374,9 @@ Linux 内核 6.8.0-generic x86_64
 
     // Settings
     general: "通用",
+    skills: "技能",
+    modelConfig: "模型配置",
+    about: "关于",
     streamResponses: "流式响应",
     streamDesc: "生成时显示文本",
     soundEffects: "音效",
@@ -348,6 +386,37 @@ Linux 内核 6.8.0-generic x86_64
     trainingDesc: "允许使用对话进行训练",
     clearData: "清除所有数据",
     done: "完成",
+    importSkill: "导入自定义技能",
+    dropSkillHere: "拖放 JSON 配置或 Python 文件",
+    browse: "浏览",
+
+    // Settings Detailed
+    systemInstructions: "系统指令",
+    systemInstructionsDesc: "定义 Agent 的人设和行为约束。",
+    agentCapabilities: "Agent 能力",
+    agentCapabilitiesDesc: "管理 Agent 可用的工具。",
+    creativity: "创造力 (温度)",
+    precise: "精确",
+    balanced: "平衡",
+    creative: "有创意",
+    modelAvailability: "模型可用性",
+    modelAvailabilityDesc: "您当前正在使用 Kimi (Moonshot)。升级到 Pro 以解锁 DeepSeek V3 和 GPT-4o。",
+    version: "版本",
+    changelog: "更新日志",
+    privacyPolicy: "隐私政策",
+    aboutDesc: "Agent UI 是一个专为高保真 LLM 交互设计的开源界面。由 React, Vite 和 Tailwind CSS 驱动。",
+
+    // Skills
+    skill_web_browsing_name: "网页浏览",
+    skill_web_browsing_desc: "允许 Agent 访问互联网上的实时信息。",
+    skill_python_interpreter_name: "Python 沙箱",
+    skill_python_interpreter_desc: "在安全、隔离的环境中执行 Python 代码。",
+    skill_dalle_3_name: "图像生成",
+    skill_dalle_3_desc: "使用 DALL-E 3 生成高质量图像。",
+    skill_memory_core_name: "长期记忆",
+    skill_memory_core_desc: "使 Agent 能够跨不同会话记住上下文。",
+    skill_code_analysis_name: "代码库分析",
+    skill_code_analysis_desc: "深度扫描和分析 GitHub 仓库。",
 
     // Quota
     quotaTitle: "项目数量已达上限",

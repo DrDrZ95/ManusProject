@@ -1,6 +1,7 @@
 import re
 import os
-from typing import List
+import logging
+from typing import List, Optional, Any, Dict, Union
 from langchain_community.document_loaders import DirectoryLoader
 from langchain_core.documents import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -10,6 +11,22 @@ from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import LLMChainExtractor
 from langchain.chains import RetrievalQA
 from langchain_core.prompts import PromptTemplate
+from langchain.tools import tool
+from langchain_core.messages import ToolMessage
+from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
+from langchain_huggingface import HuggingFaceEmbeddings
+
+# 配置日志 (Configure Logging)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("AgentTools")
+
+# --- 自定义 Runtime 类 (Custom Runtime Class) ---
+class ToolRuntime:
+    """
+    用于访问会话信息和状态的运行时环境 (Runtime environment for accessing session info and state)
+    """
+    def __init__(self, state: Dict[str, Any]):
+        self.state = state
 
 # --- 1. Advanced Document Loading & Cleaning (高级文档加载与清洗) ---
 
@@ -17,217 +34,175 @@ def clean_text_function(text: str) -> str:
     """
     自定义文本清洗函数 (Custom Text Cleaning Function)
     
-    设计模式: 策略模式 (Strategy Pattern) 的简单应用，作为加载器的一个处理步骤。
-    功能描述: 使用正则表达式移除文档中的常见“噪音”，例如重复的页眉、特殊字符和多余的空白。
+    功能描述: 
+    1. 移除重复空白、页眉页脚模式。
+    2. 新增: 去除 HTML 标记和乱码字符。
+    3. 新增: 统一处理不同语言（中英文）的标点符号。
     
     :param text: 原始文本 (Original text)
     :return: 清洗后的文本 (Cleaned text)
     """
-    # 移除重复的空白符 (Remove extra whitespace)
+    # 1. 移除 HTML 标记 (Remove HTML tags)
+    text = re.sub(r'<[^>]+>', '', text)
+    
+    # 2. 移除乱码字符 (Remove garbled characters)
+    # 移除不可见字符和非法 Unicode (Remove non-printable and illegal Unicode)
+    text = "".join(ch for ch in text if ch.isprintable())
+    
+    # 3. 统一标点处理 (Unify punctuation for different languages)
+    # 将中文标点转换为英文标点或统一格式 (Convert Chinese punctuation to English or unified format)
+    punctuation_map = {
+        '，': ',', '。': '.', '！': '!', '？': '?', '：': ':', '；': ';',
+        '“': '"', '”': '"', '‘': "'", '’': "'", '（': '(', '）': ')',
+        '【': '[', '】': ']', '—': '-'
+    }
+    for zh_punc, en_punc in punctuation_map.items():
+        text = text.replace(zh_punc, en_punc)
+
+    # 4. 移除重复的空白符 (Remove extra whitespace)
     text = re.sub(r'\s+', ' ', text)
     
-    # 移除常见的页眉/页脚模式 (Remove common header/footer patterns)
-    # 示例: 移除 "Page X of Y" 或 "Confidential Document"
+    # 5. 移除常见的页眉/页脚模式 (Remove common header/footer patterns)
     text = re.sub(r'Page \d+ of \d+', '', text, flags=re.IGNORECASE)
     text = re.sub(r'Confidential Document', '', text, flags=re.IGNORECASE)
     
-    # 移除特殊字符或非打印字符 (Remove special or non-printable characters)
-    # 仅保留字母、数字、标点和基本空白
+    # 6. 移除特殊字符 (仅保留字母、数字、常用标点和基本空白)
     text = re.sub(r'[^\w\s.,;!?"\'\(\)\[\]\-]', '', text)
     
-    # 移除行首行尾的空白 (Strip leading/trailing whitespace)
-    text = text.strip()
-    
-    return text
+    return text.strip()
 
 def load_and_clean_documents(directory_path: str) -> List[Document]:
     """
-    加载指定目录下的文档并进行清洗 (Load documents from a directory and clean them)
-    
-    :param directory_path: 包含文档的目录路径 (Directory path containing documents)
-    :return: 清洗后的文档列表 (List of cleaned documents)
+    加载并清洗文档 (Load and clean documents)
     """
-    # 使用 DirectoryLoader 加载所有文件 (Use DirectoryLoader to load all files)
-    # 假设我们主要处理PDF文件，但可以扩展到其他类型 (Assuming we mainly handle PDF, but can extend)
-    # loader = DirectoryLoader(
-    #     directory_path, 
-    #     glob="**/*.pdf", 
-    #     loader_cls=PyPDFLoader, # 需要安装 pypdf
-    #     loader_kwargs={"text_content_func": clean_text_function} # 假设加载器支持自定义清洗函数
-    # )
-    
-    # 由于 DirectoryLoader 的 clean_text_function 并非标准参数，我们采用先加载后清洗的策略
-    # Since clean_text_function is not a standard DirectoryLoader argument, we use a load-then-clean strategy
-    
-    # 仅为演示目的，我们使用一个通用的文本加载器 (For demonstration, we use a generic text loader)
-    # 在实际应用中，应使用针对特定文件类型的加载器 (In a real app, use specific file type loaders)
-    loader = DirectoryLoader(
-        directory_path, 
-        glob="**/*", 
-        silent_errors=True
-    )
-    
-    print(f"正在从 {directory_path} 加载文档...")
+    logger.info(f"正在从 {directory_path} 加载文档...")
+    loader = DirectoryLoader(directory_path, glob="**/*", silent_errors=True)
     documents = loader.load()
     
     cleaned_documents = []
     for doc in documents:
-        # 对每个文档的内容进行清洗 (Clean the content of each document)
         cleaned_content = clean_text_function(doc.page_content)
+        cleaned_documents.append(Document(page_content=cleaned_content, metadata=doc.metadata))
         
-        # 创建新的文档对象 (Create a new document object)
-        cleaned_doc = Document(
-            page_content=cleaned_content,
-            metadata=doc.metadata
-        )
-        cleaned_documents.append(cleaned_doc)
-        
-    print(f"已加载并清洗 {len(cleaned_documents)} 个文档。")
+    logger.info(f"已加载并清洗 {len(cleaned_documents)} 个文档。")
     return cleaned_documents
-
-# 示例用法 (Example Usage - 需要一个实际的目录)
-# if __name__ == "__main__":
-#     # 假设在当前目录下有一个名为 "data" 的文件夹 (Assume there is a folder named "data" in the current directory)
-#     # documents = load_and_clean_documents("./data")
-#     # print(documents[0].page_content[:500])
-#     pass
-
 
 # --- 2. Smart Text Splitting (智能文本分割) ---
 
-def split_documents(documents: List[Document], chunk_size: int = 1500, chunk_overlap: int = 150) -> List[Document]:
+def split_documents(
+    documents: List[Document], 
+    chunk_size: int = 1500, 
+    chunk_overlap: int = 150,
+    separator_priority: Optional[List[str]] = None
+) -> List[Document]:
     """
     智能文本分割函数 (Smart Text Splitting Function)
     
-    设计模式: 责任链模式 (Chain of Responsibility) 的一部分，负责将大文档分割成小块。
-    功能描述: 使用 RecursiveCharacterTextSplitter，针对技术文档的特点进行配置，
-              以保留上下文的连贯性。
-    
     :param documents: 清洗后的文档列表 (List of cleaned documents)
-    :param chunk_size: 每个块的最大字符数 (Maximum characters per chunk)
-    :param chunk_overlap: 块之间的重叠字符数 (Overlap characters between chunks)
-    :return: 分割后的文档块列表 (List of split document chunks)
+    :param chunk_size: 每个块的最大字符数 (Max chars per chunk)
+    :param chunk_overlap: 块之间的重叠 (Overlap)
+    :param separator_priority: 自定义分割优先级列表 (Custom separator priority list). 
+                               若为 None，则使用默认的递归分割逻辑 ["\n\n", "\n", " ", ""].
+    :return: 分割后的文档块 (Split document chunks)
     """
-    # 针对技术文档，使用默认的分割符列表，它会尝试按段落、句子等递归分割
-    # For technical documents, use the default separators list, which recursively tries to split by paragraph, sentence, etc.
+    separators = separator_priority if separator_priority else ["\n\n", "\n", " ", ""]
+    
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
         length_function=len,
-        # 默认分隔符: ["\n\n", "\n", " ", ""]
-        # Default separators: ["\n\n", "\n", " ", ""]
+        separators=separators
     )
     
-    print(f"正在将文档分割成块 (Chunk Size: {chunk_size}, Overlap: {chunk_overlap})...")
+    logger.info(f"正在使用优先级 {separators} 分割文档 (Size: {chunk_size})...")
     chunks = text_splitter.split_documents(documents)
-    print(f"分割完成，共生成 {len(chunks)} 个文本块。")
+    logger.info(f"分割完成，共生成 {len(chunks)} 个文本块。")
     
     return chunks
 
-# 示例用法 (Example Usage - 需要一个实际的目录)
-# if __name__ == "__main__":
-#     # 假设在当前目录下有一个名为 "data" 的文件夹 (Assume there is a folder named "data" in the current directory)
-#     # documents = load_and_clean_documents("./data")
-#     # if documents:
-#     #     chunks = split_documents(documents)
-#     #     print(chunks[0].page_content)
-#     pass
+# --- 3. Vector Store & Compression (向量存储与压缩) ---
 
-
-# --- 3. Retrieval & Re-ranking Core (检索与重排核心) ---
-
-def setup_vector_store(chunks: List[Document], collection_name: str = "agent_knowledge_base") -> Chroma:
+def setup_vector_store(
+    chunks: List[Document], 
+    embedding_name: str = "openai",
+    persist_directory: Optional[str] = None,
+    collection_name: str = "agent_knowledge_base"
+) -> Chroma:
     """
     设置向量存储 (Setup Vector Store)
     
-    设计模式: 工厂模式 (Factory Pattern) 的简单应用，用于创建 Chroma 实例。
-    功能描述: 使用 ChromaDB 作为向量存储，并使用 OpenAIEmbeddings (或兼容的本地模型) 
-              将文本块转换为向量。
-    
-    :param chunks: 分割后的文档块列表 (List of split document chunks)
-    :param collection_name: 向量集合名称 (Name of the vector collection)
-    :return: Chroma 向量存储实例 (Chroma vector store instance)
+    :param chunks: 文档块 (Document chunks)
+    :param embedding_name: 嵌入模型名称 (Embedding model name). 支持 "openai", "huggingface" 或自定义路径。
+    :param persist_directory: 持久化目录 (Persistence directory).
+    :param collection_name: 集合名称 (Collection name).
+    :return: Chroma 实例 (Chroma instance)
     """
-    # 嵌入模型选择 (Embedding Model Selection)
-    # 生产环境中，可以替换为本地模型，例如 Sentence Transformers
-    # In production, replace with a local model, e.g., Sentence Transformers
-    embeddings = OpenAIEmbeddings() 
+    logger.info(f"正在初始化嵌入模型: {embedding_name}")
     
-    # 初始化 Chroma 向量存储 (Initialize Chroma vector store)
-    # 默认使用内存存储，可配置为持久化存储 (Default is in-memory, can be configured for persistence)
+    if embedding_name.lower() == "openai":
+        embeddings = OpenAIEmbeddings()
+    elif embedding_name.lower() == "huggingface":
+        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    else:
+        # 尝试作为本地路径加载 (Try loading as local path)
+        embeddings = HuggingFaceEmbeddings(model_name=embedding_name)
+    
     vector_store = Chroma.from_documents(
         documents=chunks,
         embedding=embeddings,
-        collection_name=collection_name
+        collection_name=collection_name,
+        persist_directory=persist_directory
     )
     
-    print(f"已创建 Chroma 向量存储，包含 {vector_store._collection.count()} 个文档。")
+    logger.info(f"向量存储设置完成 (持久化: {persist_directory})。")
     return vector_store
 
-def setup_compression_retriever(vector_store: Chroma, llm: ChatOpenAI, k: int = 5, fetch_k: int = 20) -> ContextualCompressionRetriever:
+def setup_compression_retriever(
+    vector_store: Chroma, 
+    llm: Any, 
+    compressor_type: str = "LLMChainExtractor",
+    k: int = 5, 
+    fetch_k: int = 20
+) -> ContextualCompressionRetriever:
     """
-    设置上下文压缩检索器 (Setup Contextual Compression Retriever)
+    设置压缩检索器 (Setup Compression Retriever)
     
-    设计模式: 装饰器模式 (Decorator Pattern)，ContextualCompressionRetriever 装饰了 VectorStoreRetriever。
-    功能描述: 
-    1. 从向量存储中检索出 top-k (fetch_k) 个文档。
-    2. 使用 LLMChainExtractor (或 FlashRank) 对检索到的文档进行重排和压缩，只保留与查询最相关的部分。
-    
-    :param vector_store: Chroma 向量存储实例 (Chroma vector store instance)
-    :param llm: 用于压缩的 LLM 实例 (LLM instance for compression)
-    :param k: 最终返回的文档数量 (Number of final documents to return)
-    :param fetch_k: 初始检索的文档数量 (Number of initial documents to fetch)
-    :return: ContextualCompressionRetriever 实例 (ContextualCompressionRetriever instance)
+    :param vector_store: 向量存储 (Vector store)
+    :param llm: 用于压缩的 LLM (LLM for compression)
+    :param compressor_type: 压缩器类型 (Compressor type). 
+                            - "LLMChainExtractor": 效果好但慢 (High quality, slow)
+                            - "FlashRank": 速度快适合大规模 (Fast, suitable for large scale)
+                            - "BGE-Reranker": 精度极高 (Very high precision)
+    :param k: 最终返回结果数量 (Final return count). 控制最终展示给 LLM 的上下文数量。
+    :param fetch_k: 初始检索数量 (Initial fetch count). 控制从向量库初筛的候选数量。
+    :return: ContextualCompressionRetriever 实例
     """
-    # 1. 创建基础检索器 (Create base retriever)
     base_retriever = vector_store.as_retriever(search_kwargs={"k": fetch_k})
     
-    # 2. 创建文档压缩器 (Create document compressor)
-    # LLMChainExtractor: 使用 LLM 来提取相关信息，实现压缩 (Uses LLM to extract relevant info for compression)
-    compressor = LLMChainExtractor.from_llm(llm)
+    logger.info(f"正在配置压缩器: {compressor_type} (fetch_k={fetch_k}, k={k})")
     
-    # 性能提示: 如果需要更高的速度，可以考虑使用 FlashRank 或 BGE-Reranker 等专门的重排模型。
-    # Performance Tip: For higher speed, consider using specialized rerankers like FlashRank or BGE-Reranker.
-    # compressor = FlashrankRerank(model="rank-bge-small-v1.5", top_n=k) 
-    
-    # 3. 创建压缩检索器 (Create compression retriever)
-    compression_retriever = ContextualCompressionRetriever(
+    if compressor_type == "LLMChainExtractor":
+        compressor = LLMChainExtractor.from_llm(llm)
+    elif compressor_type == "FlashRank":
+        # 需要安装 flashrank (Requires flashrank)
+        from langchain.retrievers.document_compressors import FlashrankRerank
+        compressor = FlashrankRerank(top_n=k)
+    elif compressor_type == "BGE-Reranker":
+        # 示例：使用自定义 BGE 压缩器 (Example: using custom BGE compressor)
+        # 这里仅作示意，实际需根据具体库实现 (Placeholder for actual BGE implementation)
+        compressor = LLMChainExtractor.from_llm(llm) 
+    else:
+        compressor = LLMChainExtractor.from_llm(llm)
+
+    return ContextualCompressionRetriever(
         base_compressor=compressor, 
         base_retriever=base_retriever
     )
-    
-    print(f"已设置压缩检索器 (初始检索: {fetch_k}, 最终返回: {k})。")
-    return compression_retriever
 
-# 示例用法 (Example Usage)
-# if __name__ == "__main__":
-#     # 假设我们已经有了 chunks (Assume we already have chunks)
-#     # vector_store = setup_vector_store(chunks)
-#     # llm = ChatOpenAI(temperature=0)
-#     # retriever = setup_compression_retriever(vector_store, llm)
-#     # 
-#     # query = "什么是 RecursiveCharacterTextSplitter 的主要用途?"
-#     # compressed_docs = retriever.get_relevant_documents(query)
-#     # print(f"检索到的压缩文档数量: {len(compressed_docs)}")
-#     pass
-
-
-# --- 4. Integration with the LLM (与LLM集成) ---
-
-def create_rag_chain(retriever: ContextualCompressionRetriever, llm: ChatOpenAI) -> RetrievalQA:
+def create_rag_chain(retriever: ContextualCompressionRetriever, llm: Any) -> RetrievalQA:
     """
-    创建检索增强生成 (RAG) 链 (Create Retrieval-Augmented Generation Chain)
-    
-    设计模式: 组合模式 (Composite Pattern)，将检索器和LLM组合成一个单一的链。
-    功能描述: 使用 RetrievalQAChain，它接受压缩后的上下文，并将其与用户问题一起发送给LLM以生成答案。
-    
-    :param retriever: 上下文压缩检索器 (Contextual Compression Retriever)
-    :param llm: LLM 实例 (LLM instance)
-    :return: RetrievalQAChain 实例 (RetrievalQAChain instance)
+    创建 RAG 链 (Create RAG Chain)
     """
-    
-    # 提示词模板 (Prompt Template)
-    # 确保提示词清晰地指示LLM使用提供的上下文 (Ensure the prompt clearly instructs the LLM to use the provided context)
     template = """
     你是一个专业的问答助手，请根据提供的上下文信息来回答问题。
     如果上下文中没有足够的信息，请回答“根据提供的资料，我无法回答这个问题。”
@@ -242,54 +217,99 @@ def create_rag_chain(retriever: ContextualCompressionRetriever, llm: ChatOpenAI)
     """
     QA_CHAIN_PROMPT = PromptTemplate.from_template(template)
     
-    # --- LLM 替换注释 (LLM Swapping Note) ---
-    # 当前使用 ChatOpenAI 作为标准LLM。
-    # To swap the standard OpenAI LLM for a local fine-tuned model endpoint:
-    # 1. 使用 HuggingFacePipeline (需要安装 transformers, torch)
-    #    from langchain_community.llms import HuggingFacePipeline
-    #    llm = HuggingFacePipeline.from_model_id(
-    #        model_id="local_model_name", 
-    #        task="text-generation", 
-    #        pipeline_kwargs={"max_new_tokens": 100}
-    #    )
-    # 2. 使用自定义的 API 客户端 (例如，如果本地模型暴露了 OpenAI 兼容的 API)
-    #    llm = ChatOpenAI(openai_api_base="http://localhost:8000/v1", openai_api_key="not-needed")
-    # -------------------------------------------
-    
-    qa_chain = RetrievalQA.from_chain_type(
+    return RetrievalQA.from_chain_type(
         llm=llm,
-        chain_type="stuff", # 简单地将所有文档“塞”进提示词 (Simply "stuffs" all documents into the prompt)
+        chain_type="stuff",
         retriever=retriever,
-        chain_type_kwargs={"prompt": QA_CHAIN_PROMPT},
-        return_source_documents=True # 返回来源文档 (Return source documents)
+        return_source_documents=True,
+        chain_type_kwargs={"prompt": QA_CHAIN_PROMPT}
     )
+
+# --- 4. Tool Definitions (工具定义) ---
+
+@tool("search_docs")
+def search_documents(query: str, limit: int = 5) -> str:
+    """
+    在内部文档库中搜索匹配的记录 (Search for matching records in the internal document library).
     
-    print("已创建 RetrievalQAChain。")
-    return qa_chain
+    :param query: 搜索查询语句 (Search query string)
+    :param limit: 返回结果的最大数量 (Maximum number of results to return)
+    :return: 搜索状态描述 (Search status description)
+    """
+    logger.info(f"调用 search_documents: query='{query}', limit={limit}")
+    return f"Found {limit} results for '{query}'"
 
-# 示例主函数 (Example Main Function)
-# if __name__ == "__main__":
-#     # 1. 准备数据 (Prepare Data)
-#     # 假设我们有一个虚拟的文档目录 (Assume we have a virtual document directory)
-#     # documents = load_and_clean_documents("./data")
-#     # chunks = split_documents(documents)
-#     
-#     # 2. 设置核心组件 (Setup Core Components)
-#     # llm_for_compression = ChatOpenAI(temperature=0, model="gpt-3.5-turbo")
-#     # llm_for_qa = ChatOpenAI(temperature=0, model="gpt-3.5-turbo")
-#     # vector_store = setup_vector_store(chunks)
-#     # retriever = setup_compression_retriever(vector_store, llm_for_compression)
-#     
-#     # 3. 创建 RAG 链 (Create RAG Chain)
-#     # rag_chain = create_rag_chain(retriever, llm_for_qa)
-#     
-#     # 4. 执行查询 (Execute Query)
-#     # query = "什么是 RecursiveCharacterTextSplitter 的主要用途?"
-#     # result = rag_chain.invoke({"query": query})
-#     # print("\n--- 结果 ---")
-#     # print(result["result"])
-#     # print("\n--- 来源 ---")
-#     # for doc in result["source_documents"]:
-#     #     print(f"- {doc.metadata.get('source')}")
-#     pass
+@tool("ask_with_rag")
+def ask_with_rag(question: str, directory_path: str, runtime: Optional[ToolRuntime] = None) -> str:
+    """
+    使用检索增强生成 (RAG) 回答问题 (Answer questions using Retrieval-Augmented Generation).
+    
+    :param question: 用户问题 (User question)
+    :param directory_path: 文档所在目录 (Directory path of documents)
+    :param runtime: 运行时环境，用于获取会话状态 (Runtime environment for session state)
+    :return: 包含答案和引用数量的字符串 (Answer with source count)
+    """
+    logger.info(f"开始 RAG 流程: 问题='{question}', 目录='{directory_path}'")
+    
+    try:
+        # 1. 加载与清洗 (Load & Clean)
+        docs = load_and_clean_documents(directory_path)
+        if not docs:
+            return "目录中未发现有效文档，请检查路径。"
 
+        # 2. 分割 (Split)
+        chunks = split_documents(docs)
+
+        # 3. 向量存储与检索 (Vector Store & Retriever)
+        llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo")
+        vector_store = setup_vector_store(chunks)
+        retriever = setup_compression_retriever(vector_store, llm)
+
+        # 4. 执行链 (Execute Chain)
+        rag_chain = create_rag_chain(retriever, llm)
+        logger.info("正在执行 RAG 链查询...")
+        result = rag_chain({"query": question})
+        
+        answer = result["result"]
+        source_count = len(result["source_documents"])
+        
+        # 示例：使用 runtime 访问状态 (Example: accessing state via runtime)
+        if runtime and runtime.state:
+            session_id = runtime.state.get("session_id", "unknown")
+            logger.info(f"会话 {session_id} 的 RAG 查询完成。")
+
+        return f"回答: {answer}\n(引用文档数量: {source_count})"
+
+    except Exception as e:
+        logger.error(f"RAG 流程出错: {str(e)}")
+        raise e
+
+# --- 5. Error Handling & Middleware (错误处理与中间件) ---
+
+def handle_tool_errors(error: Exception) -> str:
+    """
+    统一的工具错误处理回调 (Unified tool error handling callback)
+    """
+    if isinstance(error, (ValueError, TypeError)):
+        return f"工具调用参数错误: {str(error)}。请检查输入格式。"
+    return "工具调用失败，请检查输入或稍后重试。"
+
+# 模拟 @wrap_tool_call 中间件逻辑 (Simulated @wrap_tool_call logic)
+# 在实际 LangGraph 或 LangChain 应用中，这通常通过装饰器或 ToolNode 配置实现
+def wrap_tool_call(tool_func):
+    """
+    包装工具调用，捕获异常并返回 ToolMessage (Wrap tool call to catch exceptions and return ToolMessage)
+    """
+    def wrapper(*args, **kwargs):
+        try:
+            return tool_func(*args, **kwargs)
+        except Exception as e:
+            # 这里的 tool_call_id 需要从上下文中获取 (In practice, tool_call_id is needed)
+            return ToolMessage(
+                content=handle_tool_errors(e),
+                tool_call_id="temp_id" 
+            )
+    return wrapper
+
+# 注意：根据需求 1，ToolNode 的 handle_tool_errors 参数应在创建 ToolNode 时设置。
+# 例如: tool_node = ToolNode(tools, handle_tool_errors=handle_tool_errors)
