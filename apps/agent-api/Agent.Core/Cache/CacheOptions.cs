@@ -54,5 +54,17 @@ public class CacheOptions
     /// 文档向量元数据缓存 TTL (Document Vectors Metadata Cache TTL) - 永久（由业务逻辑控制清除）
     /// </summary>
     public TimeSpan DocumentVectorMetadataTtl { get; set; } = TimeSpan.FromDays(365 * 10); // 模拟永久
+
+    /// <summary>
+    /// 缓存抖动范围 (Cache Jitter Range)
+    /// 用于防止缓存雪崩，为分布式缓存 TTL 添加一个随机偏移量。
+    /// 默认 5-15 分钟。
+    /// </summary>
+    public int JitterMinMinutes { get; set; } = 5;
+
+    /// <summary>
+    /// 缓存抖动范围 (Cache Jitter Range)
+    /// </summary>
+    public int JitterMaxMinutes { get; set; } = 15;
 }
 

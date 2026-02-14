@@ -10,17 +10,23 @@ public class RagService : IRagService
     private readonly ISemanticKernelService _semanticKernel;
     private readonly ILogger<RagService> _logger;
     private readonly IAgentCacheService _cacheService; // 新增：缓存服务
+    private readonly IRagCacheWarmer _cacheWarmer; // 新增：缓存预热服务
+    private readonly IBackgroundJobClient _backgroundJobs; // 新增：后台任务客户端
 
     public RagService(
         IVectorDatabaseService vectorDb,
         ISemanticKernelService semanticKernel,
         ILogger<RagService> logger,
-        IAgentCacheService cacheService) // 注入缓存服务
+        IAgentCacheService cacheService,
+        IRagCacheWarmer cacheWarmer,
+        IBackgroundJobClient backgroundJobs) // 注入后台任务客户端
     {
         _vectorDb = vectorDb ?? throw new ArgumentNullException(nameof(vectorDb));
         _semanticKernel = semanticKernel ?? throw new ArgumentNullException(nameof(semanticKernel));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+        _cacheWarmer = cacheWarmer ?? throw new ArgumentNullException(nameof(cacheWarmer));
+        _backgroundJobs = backgroundJobs ?? throw new ArgumentNullException(nameof(backgroundJobs));
     }
 
     #region Document Management - 文档管理
@@ -105,8 +111,11 @@ public class RagService : IRagService
                 document.Id, chunks.Count);
 
             // Invalidate retrieval and response caches for this collection - 使该集合的检索和响应缓存失效
-            // await _cacheService.RemoveByPrefixAsync($"rag:retrieval:{collectionName}:");
-            // await _cacheService.RemoveByPrefixAsync($"rag:response:{collectionName}:");
+            await _cacheService.RemoveByPrefixAsync($"rag:retrieval:{collectionName}:");
+            await _cacheService.RemoveByPrefixAsync($"rag:response:{collectionName}:");
+
+            // Trigger cache warmup for hot queries - 触发热点查询的缓存预热
+            _backgroundJobs.Enqueue<IRagCacheWarmer>(warmer => warmer.WarmupHotQueriesAsync(collectionName, default));
 
             return document.Id;
         }
@@ -213,10 +222,6 @@ public class RagService : IRagService
             await AddDocumentAsync(collectionName, document);
 
             _logger.LogInformation("Successfully updated document {DocumentId}", document.Id);
-
-            // Invalidate retrieval and response caches for this collection - 使该集合的检索和响应缓存失效
-            // await _cacheService.RemoveByPrefixAsync($"rag:retrieval:{collectionName}:");
-            // await _cacheService.RemoveByPrefixAsync($"rag:response:{collectionName}:");
         }
         catch (Exception ex)
         {
@@ -249,8 +254,8 @@ public class RagService : IRagService
             _logger.LogInformation("Successfully deleted document {DocumentId}", documentId);
 
             // Invalidate retrieval and response caches for this collection - 使该集合的检索和响应缓存失效
-            // await _cacheService.RemoveByPrefixAsync($"rag:retrieval:{collectionName}:");
-            // await _cacheService.RemoveByPrefixAsync($"rag:response:{collectionName}:");
+            await _cacheService.RemoveByPrefixAsync($"rag:retrieval:{collectionName}:");
+            await _cacheService.RemoveByPrefixAsync($"rag:response:{collectionName}:");
         }
         catch (Exception ex)
         {
@@ -297,6 +302,10 @@ public class RagService : IRagService
         if (cachedResult != null)
         {
             _logger.LogInformation("Cache Hit (Retrieval): Retrieved {ChunkCount} chunks for query: {Query}", cachedResult.Chunks.Count(), query.Text);
+            
+            // 记录热点查询用于预热 (Record hot query for warmup)
+            await _cacheWarmer.RecordQueryAccessAsync(collectionName, query);
+            
             return cachedResult;
         }
 
@@ -346,6 +355,9 @@ public class RagService : IRagService
                     ["reranking_enabled"] = query.ReRanking?.Enabled ?? false
                 }
             };
+
+            // 记录热点查询用于预热 (Record hot query for warmup)
+            await _cacheWarmer.RecordQueryAccessAsync(collectionName, query);
 
             // 将结果存入缓存 (Cache the result)
             // 默认缓存 30 分钟 (Default cache duration: 30 minutes)

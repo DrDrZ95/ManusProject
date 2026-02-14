@@ -17,6 +17,9 @@ public static class RagExtensions
     {
         // Register RAG service - 注册RAG服务
         services.AddScoped<IRagService, RagService>();
+        
+        // Register RAG Cache Warmer - 注册RAG缓存预热服务
+        services.AddScoped<IRagCacheWarmer, RagCacheWarmer>();
 
         // Configure RAG options from configuration - 从配置中配置RAG选项
         services.Configure<RagServiceOptions>(configuration.GetSection("RAG"));

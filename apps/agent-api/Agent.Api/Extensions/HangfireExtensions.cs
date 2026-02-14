@@ -1,3 +1,6 @@
+using Agent.Application.Services.RAG;
+using Hangfire;
+
 namespace Agent.Api.Extensions;
 
 /// <summary>
@@ -41,12 +44,12 @@ public static class HangfireExtensions
             // Authorization = new [] { new HangfireAuthorizationFilter() }
         });
 
-        // 示例：添加一个简单的后台任务
-        // Example: Add a simple background job
-        RecurringJob.AddOrUpdate(
-            "EasyJob",
-            () => System.Console.WriteLine("Hello from Hangfire!"),
-            Cron.Minutely); // 每分钟执行一次 (Executes every minute)
+        // RAG 缓存预热任务 (RAG cache warmup job)
+        // 每天凌晨 2 点执行 (Executes at 2 AM daily)
+        RecurringJob.AddOrUpdate<IRagCacheWarmer>(
+            "RagCacheWarmup-Default",
+            warmer => warmer.WarmupHotQueriesAsync("default", default),
+            Cron.Daily(2));
 
         return app;
     }

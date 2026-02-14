@@ -4,6 +4,11 @@ namespace Agent.Core.Tests.Services
     using Agent.Application.Services.VectorDatabase;
     using Agent.Application.Services.SemanticKernel;
     using Agent.Core.Cache;
+    using Hangfire;
+    using Microsoft.Extensions.Logging;
+    using Moq;
+    using Xunit;
+
     /// <summary>
     /// RagService 核心逻辑单元测试
     /// Unit tests for RagService core logic
@@ -14,6 +19,8 @@ namespace Agent.Core.Tests.Services
         private readonly Mock<ISemanticKernelService> _mockSemanticKernel;
         private readonly Mock<ILogger<RagService>> _mockLogger;
         private readonly Mock<IAgentCacheService> _mockCacheService;
+        private readonly Mock<IRagCacheWarmer> _mockCacheWarmer;
+        private readonly Mock<IBackgroundJobClient> _mockBackgroundJobs;
         private readonly RagService _ragService;
         private readonly RagTestFixture _fixture;
 
@@ -24,12 +31,16 @@ namespace Agent.Core.Tests.Services
             _mockSemanticKernel = new Mock<ISemanticKernelService>();
             _mockLogger = new Mock<ILogger<RagService>>();
             _mockCacheService = new Mock<IAgentCacheService>();
+            _mockCacheWarmer = new Mock<IRagCacheWarmer>();
+            _mockBackgroundJobs = new Mock<IBackgroundJobClient>();
 
             _ragService = new RagService(
                 _mockVectorDb.Object,
                 _mockSemanticKernel.Object,
                 _mockLogger.Object,
-                _mockCacheService.Object);
+                _mockCacheService.Object,
+                _mockCacheWarmer.Object,
+                _mockBackgroundJobs.Object);
         }
 
         #region Document Processing Tests (Step 1 & 2)

@@ -39,6 +39,7 @@ global using Microsoft.Extensions.Hosting;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Options;
 global using Microsoft.SemanticKernel;
+global using Hangfire;
 global using Microsoft.SemanticKernel.ChatCompletion;
 global using Microsoft.SemanticKernel.Connectors.Chroma;
 global using Microsoft.SemanticKernel.Connectors.OpenAI;

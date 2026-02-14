@@ -32,6 +32,7 @@ global using Microsoft.Extensions.Diagnostics.HealthChecks;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Options;
 global using Microsoft.SemanticKernel;
+global using StackExchange.Redis;
 global using Microsoft.SemanticKernel.Connectors.Chroma;
 global using ModelContextProtocol;
 global using ModelContextProtocol.Protocol;

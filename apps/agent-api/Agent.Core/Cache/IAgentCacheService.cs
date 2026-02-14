@@ -57,5 +57,13 @@ public interface IAgentCacheService
     /// <param name="key">缓存键 (Cache key)</param>
     /// <param name="cancellationToken">取消令牌 (Cancellation token)</param>
     Task RemoveAsync(string key, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 根据前缀移除缓存 (Remove cache by prefix)
+    /// 支持通配符匹配，例如 "rag:retrieval:collection_name:*"
+    /// </summary>
+    /// <param name="prefix">缓存键前缀 (Cache key prefix)</param>
+    /// <param name="cancellationToken">取消令牌 (Cancellation token)</param>
+    Task RemoveByPrefixAsync(string prefix, CancellationToken cancellationToken = default);
 }
 

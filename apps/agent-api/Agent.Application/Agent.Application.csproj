@@ -1,6 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\Agent.Core\Agent.Core.csproj" />
+    <PackageReference Include="Hangfire.Core" Version="1.8.12" />
   </ItemGroup>
 
   <PropertyGroup>
