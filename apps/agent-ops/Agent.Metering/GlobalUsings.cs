@@ -1,15 +1,27 @@
 global using Agent.Metering.eBPF;
 global using Agent.Metering.Extensions;
 global using Agent.Metering.Middleware;
+global using Agent.Metering.Pipelines;
+global using Agent.Metering.Controllers;
 global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.Extensions.Caching.Memory;
 global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Hosting;
 global using Microsoft.Extensions.Logging;
-global using OpenTelemetry; // 引入OpenTelemetry
-global using OpenTelemetry.Trace; // 引入OpenTelemetry追踪
+global using Microsoft.Extensions.Options;
+global using OpenTelemetry;
+global using OpenTelemetry.Trace;
 global using System;
 global using System.Collections.Concurrent;
+global using System.Collections.Generic;
 global using System.Diagnostics;
+global using System.IO;
 global using System.Net;
+global using System.Text;
+global using System.Text.Json;
+global using System.Text.RegularExpressions;
+global using System.Threading;
+global using System.Threading.Channels;
 global using System.Threading.Tasks;
 
