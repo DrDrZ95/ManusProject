@@ -15,12 +15,20 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IMeteringComponentRegistry, MeteringComponentRegistry>();
 
         // 注册内置日志采集与处理插件
-        // File tail receiver：从文件系统读取日志行
+        // File tail receiver：从文件系统读取日志行（可用于容器/Docker 日志）
         services.AddSingleton<IMeteringReceiver>(sp =>
         {
             var optionsMonitor = sp.GetRequiredService<IOptionsMonitor<FileTailReceiverOptions>>();
             var logger = sp.GetRequiredService<ILogger<FileTailReceiver>>();
             return new FileTailReceiver("file-tail", optionsMonitor, logger);
+        });
+
+        // Dapr Prometheus metrics receiver：抓取 Dapr sidecar 的 /metrics 端点
+        services.AddSingleton<IMeteringReceiver>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<DaprPrometheusReceiver>>();
+            var options = new DaprPrometheusOptions();
+            return new DaprPrometheusReceiver("dapr-prometheus", options, logger);
         });
 
         // 多行聚合处理器
@@ -43,6 +51,19 @@ public static class ServiceCollectionExtensions
             return new LogTransformProcessor("log-transform", options);
         });
 
+        // Kubernetes metadata enricher
+        services.AddSingleton<IMeteringProcessor>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<KubernetesMetadataProcessor>>();
+            var options = new KubernetesMetadataOptions
+            {
+                PodNameEnv = "POD_NAME",
+                NamespaceEnv = "POD_NAMESPACE",
+                NodeNameEnv = "NODE_NAME"
+            };
+            return new KubernetesMetadataProcessor("k8s-metadata", options, logger);
+        });
+
         // OTLP 风格日志导出器（依赖外部 OTLP 日志管道配置）
         services.AddSingleton<IMeteringExporter>(sp =>
         {
@@ -52,6 +73,18 @@ public static class ServiceCollectionExtensions
                 Name = "otlp-logs"
             };
             return new OtlpLogExporter("otlp-logs", options, logger);
+        });
+
+        // OTLP/HTTP 通用导出器（可用于对接 OTLP/HTTP Collector 或 Datadog OTLP ingest）
+        services.AddSingleton<IMeteringExporter>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<OtlpHttpExporter>>();
+            var options = new OtlpExporterOptions
+            {
+                Protocol = OtlpExporterProtocol.Http,
+                Endpoint = "http://127.0.0.1:4318/v1/metrics"
+            };
+            return new OtlpHttpExporter("otlp-http", options, logger);
         });
 
         // 本地调试日志导出器
@@ -65,6 +98,9 @@ public static class ServiceCollectionExtensions
             return new DebugFileLogExporter("file-debug", options, logger);
         });
 
+        // 注册 DeepSeek LoRA 微调工作流服务（用于在控制平面触发与追踪微调流程）
+        services.AddSingleton<DeepSeekLoraFinetuneWorkflow>();
+
         // 注册流水线宿主服务与健康/场景管理接口
         services.AddSingleton<MeteringPipelineHostedService>();
         services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<MeteringPipelineHostedService>());
@@ -72,5 +108,3 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IScenarioManager>(sp => sp.GetRequiredService<MeteringPipelineHostedService>());
     }
 }
-
-
