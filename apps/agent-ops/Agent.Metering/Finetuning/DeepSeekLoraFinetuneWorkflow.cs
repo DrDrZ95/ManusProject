@@ -1,71 +1,178 @@
 namespace Agent.Metering.Finetuning;
 
-public sealed class DeepSeekLoraFinetuneOptions
+public sealed class LoraFinetuneOptions
 {
+    // 0.这步是基础模型相关配置，新手可以先使用默认的 DeepSeek Coder
     public string BaseModelName { get; set; } = "deepseek-coder";
 
+    // 0.1 这步是备用模型名称，比如想切换到 Llama 时可以修改这里
     public string? AlternateBaseModelName { get; set; } = "llama-3";
 
+    // 0.2 这步是训练数据集的路径，建议使用绝对路径方便排查问题
     public string DatasetPath { get; set; } = string.Empty;
 
+    // 0.3 这步是输出目录，微调后的权重和日志都会写到这里
     public string OutputDirectory { get; set; } = string.Empty;
 
+    // 0.4 这步是最大训练步数，用于控制训练时间与成本
     public int MaxSteps { get; set; } = 1000;
 
+    // 0.5 这步是 batch size，显存不够时可以调小
     public int BatchSize { get; set; } = 4;
 
+    // 0.6 这步是学习率，数值越大收敛越快但不稳定，新手可以先用默认值
     public double LearningRate { get; set; } = 1e-4;
 
+    // 0.7 这步是 LoRA 的 rank，控制可训练参数量，越高表示表达能力越强
     public string LoraRank { get; set; } = "16";
 
+    // 0.8 这步是 LoRA 的 alpha，通常与 rank 搭配使用
     public string LoraAlpha { get; set; } = "32";
 
+    // 0.9 这步表示是否使用 4bit 量化，打开后能显著降低显存占用
     public bool Use4BitQuantization { get; set; } = true;
+
+    // 0.10 这步是 Python 可执行文件名称或路径，默认使用环境中的 python
+    public string PythonExecutable { get; set; } = "python";
+
+    // 0.11 这步是训练脚本名称，默认假设为当前工作目录下的 train_lora_unsloth.py
+    public string TrainingScript { get; set; } = "train_lora_unsloth.py";
+
+    // 0.12 这步提供一个完整的入门示例配置，开发者可以直接拷贝修改
+    public static LoraFinetuneOptions CreateSample()
+    {
+        return new LoraFinetuneOptions
+        {
+            BaseModelName = "deepseek-coder",
+            AlternateBaseModelName = "meta-llama/Meta-Llama-3-8B",
+            DatasetPath = "/data/finetune/deepseek_train.jsonl",
+            OutputDirectory = "/models/deepseek_lora_adapter",
+            MaxSteps = 800,
+            BatchSize = 4,
+            LearningRate = 1e-4,
+            LoraRank = "16",
+            LoraAlpha = "32",
+            Use4BitQuantization = true,
+            PythonExecutable = "python",
+            TrainingScript = "train_lora_unsloth.py"
+        };
+    }
 }
 
-public sealed class DeepSeekLoraFinetuneWorkflow
+public sealed class LoraFinetuneProcessRunner
 {
-    private readonly ILogger<DeepSeekLoraFinetuneWorkflow> _logger;
+    private readonly ILogger<LoraFinetuneProcessRunner> _logger;
 
-    public DeepSeekLoraFinetuneWorkflow(ILogger<DeepSeekLoraFinetuneWorkflow> logger)
+    public LoraFinetuneProcessRunner(ILogger<LoraFinetuneProcessRunner> logger)
     {
         _logger = logger;
     }
 
-    public async Task RunAsync(DeepSeekLoraFinetuneOptions options, IProgress<string>? progress, CancellationToken cancellationToken)
+    // 1.这步是对外暴露的主入口，用于启动一次 LoRA 微调流程
+    //   - options: 微调需要的所有参数
+    //   - progress: 用于向调用方报告当前执行到哪一步（可选）
+    //   - cancellationToken: 用于在外部需要时取消训练进程
+    public async Task<int> RunAsync(LoraFinetuneOptions options, IProgress<string>? progress, CancellationToken cancellationToken)
     {
         progress ??= new Progress<string>(_ => { });
 
-        // 1.这步实现了基础参数检查与准备，确保路径与超参数在合理范围内
+        // 1.1 这步实现了基础参数检查与准备，确保路径与超参数在合理范围内
         ValidateOptions(options);
         progress.Report("1. 已完成基础参数检查与准备。");
 
-        // 2.这步实现了微调数据集的前置准备（格式、清洗、切分）
+        // 2.这步实现了微调数据集的前置说明与建议，帮助新手理解数据准备流程
         await PrepareDatasetAsync(options, progress, cancellationToken);
-        progress.Report("2. 已完成数据集预处理与切分。");
+        progress.Report("2. 已完成数据集预处理与切分建议输出。");
 
-        // 3.这步实现了 LoRA + unsloth 环境的配置说明（通过脚本或外部环境准备）
+        // 3.这步实现了 LoRA + unsloth 环境准备说明，涵盖依赖安装与显存需求
         await DescribeEnvironmentAsync(options, progress, cancellationToken);
         progress.Report("3. 已完成 LoRA + unsloth 训练环境配置步骤说明。");
 
-        // 4.这步实现了启动微调训练脚本的命令拼装（包含 DeepSeek 与 Llama 模型参数）
-        var commandLine = BuildTrainingCommandLine(options);
-        progress.Report("4. 已生成 LoRA+unsloth 微调命令行示例。");
+        // 4.这步实现了实际要执行的 Python 命令拼装，并通过 Process 启动训练
+        var arguments = BuildTrainingArguments(options);
+        progress.Report("4. 已生成 LoRA+unsloth 微调命令行参数。");
 
-        // 5.这步实现了对训练过程的监控说明（日志、指标与中间结果检查）
-        await DescribeMonitoringAsync(options, commandLine, progress, cancellationToken);
+        // 4.1 这步创建了 ProcessStartInfo，用于以受控方式启动 Python 训练脚本
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = options.PythonExecutable,
+            Arguments = arguments,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        using var process = new Process
+        {
+            StartInfo = startInfo,
+            EnableRaisingEvents = true
+        };
+
+        // 4.2 这步为新手展示如何订阅标准输出，将训练日志实时打印出来
+        process.OutputDataReceived += (_, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+            {
+                progress.Report($"[stdout] {e.Data}");
+            }
+        };
+
+        // 4.3 这步用于捕获标准错误输出，把潜在的错误信息暴露给调用方
+        process.ErrorDataReceived += (_, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+            {
+                progress.Report($"[stderr] {e.Data}");
+            }
+        };
+
+        // 4.4 这步在取消信号触发时尝试安全终止训练进程，避免僵尸进程
+        using var registration = cancellationToken.Register(() =>
+        {
+            try
+            {
+                if (!process.HasExited)
+                {
+                    process.Kill();
+                }
+            }
+            catch
+            {
+            }
+        });
+
+        progress.Report("4. 即将启动 Python 训练进程。");
+
+        if (!process.Start())
+        {
+            throw new InvalidOperationException("无法启动微调训练进程，请检查 Python 与脚本配置。");
+        }
+
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+
+        // 4.5 这步等待训练进程结束，并返回退出码，0 通常表示执行成功
+        await process.WaitForExitAsync(cancellationToken);
+        var exitCode = process.ExitCode;
+        progress.Report($"4. 训练进程已结束，退出码为 {exitCode}。");
+
+        // 5.这步实现了对训练过程监控与中间结果的说明，帮助理解如何评估效果
+        await DescribeMonitoringAsync(options, $"{options.PythonExecutable} {arguments}", progress, cancellationToken);
         progress.Report("5. 已输出训练过程监控与中间结果检查建议。");
 
-        // 6.这步实现了微调产物的整理与导出流程（权重、适配器、日志与指标）
+        // 6.这步实现了微调产物整理与导出的一般建议，方便模型落盘与部署
         await DescribeArtifactsAsync(options, progress, cancellationToken);
         progress.Report("6. 已说明微调产物的导出与落盘结构。");
 
-        // 7.这步实现了与 Agent.Metering / 观测系统集成的建议（指标与日志回流）
+        // 7.这步实现了与观测系统和推理服务的集成建议，帮助串联完整链路
         await DescribeIntegrationAsync(options, progress, cancellationToken);
         progress.Report("7. 已输出与 Agent.Metering 以及下游观测系统集成的建议。");
+
+        return exitCode;
     }
 
-    private static void ValidateOptions(DeepSeekLoraFinetuneOptions options)
+    private static void ValidateOptions(LoraFinetuneOptions options)
     {
         if (string.IsNullOrWhiteSpace(options.DatasetPath))
         {
@@ -93,7 +200,7 @@ public sealed class DeepSeekLoraFinetuneWorkflow
         }
     }
 
-    private Task PrepareDatasetAsync(DeepSeekLoraFinetuneOptions options, IProgress<string> progress, CancellationToken cancellationToken)
+    private Task PrepareDatasetAsync(LoraFinetuneOptions options, IProgress<string> progress, CancellationToken cancellationToken)
     {
         // 2.1 这步实现了对原始数据集路径的说明与检查（如 JSONL/Parquet）
         progress.Report($"2.1 将从数据集路径 {options.DatasetPath} 读取原始训练样本。");
@@ -110,7 +217,7 @@ public sealed class DeepSeekLoraFinetuneWorkflow
         return Task.CompletedTask;
     }
 
-    private Task DescribeEnvironmentAsync(DeepSeekLoraFinetuneOptions options, IProgress<string> progress, CancellationToken cancellationToken)
+    private Task DescribeEnvironmentAsync(LoraFinetuneOptions options, IProgress<string> progress, CancellationToken cancellationToken)
     {
         // 3.1 这步实现了安装 unsloth 与所需依赖库的建议命令行说明
         progress.Report("3.1 建议在 Python 环境中安装 unsloth 与 transformers、accelerate、bitsandbytes 等依赖。");
@@ -127,29 +234,26 @@ public sealed class DeepSeekLoraFinetuneWorkflow
         return Task.CompletedTask;
     }
 
-    private string BuildTrainingCommandLine(DeepSeekLoraFinetuneOptions options)
+    private string BuildTrainingArguments(LoraFinetuneOptions options)
     {
         var builder = new StringBuilder();
 
-        // 4.1 这步实现了 Python 微调脚本的基本入口命令构建
-        builder.Append("python train_lora_unsloth.py");
-
-        // 4.2 这步实现了基础模型名称的参数拼装，支持 DeepSeek 与 Llama 等模型
+        // 4.1 这步实现了基础模型名称的参数拼装，支持 DeepSeek 与 Llama 等模型
         builder.Append(" ");
         builder.Append("--base_model ");
         builder.Append(EscapeShell(options.BaseModelName));
 
-        // 4.3 这步实现了数据集路径参数的拼装，指向预处理后的训练数据
+        // 4.2 这步实现了数据集路径参数的拼装，指向预处理后的训练数据
         builder.Append(" ");
         builder.Append("--dataset_path ");
         builder.Append(EscapeShell(options.DatasetPath));
 
-        // 4.4 这步实现了输出目录参数的拼装，用于保存 LoRA 适配器与配置
+        // 4.3 这步实现了输出目录参数的拼装，用于保存 LoRA 适配器与配置
         builder.Append(" ");
         builder.Append("--output_dir ");
         builder.Append(EscapeShell(options.OutputDirectory));
 
-        // 4.5 这步实现了训练超参数（步数、batch size、学习率）的拼装
+        // 4.4 这步实现了训练超参数（步数、batch size、学习率）的拼装
         builder.Append(" ");
         builder.Append("--max_steps ");
         builder.Append(options.MaxSteps.ToString(CultureInfo.InvariantCulture));
@@ -162,7 +266,7 @@ public sealed class DeepSeekLoraFinetuneWorkflow
         builder.Append("--learning_rate ");
         builder.Append(options.LearningRate.ToString(CultureInfo.InvariantCulture));
 
-        // 4.6 这步实现了 LoRA 相关参数的拼装，例如 rank 与 alpha
+        // 4.5 这步实现了 LoRA 相关参数的拼装，例如 rank 与 alpha
         builder.Append(" ");
         builder.Append("--lora_rank ");
         builder.Append(EscapeShell(options.LoraRank));
@@ -171,16 +275,16 @@ public sealed class DeepSeekLoraFinetuneWorkflow
         builder.Append("--lora_alpha ");
         builder.Append(EscapeShell(options.LoraAlpha));
 
-        // 4.7 这步实现了 4bit 量化开关参数的拼装，结合 unsloth 的高效加载能力
+        // 4.6 这步实现了 4bit 量化开关参数的拼装，结合 unsloth 的高效加载能力
         if (options.Use4BitQuantization)
         {
             builder.Append(" --use_4bit");
         }
 
-        return builder.ToString();
+        return $"{EscapeShell(options.TrainingScript)} {builder}";
     }
 
-    private Task DescribeMonitoringAsync(DeepSeekLoraFinetuneOptions options, string commandLine, IProgress<string> progress, CancellationToken cancellationToken)
+    private Task DescribeMonitoringAsync(LoraFinetuneOptions options, string commandLine, IProgress<string> progress, CancellationToken cancellationToken)
     {
         // 5.1 这步实现了通过日志流监控训练进度与损失变化的建议
         progress.Report("5.1 建议在训练脚本中定期输出 step/loss/learning_rate 等指标到标准输出与日志文件。");
@@ -197,7 +301,7 @@ public sealed class DeepSeekLoraFinetuneWorkflow
         return Task.CompletedTask;
     }
 
-    private Task DescribeArtifactsAsync(DeepSeekLoraFinetuneOptions options, IProgress<string> progress, CancellationToken cancellationToken)
+    private Task DescribeArtifactsAsync(LoraFinetuneOptions options, IProgress<string> progress, CancellationToken cancellationToken)
     {
         // 6.1 这步实现了微调后 LoRA 适配器权重输出位置的说明
         progress.Report($"6.1 建议将 LoRA 适配器权重保存在输出目录 {options.OutputDirectory}/lora_adapter 中。");
@@ -214,7 +318,7 @@ public sealed class DeepSeekLoraFinetuneWorkflow
         return Task.CompletedTask;
     }
 
-    private Task DescribeIntegrationAsync(DeepSeekLoraFinetuneOptions options, IProgress<string> progress, CancellationToken cancellationToken)
+    private Task DescribeIntegrationAsync(LoraFinetuneOptions options, IProgress<string> progress, CancellationToken cancellationToken)
     {
         // 7.1 这步实现了将训练过程指标暴露为 OTLP metrics 的建议
         progress.Report("7.1 建议在训练脚本中通过 OTLP 或 Prometheus 将关键指标暴露给 Agent.Metering。");
@@ -246,4 +350,3 @@ public sealed class DeepSeekLoraFinetuneWorkflow
         return value;
     }
 }
-

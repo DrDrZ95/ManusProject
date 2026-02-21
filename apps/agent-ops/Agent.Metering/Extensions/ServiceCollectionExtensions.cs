@@ -98,8 +98,8 @@ public static class ServiceCollectionExtensions
             return new DebugFileLogExporter("file-debug", options, logger);
         });
 
-        // 注册 DeepSeek LoRA 微调工作流服务（用于在控制平面触发与追踪微调流程）
-        services.AddSingleton<DeepSeekLoraFinetuneWorkflow>();
+        // 注册通用 LoRA 微调流程运行器（用于在控制平面触发与追踪微调流程）
+        services.AddSingleton<LoraFinetuneProcessRunner>();
 
         // 注册流水线宿主服务与健康/场景管理接口
         services.AddSingleton<MeteringPipelineHostedService>();
