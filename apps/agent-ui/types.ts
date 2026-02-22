@@ -83,6 +83,7 @@ export interface Settings {
   streamResponses: boolean;
   soundEffects: boolean;
   allowTraining: boolean;
+  theme: 'light' | 'dark';
 }
 
 /**

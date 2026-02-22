@@ -21,28 +21,28 @@ const ContextMenu = ({ x, y, onClose, actions }: any) => {
   return (
     <div 
       ref={menuRef}
-      className="fixed z-[100] w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/50 py-2 text-sm animate-fadeIn"
+      className="fixed z-[100] w-56 bg-white/95 dark:bg-[#1E1F20]/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/50 dark:border-[#444746]/50 py-2 text-sm animate-fadeIn"
       style={{ top: Math.min(y, window.innerHeight - 300), left: Math.min(x, window.innerWidth - 240) }}
     >
       {actions.filter(Boolean).map((action: any, idx: number) => {
         if (action.separator) {
-          return <div key={idx} className="h-px bg-gray-100 my-1.5 mx-2" />;
+          return <div key={idx} className="h-px bg-gray-100 dark:bg-[#444746] my-1.5 mx-2" />;
         }
 
         if (action.subMenu) {
           return (
             <div key={idx} className="relative group/submenu">
-              <button className="w-full px-4 py-2.5 text-left flex items-center gap-3 hover:bg-gray-50 text-gray-700 font-bold transition-colors">
-                {action.icon && <action.icon className="w-4 h-4 text-gray-400" />}
+              <button className="w-full px-4 py-2.5 text-left flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-[#333537] text-gray-700 dark:text-[#E3E3E3] font-bold transition-colors">
+                {action.icon && <action.icon className="w-4 h-4 text-gray-400 dark:text-[#C4C7C5]" />}
                 <span className="flex-1">{action.label}</span>
-                <Icons.ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                <Icons.ChevronRight className="w-3.5 h-3.5 text-gray-400 dark:text-[#C4C7C5]" />
               </button>
-              <div className="absolute left-full top-0 -ml-1 w-48 bg-white rounded-2xl shadow-2xl border border-gray-200 py-1.5 hidden group-hover/submenu:block">
+              <div className="absolute left-full top-0 -ml-1 w-48 bg-white dark:bg-[#1E1F20] rounded-2xl shadow-2xl border border-gray-200 dark:border-[#444746] py-1.5 hidden group-hover/submenu:block">
                 {action.subMenu.filter(Boolean).map((sub: any, sidx: number) => (
                   <button 
                     key={sidx} 
                     onClick={() => { sub.onClick(); onClose(); }} 
-                    className="w-full px-4 py-2 text-left hover:bg-gray-50 text-[11px] font-black truncate text-gray-500 hover:text-black transition-colors"
+                    className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-[#333537] text-[11px] font-black truncate text-gray-500 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white transition-colors"
                   >
                     {sub.label || "Untitled"}
                   </button>
@@ -60,10 +60,10 @@ const ContextMenu = ({ x, y, onClose, actions }: any) => {
             onClick={() => { action.onClick?.(); onClose(); }} 
             className={clsx(
               "w-full px-4 py-2.5 text-left flex items-center gap-3 font-bold transition-colors", 
-              action.danger ? "text-red-600 hover:bg-red-50" : "text-gray-700 hover:bg-gray-50"
+              action.danger ? "text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" : "text-gray-700 dark:text-[#E3E3E3] hover:bg-gray-50 dark:hover:bg-[#333537]"
             )}
           >
-            {action.icon && <action.icon className={clsx("w-4 h-4", action.danger ? "text-red-500" : "text-gray-400")} />}
+            {action.icon && <action.icon className={clsx("w-4 h-4", action.danger ? "text-red-500" : "text-gray-400 dark:text-[#C4C7C5]")} />}
             <span>{action.label}</span>
           </button>
         );
@@ -142,18 +142,18 @@ const NavItem: React.FC<NavItemProps> = ({
           className={clsx(
             "w-full h-10 flex items-center rounded-xl transition-all duration-200 relative border border-transparent",
             isSlim ? "justify-center px-0" : "px-2 gap-3",
-            isActive ? "bg-gray-200/50 text-black font-black" : "text-gray-600 hover:bg-gray-200/30",
+            isActive ? "bg-gray-200/50 dark:bg-[#004A77] text-black dark:text-[#E3E3E3] font-black" : "text-gray-600 dark:text-[#C4C7C5] hover:bg-gray-200/30 dark:hover:bg-[#333537]",
             isSubItem && !isSlim && "h-9",
-            isDragOver && "bg-blue-50 border-blue-300 shadow-inner"
+            isDragOver && "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 shadow-inner"
           )}
         >
           {group ? (
             <ProjectMarker group={group} isSlim={isSlim} />
           ) : Icon ? (
-            <Icon className={clsx(isSlim ? "w-5 h-5" : "w-4 h-4", "shrink-0", isActive ? "text-black" : "text-gray-400 group-hover:text-black")} />
+            <Icon className={clsx(isSlim ? "w-5 h-5" : "w-4 h-4", "shrink-0", isActive ? "text-black dark:text-[#E3E3E3]" : "text-gray-400 dark:text-[#C4C7C5] group-hover:text-black dark:group-hover:text-white")} />
           ) : (
             isSlim ? (
-              <div className={clsx("w-8 h-8 rounded-lg flex items-center justify-center transition-colors", isActive ? "bg-black text-white" : "bg-gray-100 text-gray-400")}>
+              <div className={clsx("w-8 h-8 rounded-lg flex items-center justify-center transition-colors", isActive ? "bg-black dark:bg-white text-white dark:text-black" : "bg-gray-100 dark:bg-[#333537] text-gray-400 dark:text-[#C4C7C5]")}>
                 <Icons.Chat className="w-4 h-4" />
               </div>
             ) : null
@@ -164,7 +164,7 @@ const NavItem: React.FC<NavItemProps> = ({
               {isEditing ? (
                 <input 
                   autoFocus 
-                  className="w-full bg-transparent outline-none text-sm font-black border-b-2 border-black/10 focus:border-black py-0.5"
+                  className="w-full bg-transparent outline-none text-sm font-black border-b-2 border-black/10 dark:border-white/10 focus:border-black dark:focus:border-white py-0.5 text-black dark:text-[#E3E3E3]"
                   value={editValue}
                   onChange={(e) => onEditChange?.(e.target.value)}
                   onBlur={() => onEditSubmit?.()}
@@ -182,7 +182,7 @@ const NavItem: React.FC<NavItemProps> = ({
               
               {/* Expand/Collapse Icon moved to the right */}
               {group && !isEditing && (
-                  <div className="text-gray-400 transition-transform duration-200 ml-2">
+                  <div className="text-gray-400 dark:text-[#C4C7C5] transition-transform duration-200 ml-2">
                        {group.collapsed ? <Icons.ChevronLeft className="w-4 h-4" /> : <Icons.ChevronDown className="w-4 h-4" />}
                   </div>
               )}
@@ -191,7 +191,7 @@ const NavItem: React.FC<NavItemProps> = ({
     
           {isActive && !isEditing && (
             <div className={clsx(
-              "absolute top-1/2 -translate-y-1/2 w-1 h-4 bg-black rounded-r-full shadow-sm shadow-black/20",
+              "absolute top-1/2 -translate-y-1/2 w-1 h-4 bg-black dark:bg-[#A8C7FA] rounded-r-full shadow-sm shadow-black/20 dark:shadow-white/20",
               isSlim ? "left-0" : isSubItem ? "-left-[1px]" : "left-0"
             )} />
           )}
@@ -204,7 +204,7 @@ const NavItem: React.FC<NavItemProps> = ({
               onActionClick?.(e);
             }}
             className={clsx(
-                "absolute top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-black opacity-0 group-hover/item:opacity-100 transition-opacity rounded-md hover:bg-white z-10",
+                "absolute top-1/2 -translate-y-1/2 p-1 text-gray-400 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white opacity-0 group-hover/item:opacity-100 transition-opacity rounded-md hover:bg-white dark:hover:bg-[#333537] z-10",
                 group ? "right-10" : "right-4"
             )}
           >
@@ -350,7 +350,7 @@ export const Sidebar: React.FC = () => {
     <div className="relative group/slim-item w-full flex justify-center py-2">
        <button 
          onClick={onClick}
-         className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100 hover:bg-black hover:text-white text-gray-500 transition-all active:scale-95 shadow-sm"
+         className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-[#1E1F20] hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black text-gray-500 dark:text-[#C4C7C5] transition-all active:scale-95 shadow-sm"
        >
           <Icon className="w-5 h-5" />
        </button>
@@ -358,8 +358,8 @@ export const Sidebar: React.FC = () => {
        {/* Flyout Menu - Updated to be on the right side and prevent disappearance */}
        {children && (
          <div className="absolute left-full top-0 pl-4 hidden group-hover/slim-item:block z-50">
-            <div className="w-64 bg-white border border-gray-100 rounded-2xl shadow-2xl p-2 animate-fadeIn origin-top-left max-h-[80vh] overflow-y-auto custom-scrollbar">
-                <div className="px-3 py-2 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1">
+            <div className="w-64 bg-white dark:bg-[#1E1F20] border border-gray-100 dark:border-[#444746] rounded-2xl shadow-2xl p-2 animate-fadeIn origin-top-left max-h-[80vh] overflow-y-auto custom-scrollbar">
+                <div className="px-3 py-2 text-xs font-black text-gray-400 dark:text-[#C4C7C5] uppercase tracking-widest border-b border-gray-50 dark:border-[#444746] mb-1">
                     {label}
                 </div>
                 {children}
@@ -374,7 +374,7 @@ export const Sidebar: React.FC = () => {
       layout
       animate={{ width: isSlim ? 72 : sidebarWidth }}
       transition={{ duration: isResizing ? 0 : 0.35, ease: [0.4, 0, 0.2, 1] }}
-      className="flex flex-col bg-[#F9FAFB] border-r border-gray-200 h-full select-none z-10 relative shrink-0"
+      className="flex flex-col bg-[#F9FAFB] dark:bg-[#1E1F20] border-r border-gray-200 dark:border-[#444746] h-full select-none z-10 relative shrink-0"
     >
       {/* Header */}
       <div className="h-16 flex items-center justify-between px-5 shrink-0 overflow-hidden">
@@ -384,17 +384,17 @@ export const Sidebar: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-3 flex-1 overflow-hidden"
           >
-            <div className="w-8 h-8 bg-black text-white rounded-xl flex items-center justify-center shadow-lg shrink-0">
+            <div className="w-8 h-8 bg-black dark:bg-white text-white dark:text-black rounded-xl flex items-center justify-center shadow-lg shrink-0">
               <Icons.Zap className="w-5 h-5" fill="currentColor" />
             </div>
-            <span className="font-black text-xl tracking-tighter text-black uppercase truncate">Agent</span>
+            <span className="font-black text-xl tracking-tighter text-black dark:text-white uppercase truncate">Agent</span>
           </motion.div>
         )}
         
         <button 
             onClick={(e) => { e.stopPropagation(); store.toggleSidebar(); }}
             className={clsx(
-              "w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center shadow-lg hover:bg-gray-800 transition-all hover:scale-105 active:scale-95 shrink-0",
+              "w-10 h-10 bg-black dark:bg-[#28292A] text-white dark:text-[#E3E3E3] rounded-xl flex items-center justify-center shadow-lg hover:bg-gray-800 dark:hover:bg-[#333537] transition-all hover:scale-105 active:scale-95 shrink-0 border border-transparent dark:border-[#444746]",
               isSlim ? "mx-auto" : ""
             )}
         >
@@ -412,7 +412,7 @@ export const Sidebar: React.FC = () => {
         <button 
           onClick={store.createNewSession} 
           className={clsx(
-            "bg-black text-white flex items-center justify-center transition-all hover:bg-gray-800 rounded-xl shadow-xl active:scale-[0.98] border border-white/5",
+            "bg-black dark:bg-[#28292A] text-white dark:text-[#E3E3E3] flex items-center justify-center transition-all hover:bg-gray-800 dark:hover:bg-[#333537] rounded-xl shadow-xl active:scale-[0.98] border border-white/5 dark:border-[#444746]",
             isSlim ? "w-11 h-11 mx-auto" : "w-full h-11 gap-2"
           )}
           title={isSlim ? t.newChat : undefined}
@@ -429,12 +429,12 @@ export const Sidebar: React.FC = () => {
             className={clsx(
                 "flex items-center justify-center transition-all active:scale-[0.98] border border-transparent",
                  isSlim 
-                   ? "w-11 h-11 mx-auto rounded-xl hover:bg-gray-200/50 text-gray-500 bg-white shadow-sm" 
-                   : "w-full h-10 gap-3 px-4 text-left rounded-xl hover:bg-gray-200/50 text-gray-500 hover:text-black font-bold"
+                   ? "w-11 h-11 mx-auto rounded-xl hover:bg-gray-200/50 dark:hover:bg-[#333537] text-gray-500 dark:text-[#C4C7C5] bg-white dark:bg-[#1E1F20] shadow-sm" 
+                   : "w-full h-10 gap-3 px-4 text-left rounded-xl hover:bg-gray-200/50 dark:hover:bg-[#333537] text-gray-500 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white font-bold"
             )}
             title={isSlim ? t.search : undefined}
          >
-             <Icons.Search className={clsx("w-5 h-5", !isSlim && "text-gray-400")} />
+             <Icons.Search className={clsx("w-5 h-5", !isSlim && "text-gray-400 dark:text-[#C4C7C5]")} />
              {!isSlim && <span>{t.search}</span>}
          </button>
       </div>
@@ -454,7 +454,7 @@ export const Sidebar: React.FC = () => {
                 <div>
                    <div 
                       onClick={() => setIsProjectsCollapsed(!isProjectsCollapsed)}
-                      className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-4 mb-2 flex justify-between items-center opacity-60 hover:opacity-100 transition-opacity cursor-pointer group/header"
+                      className="text-[10px] font-black text-gray-400 dark:text-[#C4C7C5] uppercase tracking-[0.2em] px-4 mb-2 flex justify-between items-center opacity-60 hover:opacity-100 transition-opacity cursor-pointer group/header"
                    >
                       <div className="flex items-center gap-2">
                          <Icons.ChevronDown className={clsx("w-3.5 h-3.5 transition-transform", isProjectsCollapsed ? "-rotate-90" : "rotate-0")} />
@@ -462,7 +462,7 @@ export const Sidebar: React.FC = () => {
                       </div>
                       <button 
                          onClick={(e) => { e.stopPropagation(); store.createGroup(uuidv4(), t.untitledGroup); }} 
-                         className="hover:text-black transition-all p-1 hover:bg-gray-200 rounded-md"
+                         className="hover:text-black dark:hover:text-white transition-all p-1 hover:bg-gray-200 dark:hover:bg-[#333537] rounded-md"
                       >
                           <Icons.Plus className="w-3.5 h-3.5" />
                       </button>
@@ -488,7 +488,7 @@ export const Sidebar: React.FC = () => {
                               {group.title || t.untitledGroup}
                             </NavItem>
                             {!group.collapsed && (
-                               <div className="ml-[20px] border-l-2 border-gray-200 mt-1 pl-3 space-y-0.5 mb-5 pr-1 relative">
+                               <div className="ml-[20px] border-l-2 border-gray-200 dark:border-[#444746] mt-1 pl-3 space-y-0.5 mb-5 pr-1 relative">
                                   {sessions.map(s => (
                                     <NavItem 
                                       key={s.id} 
@@ -518,7 +518,7 @@ export const Sidebar: React.FC = () => {
                 <div>
                    <div 
                       onClick={() => setIsRecentCollapsed(!isRecentCollapsed)}
-                      className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-4 mb-2 flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+                      className="text-[10px] font-black text-gray-400 dark:text-[#C4C7C5] uppercase tracking-[0.2em] px-4 mb-2 flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
                    >
                       <Icons.ChevronDown className={clsx("w-3.5 h-3.5 transition-transform", isRecentCollapsed ? "-rotate-90" : "rotate-0")} />
                       <span>{t.recent}</span>
@@ -528,7 +528,7 @@ export const Sidebar: React.FC = () => {
                       animate={{ height: isRecentCollapsed ? 0 : 'auto', opacity: isRecentCollapsed ? 0 : 1 }}
                       className="overflow-hidden space-y-0.5 relative"
                    >
-                      <div className="ml-[20px] border-l-2 border-gray-200 mt-1 pl-3 space-y-0.5 mb-5 pr-1 relative">
+                      <div className="ml-[20px] border-l-2 border-gray-200 dark:border-[#444746] mt-1 pl-3 space-y-0.5 mb-5 pr-1 relative">
                         {ungrouped.map(s => (
                           <NavItem 
                             key={s.id} 
@@ -567,10 +567,10 @@ export const Sidebar: React.FC = () => {
                               <button
                                 key={g.id}
                                 onClick={(e) => handleSlimProjectClick(e, g)}
-                                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors text-left group/item"
+                                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-[#333537] transition-colors text-left group/item"
                               >
                                   <ProjectMarker group={g} />
-                                  <span className="text-sm font-bold text-gray-700 truncate flex-1">{g.title || t.untitledGroup}</span>
+                                  <span className="text-sm font-bold text-gray-700 dark:text-[#E3E3E3] truncate flex-1">{g.title || t.untitledGroup}</span>
                               </button>
                           ))}
                       </div>
@@ -589,7 +589,7 @@ export const Sidebar: React.FC = () => {
                                 onClick={(e) => { e.stopPropagation(); store.selectSession(s.id); }}
                                 className={clsx(
                                     "w-full text-left p-2 rounded-lg text-xs font-bold truncate transition-colors",
-                                    s.id === store.currentSessionId ? "bg-black text-white" : "text-gray-600 hover:bg-gray-100"
+                                    s.id === store.currentSessionId ? "bg-black dark:bg-[#004A77] text-white dark:text-[#E3E3E3]" : "text-gray-600 dark:text-[#C4C7C5] hover:bg-gray-100 dark:hover:bg-[#333537]"
                                 )}
                             >
                                 {s.title || "Untitled Chat"}
@@ -608,7 +608,7 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* User Section */}
-      <div className="p-2 border-t border-gray-200 bg-[#F9FAFB] shrink-0 relative" ref={userMenuRef}>
+      <div className="p-2 border-t border-gray-200 dark:border-[#444746] bg-[#F9FAFB] dark:bg-[#1E1F20] shrink-0 relative" ref={userMenuRef}>
          <AnimatePresence>
          {showUserMenu && (
            <motion.div 
@@ -616,33 +616,33 @@ export const Sidebar: React.FC = () => {
              animate={{ opacity: 1, x: 0, y: 0, scale: 1 }} 
              exit={{ opacity: 0, x: isSlim ? 10 : 0, y: 10, scale: 0.95 }}
              className={clsx(
-                "absolute bottom-full bg-white rounded-[22px] shadow-[0_15px_45px_-12px_rgba(0,0,0,0.15)] border border-gray-200 py-1.5 mb-3 z-[100] text-[13px] overflow-hidden whitespace-nowrap",
+                "absolute bottom-full bg-white dark:bg-[#1E1F20] rounded-[22px] shadow-[0_15px_45px_-12px_rgba(0,0,0,0.15)] border border-gray-200 dark:border-[#444746] py-1.5 mb-3 z-[100] text-[13px] overflow-hidden whitespace-nowrap",
                 isSlim ? "left-14 w-52" : "left-2.5 right-2.5"
              )}
            >
-              <div className="px-4 py-2 mb-1 border-b border-gray-50 bg-gray-50/50">
-                  <div className="font-black text-black text-xs truncate">{store.user?.name}</div>
-                  <div className="text-[10px] text-gray-400 font-bold truncate mt-0.5">{store.user?.email}</div>
+              <div className="px-4 py-2 mb-1 border-b border-gray-50 dark:border-[#444746] bg-gray-50/50 dark:bg-[#1E1F20]/50">
+                  <div className="font-black text-black dark:text-white text-xs truncate">{store.user?.name}</div>
+                  <div className="text-[10px] text-gray-400 dark:text-[#C4C7C5] font-bold truncate mt-0.5">{store.user?.email}</div>
               </div>
-              <button onClick={() => { setShowUserMenu(false); store.setActiveModal('account'); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2.5 font-bold text-gray-700 transition-colors">
-                <Icons.User className="w-3.5 h-3.5 text-gray-400" /> 
+              <button onClick={() => { setShowUserMenu(false); store.setActiveModal('account'); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-[#333537] flex items-center gap-2.5 font-bold text-gray-700 dark:text-[#E3E3E3] transition-colors">
+                <Icons.User className="w-3.5 h-3.5 text-gray-400 dark:text-[#C4C7C5]" /> 
                 <span>{t.account}</span>
               </button>
-              <button onClick={() => { setShowUserMenu(false); store.setActiveModal('settings'); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2.5 font-bold text-gray-700 transition-colors">
-                <Icons.Settings className="w-3.5 h-3.5 text-gray-400" /> 
+              <button onClick={() => { setShowUserMenu(false); store.setActiveModal('settings'); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-[#333537] flex items-center gap-2.5 font-bold text-gray-700 dark:text-[#E3E3E3] transition-colors">
+                <Icons.Settings className="w-3.5 h-3.5 text-gray-400 dark:text-[#C4C7C5]" /> 
                 <span>{t.settings}</span>
               </button>
-              <button onClick={() => { setShowUserMenu(false); store.setActiveModal('help'); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2.5 font-bold text-gray-700 transition-colors">
-                <Icons.Help className="w-3.5 h-3.5 text-gray-400" /> 
+              <button onClick={() => { setShowUserMenu(false); store.setActiveModal('help'); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-[#333537] flex items-center gap-2.5 font-bold text-gray-700 dark:text-[#E3E3E3] transition-colors">
+                <Icons.Help className="w-3.5 h-3.5 text-gray-400 dark:text-[#C4C7C5]" /> 
                 <span>{t.getHelp}</span>
               </button>
-              <div className="h-px bg-gray-100 my-1 mx-4" />
-              <button onClick={() => { setShowUserMenu(false); store.setActiveModal('upgrade'); }} className="w-full px-4 py-2 text-left hover:bg-yellow-50 flex items-center gap-2.5 font-bold text-yellow-700 transition-colors">
+              <div className="h-px bg-gray-100 dark:bg-[#444746] my-1 mx-4" />
+              <button onClick={() => { setShowUserMenu(false); store.setActiveModal('upgrade'); }} className="w-full px-4 py-2 text-left hover:bg-yellow-50 dark:hover:bg-yellow-900/20 flex items-center gap-2.5 font-bold text-yellow-700 dark:text-yellow-500 transition-colors">
                 <Icons.CreditCard className="w-3.5 h-3.5 text-yellow-500" /> 
                 <span>{t.upgradeSubscription}</span>
               </button>
-              <div className="h-px bg-gray-100 my-1 mx-4" />
-              <button onClick={() => { setShowUserMenu(false); store.logout(); }} className="w-full px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center gap-2.5 font-bold transition-colors">
+              <div className="h-px bg-gray-100 dark:bg-[#444746] my-1 mx-4" />
+              <button onClick={() => { setShowUserMenu(false); store.logout(); }} className="w-full px-4 py-2 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center gap-2.5 font-bold transition-colors">
                 <Icons.LogOut className="w-3.5 h-3.5" /> 
                 <span>{t.signOut}</span>
               </button>
@@ -656,11 +656,11 @@ export const Sidebar: React.FC = () => {
               setShowUserMenu(!showUserMenu);
            }} 
            className={clsx(
-             "flex items-center gap-2.5 p-1.5 rounded-xl transition-all hover:bg-gray-200/50 w-full active:scale-[0.98]",
+             "flex items-center gap-2.5 p-1.5 rounded-xl transition-all hover:bg-gray-200/50 dark:hover:bg-[#333537] w-full active:scale-[0.98]",
              isSlim ? "justify-center" : ""
            )}
          >
-            <div className="w-11 h-11 md:w-8 md:h-8 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 flex items-center justify-center text-gray-600 shadow-sm border-2 border-white shrink-0 relative overflow-hidden transition-all">
+            <div className="w-11 h-11 md:w-8 md:h-8 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center text-gray-600 dark:text-[#C4C7C5] shadow-sm border-2 border-white dark:border-[#444746] shrink-0 relative overflow-hidden transition-all">
               {store.user?.avatar ? (
                   <img src={store.user.avatar} className="w-full h-full object-cover filter grayscale" />
               ) : (
@@ -669,8 +669,8 @@ export const Sidebar: React.FC = () => {
             </div>
             {!isSlim && (
               <div className="flex-1 text-left overflow-hidden">
-                <div className="text-[12px] font-bold text-black truncate leading-tight">{store.user?.name || "Agent 用户"}</div>
-                <div className="text-[9px] text-gray-400 font-bold truncate leading-none mt-0.5">{store.user?.email}</div>
+                <div className="text-[12px] font-bold text-black dark:text-[#E3E3E3] truncate leading-tight">{store.user?.name || "Agent 用户"}</div>
+                <div className="text-[9px] text-gray-400 dark:text-[#C4C7C5] font-bold truncate leading-none mt-0.5">{store.user?.email}</div>
               </div>
             )}
          </button>

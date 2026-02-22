@@ -45,7 +45,8 @@ export const useStore = create<ExtendedAppState>((set, get) => {
     settings: {
       streamResponses: true,
       soundEffects: true,
-      allowTraining: false
+      allowTraining: false,
+      theme: 'light'
     },
     sessions: MOCK_SESSIONS,
     groups: [], 

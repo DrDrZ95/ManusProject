@@ -132,10 +132,10 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
     <>
     <div className="w-full max-w-[95%] lg:max-w-5xl mx-auto relative">
       <div className={clsx(
-        "relative group bg-white rounded-[26px] border transition-all duration-300 ease-out",
+        "relative group bg-white dark:bg-[#1E1F20] rounded-[26px] border transition-all duration-300 ease-out",
         isAgentMode 
             ? "border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.2)]" 
-            : "border-gray-200 focus-within:border-gray-400 focus-within:shadow-lg shadow-sm"
+            : "border-gray-200 dark:border-transparent focus-within:border-gray-400 dark:focus-within:border-[#444746] focus-within:shadow-lg shadow-sm"
       )}>
         
         <AnimatePresence mode="wait">
@@ -201,14 +201,14 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
                     onKeyDown={handleKeyDown}
                     placeholder={getPlaceholder()}
                     rows={1}
-                    className="flex-1 max-h-[200px] resize-none bg-transparent outline-none text-gray-900 placeholder-gray-400 leading-relaxed font-normal min-h-[24px] py-1"
+                    className="flex-1 max-h-[200px] resize-none bg-transparent outline-none text-gray-900 dark:text-[#E3E3E3] placeholder-gray-400 dark:placeholder-[#C4C7C5] leading-relaxed font-normal min-h-[24px] py-1"
                   />
                   
                   {/* Action Buttons: Voice and Send */}
                   <div className="flex items-center gap-2 mb-0.5">
                     <button 
                       onClick={() => setIsVoiceMode(true)}
-                      className="p-2 text-gray-400 hover:text-black transition-colors rounded-full hover:bg-gray-100"
+                      className="p-2 text-gray-400 dark:text-[#C4C7C5] hover:text-black dark:hover:text-[#E3E3E3] transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-[#333537]"
                       title="Voice Input"
                     >
                       <Icons.Mic className="w-6 h-6" />
@@ -220,12 +220,12 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
                       className={clsx(
                         "w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200",
                         (input.trim() || attachments.length > 0) && !isLoading
-                          ? isAgentMode ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md" : "bg-black hover:bg-gray-800 text-white shadow-md"
-                          : "bg-gray-100 text-gray-300 cursor-not-allowed"
+                          ? isAgentMode ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md" : "bg-black dark:bg-[#E3E3E3] hover:bg-gray-800 dark:hover:bg-white text-white dark:text-black shadow-md"
+                          : "bg-gray-100 dark:bg-[#333537] text-gray-300 dark:text-[#5e5e5e] cursor-not-allowed"
                       )}
                     >
                       {isLoading ? (
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-white/30 dark:border-black/30 border-t-white dark:border-t-black rounded-full animate-spin" />
                       ) : (
                         <Icons.Send className="w-4 h-4 ml-0.5" />
                       )}
@@ -248,7 +248,7 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
 
                   <button 
                     onClick={() => fileInputRef.current?.click()}
-                    className="p-2 text-gray-400 hover:text-black transition-colors rounded-full hover:bg-gray-100"
+                    className="p-2 text-gray-400 dark:text-[#C4C7C5] hover:text-black dark:hover:text-[#E3E3E3] transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-[#333537]"
                     title="Attach File"
                   >
                     <Icons.Attach className="w-5 h-5" />

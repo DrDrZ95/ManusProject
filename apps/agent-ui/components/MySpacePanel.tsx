@@ -13,12 +13,17 @@ const MOCK_FILES = [
   { id: '3', name: 'api_endpoints.md', type: 'doc', size: '12 KB', date: '2025-05-08', content: '# API Endpoints\n\n## GET /users\nReturns list of users.\n\n## POST /login\nAuthenticates user.' },
   { id: '4', name: 'styles.css', type: 'code', size: '45 KB', date: '2025-05-05', content: '.container { max-width: 1200px; margin: 0 auto; }' },
   { id: '5', name: 'avatar_draft.jpg', type: 'image', size: '1.2 MB', date: '2025-05-01', content: 'https://picsum.photos/seed/anime/400/400' },
+  { id: '6', name: 'database_schema.sql', type: 'code', size: '28 KB', date: '2025-04-28', content: 'CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(255));' },
+  { id: '7', name: 'deployment_script.sh', type: 'code', size: '4 KB', date: '2025-04-25', content: '#!/bin/bash\necho "Deploying..."' },
+  { id: '8', name: 'logo_variants.pdf', type: 'doc', size: '4.5 MB', date: '2025-04-20', content: 'PDF Content Placeholder' },
 ];
 
 const MOCK_SOLUTIONS = [
   { id: 's1', name: 'Auto-Scaling Infrastructure', type: 'doc', size: 'Solution', date: '2025-05-14', content: 'Implements K8s HPA.' },
   { id: 's2', name: 'Auth0 Integration Flow', type: 'code', size: 'Solution', date: '2025-05-13', content: 'Redirect to /callback...' },
   { id: 's3', name: 'Database Migration Strategy', type: 'doc', size: 'Solution', date: '2025-05-11', content: 'Blue/Green deployment strategy.' },
+  { id: 's4', name: 'Real-time Notification System', type: 'code', size: 'Solution', date: '2025-05-09', content: 'WebSocket implementation details.' },
+  { id: 's5', name: 'Payment Gateway Integration', type: 'doc', size: 'Solution', date: '2025-05-05', content: 'Stripe API integration steps.' },
 ];
 
 export const MySpacePanel: React.FC = () => {
@@ -89,46 +94,46 @@ export const MySpacePanel: React.FC = () => {
 
   const getFileIcon = (type: string) => {
     switch (type) {
-      case 'image': return <Icons.FileImage className="w-5 h-5 text-purple-500" />;
-      case 'code': return <Icons.FileCode className="w-5 h-5 text-blue-500" />;
-      default: return <Icons.FileText className="w-5 h-5 text-gray-500" />;
+      case 'image': return <Icons.FileImage className="w-5 h-5 text-purple-500 dark:text-purple-400" />;
+      case 'code': return <Icons.FileCode className="w-5 h-5 text-blue-500 dark:text-blue-400" />;
+      default: return <Icons.FileText className="w-5 h-5 text-gray-500 dark:text-gray-400" />;
     }
   };
 
   const currentList = activeTab === 'files' ? files : solutions;
 
   return (
-    <div className="h-full w-full flex flex-col bg-white relative overflow-hidden border-l border-gray-200 shadow-xl">
+    <div className="h-full w-full flex flex-col bg-white dark:bg-[#1E1F20] relative overflow-hidden border-l border-gray-200 dark:border-[#444746] shadow-xl">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-[#1E1F20] border-b border-gray-200 dark:border-[#444746] flex-shrink-0">
         <div className="flex items-center space-x-2 select-none">
-          <div className="w-7 h-7 bg-black text-white rounded-lg flex items-center justify-center">
+          <div className="w-7 h-7 bg-black dark:bg-[#A8C7FA] text-white dark:text-black rounded-lg flex items-center justify-center">
              <Icons.Folder className="w-4 h-4" />
           </div>
-          <span className="font-bold text-gray-900">{t.mySpace}</span>
+          <span className="font-bold text-gray-900 dark:text-[#E3E3E3]">{t.mySpace}</span>
         </div>
         
         <div className="flex items-center gap-2">
            {/* Remote Linux Button */}
            <button 
              onClick={handleRemoteClick}
-             className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-gray-600 hover:text-black hover:bg-gray-200 rounded-md transition-colors"
+             className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-gray-600 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-[#333537] rounded-md transition-colors"
              title={t.functionUnderDev}
            >
              <Icons.Remote className="w-3.5 h-3.5" />
              <span className="hidden sm:inline">{t.remoteLinux}</span>
            </button>
 
-           <div className="w-px h-4 bg-gray-300 mx-1" />
+           <div className="w-px h-4 bg-gray-300 dark:bg-[#444746] mx-1" />
 
-           <button onClick={toggleTerminal} className="p-1.5 text-gray-400 hover:text-black transition-colors rounded-md hover:bg-gray-200">
+           <button onClick={toggleTerminal} className="p-1.5 text-gray-400 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white transition-colors rounded-md hover:bg-gray-200 dark:hover:bg-[#333537]">
             <Icons.ClosePanelRight className="w-4 h-4" />
           </button>
         </div>
       </div>
 
       {/* File List */}
-      <div className="flex-1 overflow-y-auto p-2 bg-white custom-scrollbar relative pb-16">
+      <div className="flex-1 overflow-y-auto p-2 bg-white dark:bg-[#1E1F20] custom-scrollbar relative pb-16">
          <div className="space-y-1">
             {currentList.map((file) => {
               const isSelected = selectedIds.includes(file.id);
@@ -141,41 +146,41 @@ export const MySpacePanel: React.FC = () => {
                   className={clsx(
                     "group flex items-center p-3 rounded-xl cursor-pointer border transition-all select-none relative",
                     isSelected 
-                      ? "bg-blue-50 border-blue-200 shadow-sm" 
-                      : "bg-transparent hover:bg-gray-50 border-transparent hover:border-gray-100"
+                      ? "bg-blue-50 dark:bg-[#004A77]/30 border-blue-200 dark:border-[#004A77] shadow-sm" 
+                      : "bg-transparent hover:bg-gray-50 dark:hover:bg-[#333537] border-transparent hover:border-gray-100 dark:hover:border-[#444746]"
                   )}
                 >
                    <div className={clsx(
                      "p-3 rounded-lg border shadow-sm mr-3 transition-colors",
-                     isSelected ? "bg-white border-blue-100" : "bg-gray-50 border-gray-100 group-hover:bg-white group-hover:border-gray-200"
+                     isSelected ? "bg-white dark:bg-[#1E1F20] border-blue-100 dark:border-[#004A77]" : "bg-gray-50 dark:bg-[#333537] border-gray-100 dark:border-[#444746] group-hover:bg-white dark:group-hover:bg-[#1E1F20] group-hover:border-gray-200 dark:group-hover:border-[#444746]"
                    )}>
                       {getFileIcon(file.type)}
                    </div>
                    <div className="flex-1 min-w-0">
-                      <div className={clsx("text-sm font-medium truncate transition-colors", isSelected ? "text-blue-700" : "text-gray-900")}>
+                      <div className={clsx("text-sm font-medium truncate transition-colors", isSelected ? "text-blue-700 dark:text-[#A8C7FA]" : "text-gray-900 dark:text-[#E3E3E3]")}>
                         {file.name}
                       </div>
-                      <div className="flex items-center text-[10px] text-gray-400 gap-2 mt-0.5">
+                      <div className="flex items-center text-[10px] text-gray-400 dark:text-[#C4C7C5] gap-2 mt-0.5">
                          <span>{file.size}</span>
-                         <span className="w-0.5 h-0.5 bg-gray-300 rounded-full" />
+                         <span className="w-0.5 h-0.5 bg-gray-300 dark:bg-[#444746] rounded-full" />
                          <span>{file.date}</span>
                       </div>
                    </div>
                    
                    {/* Hover Actions (Preview & Download) */}
                    {!isSelected && (
-                     <div className="absolute right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur-sm rounded-lg p-1 shadow-sm border border-gray-100">
+                     <div className="absolute right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 dark:bg-[#1E1F20]/80 backdrop-blur-sm rounded-lg p-1 shadow-sm border border-gray-100 dark:border-[#444746]">
                         <button 
                           onClick={(e) => handlePreviewClick(e, file)}
-                          className="p-1.5 text-gray-500 hover:text-black hover:bg-gray-100 rounded-md transition-colors"
+                          className="p-1.5 text-gray-500 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#333537] rounded-md transition-colors"
                           title={t.previewFile}
                         >
                            <Icons.Preview className="w-4 h-4" />
                         </button>
-                        <div className="w-px h-3 bg-gray-300" />
+                        <div className="w-px h-3 bg-gray-300 dark:bg-[#444746]" />
                         <button 
                           onClick={(e) => handleDownloadClick(e, file)}
-                          className="p-1.5 text-gray-500 hover:text-black hover:bg-gray-100 rounded-md transition-colors"
+                          className="p-1.5 text-gray-500 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#333537] rounded-md transition-colors"
                           title={t.download}
                         >
                            <Icons.Download className="w-4 h-4" />
@@ -185,14 +190,14 @@ export const MySpacePanel: React.FC = () => {
 
                    {isSelected && (
                       <div className="flex items-center justify-center pl-2">
-                         <Icons.Check className="w-5 h-5 text-blue-600" />
+                         <Icons.Check className="w-5 h-5 text-blue-600 dark:text-[#A8C7FA]" />
                       </div>
                    )}
                 </motion.div>
               );
             })}
             {currentList.length === 0 && (
-              <div className="text-center text-gray-400 text-sm mt-10">
+              <div className="text-center text-gray-400 dark:text-[#C4C7C5] text-sm mt-10">
                 No items available.
               </div>
             )}
@@ -200,12 +205,12 @@ export const MySpacePanel: React.FC = () => {
       </div>
       
       {/* Tabs Bottom */}
-      <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50 p-1 flex">
+      <div className="flex-shrink-0 border-t border-gray-200 dark:border-[#444746] bg-gray-50 dark:bg-[#1E1F20] p-1 flex">
          <button 
             onClick={() => { setActiveTab('files'); setSelectedIds([]); }}
             className={clsx(
                 "flex-1 py-2.5 text-xs font-bold uppercase tracking-wider text-center rounded-lg transition-all",
-                activeTab === 'files' ? "bg-white text-black shadow-sm" : "text-gray-500 hover:bg-gray-200 hover:text-black"
+                activeTab === 'files' ? "bg-white dark:bg-[#333537] text-black dark:text-[#E3E3E3] shadow-sm" : "text-gray-500 dark:text-[#C4C7C5] hover:bg-gray-200 dark:hover:bg-[#444746] hover:text-black dark:hover:text-[#E3E3E3]"
             )}
          >
             {t.mySpaceFiles}
@@ -214,7 +219,7 @@ export const MySpacePanel: React.FC = () => {
             onClick={() => { setActiveTab('solutions'); setSelectedIds([]); }}
             className={clsx(
                 "flex-1 py-2.5 text-xs font-bold uppercase tracking-wider text-center rounded-lg transition-all",
-                activeTab === 'solutions' ? "bg-white text-black shadow-sm" : "text-gray-500 hover:bg-gray-200 hover:text-black"
+                activeTab === 'solutions' ? "bg-white dark:bg-[#333537] text-black dark:text-[#E3E3E3] shadow-sm" : "text-gray-500 dark:text-[#C4C7C5] hover:bg-gray-200 dark:hover:bg-[#444746] hover:text-black dark:hover:text-[#E3E3E3]"
             )}
          >
             {t.mySpaceSolutions}
@@ -228,15 +233,15 @@ export const MySpacePanel: React.FC = () => {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="absolute bottom-16 left-4 right-4 bg-white border border-gray-200 shadow-2xl rounded-xl p-3 z-40 flex items-center justify-between"
+            className="absolute bottom-16 left-4 right-4 bg-white dark:bg-[#1E1F20] border border-gray-200 dark:border-[#444746] shadow-2xl rounded-xl p-3 z-40 flex items-center justify-between"
           >
              <div className="flex items-center gap-2 px-2">
-                <span className="bg-black text-white text-xs font-bold px-2 py-0.5 rounded-md">{selectedIds.length}</span>
-                <span className="text-sm font-medium text-gray-600">{t.itemsSelected}</span>
+                <span className="bg-black dark:bg-[#A8C7FA] text-white dark:text-black text-xs font-bold px-2 py-0.5 rounded-md">{selectedIds.length}</span>
+                <span className="text-sm font-medium text-gray-600 dark:text-[#C4C7C5]">{t.itemsSelected}</span>
              </div>
              <button 
                onClick={handleDeleteRequest}
-               className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors"
+               className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg text-sm font-medium transition-colors"
              >
                 <Icons.Trash className="w-4 h-4" />
                 {t.deleteSelected}
@@ -252,25 +257,25 @@ export const MySpacePanel: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-center justify-center p-6"
+            className="absolute inset-0 z-50 bg-black/20 dark:bg-black/50 backdrop-blur-sm flex items-center justify-center p-6"
           >
              <motion.div
                 initial={{ scale: 0.9, y: 20 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.9, y: 20 }}
-                className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm border border-gray-200"
+                className="bg-white dark:bg-[#1E1F20] rounded-2xl shadow-xl p-6 w-full max-w-sm border border-gray-200 dark:border-[#444746]"
              >
-                <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-full flex items-center justify-center mb-4 mx-auto">
                    <Icons.Trash className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-bold text-center text-gray-900 mb-2">Delete {selectedIds.length} Item(s)?</h3>
-                <p className="text-center text-gray-500 text-sm mb-6 leading-relaxed">
+                <h3 className="text-lg font-bold text-center text-gray-900 dark:text-[#E3E3E3] mb-2">Delete {selectedIds.length} Item(s)?</h3>
+                <p className="text-center text-gray-500 dark:text-[#C4C7C5] text-sm mb-6 leading-relaxed">
                   {t.confirmBatchDelete}
                 </p>
                 <div className="flex gap-3">
                    <button 
                      onClick={cancelDelete}
-                     className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
+                     className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-[#333537] text-gray-700 dark:text-[#E3E3E3] font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-[#444746] transition-colors"
                    >
                      Cancel
                    </button>
@@ -293,41 +298,41 @@ export const MySpacePanel: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 bg-white/60 backdrop-blur-md p-4 flex flex-col"
+            className="absolute inset-0 z-50 bg-white/60 dark:bg-black/60 backdrop-blur-md p-4 flex flex-col"
           >
              <motion.div 
                initial={{ scale: 0.95, y: 10 }}
                animate={{ scale: 1, y: 0 }}
                exit={{ scale: 0.95, y: 10 }}
-               className="flex-1 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden ring-1 ring-black/5"
+               className="flex-1 bg-white dark:bg-[#1E1F20] rounded-2xl shadow-2xl border border-gray-200 dark:border-[#444746] flex flex-col overflow-hidden ring-1 ring-black/5"
              >
                 {/* Preview Header */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-[#444746] bg-gray-50/50 dark:bg-[#1E1F20]/50">
                    <div className="flex items-center gap-3 overflow-hidden">
-                      <button onClick={() => setPreviewFile(null)} className="p-1.5 hover:bg-gray-200 rounded-full transition-colors text-gray-500 hover:text-black">
+                      <button onClick={() => setPreviewFile(null)} className="p-1.5 hover:bg-gray-200 dark:hover:bg-[#333537] rounded-full transition-colors text-gray-500 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white">
                          <Icons.ChevronDown className="w-5 h-5 rotate-90" />
                       </button>
-                      <span className="font-semibold text-sm truncate text-gray-900">{previewFile.name}</span>
+                      <span className="font-semibold text-sm truncate text-gray-900 dark:text-[#E3E3E3]">{previewFile.name}</span>
                    </div>
-                   <button className="px-3 py-1.5 bg-black text-white hover:bg-gray-800 rounded-lg flex items-center gap-2 text-xs font-medium transition-all shadow-sm">
+                   <button className="px-3 py-1.5 bg-black dark:bg-[#A8C7FA] text-white dark:text-black hover:bg-gray-800 dark:hover:bg-[#8AB4F8] rounded-lg flex items-center gap-2 text-xs font-medium transition-all shadow-sm">
                       <Icons.Download className="w-3.5 h-3.5" />
                       {t.download}
                    </button>
                 </div>
 
                 {/* Preview Content */}
-                <div className="flex-1 bg-gray-100/50 p-6 overflow-y-auto flex items-center justify-center relative">
+                <div className="flex-1 bg-gray-100/50 dark:bg-[#131314] p-6 overflow-y-auto flex items-center justify-center relative">
                    {previewFile.type === 'image' ? (
-                      <img src={previewFile.content} alt="Preview" className="max-w-full max-h-full rounded-lg shadow-lg border border-gray-200 object-contain" />
+                      <img src={previewFile.content} alt="Preview" className="max-w-full max-h-full rounded-lg shadow-lg border border-gray-200 dark:border-[#444746] object-contain" />
                    ) : (
-                      <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-200 max-w-md w-full">
+                      <div className="bg-white dark:bg-[#1E1F20] p-8 rounded-xl shadow-lg border border-gray-200 dark:border-[#444746] max-w-md w-full">
                          <div className="flex justify-center mb-6">
-                            <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                            <div className="p-4 bg-gray-50 dark:bg-[#333537] rounded-2xl border border-gray-100 dark:border-[#444746]">
                                {getFileIcon(previewFile.type)}
                             </div>
                          </div>
                          <div className="text-center">
-                            <div className="text-left bg-gray-50 p-4 rounded-lg text-xs font-mono text-gray-600 overflow-auto max-h-60 border border-gray-200 shadow-inner">
+                            <div className="text-left bg-gray-50 dark:bg-[#333537] p-4 rounded-lg text-xs font-mono text-gray-600 dark:text-[#C4C7C5] overflow-auto max-h-60 border border-gray-200 dark:border-[#444746] shadow-inner">
                                 <pre className="whitespace-pre-wrap">{previewFile.content}</pre>
                             </div>
                          </div>

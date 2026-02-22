@@ -26,22 +26,22 @@ const ModalContent: React.FC<{ children: React.ReactNode; title: string; icon?: 
     exit={{ scale: 0.95, opacity: 0, y: 20 }}
     transition={{ type: "spring", stiffness: 300, damping: 30 }}
     className={clsx(
-        "bg-white w-full rounded-[28px] shadow-[0_32px_80px_-15px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col max-h-[85vh]",
+        "bg-white dark:bg-[#1E1F20] w-full rounded-[28px] shadow-[0_32px_80px_-15px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col max-h-[85vh]",
         className || "max-w-2xl"
     )}
     onClick={(e) => e.stopPropagation()}
   >
-    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50 flex-shrink-0">
+    <div className="px-6 py-4 border-b border-gray-100 dark:border-[#444746] flex items-center justify-between bg-gray-50/50 dark:bg-[#1E1F20] flex-shrink-0">
       <div className="flex items-center gap-3">
-        {Icon && <div className="p-2 bg-black text-white rounded-lg shadow-md"><Icon className="w-4 h-4" /></div>}
-        <h2 className="text-xl font-black text-gray-900 tracking-tight">{title}</h2>
+        {Icon && <div className="p-2 bg-black dark:bg-[#E3E3E3] text-white dark:text-black rounded-lg shadow-md"><Icon className="w-4 h-4" /></div>}
+        <h2 className="text-xl font-black text-gray-900 dark:text-[#E3E3E3] tracking-tight">{title}</h2>
       </div>
       <button 
         onClick={() => {
             if (onClose) onClose();
             else useStore.getState().setActiveModal(null);
         }}
-        className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-black transition-all active:scale-90"
+        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#333537] text-gray-400 dark:text-[#C4C7C5] hover:text-black dark:hover:text-[#E3E3E3] transition-all active:scale-90"
       >
         <Icons.Close className="w-5 h-5" />
       </button>
@@ -74,6 +74,19 @@ const CHARACTER_AVATARS = [
   `https://api.dicebear.com/9.x/lorelei/svg?seed=Jack`,
   `https://api.dicebear.com/9.x/lorelei/svg?seed=Chloe`,
   `https://api.dicebear.com/9.x/lorelei/svg?seed=Finn`,
+  // Rick and Morty
+  `https://api.dicebear.com/9.x/avataaars/svg?seed=Rick`,
+  `https://api.dicebear.com/9.x/avataaars/svg?seed=Morty`,
+  `https://api.dicebear.com/9.x/avataaars/svg?seed=Summer`,
+  `https://api.dicebear.com/9.x/avataaars/svg?seed=Beth`,
+  `https://api.dicebear.com/9.x/avataaars/svg?seed=Jerry`,
+  // Family Guy
+  `https://api.dicebear.com/9.x/avataaars/svg?seed=Peter`,
+  `https://api.dicebear.com/9.x/avataaars/svg?seed=Lois`,
+  `https://api.dicebear.com/9.x/avataaars/svg?seed=Stewie`,
+  `https://api.dicebear.com/9.x/avataaars/svg?seed=Brian`,
+  `https://api.dicebear.com/9.x/avataaars/svg?seed=Chris`,
+  `https://api.dicebear.com/9.x/avataaars/svg?seed=Meg`,
 ];
 
 const PROJECT_COLORS = [
@@ -280,7 +293,7 @@ export const UserModals: React.FC = () => {
                     type="text" 
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-black transition-all font-bold text-sm text-gray-900" 
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-[#333537] border border-gray-100 dark:border-[#444746] rounded-xl outline-none focus:border-black dark:focus:border-[#A8C7FA] transition-all font-bold text-sm text-gray-900 dark:text-[#E3E3E3]" 
                     placeholder="Your Name" 
                   />
                 </div>
@@ -289,7 +302,7 @@ export const UserModals: React.FC = () => {
                   <input 
                     type="email" 
                     disabled
-                    className="w-full px-4 py-3 bg-gray-100 border border-transparent rounded-xl text-gray-400 cursor-not-allowed font-bold text-sm" 
+                    className="w-full px-4 py-3 bg-gray-100 dark:bg-[#1E1F20] border border-transparent rounded-xl text-gray-400 dark:text-[#C4C7C5] cursor-not-allowed font-bold text-sm" 
                     defaultValue={user?.email} 
                   />
                 </div>
@@ -300,21 +313,21 @@ export const UserModals: React.FC = () => {
                 <textarea 
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-black transition-all font-bold text-sm text-gray-900 h-24 resize-none" 
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-[#333537] border border-gray-100 dark:border-[#444746] rounded-xl outline-none focus:border-black dark:focus:border-[#A8C7FA] transition-all font-bold text-sm text-gray-900 dark:text-[#E3E3E3] h-24 resize-none" 
                     placeholder={t.bioPlaceholder} 
                 />
               </div>
 
-              <div className="pt-5 border-t border-gray-100 flex justify-end gap-3">
+              <div className="pt-5 border-t border-gray-100 dark:border-[#444746] flex justify-end gap-3">
                  <button 
                     onClick={() => setActiveModal(null)}
-                    className="px-6 py-3 text-gray-500 font-black rounded-xl hover:bg-gray-100 transition-all uppercase tracking-widest text-[11px]"
+                    className="px-6 py-3 text-gray-500 dark:text-[#C4C7C5] font-black rounded-xl hover:bg-gray-100 dark:hover:bg-[#333537] transition-all uppercase tracking-widest text-[11px]"
                  >
                     {t.cancel}
                  </button>
                  <button 
                     onClick={handleSaveAccount}
-                    className="px-8 py-3 bg-black text-white font-black rounded-xl hover:bg-gray-800 transition-all shadow-md active:scale-95 uppercase tracking-widest text-[11px]"
+                    className="px-8 py-3 bg-black dark:bg-[#A8C7FA] text-white dark:text-black font-black rounded-xl hover:bg-gray-800 dark:hover:bg-[#8AB4F8] transition-all shadow-md active:scale-95 uppercase tracking-widest text-[11px]"
                  >
                     {t.saveChanges}
                  </button>
@@ -327,8 +340,8 @@ export const UserModals: React.FC = () => {
           <ModalContent title={t.settings} icon={Icons.Settings} className="max-w-4xl h-[600px]">
             <div className="flex h-full">
                 {/* Left Sidebar Tabs */}
-                <div className="w-56 bg-gray-50 border-r border-gray-100 p-4 space-y-1">
-                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-3">Categories</div>
+                <div className="w-56 bg-gray-50 dark:bg-[#1E1F20] border-r border-gray-100 dark:border-[#444746] p-4 space-y-1">
+                    <div className="text-[10px] font-black text-gray-400 dark:text-[#C4C7C5] uppercase tracking-widest mb-3 px-3">Categories</div>
                     
                     {settingsTabs.map(tab => (
                         <button
@@ -337,8 +350,8 @@ export const UserModals: React.FC = () => {
                             className={clsx(
                                 "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-bold",
                                 settingsTab === tab.id 
-                                    ? "bg-black text-white shadow-md" 
-                                    : "text-gray-500 hover:bg-white hover:text-black"
+                                    ? "bg-black dark:bg-[#A8C7FA] text-white dark:text-black shadow-md" 
+                                    : "text-gray-500 dark:text-[#C4C7C5] hover:bg-white dark:hover:bg-[#333537] hover:text-black dark:hover:text-[#E3E3E3]"
                             )}
                         >
                             <tab.icon className="w-4 h-4" />
@@ -348,7 +361,7 @@ export const UserModals: React.FC = () => {
                 </div>
 
                 {/* Right Content Area */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-8 bg-white">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-8 bg-white dark:bg-[#1E1F20]">
                     {settingsTab === 'general' && (
                         <div className="space-y-8 animate-fadeIn">
                              <section className="space-y-4">
@@ -380,6 +393,27 @@ export const UserModals: React.FC = () => {
                             <section className="space-y-4">
                                 <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Preferences</h3>
                                 <div className="space-y-3">
+                                    <label className="flex items-center justify-between p-4 bg-white dark:bg-[#1E1F20] border border-gray-100 dark:border-[#444746] rounded-2xl hover:border-gray-300 dark:hover:border-[#A8C7FA] transition-all cursor-pointer">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-2 bg-gray-50 dark:bg-[#333537] text-gray-600 dark:text-[#E3E3E3] rounded-lg">
+                                                <Icons.Moon className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-gray-900 dark:text-[#E3E3E3]">{t.darkMode}</div>
+                                                <div className="text-xs text-gray-500 dark:text-[#C4C7C5] font-medium">{t.darkModeDesc}</div>
+                                            </div>
+                                        </div>
+                                        <div className={clsx("w-12 h-6 rounded-full relative transition-all duration-300", settings.theme === 'dark' ? "bg-black dark:bg-[#A8C7FA]" : "bg-gray-200 dark:bg-[#444746]")}>
+                                            <input 
+                                                type="checkbox" 
+                                                className="hidden" 
+                                                checked={settings.theme === 'dark'} 
+                                                onChange={(e) => updateSettings({ theme: e.target.checked ? 'dark' : 'light' })}
+                                            />
+                                            <motion.div animate={{ x: settings.theme === 'dark' ? 24 : 4 }} className="w-4 h-4 bg-white dark:bg-black rounded-full shadow-md absolute top-1" />
+                                        </div>
+                                    </label>
+
                                     <label className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl hover:border-gray-300 transition-all cursor-pointer">
                                         <div className="flex items-center gap-4">
                                             <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
@@ -427,10 +461,10 @@ export const UserModals: React.FC = () => {
                             <hr className="border-gray-100" />
 
                             <section className="space-y-4">
-                                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t.dataPrivacy}</h3>
+                                <h3 className="text-[10px] font-black text-gray-400 dark:text-[#C4C7C5] uppercase tracking-widest">{t.dataPrivacy}</h3>
                                 <button 
                                     onClick={handleClearData}
-                                    className="w-full flex items-center justify-between p-4 bg-red-50 text-red-600 rounded-2xl hover:bg-red-100 transition-all border border-red-100 group"
+                                    className="w-full flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-2xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-all border border-red-100 dark:border-red-900/30 group"
                                 >
                                     <div className="flex items-center gap-4">
                                         <ShieldAlert className="w-5 h-5" />
@@ -456,41 +490,41 @@ export const UserModals: React.FC = () => {
 
                              <div className="grid grid-cols-1 gap-4">
                                 {AVAILABLE_SKILLS.map(skill => (
-                                    <div key={skill.id} className="flex items-start justify-between p-4 bg-white border border-gray-200 rounded-2xl hover:shadow-md transition-shadow group">
+                                    <div key={skill.id} className="flex items-start justify-between p-4 bg-white dark:bg-[#1E1F20] border border-gray-200 dark:border-[#444746] rounded-2xl hover:shadow-md transition-shadow group">
                                         <div className="flex gap-4">
-                                            <div className="p-3 bg-gray-50 rounded-xl group-hover:bg-black group-hover:text-white transition-colors">
+                                            <div className="p-3 bg-gray-50 dark:bg-[#333537] rounded-xl group-hover:bg-black dark:group-hover:bg-[#A8C7FA] group-hover:text-white dark:group-hover:text-black transition-colors">
                                                 <skill.icon className="w-5 h-5" />
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <span className="font-bold text-gray-900 text-sm">{skill.name}</span>
-                                                    {skill.beta && <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 text-[9px] font-bold rounded uppercase">Beta</span>}
-                                                    {skill.pro && <span className="px-1.5 py-0.5 bg-black text-white text-[9px] font-bold rounded uppercase">Pro</span>}
+                                                    <span className="font-bold text-gray-900 dark:text-[#E3E3E3] text-sm">{skill.name}</span>
+                                                    {skill.beta && <span className="px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-[9px] font-bold rounded uppercase">Beta</span>}
+                                                    {skill.pro && <span className="px-1.5 py-0.5 bg-black dark:bg-[#A8C7FA] text-white dark:text-black text-[9px] font-bold rounded uppercase">Pro</span>}
                                                 </div>
-                                                <p className="text-xs text-gray-500 font-medium leading-relaxed max-w-[280px]">{skill.description}</p>
+                                                <p className="text-xs text-gray-500 dark:text-[#C4C7C5] font-medium leading-relaxed max-w-[280px]">{skill.description}</p>
                                             </div>
                                         </div>
                                         <button 
                                             onClick={() => toggleSkill(skill.id)}
                                             className={clsx(
                                                 "w-12 h-6 rounded-full relative transition-all duration-300 flex-shrink-0 mt-1", 
-                                                enabledSkills[skill.id] ? "bg-black" : "bg-gray-200"
+                                                enabledSkills[skill.id] ? "bg-black dark:bg-[#A8C7FA]" : "bg-gray-200 dark:bg-[#444746]"
                                             )}
                                         >
-                                            <motion.div animate={{ x: enabledSkills[skill.id] ? 24 : 4 }} className="w-4 h-4 bg-white rounded-full shadow-md absolute top-1" />
+                                            <motion.div animate={{ x: enabledSkills[skill.id] ? 24 : 4 }} className="w-4 h-4 bg-white dark:bg-black rounded-full shadow-md absolute top-1" />
                                         </button>
                                     </div>
                                 ))}
                              </div>
 
                              {/* Drag and Drop Upload Area */}
-                             <div className="mt-6 border-2 border-dashed border-gray-200 rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:border-black/20 transition-colors cursor-pointer bg-gray-50/50 group">
-                                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-3 text-gray-400 shadow-sm border border-gray-100 group-hover:scale-105 transition-transform">
+                             <div className="mt-6 border-2 border-dashed border-gray-200 dark:border-[#444746] rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:border-black/20 dark:hover:border-white/20 transition-colors cursor-pointer bg-gray-50/50 dark:bg-[#333537]/50 group">
+                                <div className="w-12 h-12 bg-white dark:bg-[#1E1F20] rounded-full flex items-center justify-center mb-3 text-gray-400 dark:text-[#C4C7C5] shadow-sm border border-gray-100 dark:border-[#444746] group-hover:scale-105 transition-transform">
                                     <Upload className="w-5 h-5" />
                                 </div>
-                                <div className="text-sm font-bold text-gray-900">{t.importSkill}</div>
-                                <div className="text-xs text-gray-500 mt-1 mb-3">{t.dropSkillHere}</div>
-                                <button className="px-4 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+                                <div className="text-sm font-bold text-gray-900 dark:text-[#E3E3E3]">{t.importSkill}</div>
+                                <div className="text-xs text-gray-500 dark:text-[#C4C7C5] mt-1 mb-3">{t.dropSkillHere}</div>
+                                <button className="px-4 py-1.5 bg-white dark:bg-[#1E1F20] border border-gray-200 dark:border-[#444746] rounded-lg text-xs font-bold text-gray-700 dark:text-[#E3E3E3] hover:bg-gray-50 dark:hover:bg-[#333537] transition-colors shadow-sm">
                                     {t.browse}
                                 </button>
                              </div>
@@ -507,7 +541,7 @@ export const UserModals: React.FC = () => {
                                 <textarea 
                                     value={systemPrompt}
                                     onChange={(e) => setSystemPrompt(e.target.value)}
-                                    className="w-full h-40 p-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium text-gray-800 outline-none focus:border-black focus:ring-1 focus:ring-black transition-all resize-none"
+                                    className="w-full h-40 p-4 bg-gray-50 dark:bg-[#333537] border border-gray-200 dark:border-[#444746] rounded-2xl text-sm font-medium text-gray-800 dark:text-[#E3E3E3] outline-none focus:border-black dark:focus:border-[#A8C7FA] focus:ring-1 focus:ring-black dark:focus:ring-[#A8C7FA] transition-all resize-none"
                                 />
                             </section>
 
@@ -524,7 +558,7 @@ export const UserModals: React.FC = () => {
                                         step="0.1" 
                                         value={temperature}
                                         onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black"
+                                        className="w-full h-2 bg-gray-200 dark:bg-[#444746] rounded-lg appearance-none cursor-pointer accent-black dark:accent-[#A8C7FA]"
                                     />
                                     <div className="flex justify-between text-[10px] font-bold text-gray-400 mt-2">
                                         <span>{t.precise}</span>

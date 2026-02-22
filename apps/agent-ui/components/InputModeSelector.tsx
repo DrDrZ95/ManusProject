@@ -44,7 +44,7 @@ export const InputModeSelector: React.FC<InputModeSelectorProps> = ({ onSelectAg
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 text-gray-400 hover:text-black transition-colors rounded-full hover:bg-gray-100 flex items-center gap-1"
+        className="p-2 text-gray-400 dark:text-[#C4C7C5] hover:text-black dark:hover:text-[#E3E3E3] transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-[#333537] flex items-center gap-1"
         title="Select Input Mode"
       >
         <activeMode.icon className="w-5 h-5" />
@@ -52,7 +52,7 @@ export const InputModeSelector: React.FC<InputModeSelectorProps> = ({ onSelectAg
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-full mb-2 left-0 w-56 bg-white border border-gray-200 rounded-xl shadow-xl p-1 z-50 overflow-hidden">
+        <div className="absolute bottom-full mb-2 left-0 w-56 bg-white dark:bg-[#1E1F20] border border-gray-200 dark:border-[#444746] rounded-xl shadow-xl p-1 z-50 overflow-hidden">
           {modes.map((mode) => (
             <button
               key={mode.id}
@@ -68,7 +68,7 @@ export const InputModeSelector: React.FC<InputModeSelectorProps> = ({ onSelectAg
               }}
               className={clsx(
                 "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left text-sm",
-                inputMode === mode.id ? "bg-gray-100 text-black font-medium" : "text-gray-600 hover:bg-gray-50 hover:text-black"
+                inputMode === mode.id ? "bg-gray-100 dark:bg-[#333537] text-black dark:text-[#E3E3E3] font-medium" : "text-gray-600 dark:text-[#C4C7C5] hover:bg-gray-50 dark:hover:bg-[#333537] hover:text-black dark:hover:text-[#E3E3E3]"
               )}
             >
               <mode.icon className="w-4 h-4" />

@@ -54,7 +54,8 @@ import {
   Image,
   Search,
   Layers,
-  History
+  History,
+  Moon
 } from 'lucide-react';
 
 // Unified icon collection for the application
@@ -113,5 +114,6 @@ export const Icons = {
   Image: Image,
   Search: Search,
   Layers: Layers,
-  History: History
+  History: History,
+  Moon: Moon
 };

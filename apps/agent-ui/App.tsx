@@ -76,9 +76,9 @@ const SearchModal: React.FC = () => {
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.95, opacity: 0, y: -20 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                    className="w-full max-w-xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
                 >
-                    <div className="flex items-center px-4 py-3 border-b border-gray-100">
+                    <div className="flex items-center px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                         <Icons.Search className="w-5 h-5 text-gray-400" />
                         <input 
                             autoFocus
@@ -86,11 +86,11 @@ const SearchModal: React.FC = () => {
                             placeholder={t.searchPlaceholder}
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            className="flex-1 px-4 py-2 outline-none text-gray-900 text-sm font-medium placeholder:text-gray-400"
+                            className="flex-1 px-4 py-2 outline-none text-gray-900 dark:text-white bg-transparent text-sm font-medium placeholder:text-gray-400"
                         />
                         <div className="flex items-center gap-2">
-                             <kbd className="hidden sm:inline-block px-2 py-1 bg-gray-100 rounded text-[10px] font-bold text-gray-500 border border-gray-200">ESC</kbd>
-                             <button onClick={toggleSearch} className="p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black">
+                             <kbd className="hidden sm:inline-block px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-[10px] font-bold text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600">ESC</kbd>
+                             <button onClick={toggleSearch} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-gray-400 hover:text-black dark:hover:text-white">
                                 <Icons.Close className="w-4 h-4" />
                              </button>
                         </div>
@@ -165,7 +165,16 @@ const App: React.FC = () => {
   const currentSession = sessions.find(s => s.id === currentSessionId);
   const messages = currentSession?.messages || [];
   
+  const settings = useStore(s => s.settings);
   const t = translations[language];
+
+  useEffect(() => {
+    if (settings.theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [settings.theme]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -316,7 +325,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#F3F4F6] text-gray-900 font-sans selection:bg-gray-300 selection:text-black">
+    <div className="flex h-screen w-full overflow-hidden bg-[#F3F4F6] dark:bg-[#131314] text-gray-900 dark:text-[#E3E3E3] font-sans selection:bg-gray-300 selection:text-black">
       <Toast />
       <UserModals />
       <SearchModal />
@@ -324,15 +333,15 @@ const App: React.FC = () => {
       <Sidebar />
       
       {/* MOBILE HEADER */}
-       <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-[#F3F4F6]/80 backdrop-blur border-b border-gray-200 flex items-center justify-between px-4 z-40">
-          <button onClick={toggleSidebar} className="text-gray-600">
+       <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-[#F3F4F6]/80 dark:bg-[#131314]/80 backdrop-blur border-b border-gray-200 dark:border-[#444746] flex items-center justify-between px-4 z-40">
+          <button onClick={toggleSidebar} className="text-gray-600 dark:text-[#C4C7C5]">
              <Icons.Sidebar className="w-6 h-6" />
           </button>
           <div className="flex items-center gap-2">
-            <Icons.Zap className="w-5 h-5 text-black fill-black" />
-            <span className="font-bold text-lg tracking-tight text-black">Agent</span>
+            <Icons.Zap className="w-5 h-5 text-black dark:text-white fill-black dark:fill-white" />
+            <span className="font-bold text-lg tracking-tight text-black dark:text-white">Agent</span>
           </div>
-          <button onClick={toggleTerminal} className={clsx("text-gray-600", isTerminalOpen && "text-black")}>
+          <button onClick={toggleTerminal} className={clsx("text-gray-600 dark:text-[#C4C7C5]", isTerminalOpen && "text-black dark:text-white")}>
              <Icons.Folder className="w-5 h-5" />
           </button>
        </div>
@@ -342,11 +351,11 @@ const App: React.FC = () => {
            {messages.length === 0 ? (
              <div className="h-full flex flex-col items-center justify-center opacity-0 animate-[fadeIn_0.5s_ease-out_forwards] pb-20 px-4">
                 <div className="flex flex-col items-center text-center max-w-2xl w-full">
-                    <div className="w-16 h-16 mb-6 rounded-2xl bg-white text-black flex items-center justify-center shadow-lg border border-gray-100">
+                    <div className="w-16 h-16 mb-6 rounded-2xl bg-white dark:bg-[#1E1F20] text-black dark:text-white flex items-center justify-center shadow-lg border border-gray-100 dark:border-[#444746]">
                       <Icons.Zap className="w-8 h-8" fill="currentColor" />
                     </div>
-                    <h1 className="text-2xl font-semibold mb-2 text-gray-900">{t.grokIntroTitle}</h1>
-                    <p className="text-gray-500 mb-8 px-4">
+                    <h1 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-white">{t.grokIntroTitle}</h1>
+                    <p className="text-gray-500 dark:text-[#C4C7C5] mb-8 px-4">
                       {t.grokIntroDesc}
                     </p>
                     <NewsGrid news={news} />
@@ -366,7 +375,7 @@ const App: React.FC = () => {
            )}
         </div>
 
-        <div className="w-full z-20 bg-gradient-to-t from-[#F3F4F6] via-[#F3F4F6] to-transparent pt-10 pb-6 px-4">
+        <div className="w-full z-20 bg-gradient-to-t from-[#F3F4F6] via-[#F3F4F6] dark:from-[#131314] dark:via-[#131314] to-transparent pt-10 pb-6 px-4">
            <InputArea onSend={handleSend} />
         </div>
       </main>
@@ -391,7 +400,7 @@ const App: React.FC = () => {
            
            <div 
              style={{ width: isDragging ? terminalWidth : `${terminalWidth}px` }}
-             className="w-full md:w-auto shrink-0 h-full shadow-[-10px_0_30px_rgba(0,0,0,0.05)] z-30 absolute md:relative right-0 bg-white overflow-hidden"
+             className="w-full md:w-auto shrink-0 h-full shadow-[-10px_0_30px_rgba(0,0,0,0.05)] z-30 absolute md:relative right-0 bg-white dark:bg-[#1E1F20] overflow-hidden border-l border-gray-200 dark:border-[#444746]"
            >
               <MySpacePanel />
            </div>
@@ -409,7 +418,7 @@ const App: React.FC = () => {
          >
              <button 
                onClick={toggleTerminal}
-               className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-500 hover:text-black hover:border-gray-400 transition-all shadow-sm"
+               className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-[#1E1F20] border border-gray-200 dark:border-[#444746] rounded-lg text-sm text-gray-500 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white hover:border-gray-400 dark:hover:border-[#8AB4F8] transition-all shadow-sm"
              >
                <Icons.Folder className="w-4 h-4" />
                <span>{t.mySpace}</span>

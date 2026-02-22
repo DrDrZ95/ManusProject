@@ -19,9 +19,9 @@ export const NewsGrid: React.FC<NewsGridProps> = ({ news }) => {
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="group block bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+          className="group block bg-white dark:bg-[#1E1F20] rounded-xl border border-gray-200 dark:border-[#444746] overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
         >
-          <div className="h-32 bg-gray-100 overflow-hidden relative">
+          <div className="h-32 bg-gray-100 dark:bg-[#333537] overflow-hidden relative">
             <img 
               src={item.thumbnailUrl} 
               alt={item.title}
@@ -33,12 +33,12 @@ export const NewsGrid: React.FC<NewsGridProps> = ({ news }) => {
           </div>
           <div className="p-4">
             <div className="flex items-start justify-between gap-2 mb-2">
-               <h3 className="text-sm font-bold text-gray-900 leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">
+               <h3 className="text-sm font-bold text-gray-900 dark:text-[#E3E3E3] leading-tight group-hover:text-blue-600 dark:group-hover:text-[#A8C7FA] transition-colors line-clamp-2">
                  {item.title}
                </h3>
-               <Icons.ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 -rotate-45 group-hover:rotate-0 transition-transform" />
+               <Icons.ArrowRight className="w-4 h-4 text-gray-300 dark:text-[#C4C7C5] group-hover:text-blue-500 dark:group-hover:text-[#A8C7FA] -rotate-45 group-hover:rotate-0 transition-transform" />
             </div>
-            <p className="text-xs text-gray-500 line-clamp-2">
+            <p className="text-xs text-gray-500 dark:text-[#C4C7C5] line-clamp-2">
               {item.summary}
             </p>
           </div>

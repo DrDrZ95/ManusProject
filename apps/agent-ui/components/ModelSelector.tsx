@@ -48,14 +48,14 @@ export const ModelSelector: React.FC = () => {
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-100 transition-colors text-sm font-medium text-gray-600 hover:text-black"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-[#333537] transition-colors text-sm font-medium text-gray-600 dark:text-[#C4C7C5] hover:text-black dark:hover:text-[#E3E3E3]"
       >
         <span>{activeOption.label}</span>
         <Icons.ChevronDown className={clsx("w-3 h-3 transition-transform", isOpen && "rotate-180")} />
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-full mb-2 left-0 w-64 bg-white border border-gray-200 rounded-xl shadow-2xl p-1 z-50 overflow-hidden">
+        <div className="absolute bottom-full mb-2 left-0 w-64 bg-white dark:bg-[#1E1F20] border border-gray-200 dark:border-[#444746] rounded-xl shadow-2xl p-1 z-50 overflow-hidden">
           {options.map((option) => (
             <button
               key={option.id}
@@ -65,23 +65,23 @@ export const ModelSelector: React.FC = () => {
               }}
               className={clsx(
                 "w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors text-left",
-                selectedModel === option.id ? "bg-gray-50" : "hover:bg-gray-50"
+                selectedModel === option.id ? "bg-gray-50 dark:bg-[#333537]" : "hover:bg-gray-50 dark:hover:bg-[#333537]"
               )}
             >
               <div className={clsx(
                 "p-2 rounded-lg",
-                selectedModel === option.id ? "bg-black text-white" : "bg-gray-100 text-gray-500"
+                selectedModel === option.id ? "bg-black dark:bg-[#E3E3E3] text-white dark:text-black" : "bg-gray-100 dark:bg-[#333537] text-gray-500 dark:text-[#C4C7C5]"
               )}>
                 <option.icon className="w-4 h-4" />
               </div>
               <div>
-                <div className={clsx("text-sm font-bold", selectedModel === option.id ? "text-black" : "text-gray-700")}>
+                <div className={clsx("text-sm font-bold", selectedModel === option.id ? "text-black dark:text-[#E3E3E3]" : "text-gray-700 dark:text-[#C4C7C5]")}>
                   {option.label}
                 </div>
-                <div className="text-xs text-gray-500">{option.description}</div>
+                <div className="text-xs text-gray-500 dark:text-[#C4C7C5]">{option.description}</div>
               </div>
               {selectedModel === option.id && (
-                <Icons.Check className="w-4 h-4 text-black ml-auto" />
+                <Icons.Check className="w-4 h-4 text-black dark:text-[#E3E3E3] ml-auto" />
               )}
             </button>
           ))}
