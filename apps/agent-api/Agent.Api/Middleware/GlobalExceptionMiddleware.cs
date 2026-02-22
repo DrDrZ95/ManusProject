@@ -106,7 +106,6 @@ public class GlobalExceptionMiddleware
         var activity = Activity.Current;
         if (activity != null)
         {
-            activity.RecordException(exception);
             activity.SetStatus(ActivityStatusCode.Error, exception.Message);
         }
     }

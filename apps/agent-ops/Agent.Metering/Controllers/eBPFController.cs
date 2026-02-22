@@ -1,12 +1,7 @@
-namespace Agent.Api.Controllers;
+using Swashbuckle.AspNetCore.Annotations;
 
-/// <summary>
-/// eBPF Detective Controller
-/// eBPF 侦探控制器
-/// 
-/// Provides eBPF-related API endpoints for system monitoring and diagnostics
-/// 提供eBPF相关的API端点，用于系统监控和诊断
-/// </summary>
+namespace Agent.Metering.Controllers;
+
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
@@ -22,13 +17,6 @@ public class eBPFController : ControllerBase
         _logger = logger;
     }
 
-    /// <summary>
-    /// Run a specified bpftrace script
-    /// 运行指定的bpftrace脚本
-    /// </summary>
-    /// <param name="scriptName">Script name - 脚本名称</param>
-    /// <param name="args">Script arguments - 脚本参数</param>
-    /// <returns>Script output - 脚本输出</returns>
     [HttpGet("script/{scriptName}")]
     [SwaggerOperation(
         Summary = "Run bpftrace script",
@@ -64,11 +52,6 @@ public class eBPFController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Get current CPU usage
-    /// 获取当前CPU使用率
-    /// </summary>
-    /// <returns>CPU usage percentage - CPU使用率百分比</returns>
     [HttpGet("cpu-usage")]
     [SwaggerOperation(
         Summary = "Get CPU usage",
@@ -92,11 +75,6 @@ public class eBPFController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Get current memory usage
-    /// 获取当前内存使用率
-    /// </summary>
-    /// <returns>Memory usage percentage - 内存使用率百分比</returns>
     [HttpGet("memory-usage")]
     [SwaggerOperation(
         Summary = "Get memory usage",
@@ -120,12 +98,6 @@ public class eBPFController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Monitor network activity (streaming output)
-    /// 监控网络活动 (流式输出)
-    /// </summary>
-    /// <param name="durationSeconds">Monitoring duration (seconds) - 监控持续时间（秒）</param>
-    /// <returns>Stream of network activity data - 网络活动数据流</returns>
     [HttpGet("monitor/network")]
     [SwaggerOperation(
         Summary = "Monitor network activity",
@@ -144,13 +116,6 @@ public class eBPFController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Monitor process activity (streaming output)
-    /// 监控进程活动 (流式输出)
-    /// </summary>
-    /// <param name="processName">Process name - 进程名称</param>
-    /// <param name="durationSeconds">Monitoring duration (seconds) - 监控持续时间（秒）</param>
-    /// <returns>Stream of process activity data - 进程活动数据流</returns>
     [HttpGet("monitor/process/{processName}")]
     [SwaggerOperation(
         Summary = "Monitor process activity",
@@ -169,4 +134,3 @@ public class eBPFController : ControllerBase
         }
     }
 }
-

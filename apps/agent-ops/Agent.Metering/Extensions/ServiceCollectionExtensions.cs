@@ -6,6 +6,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddEbpfMetering(this IServiceCollection services)
     {
         services.AddSingleton<IEbpfService, EbpfService>();
+        services.AddSingleton<IeBPFDetectiveService, eBPFDetectiveService>();
         return services;
     }
 

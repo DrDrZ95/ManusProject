@@ -1,9 +1,13 @@
 global using Agent.Metering.eBPF;
+global using Agent.Metering.eBPF.Detective;
 global using Agent.Metering.Extensions;
 global using Agent.Metering.Middleware;
 global using Agent.Metering.Pipelines;
 global using Agent.Metering.Finetuning;
 global using Agent.Metering.Controllers;
+global using Agent.Core.Models.Common;
+global using Asp.Versioning;
+global using Asp.Versioning.ApiExplorer;
 global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.Extensions.Caching.Memory;

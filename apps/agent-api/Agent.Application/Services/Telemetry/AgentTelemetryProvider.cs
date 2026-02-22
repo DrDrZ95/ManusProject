@@ -73,7 +73,19 @@ public class AgentSpan : IAgentSpan
 
     public void RecordException(Exception exception)
     {
-        _activity?.RecordException(exception);
+        if (_activity == null)
+        {
+            return;
+        }
+
+        var tags = new ActivityTagsCollection
+        {
+            { "exception.type", exception.GetType().FullName ?? string.Empty },
+            { "exception.message", exception.Message },
+            { "exception.stacktrace", exception.StackTrace ?? string.Empty }
+        };
+
+        _activity.AddEvent(new ActivityEvent("exception", tags: tags));
     }
 
     public void SetStatus(ActivityStatusCode statusCode, string? description = null)

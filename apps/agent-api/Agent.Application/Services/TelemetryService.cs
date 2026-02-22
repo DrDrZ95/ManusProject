@@ -60,7 +60,6 @@ public class TelemetryService : ITelemetryService
             if (activity != null)
             {
                 activity.SetStatus(ActivityStatusCode.Error, ex.Message);
-                activity.RecordException(ex);
             }
 
             _logger.LogError(ex, "Error in activity {ActivityName}: {ErrorMessage}", name, ex.Message);
@@ -104,7 +103,6 @@ public class TelemetryService : ITelemetryService
             if (activity != null)
             {
                 activity.SetStatus(ActivityStatusCode.Error, ex.Message);
-                activity.RecordException(ex);
             }
 
             _logger.LogError(ex, "Error in activity {ActivityName}: {ErrorMessage}", name, ex.Message);

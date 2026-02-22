@@ -3,7 +3,6 @@ global using Agent.Core.Cache;
 global using Agent.Core.Data;
 global using Agent.Core.Data.Entities;
 global using Agent.Core.Data.Repositories;
-global using Agent.Core.eBPF;
 global using Agent.Core.Gateway;
 global using Agent.Core.Identity;
 global using Agent.Core.Memory.Interfaces;

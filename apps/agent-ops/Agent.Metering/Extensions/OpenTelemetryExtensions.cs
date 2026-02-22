@@ -1,20 +1,16 @@
-namespace Agent.Api.Extensions;
+using OpenTelemetry;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Instrumentation.AspNetCore;
+using OpenTelemetry.Instrumentation.Http;
 
-/// <summary>
-/// Extension methods for configuring OpenTelemetry in the application.
-/// </summary>
+namespace Agent.Metering.Extensions;
+
 public static class OpenTelemetryExtensions
 {
-    /// <summary>
-    /// Adds OpenTelemetry services to the service collection.
-    /// </summary>
-    /// <param name="services">The service collection.</param>
-    /// <param name="serviceName">The name of the service.</param>
-    /// <param name="serviceVersion">The version of the service.</param>
-    /// <returns>The service collection.</returns>
     public static IServiceCollection AddOpenTelemetryServices(
         this IServiceCollection services,
-        string serviceName = "Agent.Api",
+        string serviceName = "Agent.Metering",
         string serviceVersion = "1.0.0")
     {
         services.AddOpenTelemetry()
@@ -24,19 +20,15 @@ public static class OpenTelemetryExtensions
                     .SetResourceBuilder(
                         ResourceBuilder.CreateDefault()
                             .AddService(serviceName: serviceName, serviceVersion: serviceVersion))
-                    .AddSource("Agent.Api")
+                    .AddSource("Agent.Metering")
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddConsoleExporter()
                     .AddOtlpExporter(options =>
                     {
                         options.Endpoint = new Uri("http://localhost:4317");
                     });
             });
 
-        services.AddSingleton<ITelemetryService, TelemetryService>();
-
         return services;
     }
 }
-

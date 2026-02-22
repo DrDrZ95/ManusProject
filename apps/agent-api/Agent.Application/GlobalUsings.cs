@@ -47,7 +47,6 @@ global using Microsoft.SemanticKernel.Embeddings;
 global using Microsoft.SemanticKernel.Plugins.OpenApi;
 global using ModelContextProtocol.Client;
 global using ModelContextProtocol.Protocol;
-global using OpenTelemetry.Trace;
 global using Polly;
 global using Polly.CircuitBreaker;
 global using Polly.Retry;

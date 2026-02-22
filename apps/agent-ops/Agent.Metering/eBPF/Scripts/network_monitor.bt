@@ -1,4 +1,3 @@
-
 #!/usr/local/bin/bpftrace
 
 /*
@@ -12,36 +11,26 @@ BEGIN
     printf("Monitoring network activity... Hit Ctrl-C to end.\n");
 }
 
-// 跟踪TCP连接建立
-// Trace TCP connection establishment
 kprobe:tcp_connect
 {
     printf("TCP Connect: PID %d, Comm %s\n", pid, comm);
 }
 
-// 跟踪TCP数据发送
-// Trace TCP data send
 kprobe:tcp_sendmsg
 {
     printf("TCP Send: PID %d, Comm %s, Size %d\n", pid, comm, arg2);
 }
 
-// 跟踪TCP数据接收
-// Trace TCP data receive
 kprobe:tcp_recvmsg
 {
     printf("TCP Recv: PID %d, Comm %s, Size %d\n", pid, comm, arg2);
 }
 
-// 跟踪网络设备数据包发送
-// Trace network device packet send
 kprobe:dev_queue_xmit
 {
     printf("Net Xmit: PID %d, Comm %s, Len %d\n", pid, comm, arg1->len);
 }
 
-// 跟踪网络设备数据包接收
-// Trace network device packet receive
 kprobe:netif_receive_skb
 {
     printf("Net Recv: PID %d, Comm %s, Len %d\n", pid, comm, arg0->len);
@@ -51,5 +40,4 @@ END
 {
     printf("Network monitoring ended.\n");
 }
-
 
