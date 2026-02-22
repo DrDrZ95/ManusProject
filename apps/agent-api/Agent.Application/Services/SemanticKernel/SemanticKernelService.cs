@@ -21,6 +21,7 @@ public class SemanticKernelService : ISemanticKernelService
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IPrometheusService _prometheusService;
     private readonly IAgentTelemetryProvider _telemetryProvider;
+    private readonly IAgentTraceService _agentTraceService;
 
     private readonly ResiliencePipeline _resiliencePipeline;
     private double _totalCost = 0;
@@ -40,7 +41,8 @@ public class SemanticKernelService : ISemanticKernelService
         IPermissionService permissionService,
         IHttpContextAccessor httpContextAccessor,
         IPrometheusService prometheusService,
-        IAgentTelemetryProvider telemetryProvider)
+        IAgentTelemetryProvider telemetryProvider,
+        IAgentTraceService agentTraceService)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         _chatService = chatService ?? throw new ArgumentNullException(nameof(chatService));
@@ -57,6 +59,7 @@ public class SemanticKernelService : ISemanticKernelService
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         _prometheusService = prometheusService ?? throw new ArgumentNullException(nameof(prometheusService));
         _telemetryProvider = telemetryProvider ?? throw new ArgumentNullException(nameof(telemetryProvider));
+        _agentTraceService = agentTraceService ?? throw new ArgumentNullException(nameof(agentTraceService));
 
         // Initialize resilience pipeline - 初始化弹性管道
         _resiliencePipeline = new ResiliencePipelineBuilder()
@@ -685,14 +688,73 @@ public class SemanticKernelService : ISemanticKernelService
     /// </summary>
     public async Task<string> ExecutePromptAsync(string prompt)
     {
+        var traceId = Guid.NewGuid().ToString();
+        var sessionId = GetCurrentSessionId();
+
+        var thinkingTrace = new AgentTrace
+        {
+            TraceId = traceId,
+            SessionId = sessionId,
+            Timestamp = DateTime.UtcNow,
+            Type = TraceType.Thinking,
+            Data = new Dictionary<string, object>
+            {
+                ["prompt"] = prompt
+            }
+        };
+
+        await _agentTraceService.RecordTraceAsync(thinkingTrace);
+
         try
         {
+            var stopwatch = Stopwatch.StartNew();
             var result = await _kernel.InvokePromptAsync(prompt);
-            return result.ToString();
+            stopwatch.Stop();
+
+            var resultText = result.ToString();
+            var tokenCount = EstimateTokenCount(prompt, resultText);
+            var costUsd = EstimateCost(tokenCount);
+
+            var resultTrace = new AgentTrace
+            {
+                TraceId = traceId,
+                SessionId = sessionId,
+                Timestamp = DateTime.UtcNow,
+                Type = TraceType.Result,
+                Data = new Dictionary<string, object>
+                {
+                    ["prompt"] = prompt,
+                    ["response"] = resultText
+                },
+                Metadata = new Dictionary<string, object>
+                {
+                    ["latency_ms"] = stopwatch.ElapsedMilliseconds
+                },
+                CostUsd = costUsd,
+                TokenCount = tokenCount
+            };
+
+            await _agentTraceService.RecordTraceAsync(resultTrace);
+
+            return resultText;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to execute prompt");
+            var errorTrace = new AgentTrace
+            {
+                TraceId = traceId,
+                SessionId = sessionId,
+                Timestamp = DateTime.UtcNow,
+                Type = TraceType.Result,
+                Data = new Dictionary<string, object>
+                {
+                    ["prompt"] = prompt,
+                    ["error"] = ex.Message
+                }
+            };
+
+            await _agentTraceService.RecordTraceAsync(errorTrace);
             throw;
         }
     }
@@ -700,6 +762,35 @@ public class SemanticKernelService : ISemanticKernelService
     #endregion
 
     #region Private Helper Methods - 私有辅助方法
+
+    private string GetCurrentSessionId()
+    {
+        var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return string.IsNullOrWhiteSpace(userId) ? "system" : userId;
+    }
+
+    private int EstimateTokenCount(string prompt, string? completion)
+    {
+        var promptLength = string.IsNullOrEmpty(prompt) ? 0 : prompt.Length;
+        var completionLength = string.IsNullOrEmpty(completion) ? 0 : completion.Length;
+        var estimated = (promptLength + completionLength) / 4.0;
+        return (int)Math.Ceiling(estimated);
+    }
+
+    private double EstimateCost(int tokenCount)
+    {
+        if (tokenCount <= 0)
+        {
+            return 0;
+        }
+
+        if (!_options.ModelCosts.TryGetValue(_options.ChatModel, out var pricePerThousand))
+        {
+            return 0;
+        }
+
+        return pricePerThousand * tokenCount / 1000.0;
+    }
 
     /// <summary>
     /// Get streaming response from chat service

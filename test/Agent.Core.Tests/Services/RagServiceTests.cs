@@ -21,6 +21,7 @@ namespace Agent.Core.Tests.Services
         private readonly Mock<IAgentCacheService> _mockCacheService;
         private readonly Mock<IRagCacheWarmer> _mockCacheWarmer;
         private readonly Mock<IBackgroundJobClient> _mockBackgroundJobs;
+        private readonly Mock<IPromptAnalyticsService> _mockPromptAnalytics;
         private readonly RagService _ragService;
         private readonly RagTestFixture _fixture;
 
@@ -33,6 +34,7 @@ namespace Agent.Core.Tests.Services
             _mockCacheService = new Mock<IAgentCacheService>();
             _mockCacheWarmer = new Mock<IRagCacheWarmer>();
             _mockBackgroundJobs = new Mock<IBackgroundJobClient>();
+            _mockPromptAnalytics = new Mock<IPromptAnalyticsService>();
 
             _ragService = new RagService(
                 _mockVectorDb.Object,
@@ -40,7 +42,8 @@ namespace Agent.Core.Tests.Services
                 _mockLogger.Object,
                 _mockCacheService.Object,
                 _mockCacheWarmer.Object,
-                _mockBackgroundJobs.Object);
+                _mockBackgroundJobs.Object,
+                _mockPromptAnalytics.Object);
         }
 
         #region Document Processing Tests (Step 1 & 2)

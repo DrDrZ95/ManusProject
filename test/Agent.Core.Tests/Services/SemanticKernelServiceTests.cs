@@ -50,7 +50,8 @@ namespace Agent.Core.Tests.Services
                 new Mock<IPermissionService>().Object,
                 new Mock<IHttpContextAccessor>().Object,
                 new Mock<IPrometheusService>().Object,
-                new Mock<IAgentTelemetryProvider>().Object
+                new Mock<IAgentTelemetryProvider>().Object,
+                new Mock<IAgentTraceService>().Object
             );
         }
 

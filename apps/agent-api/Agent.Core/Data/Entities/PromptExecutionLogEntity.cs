@@ -63,6 +63,12 @@ public class PromptExecutionLogEntity
     [Column("response_time")]
     public int ResponseTime { get; set; }
 
+    [Column("quality_score", TypeName = "numeric(3,2)")]
+    public decimal? QualityScore { get; set; }
+
+    [Column("cost_usd", TypeName = "numeric(10,4)")]
+    public decimal? CostUsd { get; set; }
+
     /// <summary>
     /// User Feedback Rating (1-5)
     /// 用户反馈评分（1-5）

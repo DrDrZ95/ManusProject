@@ -12,6 +12,7 @@ public class RagService : IRagService
     private readonly IAgentCacheService _cacheService; // 新增：缓存服务
     private readonly IRagCacheWarmer _cacheWarmer; // 新增：缓存预热服务
     private readonly IBackgroundJobClient _backgroundJobs; // 新增：后台任务客户端
+    private readonly IPromptAnalyticsService _promptAnalytics;
 
     public RagService(
         IVectorDatabaseService vectorDb,
@@ -19,7 +20,8 @@ public class RagService : IRagService
         ILogger<RagService> logger,
         IAgentCacheService cacheService,
         IRagCacheWarmer cacheWarmer,
-        IBackgroundJobClient backgroundJobs) // 注入后台任务客户端
+        IBackgroundJobClient backgroundJobs,
+        IPromptAnalyticsService promptAnalytics) // 注入后台任务客户端和 Prompt 分析服务
     {
         _vectorDb = vectorDb ?? throw new ArgumentNullException(nameof(vectorDb));
         _semanticKernel = semanticKernel ?? throw new ArgumentNullException(nameof(semanticKernel));
@@ -27,6 +29,7 @@ public class RagService : IRagService
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
         _cacheWarmer = cacheWarmer ?? throw new ArgumentNullException(nameof(cacheWarmer));
         _backgroundJobs = backgroundJobs ?? throw new ArgumentNullException(nameof(backgroundJobs));
+        _promptAnalytics = promptAnalytics ?? throw new ArgumentNullException(nameof(promptAnalytics));
     }
 
     #region Document Management - 文档管理

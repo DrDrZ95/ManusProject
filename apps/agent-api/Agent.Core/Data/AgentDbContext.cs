@@ -53,6 +53,8 @@ public class AgentDbContext : DbContext
     /// </summary>
     public DbSet<FinetuneRecordEntity> FinetuneRecords { get; set; }
 
+    public DbSet<AgentTraceEntity> AgentTraces { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -189,6 +191,19 @@ public class AgentDbContext : DbContext
             entity.HasIndex(e => e.StartedAt);
             entity.HasIndex(e => e.CompletedAt);
             entity.HasIndex(e => e.Priority);
+        });
+
+        modelBuilder.Entity<AgentTraceEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TraceId).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.SessionId).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Type).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Data).HasColumnType("jsonb");
+            entity.Property(e => e.Metadata).HasColumnType("jsonb");
+            entity.Property(e => e.CostUsd).HasColumnType("numeric(10,4)");
+            entity.HasIndex(e => e.SessionId);
+            entity.HasIndex(e => e.Timestamp);
         });
     }
 }

@@ -59,12 +59,13 @@ public class PromptTemplateEntity
     [Column("metadata", TypeName = "jsonb")]
     public string Metadata { get; set; } = "{}";
 
-    /// <summary>
-    /// Performance Metrics (Average response time, success rate, user rating)
-    /// 性能指标（平均响应时间、成功率、用户评分）
-    /// </summary>
-    [Column("performance_metrics", TypeName = "jsonb")]
-    public string PerformanceMetrics { get; set; } = "{}";
+    [MaxLength(100)]
+    [Column("experiment_id")]
+    public string? ExperimentId { get; set; }
+
+    [MaxLength(50)]
+    [Column("variant_name")]
+    public string? VariantName { get; set; }
 
     /// <summary>
     /// Created At

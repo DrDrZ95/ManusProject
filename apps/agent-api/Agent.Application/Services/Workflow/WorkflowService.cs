@@ -14,6 +14,7 @@ public class WorkflowService : IWorkflowService
     private readonly WorkflowOptions _options;
     private readonly IWorkflowRepository _repository;
     private readonly IWorkflowNotificationService _notificationService; // 新增：通知服务
+    private readonly IAgentTraceService _agentTraceService;
 
     // 状态机引擎实例管理 (State machine engine instance management)
     private readonly ConcurrentDictionary<Guid, IWorkflowEngine> _engines = new();
@@ -23,13 +24,15 @@ public class WorkflowService : IWorkflowService
         ILoggerFactory loggerFactory,
         IOptions<WorkflowOptions> options,
         IWorkflowRepository repository,
-        IWorkflowNotificationService notificationService) // 注入通知服务
+        IWorkflowNotificationService notificationService,
+        IAgentTraceService agentTraceService) // 注入通知服务
     {
         _logger = logger;
         _loggerFactory = loggerFactory;
         _options = options.Value;
         _repository = repository;
         _notificationService = notificationService;
+        _agentTraceService = agentTraceService;
     }
 
     /// <summary>
@@ -70,6 +73,7 @@ public class WorkflowService : IWorkflowService
             _notificationService,
             _repository,
             _loggerFactory.CreateLogger<WorkflowExecutionEngine>(),
+            _agentTraceService,
             existingContext);
 
         _engines[planId] = newEngine;
@@ -128,7 +132,8 @@ public class WorkflowService : IWorkflowService
                 resultPlan.CurrentState,
                 _notificationService,
                 _repository,
-                _loggerFactory.CreateLogger<WorkflowExecutionEngine>());
+                _loggerFactory.CreateLogger<WorkflowExecutionEngine>(),
+                _agentTraceService);
 
             _engines[resultPlan.Id] = engine;
             await engine.TriggerEventAsync(WorkflowEvent.StartTask);

@@ -16,6 +16,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IToolRegistryService, ToolRegistryService>();
         services.AddScoped<ISmartToolSelector, SmartToolSelector>();
 
+            services.AddScoped<IAgentTraceService, AgentTraceService>();
+
         return services;
     }
 }

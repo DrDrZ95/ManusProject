@@ -12,16 +12,19 @@ public class PromptsService : IPromptsService
     private readonly ILogger<PromptsService> _logger;
     private readonly Dictionary<string, Dictionary<string, PromptTemplate>> _prompts;
     private readonly Dictionary<string, List<ToolExample>> _toolExamples;
+    private readonly Dictionary<string, CompositePromptTemplate> _compositePrompts;
 
     public PromptsService(ILogger<PromptsService> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _prompts = new Dictionary<string, Dictionary<string, PromptTemplate>>();
         _toolExamples = new Dictionary<string, List<ToolExample>>();
+        _compositePrompts = new Dictionary<string, CompositePromptTemplate>(StringComparer.OrdinalIgnoreCase);
 
         // 初始化内置提示词和工具示例 - Initialize built-in prompts and tool examples
         InitializeBuiltInPrompts();
         InitializeToolExamples();
+        InitializeCompositePrompts();
     }
 
     /// <summary>
@@ -909,6 +912,204 @@ public class PromptsService : IPromptsService
 
         _logger.LogInformation("Initialized {Count} tool categories with {Total} total examples",
             _toolExamples.Count, _toolExamples.Values.Sum(t => t.Count));
+    }
+
+    private void InitializeCompositePrompts()
+    {
+        var ragQuery = new CompositePromptTemplate
+        {
+            Id = "rag_query_best_practice",
+            Category = "rag",
+            Name = "rag_query_best_practice",
+            Title = "RAG Query with Retrieval and Answering",
+            Description = "Best-practice template for retrieval-augmented question answering over documents.",
+            BaseTemplateId = "rag_document_qa",
+            IncludeTemplateIds = new List<string> { "rag_document_summary" },
+            Variables = new List<PromptVariable>
+            {
+                new PromptVariable { Name = "query", Description = "User question", Type = "string", Required = true },
+                new PromptVariable { Name = "context", Description = "Retrieved document context", Type = "string", Required = true },
+                new PromptVariable { Name = "language", Description = "Response language", Type = "string", DefaultValue = "zh-CN" },
+                new PromptVariable { Name = "include_sources", Description = "Whether to include source attributions", Type = "boolean", DefaultValue = true }
+            },
+            Examples = new List<string>
+            {
+                "用户提问：\"公司最新的安全基线有哪些要求？\"，从知识库检索合规文档并生成带引用的回答。",
+                "用户提问：\"某个微服务的限流策略是如何配置的？\"，从架构设计文档中检索相关章节并回答。",
+                "用户提问：\"最近一次重大故障的原因和改进措施是什么？\"，从事后复盘文档中检索信息并总结。"
+            },
+            OutputSchemaJson = """
+{
+  "type": "object",
+  "properties": {
+    "answer": { "type": "string" },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "document_id": { "type": "string" },
+          "title": { "type": "string" },
+          "snippet": { "type": "string" }
+        },
+        "required": [ "document_id", "snippet" ]
+      }
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+  },
+  "required": [ "answer" ]
+}
+""",
+            EstimatedTokenCost = 1500
+        };
+
+        var workflowDecomposition = new CompositePromptTemplate
+        {
+            Id = "workflow_task_decomposition",
+            Category = "workflow",
+            Name = "workflow_task_decomposition",
+            Title = "Workflow Task Decomposition and State Planning",
+            Description = "Best-practice template for breaking down complex tasks into workflow steps with states.",
+            BaseTemplateId = "workflow_task_breakdown",
+            IncludeTemplateIds = new List<string>(),
+            Variables = new List<PromptVariable>
+            {
+                new PromptVariable { Name = "project_name", Description = "Project or workflow name", Type = "string", Required = true },
+                new PromptVariable { Name = "objective", Description = "Overall objective", Type = "string", Required = true },
+                new PromptVariable { Name = "timeline", Description = "Timeline or deadline", Type = "string", DefaultValue = "flexible" },
+                new PromptVariable { Name = "resources", Description = "Available resources", Type = "string", DefaultValue = "" }
+            },
+            Examples = new List<string>
+            {
+                "将\"为现有应用接入 RAG 知识库\"拆解为若干可执行步骤，标记每步的状态和依赖关系。",
+                "将\"构建生产级 Prometheus + Grafana 监控体系\"拆解为规划、部署、验证三个阶段的详细步骤。",
+                "将\"对接第三方支付网关\"拆解为开发、测试、灰度和回滚预案等步骤。"
+            },
+            OutputSchemaJson = """
+{
+  "type": "object",
+  "properties": {
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "index": { "type": "integer" },
+          "text": { "type": "string" },
+          "type": { "type": "string" },
+          "state": { "type": "string", "enum": ["NotStarted", "InProgress", "Completed", "Blocked"] }
+        },
+        "required": [ "index", "text", "type" ]
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": { "type": "integer" },
+          "to": { "type": "integer" }
+        },
+        "required": [ "from", "to" ]
+      }
+    }
+  },
+  "required": [ "steps" ]
+}
+""",
+            EstimatedTokenCost = 1200
+        };
+
+        var toolCalling = new CompositePromptTemplate
+        {
+            Id = "tool_invocation_best_practice",
+            Category = "tools",
+            Name = "tool_invocation_best_practice",
+            Title = "Tool Invocation with Parameter Extraction and Validation",
+            Description = "Best-practice template for extracting parameters, calling tools, and validating results.",
+            BaseTemplateId = "code_api_spec",
+            IncludeTemplateIds = new List<string>(),
+            Variables = new List<PromptVariable>
+            {
+                new PromptVariable { Name = "tool_name", Description = "Tool or API name", Type = "string", Required = true },
+                new PromptVariable { Name = "natural_language_request", Description = "Original user request", Type = "string", Required = true },
+                new PromptVariable { Name = "schema", Description = "Expected parameter JSON schema", Type = "string", Required = true }
+            },
+            Examples = new List<string>
+            {
+                "从用户描述\"查询 2023 年 1 月至 3 月上海地区订单总额\"中提取 SQL 查询的时间和地域参数，并校验范围。",
+                "从用户输入\"部署一个 3 副本的 nginx 服务暴露 80 端口\"中提取 Kubernetes Deployment 的镜像、replicas 和端口参数。",
+                "从用户请求\"压测该接口到 1000 QPS\"中提取压测工具所需的并发数、持续时间和目标 URL。"
+            },
+            OutputSchemaJson = """
+{
+  "type": "object",
+  "properties": {
+    "arguments": {
+      "type": "object"
+    },
+    "validation_errors": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "should_invoke": { "type": "boolean" }
+  },
+  "required": [ "arguments", "should_invoke" ]
+}
+""",
+            EstimatedTokenCost = 800
+        };
+
+        _compositePrompts[ragQuery.Id] = ragQuery;
+        _compositePrompts[workflowDecomposition.Id] = workflowDecomposition;
+        _compositePrompts[toolCalling.Id] = toolCalling;
+
+        _logger.LogInformation("Initialized {Count} composite prompt templates", _compositePrompts.Count);
+    }
+
+    public Task<CompositePromptTemplate?> GetCompositeTemplateAsync(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return Task.FromResult<CompositePromptTemplate?>(null);
+        }
+
+        _compositePrompts.TryGetValue(id, out var template);
+        return Task.FromResult(template);
+    }
+
+    public string RenderCompositePrompt(CompositePromptRequest request)
+    {
+        CompositePromptTemplate? TemplateResolver(string id)
+        {
+            _compositePrompts.TryGetValue(id, out var composite);
+            return composite;
+        }
+
+        PromptTemplate? ResolvePrompt(string id)
+        {
+            foreach (var category in _prompts.Values)
+            {
+                foreach (var template in category.Values)
+                {
+                    if (string.Equals(template.Id, id, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return template;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        var compositeTemplate = request.Template;
+        if (string.IsNullOrEmpty(compositeTemplate.BaseTemplateId) &&
+            TemplateResolver(compositeTemplate.Id) is { } existing)
+        {
+            request.Template = existing;
+        }
+
+        return PromptComposer.RenderComposite(request, ResolvePrompt);
     }
 }
 

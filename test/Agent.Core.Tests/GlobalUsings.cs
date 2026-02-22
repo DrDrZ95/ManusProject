@@ -3,6 +3,7 @@ global using Agent.Application.Services.RAG;
 global using Agent.Application.Services.Sandbox;
 global using Agent.Application.Services.SemanticKernel;
 global using Agent.Application.Services.SemanticKernel.Planner;
+global using Agent.Application.Services.Telemetry;
 global using Agent.Application.Services.UserInput;
 global using Agent.Application.Services.VectorDatabase;
 global using Agent.Application.Services.Workflow;

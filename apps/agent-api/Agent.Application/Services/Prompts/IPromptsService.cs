@@ -81,6 +81,10 @@ public interface IPromptsService
     /// </summary>
     /// <returns>List of tool types - 工具类型列表</returns>
     Task<List<string>> GetToolTypesAsync();
+
+    Task<CompositePromptTemplate?> GetCompositeTemplateAsync(string id);
+
+    string RenderCompositePrompt(CompositePromptRequest request);
 }
 
 /// <summary>

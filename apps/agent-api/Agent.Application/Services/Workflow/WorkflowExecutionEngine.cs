@@ -13,6 +13,7 @@ public class WorkflowExecutionEngine : IWorkflowEngine
     private readonly IWorkflowRepository _workflowRepository;
     private readonly WorkflowContext _context;
     private readonly ILogger<WorkflowExecutionEngine> _logger;
+    private readonly IAgentTraceService? _agentTraceService;
     private DateTime? _stepStartTime;
 
     /// <inheritdoc />
@@ -24,12 +25,14 @@ public class WorkflowExecutionEngine : IWorkflowEngine
         IWorkflowNotificationService notificationService,
         IWorkflowRepository workflowRepository,
         ILogger<WorkflowExecutionEngine> logger,
+        IAgentTraceService? agentTraceService = null,
         WorkflowContext? existingContext = null)
     {
         _planId = planId;
         _notificationService = notificationService;
         _workflowRepository = workflowRepository;
         _logger = logger;
+        _agentTraceService = agentTraceService;
         _context = existingContext ?? new WorkflowContext(planId.GetHashCode());
 
         _stateMachine = new StateMachine<WorkflowState, WorkflowEvent>(
@@ -104,6 +107,36 @@ public class WorkflowExecutionEngine : IWorkflowEngine
             {
                 await RecordStepPerformanceAsync(false);
             }
+        }
+
+        if (_agentTraceService != null)
+        {
+            var sessionId = _context.InputParameters.TryGetValue("sessionId", out var rawSessionId) && rawSessionId is string sid && !string.IsNullOrWhiteSpace(sid)
+                ? sid
+                : "workflow";
+
+            var metadata = new Dictionary<string, object>
+            {
+                ["planId"] = _planId.ToString(),
+                ["sourceState"] = transition.Source.ToString(),
+                ["destinationState"] = transition.Destination.ToString(),
+                ["trigger"] = transition.Trigger.ToString()
+            };
+
+            var trace = new AgentTrace
+            {
+                SessionId = sessionId,
+                Timestamp = DateTime.UtcNow,
+                Type = TraceType.Result,
+                Data = new Dictionary<string, object>
+                {
+                    ["planId"] = _planId.ToString(),
+                    ["state"] = transition.Destination.ToString()
+                },
+                Metadata = metadata
+            };
+
+            await _agentTraceService.RecordTraceAsync(trace);
         }
 
         // Persistence

@@ -6,10 +6,14 @@ namespace Agent.Application.Services;
 public class McpClientService : IMcpClientService
 {
     private readonly ILogger<McpClientService> _logger;
+    private readonly IAgentTraceService _agentTraceService;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public McpClientService(ILogger<McpClientService> logger)
+    public McpClientService(ILogger<McpClientService> logger, IAgentTraceService agentTraceService, IHttpContextAccessor httpContextAccessor)
     {
         _logger = logger;
+        _agentTraceService = agentTraceService;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     /// <summary>
@@ -77,12 +81,45 @@ public class McpClientService : IMcpClientService
     {
         _logger.LogInformation("Calling tool {ToolName} on MCP client", toolName);
 
+        var traceId = Guid.NewGuid().ToString();
+        var sessionId = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "system";
+
+        var thinkingTrace = new AgentTrace
+        {
+            TraceId = traceId,
+            SessionId = sessionId,
+            Timestamp = DateTime.UtcNow,
+            Type = TraceType.ToolCall,
+            Data = new Dictionary<string, object?>
+            {
+                ["toolName"] = toolName,
+                ["parameters"] = parameters
+            }
+        };
+
+        await _agentTraceService.RecordTraceAsync(thinkingTrace, cancellationToken);
+
         var result = await client.CallToolAsync(
             toolName,
             parameters,
             cancellationToken: cancellationToken);
 
         _logger.LogInformation("Tool {ToolName} called successfully", toolName);
+
+        var resultTrace = new AgentTrace
+        {
+            TraceId = traceId,
+            SessionId = sessionId,
+            Timestamp = DateTime.UtcNow,
+            Type = TraceType.Result,
+            Data = new Dictionary<string, object?>
+            {
+                ["toolName"] = toolName,
+                ["result"] = result
+            }
+        };
+
+        await _agentTraceService.RecordTraceAsync(resultTrace, cancellationToken);
 
         return result;
     }

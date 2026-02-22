@@ -17,8 +17,9 @@ public static class PromptsExtensions
     /// <returns>Service collection for chaining - 用于链式调用的服务集合</returns>
     public static IServiceCollection AddPromptsServices(this IServiceCollection services)
     {
-        // 注册提示词服务 - Register prompts service
         services.AddSingleton<IPromptsService, PromptsService>();
+        services.AddScoped<IPromptAnalyticsService, PromptAnalyticsService>();
+        services.AddHttpClient<IMlflowTrackingService, MlflowTrackingService>();
 
         // 添加内存缓存支持 - Add memory cache support
         services.AddMemoryCache();
@@ -37,11 +38,11 @@ public static class PromptsExtensions
         this IServiceCollection services,
         Action<PromptsOptions> configureOptions)
     {
-        // 配置选项 - Configure options
         services.Configure(configureOptions);
 
-        // 注册提示词服务 - Register prompts service
         services.AddSingleton<IPromptsService, PromptsService>();
+        services.AddScoped<IPromptAnalyticsService, PromptAnalyticsService>();
+        services.AddHttpClient<IMlflowTrackingService, MlflowTrackingService>();
 
         // 添加内存缓存支持 - Add memory cache support
         services.AddMemoryCache();

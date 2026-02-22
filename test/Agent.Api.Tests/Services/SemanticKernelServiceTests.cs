@@ -17,6 +17,7 @@ public class SemanticKernelServiceTests
     private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
     private readonly Mock<IPrometheusService> _mockPrometheusService;
     private readonly Mock<IAgentTelemetryProvider> _mockTelemetryProvider;
+    private readonly Mock<IAgentTraceService> _mockTraceService;
     private readonly SemanticKernelService _semanticKernelService;
 
     public SemanticKernelServiceTests()
@@ -36,6 +37,7 @@ public class SemanticKernelServiceTests
         _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
         _mockPrometheusService = new Mock<IPrometheusService>();
         _mockTelemetryProvider = new Mock<IAgentTelemetryProvider>();
+        _mockTraceService = new Mock<IAgentTraceService>();
 
         _semanticKernelService = new SemanticKernelService(
             _mockKernel.Object,
@@ -52,7 +54,8 @@ public class SemanticKernelServiceTests
             _mockPermissionService.Object,
             _mockHttpContextAccessor.Object,
             _mockPrometheusService.Object,
-            _mockTelemetryProvider.Object
+            _mockTelemetryProvider.Object,
+            _mockTraceService.Object
         );
     }
 

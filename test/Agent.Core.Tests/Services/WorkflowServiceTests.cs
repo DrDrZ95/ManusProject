@@ -11,6 +11,7 @@ namespace Agent.Core.Tests.Services
         private readonly Mock<IOptions<WorkflowOptions>> _mockOptions;
         private readonly Mock<IWorkflowRepository> _mockRepository;
         private readonly Mock<IWorkflowNotificationService> _mockNotificationService;
+        private readonly Mock<IAgentTraceService> _mockAgentTraceService;
         private readonly WorkflowService _workflowService;
 
         public WorkflowServiceTests()
@@ -21,13 +22,15 @@ namespace Agent.Core.Tests.Services
             _mockOptions.Setup(o => o.Value).Returns(new WorkflowOptions { DefaultToDoDirectory = "/tmp/workflows" });
             _mockRepository = new Mock<IWorkflowRepository>();
             _mockNotificationService = new Mock<IWorkflowNotificationService>();
+            _mockAgentTraceService = new Mock<IAgentTraceService>();
 
             _workflowService = new WorkflowService(
                 _mockLogger.Object,
                 _mockLoggerFactory.Object,
                 _mockOptions.Object,
                 _mockRepository.Object,
-                _mockNotificationService.Object);
+                _mockNotificationService.Object,
+                _mockAgentTraceService.Object);
         }
 
         /// <summary>
@@ -70,7 +73,8 @@ namespace Agent.Core.Tests.Services
                 WorkflowState.Idle,
                 _mockNotificationService.Object,
                 _mockRepository.Object,
-                new Mock<ILogger<WorkflowExecutionEngine>>().Object);
+                new Mock<ILogger<WorkflowExecutionEngine>>().Object,
+                _mockAgentTraceService.Object);
 
             // Act & Assert: Idle -> Initializing -> Planning -> Executing -> Completed
             Assert.Equal(WorkflowState.Idle, engine.CurrentState);
@@ -102,7 +106,8 @@ namespace Agent.Core.Tests.Services
                 WorkflowState.Idle,
                 _mockNotificationService.Object,
                 _mockRepository.Object,
-                new Mock<ILogger<WorkflowExecutionEngine>>().Object);
+                new Mock<ILogger<WorkflowExecutionEngine>>().Object,
+                _mockAgentTraceService.Object);
 
             await engine.TriggerEventAsync(WorkflowEvent.StartTask);
             await engine.TriggerEventAsync(WorkflowEvent.InitializationComplete);
@@ -135,7 +140,8 @@ namespace Agent.Core.Tests.Services
                 WorkflowState.Idle,
                 _mockNotificationService.Object,
                 _mockRepository.Object,
-                new Mock<ILogger<WorkflowExecutionEngine>>().Object);
+                new Mock<ILogger<WorkflowExecutionEngine>>().Object,
+                _mockAgentTraceService.Object);
 
             await engine.TriggerEventAsync(WorkflowEvent.StartTask);
 
@@ -162,7 +168,8 @@ namespace Agent.Core.Tests.Services
                     WorkflowState.Idle,
                     _mockNotificationService.Object,
                     _mockRepository.Object,
-                    new Mock<ILogger<WorkflowExecutionEngine>>().Object)).ToList();
+                    new Mock<ILogger<WorkflowExecutionEngine>>().Object,
+                    _mockAgentTraceService.Object)).ToList();
             var startTime = DateTime.UtcNow;
 
             // Act
