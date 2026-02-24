@@ -18,7 +18,6 @@ global using Agent.Core.Cache;
 global using Agent.Core.Data;
 global using Agent.Core.Data.Entities;
 global using Agent.Core.Data.Repositories;
-global using Agent.Core.eBPF.Detective;
 global using Agent.Core.Models;
 global using Agent.Core.Models.Common;
 global using Agent.Core.Models.Finetune;
@@ -65,4 +64,3 @@ global using System.Threading.Tasks;
 global using Testcontainers.PostgreSql;
 global using Testcontainers.Redis;
 global using Xunit;
-

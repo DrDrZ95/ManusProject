@@ -30,8 +30,8 @@ global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Diagnostics.HealthChecks;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Options;
+global using Microsoft.OpenApi.Models;
 global using Microsoft.SemanticKernel;
-global using StackExchange.Redis;
 global using Microsoft.SemanticKernel.Connectors.Chroma;
 global using ModelContextProtocol;
 global using ModelContextProtocol.Protocol;
@@ -40,6 +40,7 @@ global using Polly;
 global using Polly.CircuitBreaker;
 global using Polly.Retry;
 global using Prometheus;
+global using StackExchange.Redis;
 global using Stateless;
 global using System;
 global using System.Collections.Concurrent;
@@ -83,4 +84,3 @@ public class ChatMessage
 
     public Dictionary<string, object>? Metadata { get; set; }
 }
-

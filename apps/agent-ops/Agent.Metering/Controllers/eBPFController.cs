@@ -1,5 +1,3 @@
-using Swashbuckle.AspNetCore.Annotations;
-
 namespace Agent.Metering.Controllers;
 
 [ApiController]
