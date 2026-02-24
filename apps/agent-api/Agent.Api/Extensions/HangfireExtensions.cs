@@ -8,15 +8,36 @@ public static class HangfireExtensions
 {
     public static IServiceCollection AddHangfireServices(this IServiceCollection services, IConfiguration configuration)
     {
+        var redisConnectionString = configuration.GetSection("Redis:ConnectionString").Value;
+
         // 添加 Hangfire 服务
         // Add Hangfire services
-        services.AddHangfire(hangfireConfig => hangfireConfig
-            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-            .UseSimpleAssemblyNameTypeSerializer()
-            .UseRecommendedSerializerSettings()
-            // 使用内存存储，生产环境应替换为持久化存储，如 SQL Server, PostgreSQL, Redis 等
-            // Use in-memory storage; in production, replace with persistent storage like SQL Server, PostgreSQL, Redis, etc.
-            .UseRedisStorage(configuration.GetSection("Redis:ConnectionString").Value));
+        services.AddHangfire(hangfireConfig =>
+        {
+            hangfireConfig
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings();
+
+            try
+            {
+                if (!string.IsNullOrEmpty(redisConnectionString))
+                {
+                    // 尝试使用 Redis 存储 (Try to use Redis storage)
+                    hangfireConfig.UseRedisStorage(redisConnectionString);
+                }
+                else
+                {
+                    throw new InvalidOperationException("Redis connection string is missing.");
+                }
+            }
+            catch (Exception ex)
+            {
+                // 如果 Redis 失败，回退到内存存储 (If Redis fails, fall back to memory storage)
+                ExternalComponentLogger.LogConnectionError("Hangfire Redis", ex, "Hangfire 将回退到内存存储 (MemoryStorage)。注意：重启后后台任务将丢失。");
+                hangfireConfig.UseMemoryStorage();
+            }
+        });
 
         // 添加 Hangfire 服务器，用于处理后台任务
         // Add Hangfire server for processing background jobs

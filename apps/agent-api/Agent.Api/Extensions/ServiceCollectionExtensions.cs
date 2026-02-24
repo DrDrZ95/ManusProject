@@ -22,6 +22,19 @@ public static class ServiceCollectionExtensions
         services.AddSignalRServices(configuration);
         services.AddHangfireServices(configuration);
         services.AddRedisDistributedCache(configuration);
+        services.AddAiAgentYarp(configuration);
+        
+        // Add Core Component Services - 添加核心组件服务
+        services.AddPostgreSqlDatabase(configuration);
+        services.AddSemanticKernel(configuration);
+        services.AddChromaDb(configuration);
+        services.AddDaprServices();
+        services.AddRagServices(configuration);
+        services.AddPromptsServices();
+        services.AddPythonFinetune(configuration);
+        services.AddHdfsServices(configuration);
+        services.AddSandboxTerminal(configuration);
+        services.AddWorkflowServices(configuration);
 
         return services;
     }
@@ -43,9 +56,12 @@ public static class ServiceCollectionExtensions
         };
 
         // 2. 自动化注入：只要类实现了接口，就以接口形式注入 (默认 Scoped)
-        // Automatic injection: As long as the class implements the interface, it is injected as an interface (Default Scoped)
+        // 排除掉已经手动注册或需要特殊处理的类
         builder.RegisterAssemblyTypes(assemblies)
-            .Where(t => t.IsClass && !t.IsAbstract && t.GetInterfaces().Length > 0)
+            .Where(t => t.IsClass && !t.IsAbstract && t.GetInterfaces().Length > 0 && 
+                        t.Name != "AgentTelemetryProvider" && 
+                        t.Name != "PostgreSqlService" &&
+                        t.Name != "ChromaClient")
             .AsImplementedInterfaces()
             .InstancePerLifetimeScope();
 

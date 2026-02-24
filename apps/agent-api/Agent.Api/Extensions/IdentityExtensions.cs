@@ -122,6 +122,22 @@ public static class IdentityExtensions
                     var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
                     logger.LogWarning("JWT Challenge: {Error} - {ErrorDescription}", context.Error, context.ErrorDescription);
                     return Task.CompletedTask;
+                },
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+
+                    // If the request is for our hub...
+                    // 如果请求是针对我们的hub...
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) &&
+                        (path.StartsWithSegments("/aiagentHub") || path.StartsWithSegments("/chathub") || path.StartsWithSegments("/workflowHub")))
+                    {
+                        // Read the token out of the query string
+                        // 从查询字符串中读取token
+                        context.Token = accessToken;
+                    }
+                    return Task.CompletedTask;
                 }
             };
         });
@@ -196,7 +212,8 @@ public static class IdentityExtensions
 
             // Apply pending migrations
             // 应用待处理的迁移
-            if (context.Database.GetPendingMigrations().Any())
+            var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+            if (pendingMigrations.Any())
             {
                 logger.LogInformation("Applying pending database migrations...");
                 await context.Database.MigrateAsync();
@@ -210,8 +227,11 @@ public static class IdentityExtensions
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An error occurred while initializing the Identity database");
-            throw;
+            // 使用外部组件日志记录器，输出黄色加粗提示，但不阻塞程序启动
+            ExternalComponentLogger.LogConnectionError("Identity Database", ex, "Identity 数据库连接失败。用户登录、权限验证等功能将受限。请检查 PostgreSQL 服务状态。");
+            
+            // 不再向上抛出异常，允许主程序继续启动
+            // Do not re-throw the exception, allow the main program to continue starting
         }
 
         return app;

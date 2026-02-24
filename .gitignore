@@ -115,3 +115,7 @@ storybook-static/
 
 # log
 debug.log
+
+# Custom ignores
+openapi.json
+**/openapi.json

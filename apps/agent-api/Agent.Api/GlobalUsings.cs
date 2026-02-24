@@ -38,6 +38,7 @@ global using Asp.Versioning.ApiExplorer;
 global using ChromaDB.Client;
 global using ChromaDB.Client.Models;
 global using Hangfire;
+global using Hangfire.MemoryStorage;
 global using Hangfire.Redis.StackExchange;
 global using Microsoft.AspNetCore.Authentication.JwtBearer;
 global using Microsoft.AspNetCore.Authorization;

@@ -15,9 +15,9 @@ public static class ExternalComponentLogger
             var originalColor = Console.ForegroundColor;
             
             Console.WriteLine();
-            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = ConsoleColor.Red;
             
-            // 模拟加粗（控制台本身对加粗支持有限，通常通过高亮色模拟）
+            // 模拟加粗（控制台通常使用高亮色模拟加粗效果）
             Console.WriteLine("********************************************************************************");
             Console.WriteLine($"[EXTERNAL COMPONENT ERROR] Component: {componentName}");
             Console.WriteLine($"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");

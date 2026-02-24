@@ -21,12 +21,17 @@ public static class PostgreSqlExtensions
         IConfiguration configuration)
     {
         // 获取连接字符串 - Get connection string
-        var connectionString = configuration.GetConnectionString("PostgreSQL");
+        // 优先使用 PostgreSQL，回退到 DefaultConnection
+        var connectionString = configuration.GetConnectionString("PostgreSQL") 
+                               ?? configuration.GetConnectionString("DefaultConnection");
 
         if (string.IsNullOrEmpty(connectionString))
         {
-            throw new InvalidOperationException(
-                "PostgreSQL connection string not found. Please configure 'ConnectionStrings:PostgreSQL' in appsettings.json");
+            // 如果连接字符串完全缺失，记录错误但不抛出异常，允许主程序启动
+            ExternalComponentLogger.LogConnectionError("PostgreSQL Database", new InvalidOperationException("Connection string 'PostgreSQL' or 'DefaultConnection' not found in appsettings.json"), "请在 appsettings.json 中配置数据库连接字符串。");
+            
+            // 使用占位符防止 AddDbContext 报错
+            connectionString = "Host=localhost;Database=dummy;Username=postgres;Password=postgres";
         }
 
         // 添加DbContext - Add DbContext

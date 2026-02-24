@@ -18,69 +18,6 @@ public static class SignalRExtensions
         // 注册 SignalR 通知服务 (Register SignalR Notification Service)
         services.AddSingleton<IWorkflowNotificationService, WorkflowNotificationService>();
 
-        // Add JWT authentication for SignalR
-        // 为SignalR添加JWT认证
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = configuration["Jwt:Issuer"],
-                    ValidAudience = configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured")))
-                };
-
-                // Configure JWT for SignalR
-                // 为SignalR配置JWT
-                options.Events = new JwtBearerEvents
-                {
-                    OnMessageReceived = context =>
-                    {
-                        var accessToken = context.Request.Query["access_token"];
-
-                        // If the request is for our hub...
-                        // 如果请求是针对我们的hub...
-                        var path = context.HttpContext.Request.Path;
-                        if (!string.IsNullOrEmpty(accessToken) &&
-                            (path.StartsWithSegments("/aiagentHub") || path.StartsWithSegments("/chathub")))
-                        {
-                            // Read the token out of the query string
-                            // 从查询字符串中读取token
-                            context.Token = accessToken;
-                        }
-                        return Task.CompletedTask;
-                    }
-                };
-            });
-
-        // Add authorization policies for SignalR
-        // 为SignalR添加授权策略
-        services.AddAuthorization(options =>
-        {
-            options.AddPolicy(AuthorizationPolicies.SignalRAccess, policy =>
-            {
-                policy.RequireAuthenticatedUser();
-                policy.RequireClaim("scope", "signalr.access");
-            });
-
-            options.AddPolicy(AuthorizationPolicies.RagAccess, policy =>
-            {
-                policy.RequireAuthenticatedUser();
-                policy.RequireClaim("scope", "rag.access");
-            });
-
-            options.AddPolicy(AuthorizationPolicies.FinetuneAccess, policy =>
-            {
-                policy.RequireAuthenticatedUser();
-                policy.RequireClaim("scope", "finetune.access");
-            });
-        });
-
         // Add SignalR with automatic reconnection configuration
         // 添加SignalR并配置自动重连
         services.AddSignalR(options =>
