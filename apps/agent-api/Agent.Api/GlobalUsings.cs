@@ -1,6 +1,5 @@
 global using Agent.Api.Extensions;
 global using Agent.Application.Hubs;
-global using Agent.Application.Hubs; // 引入新的Hub命名空间
 global using Agent.Application.Services;
 global using Agent.Application.Services.FileUpload;
 global using Agent.Application.Services.Finetune;
@@ -26,10 +25,9 @@ global using Agent.Core.Models.Common;
 global using Agent.Core.Models.Finetune;
 global using Agent.Core.Models.Identity;
 global using Agent.Core.Models.Memory;
-global using Agent.Core.Notifications; // 引入通知DTO命名空间
+global using Agent.Core.Notifications;
 global using Agent.Core.Tools.Interfaces;
 global using Agent.Core.Workflow;
-global using Agent.Core.Workflow; // 引入工作流相关命名空间
 global using Agent.McpGateway;
 global using Agent.McpGateway.UniversalMcp;
 global using Asp.Versioning;
@@ -46,11 +44,14 @@ global using Microsoft.AspNetCore.Http.Features;
 global using Microsoft.AspNetCore.Identity;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.AspNetCore.Mvc.ApiExplorer;
-global using Microsoft.AspNetCore.SignalR; // 引入SignalR命名空间
+global using Microsoft.AspNetCore.Routing;
+global using Microsoft.AspNetCore.SignalR;
 global using Microsoft.AspNetCore.SignalR.Client;
 global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.Configuration;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Diagnostics.HealthChecks;
+global using Microsoft.Extensions.Hosting;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Options;
 global using Microsoft.IdentityModel.Tokens;
@@ -68,6 +69,7 @@ global using System.ComponentModel;
 global using System.ComponentModel.DataAnnotations;
 global using System.Diagnostics;
 global using System.IO;
+global using System.Linq;
 global using System.Net;
 global using System.Reflection;
 global using System.Security;
@@ -85,4 +87,3 @@ public class AddDocumentsRequest
     public IEnumerable<string>? Ids { get; set; }
     public IEnumerable<Dictionary<string, object>>? Metadatas { get; set; }
 }
-
