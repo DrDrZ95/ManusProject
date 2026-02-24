@@ -126,13 +126,15 @@ const Settings: React.FC<SettingsProps> = ({ lang, activeTab }) => {
         
         {/* === PROFILE VIEW === */}
         {activeTab === 'profile' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-slide-up">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start animate-slide-up">
              {/* Profile Card */}
-             <div className="lg:col-span-1">
-                <div className="bg-white dark:bg-nexus-800 border border-slate-200 dark:border-nexus-700 rounded-[2.5rem] overflow-hidden shadow-sm sticky top-0">
-                   <div className="h-32 bg-gradient-to-r from-blue-500 to-purple-600"></div>
+             <div className="lg:col-span-1 sticky top-0">
+                <div className="bg-white dark:bg-nexus-800 border border-slate-200 dark:border-nexus-700 rounded-[2.5rem] overflow-hidden shadow-sm">
+                   <div className="h-32 bg-gradient-to-r from-blue-500 to-purple-600 relative">
+                      <div className="absolute inset-0 bg-black/10"></div>
+                   </div>
                    <div className="px-8 pb-8 relative">
-                      <div className="w-24 h-24 rounded-[1.5rem] bg-white dark:bg-nexus-800 p-1.5 absolute -top-12 shadow-xl">
+                      <div className="w-24 h-24 rounded-[1.5rem] bg-white dark:bg-nexus-800 p-1.5 absolute -top-12 shadow-xl border border-slate-100 dark:border-nexus-700">
                          <img 
                            src={selectedAvatar} 
                            alt="Profile" 
@@ -140,20 +142,36 @@ const Settings: React.FC<SettingsProps> = ({ lang, activeTab }) => {
                          />
                       </div>
                       <div className="mt-14">
-                         <h3 className="text-2xl font-black text-slate-900 dark:text-white">Admin User</h3>
-                         <p className="text-slate-500 dark:text-nexus-400 font-medium">SysAdmin • DevOps Lead</p>
+                         <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Admin User</h3>
+                         <p className="text-slate-500 dark:text-nexus-400 font-medium mt-1">SysAdmin • DevOps Lead</p>
                          
                          <div className="mt-6 flex flex-wrap gap-2">
-                            <span className="px-3 py-1 bg-green-500/10 text-green-500 rounded-lg text-[10px] font-black uppercase tracking-wider">Verified</span>
-                            <span className="px-3 py-1 bg-blue-500/10 text-blue-500 rounded-lg text-[10px] font-black uppercase tracking-wider">MFA Active</span>
+                            <span className="px-3 py-1.5 bg-green-500/10 text-green-600 dark:text-green-400 rounded-xl text-[10px] font-black uppercase tracking-wider border border-green-500/20 flex items-center">
+                               <CheckCircle size={12} className="mr-1.5" /> Verified
+                            </span>
+                            <span className="px-3 py-1.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl text-[10px] font-black uppercase tracking-wider border border-blue-500/20 flex items-center">
+                               <Shield size={12} className="mr-1.5" /> MFA Active
+                            </span>
                          </div>
 
-                         <div className="mt-8 pt-8 border-t border-slate-100 dark:border-nexus-700 space-y-4">
-                            <div className="flex items-center text-sm text-slate-600 dark:text-nexus-300">
-                               <Mail size={16} className="mr-3 text-nexus-400" /> admin@agentproject.io
+                         <div className="mt-8 pt-8 border-t border-slate-100 dark:border-nexus-700 space-y-5">
+                            <div className="flex items-center text-sm text-slate-600 dark:text-nexus-300 group">
+                               <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-nexus-900/50 flex items-center justify-center mr-4 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 transition-colors">
+                                 <Mail size={16} className="text-slate-400 dark:text-nexus-500 group-hover:text-blue-500 transition-colors" />
+                               </div>
+                               <span className="font-medium">admin@agentproject.io</span>
                             </div>
-                            <div className="flex items-center text-sm text-slate-600 dark:text-nexus-300">
-                               <Globe size={16} className="mr-3 text-nexus-400" /> San Francisco, CA
+                            <div className="flex items-center text-sm text-slate-600 dark:text-nexus-300 group">
+                               <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-nexus-900/50 flex items-center justify-center mr-4 group-hover:bg-purple-50 dark:group-hover:bg-purple-500/10 transition-colors">
+                                 <Globe size={16} className="text-slate-400 dark:text-nexus-500 group-hover:text-purple-500 transition-colors" />
+                               </div>
+                               <span className="font-medium">San Francisco, CA</span>
+                            </div>
+                            <div className="flex items-center text-sm text-slate-600 dark:text-nexus-300 group">
+                               <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-nexus-900/50 flex items-center justify-center mr-4 group-hover:bg-orange-50 dark:group-hover:bg-orange-500/10 transition-colors">
+                                 <Clock size={16} className="text-slate-400 dark:text-nexus-500 group-hover:text-orange-500 transition-colors" />
+                               </div>
+                               <span className="font-medium">Joined Sept 2023</span>
                             </div>
                          </div>
                       </div>
@@ -165,12 +183,14 @@ const Settings: React.FC<SettingsProps> = ({ lang, activeTab }) => {
              <div className="lg:col-span-2 space-y-8">
                 <div className="bg-white dark:bg-nexus-800 border border-slate-200 dark:border-nexus-700 rounded-[2.5rem] p-10 shadow-sm">
                    <h3 className="text-lg font-black text-slate-900 dark:text-white mb-8 flex items-center">
-                      <User size={20} className="mr-3 text-nexus-accent" />
+                      <div className="p-2 bg-blue-500/10 rounded-xl mr-4">
+                         <User size={20} className="text-blue-500" />
+                      </div>
                       Personal Information
                    </h3>
                    
                    {/* Avatar Selection */}
-                   <div className="mb-8">
+                   <div className="mb-10 p-6 bg-slate-50 dark:bg-nexus-900/50 border border-slate-100 dark:border-nexus-700/50 rounded-[2rem]">
                       <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-nexus-500 mb-4">Select Avatar</label>
                       <div className="flex flex-wrap gap-4">
                         {AVATARS.map((avatar) => (
@@ -179,13 +199,13 @@ const Settings: React.FC<SettingsProps> = ({ lang, activeTab }) => {
                               onClick={() => setSelectedAvatar(avatar.url)}
                               className={`relative w-16 h-16 rounded-2xl overflow-hidden transition-all duration-300 border-2 ${
                                  selectedAvatar === avatar.url 
-                                 ? 'border-nexus-accent scale-110 shadow-lg shadow-nexus-accent/20' 
+                                 ? 'border-blue-500 scale-110 shadow-lg shadow-blue-500/20' 
                                  : 'border-transparent opacity-70 hover:opacity-100 hover:scale-105'
                               }`}
                            >
                               <img src={avatar.url} alt={avatar.name} className="w-full h-full object-cover" />
                               {selectedAvatar === avatar.url && (
-                                <div className="absolute inset-0 bg-nexus-accent/20 flex items-center justify-center">
+                                <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center backdrop-blur-[2px]">
                                    <CheckCircle size={20} className="text-white drop-shadow-md" />
                                 </div>
                               )}
@@ -194,38 +214,46 @@ const Settings: React.FC<SettingsProps> = ({ lang, activeTab }) => {
                       </div>
                    </div>
 
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                       <div>
-                         <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-nexus-500 mb-2">{t.fullName}</label>
+                         <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-nexus-500 mb-2 ml-1">{t.fullName}</label>
                          <input 
                             type="text" 
                             defaultValue="Admin User"
-                            className="w-full bg-slate-50 dark:bg-nexus-900/50 border border-slate-200 dark:border-nexus-600 rounded-xl p-4 text-sm text-slate-900 dark:text-white focus:border-nexus-accent focus:ring-4 focus:ring-nexus-accent/10 outline-none transition-all font-bold"
+                            className="w-full bg-slate-50 dark:bg-nexus-900/50 border border-slate-200 dark:border-nexus-600 rounded-2xl p-4 text-sm text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-bold"
                          />
                       </div>
                       <div>
-                         <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-nexus-500 mb-2">{t.role}</label>
+                         <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-nexus-500 mb-2 ml-1">{t.role}</label>
                          <input 
                             type="text" 
                             defaultValue="System Administrator"
                             disabled
-                            className="w-full bg-slate-100 dark:bg-nexus-900 border border-slate-200 dark:border-nexus-700 rounded-xl p-4 text-sm text-slate-500 dark:text-nexus-400 cursor-not-allowed font-bold"
+                            className="w-full bg-slate-100 dark:bg-nexus-900 border border-slate-200 dark:border-nexus-700 rounded-2xl p-4 text-sm text-slate-500 dark:text-nexus-400 cursor-not-allowed font-bold opacity-70"
                          />
                       </div>
                       <div className="md:col-span-2">
-                         <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-nexus-500 mb-2">{t.bio}</label>
+                         <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-nexus-500 mb-2 ml-1">{t.bio}</label>
                          <textarea 
                             rows={4}
                             defaultValue="Lead DevOps Engineer managing the AgentProject infrastructure. Responsible for cluster stability and AI pipeline orchestration."
-                            className="w-full bg-slate-50 dark:bg-nexus-900/50 border border-slate-200 dark:border-nexus-600 rounded-xl p-4 text-sm text-slate-900 dark:text-white focus:border-nexus-accent focus:ring-4 focus:ring-nexus-accent/10 outline-none transition-all font-medium leading-relaxed"
+                            className="w-full bg-slate-50 dark:bg-nexus-900/50 border border-slate-200 dark:border-nexus-600 rounded-2xl p-4 text-sm text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-medium leading-relaxed resize-none"
                          />
                       </div>
                       <div>
-                         <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-nexus-500 mb-2">{t.email}</label>
+                         <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-nexus-500 mb-2 ml-1">{t.email}</label>
                          <input 
                             type="email" 
                             defaultValue="admin@agentproject.io"
-                            className="w-full bg-slate-50 dark:bg-nexus-900/50 border border-slate-200 dark:border-nexus-600 rounded-xl p-4 text-sm text-slate-900 dark:text-white focus:border-nexus-accent focus:ring-4 focus:ring-nexus-accent/10 outline-none transition-all font-bold"
+                            className="w-full bg-slate-50 dark:bg-nexus-900/50 border border-slate-200 dark:border-nexus-600 rounded-2xl p-4 text-sm text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-bold"
+                         />
+                      </div>
+                      <div>
+                         <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-nexus-500 mb-2 ml-1">Location</label>
+                         <input 
+                            type="text" 
+                            defaultValue="San Francisco, CA"
+                            className="w-full bg-slate-50 dark:bg-nexus-900/50 border border-slate-200 dark:border-nexus-600 rounded-2xl p-4 text-sm text-slate-900 dark:text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-bold"
                          />
                       </div>
                    </div>

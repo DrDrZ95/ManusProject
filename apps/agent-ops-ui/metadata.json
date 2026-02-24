@@ -1,4 +1,3 @@
-
 {
   "name": "AgentProject - MLOps",
   "description": "A comprehensive centralized control plane for MLOps workflows, Kubernetes monitoring, Data tool management, and Project deployment. Features a CLI-like terminal, real-time dashboards, and AI-driven insights.",

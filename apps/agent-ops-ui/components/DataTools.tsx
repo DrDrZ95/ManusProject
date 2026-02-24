@@ -212,7 +212,7 @@ const DataTools: React.FC<DataToolsProps> = ({ lang }) => {
                           <div>Type 'help' for commands.</div>
                           <br/>
                           <div className="flex items-center">
-                             <span className="text-green-400 mr-2">{selectedTool.type.toLowerCase()}></span>
+                             <span className="text-green-400 mr-2">{selectedTool.type.toLowerCase()}&gt;</span>
                              <span className="animate-pulse">_</span>
                           </div>
                        </div>
