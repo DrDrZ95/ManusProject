@@ -186,7 +186,7 @@ public class HdfsController : ControllerBase
     /// <summary>
     /// 接收二进制流数据并存储到 HDFS - Receive binary stream data and store to HDFS
     /// </summary>
-    /// <param name="fileName">文件名 - File name</n>
+    /// <param name="fileName">文件名 - File name</param>
     /// <param name="contentType">内容类型 - Content type</param>
     /// <returns>存储结果 - Storage result</returns>
     [HttpPost("stream/{fileName}")]

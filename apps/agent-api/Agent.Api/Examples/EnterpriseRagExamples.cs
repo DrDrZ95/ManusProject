@@ -16,7 +16,7 @@ public class EnterpriseRagExamples
     }
 
     /// <summary>
-    /// Example: HR Policy Q&A System
+    /// Example: HR Policy Q&amp;A System
     /// 示例：人力资源政策问答系统
     /// </summary>
     public async Task<RagResponse> HRPolicyQAExample(string question)

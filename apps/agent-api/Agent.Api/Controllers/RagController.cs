@@ -548,11 +548,11 @@ public class RagController : ControllerBase
     #region Enterprise Scenarios - 企业场景
 
     /// <summary>
-    /// Enterprise Q&A with domain knowledge
-    /// 具有领域知识的企业问答
+    /// Enterprise Q&amp;A using domain knowledge
+    /// 使用领域知识进行企业问答
     /// </summary>
-    /// <param name="request">Enterprise Q&A request / 企业问答请求</param>
-    /// <returns>Q&A response / 问答响应</returns>
+    /// <param name="request">Enterprise Q&amp;A request / 企业问答请求</param>
+    /// <returns>Q&amp;A response / 问答响应</returns>
     [HttpPost("enterprise/qa")]
     [SwaggerOperation(
         Summary = "Enterprise Q&A with domain knowledge",
@@ -933,7 +933,7 @@ public class SemanticRetrievalRequest
 }
 
 /// <summary>
-/// Enterprise Q&A request
+/// Enterprise Q&amp;A request
 /// 企业问答请求
 /// </summary>
 public class EnterpriseQARequest
