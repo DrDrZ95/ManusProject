@@ -14,11 +14,6 @@ public static class ApplicationExtensions
     /// <returns>The IServiceCollection instance for chaining. 用于链式调用的IServiceCollection实例。</returns>
     public static IServiceCollection AddCoreApplicationServices(this IServiceCollection services)
     {
-        // Add API documentation services (Swagger/OpenAPI)
-        // 添加API文档服务 (Swagger/OpenAPI)
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
-
         // Add MCP Server and register tools from the current assembly
         // 添加MCP服务器并从当前程序集注册工具
         services.AddMcpServer()
