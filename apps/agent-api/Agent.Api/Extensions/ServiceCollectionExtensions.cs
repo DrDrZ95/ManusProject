@@ -5,7 +5,8 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddHttpContextAccessor();
-        services.AddControllers();
+        services.AddControllers()
+                .AddApplicationPart(typeof(Program).Assembly);
         services.AddEndpointsApiExplorer();
         services.AddAgentTelemetry("AI-Agent.WebApi");
         services.AddApiVersioningServices();

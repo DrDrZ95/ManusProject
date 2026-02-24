@@ -14,13 +14,16 @@
     <PackageReference Include="Hangfire.MemoryStorage" Version="1.8.1.2" />
     <PackageReference Include="Hangfire.Redis.StackExchange" Version="1.9.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.16" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.8" />
     <PackageReference Include="Scrutor" Version="6.1.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="Swashbuckle.AspNetCore.ReDoc" Version="6.6.2" />
     <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.0" />
-    <PackageReference Include="StackExchange.Redis" Version="2.7.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.6.2" />
   </ItemGroup>
 
@@ -33,6 +36,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Agent.McpGateway\Agent.McpGateway.csproj" />
     <ProjectReference Include="..\Agent.Application\Agent.Application.csproj" />
+    <ProjectReference Include="..\Agent.Core\Agent.Core.csproj" />
   </ItemGroup>
 
 </Project>

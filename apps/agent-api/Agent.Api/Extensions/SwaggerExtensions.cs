@@ -55,7 +55,7 @@ public static class SwaggerExtensions
     {
         // This maps /openapi.json to serve the latest version of the swagger JSON
         // 这将映射 /openapi.json 以提供最新版本的 swagger JSON
-        return endpoints.MapGet("/openapi.json", async context =>
+        var conventionBuilder = endpoints.MapGet("/openapi.json", async context =>
         {
             var provider = context.RequestServices.GetRequiredService<IApiVersionDescriptionProvider>();
             var latestVersion = provider.ApiVersionDescriptions.OrderByDescending(v => v.ApiVersion).FirstOrDefault();
@@ -71,6 +71,40 @@ public static class SwaggerExtensions
                 context.Response.StatusCode = 404;
             }
         });
+
+        // Optional: Export the swagger JSON to a physical file in Development environment
+        // 可选：在开发环境中将 swagger JSON 导出为物理文件
+        var hostEnvironment = endpoints.ServiceProvider.GetRequiredService<IHostEnvironment>();
+        if (hostEnvironment.IsDevelopment())
+        {
+            Task.Run(async () =>
+            {
+                try
+                {
+                    // Wait a bit for the server to start
+                    await Task.Delay(5000);
+                    
+                    using var scope = endpoints.ServiceProvider.CreateScope();
+                    var generator = scope.ServiceProvider.GetRequiredService<ISwaggerProvider>();
+                    var provider = scope.ServiceProvider.GetRequiredService<IApiVersionDescriptionProvider>();
+                    var latestVersion = provider.ApiVersionDescriptions.OrderByDescending(v => v.ApiVersion).FirstOrDefault();
+                    
+                    if (latestVersion != null)
+                    {
+                        var swagger = generator.GetSwagger(latestVersion.GroupName, null, "/");
+                        var json = swagger.SerializeAsJson(Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_0);
+                        var outputPath = Path.Combine(hostEnvironment.ContentRootPath, "openapi.json");
+                        await File.WriteAllTextAsync(outputPath, json);
+                    }
+                }
+                catch (Exception)
+                {
+                    // Ignore errors during background file export
+                }
+            });
+        }
+
+        return conventionBuilder;
     }
 
 
@@ -134,10 +168,13 @@ public static class SwaggerExtensions
                 }
             });
 
-            // Include XML comments
+            // Include XML comments if file exists
             var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
             var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-            options.IncludeXmlComments(xmlPath);
+            if (File.Exists(xmlPath))
+            {
+                options.IncludeXmlComments(xmlPath);
+            }
 
             // Enable Swagger Annotations
             options.EnableAnnotations();
