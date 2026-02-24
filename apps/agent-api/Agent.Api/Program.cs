@@ -34,21 +34,18 @@ var app = builder.Build();
 // 配置HTTP请求管道
 app.UseFullApplicationPipeline(builder.Configuration);
 
-// 3. Initialize Identity database
-// 初始化Identity数据库
-await app.InitializeIdentityDatabaseAsync();
-
-// 4. Hot-load tools from registry
-// 从注册中心热加载工具
-await app.HotLoadToolsAsync();
+// 4. Initialize Identity database and hot-load tools
+// 初始化 Identity 数据库并热加载工具
+app.InitializeIdentityDatabase();
+app.HotLoadTools();
 
 // 5. Execute startup telemetry spans simulation
 // 执行启动遥测 Span 模拟
-await app.ExecuteStartupTelemetrySpansAsync();
+app.ExecuteStartupTelemetrySpans();
 
 // 6. Export OpenAPI document and print welcome message
 // 导出 OpenAPI 文档并打印欢迎消息
-await app.ExportOpenApiDocumentAsync();
+app.ExportOpenApiDocument();
 app.PrintApiReferenceWelcome();
 
 // Run the application

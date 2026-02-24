@@ -79,21 +79,26 @@ public static class ToolRegistryExtensions
     /// Hot-loads tools from the registry.
     /// 从注册中心热加载工具。
     /// </summary>
-    public static async Task HotLoadToolsAsync(this IHost app)
+    public static void HotLoadTools(this IHost app)
     {
-        try
+        // 异步在后台执行热加载，不阻塞主线程
+        // Execute hot loading asynchronously in the background, without blocking the main thread
+        Task.Run(async () =>
         {
-            using (var scope = app.Services.CreateScope())
+            try
             {
-                var toolRegistry = scope.ServiceProvider.GetRequiredService<IToolRegistryService>();
-                await toolRegistry.HotLoadToolsAsync();
+                using (var scope = app.Services.CreateScope())
+                {
+                    var toolRegistry = scope.ServiceProvider.GetRequiredService<IToolRegistryService>();
+                    await toolRegistry.HotLoadToolsAsync();
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            // 使用外部组件日志记录器，输出黄色加粗提示，但不阻塞程序启动
-            ExternalComponentLogger.LogConnectionError("Tool Registry HotLoad", ex, "无法热加载工具注册表。这通常是因为数据库连接失败或模型映射错误。程序将继续运行，但工具发现功能可能受限。");
-        }
+            catch (Exception ex)
+            {
+                // 使用外部组件日志记录器，输出黄色加粗提示，但不阻塞程序启动
+                ExternalComponentLogger.LogConnectionError("Tool Registry HotLoad", ex, "无法热加载工具注册表。这通常是因为数据库连接失败或模型映射错误。程序将继续运行，但工具发现功能可能受限。");
+            }
+        });
     }
 }
 

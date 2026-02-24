@@ -194,47 +194,50 @@ public static class IdentityExtensions
     /// </summary>
     /// <param name="app">Application builder - 应用程序构建器</param>
     /// <returns>Application builder - 应用程序构建器</returns>
-    public static async Task<IApplicationBuilder> InitializeIdentityDatabaseAsync(this IApplicationBuilder app)
+    public static void InitializeIdentityDatabase(this IApplicationBuilder app)
     {
-        using var scope = app.ApplicationServices.CreateScope();
-        var services = scope.ServiceProvider;
-        var logger = services.GetRequiredService<ILogger<Program>>();
-
-        try
+        // 异步在后台执行数据库初始化，不阻塞主线程
+        // Execute database initialization asynchronously in the background, without blocking the main thread
+        Task.Run(async () =>
         {
-            var context = services.GetRequiredService<ApplicationDbContext>();
-            var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-            var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
+            using var scope = app.ApplicationServices.CreateScope();
+            var services = scope.ServiceProvider;
+            var logger = services.GetRequiredService<ILogger<Program>>();
 
-            // Ensure database is created
-            // 确保数据库已创建
-            await context.Database.EnsureCreatedAsync();
-
-            // Apply pending migrations
-            // 应用待处理的迁移
-            var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
-            if (pendingMigrations.Any())
+            try
             {
-                logger.LogInformation("Applying pending database migrations...");
-                await context.Database.MigrateAsync();
+                var context = services.GetRequiredService<ApplicationDbContext>();
+                var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+                var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
+
+                // Ensure database is created
+                // 确保数据库已创建
+                await context.Database.EnsureCreatedAsync();
+
+                // Apply pending migrations
+                // 应用待处理的迁移
+                var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+                if (pendingMigrations.Any())
+                {
+                    logger.LogInformation("Applying pending database migrations...");
+                    await context.Database.MigrateAsync();
+                }
+
+                // Seed default admin user if not exists
+                // 如果不存在，则播种默认管理员用户
+                await SeedDefaultAdminUserAsync(userManager, roleManager, logger);
+
+                logger.LogInformation("Identity database initialized successfully");
             }
-
-            // Seed default admin user if not exists
-            // 如果不存在，则播种默认管理员用户
-            await SeedDefaultAdminUserAsync(userManager, roleManager, logger);
-
-            logger.LogInformation("Identity database initialized successfully");
-        }
-        catch (Exception ex)
-        {
-            // 使用外部组件日志记录器，输出黄色加粗提示，但不阻塞程序启动
-            ExternalComponentLogger.LogConnectionError("Identity Database", ex, "Identity 数据库连接失败。用户登录、权限验证等功能将受限。请检查 PostgreSQL 服务状态。");
-            
-            // 不再向上抛出异常，允许主程序继续启动
-            // Do not re-throw the exception, allow the main program to continue starting
-        }
-
-        return app;
+            catch (Exception ex)
+            {
+                // 使用外部组件日志记录器，输出亮红色提示，但不阻塞程序启动
+                ExternalComponentLogger.LogConnectionError("Identity Database", ex, "Identity 数据库连接失败。用户登录、权限验证等功能将受限。请检查 PostgreSQL 服务状态。");
+                
+                // 不再向上抛出异常，允许主程序继续启动
+                // Do not re-throw the exception, allow the main program to continue starting
+            }
+        });
     }
 
     /// <summary>

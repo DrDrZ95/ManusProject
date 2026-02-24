@@ -33,7 +33,7 @@ public class HdfsController : ControllerBase
     /// <returns>上传结果 - Upload result</returns>
     [HttpPost("upload")]
     [Consumes("multipart/form-data")]
-    public async Task<IActionResult> UploadFile([FromForm] IFormFile file)
+    public async Task<IActionResult> UploadFile(IFormFile file)
     {
         using (var span = _telemetryProvider.StartSpan("HdfsController.UploadFile"))
         {

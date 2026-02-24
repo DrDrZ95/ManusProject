@@ -16,7 +16,7 @@
     <PackageReference Include="Hangfire.Redis.StackExchange" Version="1.9.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.8" />
     <PackageReference Include="Scrutor" Version="6.1.0" />
-    <PackageReference Include="Scalar.AspNetCore" Version="1.2.45" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.0.18" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.16" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
@@ -29,7 +29,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="debug\runtime\openapi.json">
+    <!-- 
+      确保 openapi.json 始终复制到输出目录，以便于运行时通过 SendFileAsync 提供静态服务。
+      Ensure openapi.json is always copied to the output directory for serving as a static file via SendFileAsync.
+    -->
+    <None Update="openapi.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
