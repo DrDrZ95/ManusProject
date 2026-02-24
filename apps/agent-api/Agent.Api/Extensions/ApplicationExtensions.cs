@@ -44,7 +44,12 @@ public static class ApplicationPipelineExtensions
     /// </summary>
     public static void UseFullApplicationPipeline(this WebApplication app, IConfiguration configuration)
     {
+        // Swagger documentation generation - Swagger 文档生成
         app.UseSwaggerDocumentation();
+        
+        // ReDoc UI middleware - ReDoc UI 中间件
+        app.UseRedocDocumentation();
+
         app.ConfigureApplicationPipeline();
         app.UseFileUploadSecurity();
         app.UseIdentityServices();

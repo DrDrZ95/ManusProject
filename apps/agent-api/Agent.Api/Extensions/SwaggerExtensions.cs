@@ -17,7 +17,14 @@ public static class SwaggerExtensions
 
     public static IApplicationBuilder UseSwaggerDocumentation(this IApplicationBuilder app)
     {
+        // ReDoc uses Swagger JSON generation, but we can keep the SwaggerUI registration 
+        // code here for reference or future fallback.
+        // ReDoc 使用 Swagger JSON 生成，但我们可以保留 SwaggerUI 注册代码在此作为参考或未来回退。
         app.UseSwagger();
+
+        /*
+        // SwaggerUI code is preserved but not called by default in favor of ReDoc.
+        // SwaggerUI 代码已保留，但默认不调用，改为使用 ReDoc。
         app.UseSwaggerUI(c =>
         {
             var provider = app.ApplicationServices.GetRequiredService<IApiVersionDescriptionProvider>();
@@ -27,6 +34,7 @@ public static class SwaggerExtensions
             }
             c.RoutePrefix = "swagger";
         });
+        */
 
         return app;
     }
