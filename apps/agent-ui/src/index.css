@@ -41,6 +41,14 @@
   .dark .custom-scrollbar-h::-webkit-scrollbar-thumb {
     @apply bg-[#444746] hover:bg-[#5e5e5e];
   }
+
+  .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+  }
+  .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+  }
 }
 
 /* Animation Utilities */

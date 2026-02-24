@@ -201,7 +201,7 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
                     onKeyDown={handleKeyDown}
                     placeholder={getPlaceholder()}
                     rows={1}
-                    className="flex-1 max-h-[200px] resize-none bg-transparent outline-none text-gray-900 dark:text-[#E3E3E3] placeholder-gray-400 dark:placeholder-[#C4C7C5] leading-relaxed font-normal min-h-[24px] py-1"
+                    className="flex-1 max-h-[200px] resize-none bg-transparent outline-none text-gray-900 dark:text-[#E3E3E3] placeholder-gray-400 dark:placeholder-[#C4C7C5] leading-relaxed font-normal min-h-[24px] py-1 scrollbar-hide"
                   />
                   
                   {/* Action Buttons: Voice and Send */}

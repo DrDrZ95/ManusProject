@@ -414,8 +414,15 @@ const App: React.FC = () => {
            initial={{ opacity: 0, y: 10 }}
            animate={{ opacity: 1, y: 0 }}
            exit={{ opacity: 0, y: 10 }}
-           className="hidden lg:block absolute top-4 right-4 z-30"
+           className="hidden lg:block absolute top-4 right-8 z-30"
          >
+             <button 
+               onClick={toggleTerminal}
+               className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-[#1E1F20] border border-gray-200 dark:border-[#444746] rounded-lg text-sm text-gray-500 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white hover:border-gray-400 dark:hover:border-[#8AB4F8] transition-all shadow-sm"
+             >
+               <Icons.Folder className="w-4 h-4" />
+               <span>{t.mySpace}</span>
+             </button>
          </motion.div>
       )}
       </AnimatePresence>
