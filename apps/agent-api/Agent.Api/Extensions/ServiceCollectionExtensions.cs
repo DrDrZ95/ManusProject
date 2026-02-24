@@ -32,23 +32,41 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static void RegisterAgentServices(this ContainerBuilder builder)
     {
+        // 1. 获取核心程序集
+        // Get core assemblies
         var assemblies = new[]
         {
-            typeof(Program).Assembly,                                               // Agent.Api
-            typeof(Agent.Application.Services.Telemetry.IAgentTraceService).Assembly, // Agent.Application
-            typeof(Agent.Core.Cache.IAgentCacheService).Assembly,                   // Agent.Core
-            typeof(Agent.McpGateway.IMcpClientFactory).Assembly                         // Agent.McpGateway
+            Assembly.GetExecutingAssembly(),                                         // Agent.Api
+            Assembly.Load("Agent.Application"),                                     // Agent.Application
+            Assembly.Load("Agent.Core"),                                            // Agent.Core
+            Assembly.Load("Agent.McpGateway")                                       // Agent.McpGateway
         };
 
-        // 自动注册所有类：只要类实现了接口，就以接口形式注入
-        // Register all classes: as long as a class implements an interface, it is injected as an interface
+        // 2. 自动化注入：只要类实现了接口，就以接口形式注入 (默认 Scoped)
+        // Automatic injection: As long as the class implements the interface, it is injected as an interface (Default Scoped)
         builder.RegisterAssemblyTypes(assemblies)
             .Where(t => t.IsClass && !t.IsAbstract && t.GetInterfaces().Length > 0)
             .AsImplementedInterfaces()
-            .InstancePerLifetimeScope(); // 默认为 Scoped 注入
+            .InstancePerLifetimeScope();
 
-        // 特殊处理：如果需要单例或特定的注入方式，可以在此处覆盖
-        // Special handling: If singleton or specific injection is needed, it can be overridden here
+        // 3. 特殊注入处理 (手动覆盖自动化规则)
+        // Special injection handling (Manually override automation rules)
+        
+        // 单例服务注册
+        // Singleton service registrations
+        builder.RegisterType<Agent.Application.Services.PostgreSQL.PostgreSqlService>()
+            .As<Agent.Application.Services.PostgreSQL.IPostgreSqlService>()
+            .SingleInstance();
+
+        // 仓储层特殊注册（如果需要）
+        // Repository layer special registration (if needed)
+        builder.RegisterGeneric(typeof(Agent.Core.Data.Repositories.Repository<,>))
+            .As(typeof(Agent.Core.Data.Repositories.IRepository<,>))
+            .InstancePerLifetimeScope();
+
+        // 4. 特殊工具或需要复杂配置的组件
+        // Special tools or components requiring complex configuration
+        // (此处保留扩展空间)
     }
 }
 
