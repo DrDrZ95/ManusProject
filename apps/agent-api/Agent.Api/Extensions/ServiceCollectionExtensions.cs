@@ -5,8 +5,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddHttpContextAccessor();
-        services.AddControllers()
-                .AddApplicationPart(typeof(Program).Assembly);
+        services.AddControllers();
         
         // Add API Versioning - 优先注册版本控制
         services.AddApiVersioningServices();
