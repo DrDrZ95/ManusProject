@@ -11,94 +11,18 @@ public static class SwaggerExtensions
 
     public static IApplicationBuilder UseSwaggerDocumentation(this IApplicationBuilder app)
     {
-        // ReDoc uses Swagger JSON generation, but we can keep the SwaggerUI registration 
-        // code here for reference or future fallback.
-        // ReDoc 使用 Swagger JSON 生成，但我们可以保留 SwaggerUI 注册代码在此作为参考或未来回退。
-        app.UseSwagger(c =>
-        {
-            // Set the route template to use openapi.json instead of the default swagger.json
-            // 设置路由模板，使用 openapi.json 替代默认的 swagger.json
-            c.RouteTemplate = "swagger/{documentName}/openapi.json";
-        });
-
-        /*
-        // SwaggerUI code is preserved but not called by default in favor of ReDoc.
-        // SwaggerUI 代码已保留，但默认不调用，改为使用 ReDoc。
+        app.UseSwagger();
         app.UseSwaggerUI(c =>
         {
             var provider = app.ApplicationServices.GetRequiredService<IApiVersionDescriptionProvider>();
             foreach (var description in provider.ApiVersionDescriptions)
             {
-                c.SwaggerEndpoint($"/swagger/{description.GroupName}/openapi.json", description.GroupName.ToUpperInvariant());
+                c.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
             }
             c.RoutePrefix = "swagger";
         });
-        */
 
         return app;
-    }
-
-
-    /// <summary>
-    /// Maps the OpenAPI/Swagger JSON endpoint to a fixed path at the root.
-    /// 将 OpenAPI/Swagger JSON 端点映射到根目录下的固定路径。
-    /// </summary>
-    /// <param name="endpoints">The IEndpointRouteBuilder instance. IEndpointRouteBuilder 实例。</param>
-    /// <returns>The IEndpointConventionBuilder instance for chaining. 用于链式调用的 IEndpointConventionBuilder 实例。</returns>
-    public static IEndpointConventionBuilder MapOpenApi(this IEndpointRouteBuilder endpoints)
-    {
-        // This maps /openapi.json to serve the latest version of the swagger JSON
-        // 这将映射 /openapi.json 以提供最新版本的 swagger JSON
-        var conventionBuilder = endpoints.MapGet("/openapi.json", async context =>
-        {
-            var provider = context.RequestServices.GetRequiredService<IApiVersionDescriptionProvider>();
-            var latestVersion = provider.ApiVersionDescriptions.OrderByDescending(v => v.ApiVersion).FirstOrDefault();
-            
-            if (latestVersion != null)
-            {
-                // Redirect to the actual versioned JSON file
-                // 重定向到实际的版本化 JSON 文件
-                context.Response.Redirect($"/swagger/{latestVersion.GroupName}/openapi.json");
-            }
-            else
-            {
-                context.Response.StatusCode = 404;
-            }
-        });
-
-        // Optional: Export the swagger JSON to a physical file in Development environment
-        // 可选：在开发环境中将 swagger JSON 导出为物理文件
-        var hostEnvironment = endpoints.ServiceProvider.GetRequiredService<IHostEnvironment>();
-        if (hostEnvironment.IsDevelopment())
-        {
-            Task.Run(async () =>
-            {
-                try
-                {
-                    // Wait a bit for the server to start
-                    await Task.Delay(5000);
-                    
-                    using var scope = endpoints.ServiceProvider.CreateScope();
-                    var generator = scope.ServiceProvider.GetRequiredService<ISwaggerProvider>();
-                    var provider = scope.ServiceProvider.GetRequiredService<IApiVersionDescriptionProvider>();
-                    var latestVersion = provider.ApiVersionDescriptions.OrderByDescending(v => v.ApiVersion).FirstOrDefault();
-                    
-                    if (latestVersion != null)
-                    {
-                        var swagger = generator.GetSwagger(latestVersion.GroupName, null, "/");
-                        var json = swagger.SerializeAsJson(Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_0);
-                        var outputPath = Path.Combine(hostEnvironment.ContentRootPath, "openapi.json");
-                        await File.WriteAllTextAsync(outputPath, json);
-                    }
-                }
-                catch (Exception)
-                {
-                    // Ignore errors during background file export
-                }
-            });
-        }
-
-        return conventionBuilder;
     }
 
 

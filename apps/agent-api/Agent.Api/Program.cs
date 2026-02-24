@@ -46,6 +46,11 @@ await app.HotLoadToolsAsync();
 // 执行启动遥测 Span 模拟
 await app.ExecuteStartupTelemetrySpansAsync();
 
+// 6. Export OpenAPI document and print welcome message
+// 导出 OpenAPI 文档并打印欢迎消息
+await app.ExportOpenApiDocumentAsync();
+app.PrintApiReferenceWelcome();
+
 // Run the application
 // 运行应用程序
 app.Run();

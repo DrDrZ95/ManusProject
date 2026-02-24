@@ -66,6 +66,7 @@ global using Microsoft.SemanticKernel;
 global using Microsoft.SemanticKernel.ChatCompletion;
 global using Microsoft.SemanticKernel.Embeddings;
 global using Prometheus;
+global using Scalar.AspNetCore;
 global using StackExchange.Redis;
 global using Swashbuckle.AspNetCore.Annotations;
 global using Swashbuckle.AspNetCore.Swagger;

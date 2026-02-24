@@ -39,11 +39,9 @@ public static class ApplicationPipelineExtensions
     /// </summary>
     public static void UseFullApplicationPipeline(this WebApplication app, IConfiguration configuration)
     {
-        // Swagger documentation generation - Swagger 文档生成
+        // Documentation generation - 文档生成
         app.UseSwaggerDocumentation();
-
-        // ReDoc UI middleware - ReDoc UI 中间件
-        app.UseRedocDocumentation();
+        app.UseOpenApiDocumentation();
 
         app.ConfigureApplicationPipeline();
         app.UseFileUploadSecurity();
@@ -53,10 +51,6 @@ public static class ApplicationPipelineExtensions
         app.UsePrometheusMetrics();
         app.UseHangfireDashboard();
         app.MapControllers();
-
-        // Map OpenAPI JSON endpoint to /openapi.json
-        // 将 OpenAPI JSON 端点映射到 /openapi.json
-        app.MapOpenApi();
     }
 
     /// <summary>
