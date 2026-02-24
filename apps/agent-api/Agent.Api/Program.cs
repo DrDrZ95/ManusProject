@@ -11,6 +11,17 @@
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Use Autofac as the service provider factory
+// 使用 Autofac 作为服务提供程序工厂
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+
+// Configure Autofac container
+// 配置 Autofac 容器
+builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
+{
+    containerBuilder.RegisterAgentServices();
+});
+
 // 1. Add application services
 // 添加应用程序服务
 builder.Services.AddApplicationServices(builder.Configuration);

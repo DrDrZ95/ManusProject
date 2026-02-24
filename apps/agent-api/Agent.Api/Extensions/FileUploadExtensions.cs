@@ -14,10 +14,6 @@ public static class FileUploadExtensions
     /// <returns>Service collection - 服务集合</returns>
     public static IServiceCollection AddFileUploadServices(this IServiceCollection services)
     {
-        // Register file upload service
-        // 注册文件上传服务
-        services.AddScoped<IFileUploadService, FileUploadService>();
-
         // Configure request size limits (OWASP security measure)
         // 配置请求大小限制（OWASP安全措施）
         services.Configure<IISServerOptions>(options =>

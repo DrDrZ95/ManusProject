@@ -41,6 +41,9 @@ public class GlobalExceptionMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
+        // 处理外部组件异常的控制台高亮输出
+        ExternalComponentLogger.HandleException(exception);
+
         RecordExceptionSpan(exception);
 
         var (statusCode, errorCode, message) = CategorizeException(exception);

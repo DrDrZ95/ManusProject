@@ -1,5 +1,8 @@
 global using Agent.Api.Extensions;
+global using Agent.Api.Utils;
 global using Agent.Application.Hubs;
+global using Autofac;
+global using Autofac.Extensions.DependencyInjection;
 global using Agent.Application.Services;
 global using Agent.Application.Services.FileUpload;
 global using Agent.Application.Services.Finetune;
