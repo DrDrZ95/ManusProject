@@ -44,7 +44,9 @@ public static class RedocExtensions
             
             if (latestVersion != null)
             {
-                options.SpecUrl = $"/swagger/{latestVersion.GroupName}/swagger.json";
+                // Points to the fixed api-list.json endpoint which handles redirection
+                // 指向固定的 api-list.json 端点，该端点负责处理重定向
+                options.SpecUrl = "/api-list.json";
                 options.DocumentTitle = $"AgentProject API Documentation - {latestVersion.GroupName}";
             }
             

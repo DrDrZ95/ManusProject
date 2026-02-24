@@ -25,6 +25,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="api-list.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Agent.McpGateway\Agent.McpGateway.csproj" />
     <ProjectReference Include="..\Agent.Application\Agent.Application.csproj" />
   </ItemGroup>

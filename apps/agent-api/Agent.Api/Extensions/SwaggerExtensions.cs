@@ -20,7 +20,12 @@ public static class SwaggerExtensions
         // ReDoc uses Swagger JSON generation, but we can keep the SwaggerUI registration 
         // code here for reference or future fallback.
         // ReDoc 使用 Swagger JSON 生成，但我们可以保留 SwaggerUI 注册代码在此作为参考或未来回退。
-        app.UseSwagger();
+        app.UseSwagger(c =>
+        {
+            // Set the route template to use api-list.json instead of the default swagger.json
+            // 设置路由模板，使用 api-list.json 替代默认的 swagger.json
+            c.RouteTemplate = "swagger/{documentName}/api-list.json";
+        });
 
         /*
         // SwaggerUI code is preserved but not called by default in favor of ReDoc.
@@ -30,13 +35,42 @@ public static class SwaggerExtensions
             var provider = app.ApplicationServices.GetRequiredService<IApiVersionDescriptionProvider>();
             foreach (var description in provider.ApiVersionDescriptions)
             {
-                c.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
+                c.SwaggerEndpoint($"/swagger/{description.GroupName}/api-list.json", description.GroupName.ToUpperInvariant());
             }
             c.RoutePrefix = "swagger";
         });
         */
 
         return app;
+    }
+
+
+    /// <summary>
+    /// Maps the OpenAPI/Swagger JSON endpoint to a fixed path at the root.
+    /// 将 OpenAPI/Swagger JSON 端点映射到根目录下的固定路径。
+    /// </summary>
+    /// <param name="endpoints">The IEndpointRouteBuilder instance. IEndpointRouteBuilder 实例。</param>
+    /// <returns>The IEndpointConventionBuilder instance for chaining. 用于链式调用的 IEndpointConventionBuilder 实例。</returns>
+    public static IEndpointConventionBuilder MapOpenApi(this IEndpointRouteBuilder endpoints)
+    {
+        // This maps /api-list.json to serve the latest version of the swagger JSON
+        // 这将映射 /api-list.json 以提供最新版本的 swagger JSON
+        return endpoints.MapGet("/api-list.json", async context =>
+        {
+            var provider = context.RequestServices.GetRequiredService<IApiVersionDescriptionProvider>();
+            var latestVersion = provider.ApiVersionDescriptions.OrderByDescending(v => v.ApiVersion).FirstOrDefault();
+            
+            if (latestVersion != null)
+            {
+                // Redirect to the actual versioned JSON file
+                // 重定向到实际的版本化 JSON 文件
+                context.Response.Redirect($"/swagger/{latestVersion.GroupName}/api-list.json");
+            }
+            else
+            {
+                context.Response.StatusCode = 404;
+            }
+        });
     }
 
 

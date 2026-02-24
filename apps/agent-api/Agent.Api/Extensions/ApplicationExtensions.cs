@@ -58,6 +58,10 @@ public static class ApplicationPipelineExtensions
         app.UsePrometheusMetrics();
         app.UseHangfireDashboard();
         app.MapControllers();
+        
+        // Map OpenAPI JSON endpoint to /api-list.json
+        // 将 OpenAPI JSON 端点映射到 /api-list.json
+        app.MapOpenApi();
     }
 
     /// <summary>
