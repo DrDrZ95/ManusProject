@@ -76,21 +76,21 @@ const SearchModal: React.FC = () => {
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.95, opacity: 0, y: -20 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="w-full max-w-xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                    className="w-full max-w-xl bg-white dark:bg-[#1E1F20] rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-transparent dark:border-[#444746]"
                 >
-                    <div className="flex items-center px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                        <Icons.Search className="w-5 h-5 text-gray-400" />
+                    <div className="flex items-center px-4 py-3 border-b border-gray-100 dark:border-[#444746]">
+                        <Icons.Search className="w-5 h-5 text-gray-400 dark:text-[#C4C7C5]" />
                         <input 
                             autoFocus
                             type="text"
                             placeholder={t.searchPlaceholder}
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            className="flex-1 px-4 py-2 outline-none text-gray-900 dark:text-white bg-transparent text-sm font-medium placeholder:text-gray-400"
+                            className="flex-1 px-4 py-2 outline-none text-gray-900 dark:text-[#E3E3E3] bg-transparent text-sm font-medium placeholder:text-gray-400 dark:placeholder:text-[#C4C7C5]"
                         />
                         <div className="flex items-center gap-2">
-                             <kbd className="hidden sm:inline-block px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-[10px] font-bold text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600">ESC</kbd>
-                             <button onClick={toggleSearch} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-gray-400 hover:text-black dark:hover:text-white">
+                             <kbd className="hidden sm:inline-block px-2 py-1 bg-gray-100 dark:bg-[#333537] rounded text-[10px] font-bold text-gray-500 dark:text-[#C4C7C5] border border-gray-200 dark:border-[#444746]">ESC</kbd>
+                             <button onClick={toggleSearch} className="p-1 hover:bg-gray-100 dark:hover:bg-[#333537] rounded-full text-gray-400 dark:text-[#C4C7C5] hover:text-black dark:hover:text-[#E3E3E3]">
                                 <Icons.Close className="w-4 h-4" />
                              </button>
                         </div>
@@ -98,7 +98,7 @@ const SearchModal: React.FC = () => {
                     
                     <div className="p-2 min-h-[200px] max-h-[400px] overflow-y-auto custom-scrollbar">
                          {!query && (
-                             <div className="p-8 text-center text-gray-400">
+                             <div className="p-8 text-center text-gray-400 dark:text-[#C4C7C5]">
                                  <Icons.Search className="w-10 h-10 mx-auto mb-3 opacity-20" />
                                  <p className="text-xs font-medium">Type to search across conversations and files</p>
                              </div>
@@ -106,21 +106,21 @@ const SearchModal: React.FC = () => {
                          {/* Simulated Results */}
                          {query && (
                              <div className="space-y-1">
-                                 <div className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Simulated Results</div>
-                                 <button className="w-full text-left px-3 py-2.5 hover:bg-gray-50 rounded-lg flex items-center gap-3 group">
+                                 <div className="px-3 py-2 text-[10px] font-bold text-gray-400 dark:text-[#C4C7C5] uppercase tracking-widest">Simulated Results</div>
+                                 <button className="w-full text-left px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-[#333537] rounded-lg flex items-center gap-3 group transition-colors">
                                      {/* Fixed: Use Icons.Chat instead of Icons.MessageSquare */}
-                                     <Icons.Chat className="w-4 h-4 text-gray-400 group-hover:text-black" />
-                                     <span className="text-sm text-gray-700 group-hover:text-black font-medium">Discussion about React Hooks</span>
+                                     <Icons.Chat className="w-4 h-4 text-gray-400 dark:text-[#C4C7C5] group-hover:text-black dark:group-hover:text-white" />
+                                     <span className="text-sm text-gray-700 dark:text-[#E3E3E3] group-hover:text-black dark:group-hover:text-white font-medium">Discussion about React Hooks</span>
                                  </button>
-                                 <button className="w-full text-left px-3 py-2.5 hover:bg-gray-50 rounded-lg flex items-center gap-3 group">
-                                     <Icons.FileText className="w-4 h-4 text-gray-400 group-hover:text-black" />
-                                     <span className="text-sm text-gray-700 group-hover:text-black font-medium">project_requirements.pdf</span>
+                                 <button className="w-full text-left px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-[#333537] rounded-lg flex items-center gap-3 group transition-colors">
+                                     <Icons.FileText className="w-4 h-4 text-gray-400 dark:text-[#C4C7C5] group-hover:text-black dark:group-hover:text-white" />
+                                     <span className="text-sm text-gray-700 dark:text-[#E3E3E3] group-hover:text-black dark:group-hover:text-white font-medium">project_requirements.pdf</span>
                                  </button>
                              </div>
                          )}
                     </div>
                     
-                    <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex justify-between">
+                    <div className="px-4 py-2 bg-gray-50 dark:bg-[#28292A] border-t border-gray-100 dark:border-[#444746] text-[10px] text-gray-400 dark:text-[#C4C7C5] flex justify-between">
                         <span>Agent Search</span>
                         <span>{query.length} chars</span>
                     </div>
@@ -416,13 +416,6 @@ const App: React.FC = () => {
            exit={{ opacity: 0, y: 10 }}
            className="hidden lg:block absolute top-4 right-4 z-30"
          >
-             <button 
-               onClick={toggleTerminal}
-               className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-[#1E1F20] border border-gray-200 dark:border-[#444746] rounded-lg text-sm text-gray-500 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white hover:border-gray-400 dark:hover:border-[#8AB4F8] transition-all shadow-sm"
-             >
-               <Icons.Folder className="w-4 h-4" />
-               <span>{t.mySpace}</span>
-             </button>
          </motion.div>
       )}
       </AnimatePresence>

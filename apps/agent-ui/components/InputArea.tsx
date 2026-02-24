@@ -150,8 +150,8 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
               {attachments.length > 0 && (
                 <div className="px-4 pt-4 flex flex-wrap gap-2">
                   {attachments.map(att => (
-                    <div key={att.id} className="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-700 border border-gray-200">
-                      <Icons.Attach className="w-3 h-3 text-gray-500" />
+                    <div key={att.id} className="flex items-center gap-2 bg-gray-100 dark:bg-[#333537] px-3 py-1.5 rounded-lg text-xs font-medium text-gray-700 dark:text-[#C4C7C5] border border-gray-200 dark:border-[#444746]">
+                      <Icons.Attach className="w-3 h-3 text-gray-500 dark:text-[#9aa0a6]" />
                       <span className="max-w-[150px] truncate">{att.name}</span>
                       <button onClick={() => removeAttachment(att.id)} className="hover:text-red-500 ml-1">
                         <Icons.Close className="w-3 h-3" />
@@ -170,14 +170,14 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
                         animate={{ scale: 1, opacity: 1 }}
                         className={clsx(
                           "flex-shrink-0 mb-1",
-                          isAgentMode ? "text-blue-600" : "text-gray-600"
+                          isAgentMode ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-[#C4C7C5]"
                         )}
                      >
                         <div className={clsx(
                           "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide border select-none",
                           isAgentMode 
-                            ? "bg-blue-50 border-blue-200" 
-                            : "bg-gray-100 border-gray-200"
+                            ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800" 
+                            : "bg-gray-100 dark:bg-[#333537] border-gray-200 dark:border-[#444746]"
                         )}>
                             {isAgentMode ? <Icons.Cpu className="w-3.5 h-3.5" /> : <Icons.Zap className="w-3.5 h-3.5" />}
                             <span>{modeLabel}</span>
@@ -186,7 +186,7 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
                                 setInputMode('general');
                                 setAgentMode(false);
                               }}
-                              className={clsx("ml-1 hover:text-black", isAgentMode ? "hover:bg-blue-100" : "hover:bg-gray-200", "rounded-full p-0.5")}
+                              className={clsx("ml-1 hover:text-black dark:hover:text-white", isAgentMode ? "hover:bg-blue-100 dark:hover:bg-blue-900/40" : "hover:bg-gray-200 dark:hover:bg-[#444746]", "rounded-full p-0.5")}
                             >
                                 <Icons.Close className="w-3 h-3" />
                             </button>
@@ -239,12 +239,12 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
                   {/* Model Selector First */}
                   <ModelSelector />
 
-                  <div className="w-px h-4 bg-gray-200 mx-1" />
+                  <div className="w-px h-4 bg-gray-200 dark:bg-[#444746] mx-1" />
 
                   {/* Input Mode Selector Second */}
                   <InputModeSelector onSelectAgentMode={handleAgentModeSelect} />
                   
-                  <div className="w-px h-4 bg-gray-200 mx-1" />
+                  <div className="w-px h-4 bg-gray-200 dark:bg-[#444746] mx-1" />
 
                   <button 
                     onClick={() => fileInputRef.current?.click()}
@@ -279,11 +279,11 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
                initial={{ opacity: 0, scale: 0.95 }}
                animate={{ opacity: 1, scale: 1 }}
                exit={{ opacity: 0, scale: 0.95 }}
-               className="h-[180px] flex flex-col items-center justify-center relative bg-gradient-to-b from-gray-50 to-white rounded-[26px]"
+               className="h-[180px] flex flex-col items-center justify-center relative bg-gradient-to-b from-gray-50 to-white dark:from-[#28292A] dark:to-[#1E1F20] rounded-[26px]"
             >
                <button 
                   onClick={() => setIsVoiceMode(false)}
-                  className="absolute top-4 right-4 p-2 text-gray-400 hover:text-black rounded-full hover:bg-gray-100"
+                  className="absolute top-4 right-4 p-2 text-gray-400 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-[#333537]"
                >
                   <Icons.Close className="w-5 h-5" />
                </button>
@@ -305,7 +305,7 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
                         <div className="absolute inset-0 rounded-full border-4 border-red-200 animate-ping opacity-75"></div>
                      )}
                   </div>
-                  <p className="text-sm font-medium text-gray-600 text-center">
+                  <p className="text-sm font-medium text-gray-600 dark:text-[#C4C7C5] text-center">
                      {isRecording ? t.listening : t.tapToSpeak}
                   </p>
                </div>
@@ -328,26 +328,26 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
                  initial={{ scale: 0.9, y: 20 }}
                  animate={{ scale: 1, y: 0 }}
                  exit={{ scale: 0.9, y: 20 }}
-                 className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-gray-100"
+                 className="bg-white dark:bg-[#1E1F20] rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 dark:border-[#444746]"
                  onClick={e => e.stopPropagation()}
               >
-                  <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mb-4 mx-auto">
                       <Icons.Cpu className="w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-bold text-center text-gray-900 mb-2">{t.agentModeConfirmTitle}</h3>
-                  <p className="text-center text-gray-500 mb-6 text-sm">
+                  <h3 className="text-xl font-bold text-center text-gray-900 dark:text-[#E3E3E3] mb-2">{t.agentModeConfirmTitle}</h3>
+                  <p className="text-center text-gray-500 dark:text-[#C4C7C5] mb-6 text-sm">
                       {t.agentModeConfirmDesc}
                   </p>
                   <div className="flex gap-3">
                       <button 
                           onClick={() => setShowAgentConfirm(false)}
-                          className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
+                          className="flex-1 py-2.5 bg-gray-100 dark:bg-[#333537] text-gray-700 dark:text-[#C4C7C5] font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-[#444746] transition-colors"
                       >
                           {t.cancel}
                       </button>
                       <button 
                           onClick={confirmAgentMode}
-                          className="flex-1 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
+                          className="flex-1 py-2.5 bg-blue-600 dark:bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors shadow-lg shadow-blue-200 dark:shadow-none"
                       >
                           {t.confirm}
                       </button>

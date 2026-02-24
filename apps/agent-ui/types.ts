@@ -52,7 +52,7 @@ export interface NewsItem {
   timestamp: number;
 }
 
-export type ModelType = 'kimi' | 'deepseek' | 'gpt-oss';
+export type ModelType = 'kimi' | 'deepseek' | 'gpt-oss' | 'minimax';
 export type ModalType = 'upgrade' | 'account' | 'help' | 'settings' | 'project_edit' | 'quota_limit' | null;
 export type InputMode = 'general' | 'brainstorm' | 'oa_work' | 'company' | 'agent';
 

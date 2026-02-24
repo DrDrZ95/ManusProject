@@ -20,6 +20,7 @@ export const ModelSelector: React.FC = () => {
     { id: 'kimi', label: 'Kimi', icon: Icons.Sparkles, description: t.modelKimi },
     { id: 'deepseek', label: 'Deepseek', icon: Icons.Brain, description: t.modelDeepseek },
     { id: 'gpt-oss', label: 'GPT-OSS', icon: Icons.Box, description: t.modelGptOss },
+    { id: 'minimax', label: 'MiniMax', icon: Icons.Cpu, description: t.modelMiniMax },
   ];
 
   const activeOption = options.find(o => o.id === selectedModel) || options[0];
@@ -37,7 +38,7 @@ export const ModelSelector: React.FC = () => {
   // In Agent Mode, we force a specific "Auto" state display and disable interaction
   if (isAgentMode) {
       return (
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 text-sm font-medium text-gray-400 cursor-not-allowed select-none" title="Model selection managed by Agent">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 dark:bg-[#333537] text-sm font-medium text-gray-400 dark:text-[#C4C7C5] cursor-not-allowed select-none" title="Model selection managed by Agent">
             <Icons.Cpu className="w-4 h-4" />
             <span>Agent Auto</span>
         </div>

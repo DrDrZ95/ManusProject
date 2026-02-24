@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback, memo, Profiler } from 'react';
 import { useStore } from '../store';
 import { Icons } from './icons';
 import clsx from 'clsx';
@@ -7,8 +7,46 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { translations } from '../locales';
 import { ChatSession, Group } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { List } from 'react-window';
 
-const ContextMenu = ({ x, y, onClose, actions }: any) => {
+// Custom AutoSizer to avoid dependency issues
+const AutoSizer = ({ children }: { children: (size: { width: number, height: number }) => React.ReactNode }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        // Use contentRect for precise dimensions
+        setSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+      }
+    });
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
+      {size.width > 0 && size.height > 0 && children(size)}
+    </div>
+  );
+};
+
+// Performance monitoring callback
+const onRenderCallback = (
+  id: string,
+  phase: "mount" | "update",
+  actualDuration: number,
+  baseDuration: number,
+  startTime: number,
+  commitTime: number
+) => {
+  // Uncomment to debug performance
+  // console.log(`[Profiler] ${id} (${phase}) took ${actualDuration.toFixed(2)}ms`);
+};
+
+const ContextMenu = memo(({ x, y, onClose, actions }: any) => {
   const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -70,9 +108,9 @@ const ContextMenu = ({ x, y, onClose, actions }: any) => {
       })}
     </div>
   );
-};
+});
 
-const ProjectMarker = ({ group, isSlim }: { group: Group, isSlim?: boolean }) => (
+const ProjectMarker = memo(({ group, isSlim }: { group: Group, isSlim?: boolean }) => (
   <div className={clsx(
     "flex-shrink-0 rounded-lg flex items-center justify-center font-black text-white shadow-sm ring-1 ring-black/5 transition-transform group-hover/item:scale-105",
     isSlim ? "w-8 h-8 text-xs" : "w-6 h-6 text-[10px]",
@@ -80,7 +118,7 @@ const ProjectMarker = ({ group, isSlim }: { group: Group, isSlim?: boolean }) =>
   )}>
     {group.marker.charAt(0)}
   </div>
-);
+));
 
 interface NavItemProps {
     isActive?: boolean;
@@ -99,37 +137,38 @@ interface NavItemProps {
     draggable?: boolean;
     onDragStart?: (e: React.DragEvent) => void;
     onDrop?: (e: React.DragEvent) => void;
+    style?: React.CSSProperties; // Added for react-window
 }
 
-const NavItem: React.FC<NavItemProps> = ({ 
+const NavItem: React.FC<NavItemProps> = memo(({ 
     isActive, isEditing, editValue, onEditChange, onEditSubmit, onClick, onContextMenu, onActionClick, children, icon: Icon, group, isSlim, isSubItem,
-    draggable, onDragStart, onDrop
+    draggable, onDragStart, onDrop, style
 }) => {
     const [isDragOver, setIsDragOver] = useState(false);
 
-    const handleDragOver = (e: React.DragEvent) => {
+    const handleDragOver = useCallback((e: React.DragEvent) => {
         if (onDrop) {
             e.preventDefault();
             setIsDragOver(true);
         }
-    };
+    }, [onDrop]);
 
-    const handleDragLeave = (e: React.DragEvent) => {
+    const handleDragLeave = useCallback((e: React.DragEvent) => {
         if (onDrop) {
             setIsDragOver(false);
         }
-    };
+    }, [onDrop]);
 
-    const handleDrop = (e: React.DragEvent) => {
+    const handleDrop = useCallback((e: React.DragEvent) => {
         if (onDrop) {
             e.preventDefault();
             setIsDragOver(false);
             onDrop(e);
         }
-    };
+    }, [onDrop]);
 
     return (
-      <div className={clsx("relative group/item mb-0.5", isSlim ? "px-2" : isSubItem ? "pr-2" : "px-4")}>
+      <div style={style} className={clsx("relative group/item mb-0.5", isSlim ? "px-2" : isSubItem ? "pr-2" : "px-4")}>
         <button
           onClick={onClick}
           onContextMenu={onContextMenu}
@@ -183,7 +222,7 @@ const NavItem: React.FC<NavItemProps> = ({
               {/* Expand/Collapse Icon moved to the right */}
               {group && !isEditing && (
                   <div className="text-gray-400 dark:text-[#C4C7C5] transition-transform duration-200 ml-2">
-                       {group.collapsed ? <Icons.ChevronLeft className="w-4 h-4" /> : <Icons.ChevronDown className="w-4 h-4" />}
+                       {group.collapsed ? <Icons.ChevronRight className="w-4 h-4" /> : <Icons.ChevronDown className="w-4 h-4" />}
                   </div>
               )}
             </div>
@@ -192,28 +231,143 @@ const NavItem: React.FC<NavItemProps> = ({
           {isActive && !isEditing && (
             <div className={clsx(
               "absolute top-1/2 -translate-y-1/2 w-1 h-4 bg-black dark:bg-[#A8C7FA] rounded-r-full shadow-sm shadow-black/20 dark:shadow-white/20",
-              isSlim ? "left-0" : isSubItem ? "-left-[1px]" : "left-0"
+              "left-0"
             )} />
           )}
         </button>
         
-        {!isEditing && !isSlim && (
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              onActionClick?.(e);
-            }}
-            className={clsx(
-                "absolute top-1/2 -translate-y-1/2 p-1 text-gray-400 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white opacity-0 group-hover/item:opacity-100 transition-opacity rounded-md hover:bg-white dark:hover:bg-[#333537] z-10",
-                group ? "right-10" : "right-4"
-            )}
-          >
-            <Icons.MoreVertical className="w-3.5 h-3.5" />
-          </button>
-        )}
+        {/* Settings button removed */}
       </div>
     );
-};
+});
+
+// Helper component for Slim Mode Buttons
+const SlimButton = memo(({ icon: Icon, label, onClick, children }: any) => (
+  <div className="relative group/slim-item w-full flex justify-center py-2">
+     <button 
+       onClick={onClick}
+       className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-[#1E1F20] hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black text-gray-500 dark:text-[#C4C7C5] transition-all active:scale-95 shadow-sm"
+     >
+        <Icon className="w-5 h-5" />
+     </button>
+     
+     {/* Flyout Menu */}
+     {children && (
+       <div className="absolute left-full top-0 pl-4 hidden group-hover/slim-item:block z-50">
+          <div className="w-64 bg-white dark:bg-[#1E1F20] border border-gray-100 dark:border-[#444746] rounded-2xl shadow-2xl p-2 animate-fadeIn origin-top-left max-h-[80vh] overflow-y-auto custom-scrollbar">
+              <div className="px-3 py-2 text-xs font-black text-gray-400 dark:text-[#C4C7C5] uppercase tracking-widest border-b border-gray-50 dark:border-[#444746] mb-1">
+                  {label}
+              </div>
+              {children}
+          </div>
+       </div>
+     )}
+  </div>
+));
+
+// Row component for react-window
+const Row = memo(({ index, style, items, handlers, state }: any) => {
+  const item = items[index];
+
+  if (item.type === 'header_groups') {
+    return (
+      <div style={style} className="px-4 mb-2 flex justify-between items-center group/header">
+         <div 
+            onClick={handlers.toggleProjectsCollapsed}
+            className="text-sm font-bold text-gray-500 dark:text-[#E3E3E3] uppercase tracking-wider flex items-center gap-2 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+         >
+            <Icons.ChevronRight className={clsx("w-3.5 h-3.5 transition-transform", state.isProjectsCollapsed ? "rotate-0" : "rotate-90")} />
+            <span>{state.t.groups}</span> 
+         </div>
+         <button 
+            onClick={(e) => { e.stopPropagation(); handlers.createGroup(); }} 
+            className="hover:text-black dark:hover:text-white transition-all p-1 hover:bg-gray-200 dark:hover:bg-[#333537] rounded-md opacity-60 hover:opacity-100"
+         >
+             <Icons.Plus className="w-3.5 h-3.5" />
+         </button>
+      </div>
+    );
+  }
+
+  if (item.type === 'header_recent') {
+    return (
+      <div style={style} className="px-4 mb-2 flex items-center gap-2 group/header">
+         <div 
+            onClick={handlers.toggleRecentCollapsed}
+            className="text-sm font-bold text-gray-500 dark:text-[#E3E3E3] uppercase tracking-wider flex items-center gap-2 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+         >
+            <Icons.ChevronRight className={clsx("w-3.5 h-3.5 transition-transform", state.isRecentCollapsed ? "rotate-0" : "rotate-90")} />
+            <span>{state.t.recent}</span>
+         </div>
+      </div>
+    );
+  }
+
+  if (item.type === 'group') {
+    const group = item.data;
+    return (
+      <div style={style} className="relative">
+        <div className="absolute left-[23px] top-0 bottom-0 w-[1.5px] bg-gray-200 dark:bg-[#444746]" />
+        <div style={{ paddingLeft: 36 }}>
+            <NavItem 
+              isSubItem={true}
+              group={group}
+              isEditing={state.editingId === group.id}
+              editValue={state.editValue}
+              onEditChange={handlers.setEditValue}
+              onEditSubmit={handlers.handleRenameSubmit}
+              onContextMenu={(e: any) => handlers.onContextMenuGroup(e, group)}
+              onActionClick={(e: any) => handlers.onContextMenuGroup(e, group)}
+              onClick={() => handlers.toggleGroupCollapse(group.id, group.collapsed)}
+              onDrop={(e) => handlers.handleDropOnGroup(e, group.id)}
+            >
+              {group.title || state.t.untitledGroup}
+            </NavItem>
+        </div>
+      </div>
+    );
+  }
+
+  if (item.type === 'session' || item.type === 'session_recent') {
+    const s = item.data;
+    const isGroupSession = item.type === 'session';
+    const indent = isGroupSession ? 54 : 36;
+    
+    return (
+      <div style={style} className="relative">
+         <div className="absolute left-[23px] top-0 bottom-0 w-[1.5px] bg-gray-200 dark:bg-[#444746]" />
+         {/* Optional: Second line for group sessions? For now, just one main tree line */}
+        <div style={{ paddingLeft: indent }}>
+          <NavItem 
+            isSubItem={true} 
+            isActive={s.id === state.currentSessionId} 
+            isEditing={state.editingId === s.id}
+            editValue={state.editValue}
+            onEditChange={handlers.setEditValue}
+            onEditSubmit={handlers.handleRenameSubmit}
+            onClick={() => handlers.selectSession(s.id)} 
+            onContextMenu={(e: any) => handlers.onContextMenuSession(e, s)}
+            onActionClick={(e: any) => handlers.onContextMenuSession(e, s)}
+            draggable={true}
+            onDragStart={(e) => handlers.handleDragStartSession(e, s.id)}
+          >
+             {s.title || "Untitled Chat"}
+          </NavItem>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}, (prevProps: any, nextProps: any) => {
+  return (
+    prevProps.index === nextProps.index &&
+    prevProps.style === nextProps.style &&
+    prevProps.items === nextProps.items &&
+    prevProps.handlers === nextProps.handlers &&
+    prevProps.state === nextProps.state
+  );
+});
 
 export const Sidebar: React.FC = () => {
   const store = useStore();
@@ -232,11 +386,16 @@ export const Sidebar: React.FC = () => {
   
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  const activeGroups = store.groups.filter(g => !g.isDeleted);
-  const activeSessions = store.sessions.filter(s => !s.isDeleted);
+  // Memoize filtered lists
+  const activeGroups = useMemo(() => store.groups.filter(g => !g.isDeleted), [store.groups]);
+  const activeSessions = useMemo(() => store.sessions.filter(s => !s.isDeleted), [store.sessions]);
 
-  const groupedSessions = activeGroups.map(g => ({ group: g, sessions: activeSessions.filter(s => s.groupId === g.id) }));
-  const ungrouped = activeSessions.filter(s => !s.groupId);
+  const groupedSessions = useMemo(() => activeGroups.map(g => ({ 
+    group: g, 
+    sessions: activeSessions.filter(s => s.groupId === g.id) 
+  })), [activeGroups, activeSessions]);
+
+  const ungrouped = useMemo(() => activeSessions.filter(s => !s.groupId), [activeSessions]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -269,9 +428,9 @@ export const Sidebar: React.FC = () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isResizing]);
+  }, [isResizing, store.setSidebarWidth]);
 
-  const handleRenameSubmit = (cancel = false) => {
+  const handleRenameSubmit = useCallback((cancel = false) => {
     if (!editingId || cancel) {
       setEditingId(null);
       return;
@@ -282,14 +441,14 @@ export const Sidebar: React.FC = () => {
       else store.renameSession(editingId, editValue);
     }
     setEditingId(null);
-  };
+  }, [editingId, editValue, store.groups, store.updateGroup, store.renameSession]);
 
-  const startRename = (id: string, initialValue: string) => {
+  const startRename = useCallback((id: string, initialValue: string) => {
     setEditingId(id);
     setEditValue(initialValue);
-  };
+  }, []);
 
-  const onContextMenuGroup = (e: any, g: Group) => {
+  const onContextMenuGroup = useCallback((e: any, g: Group) => {
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY, actions: [
       { label: t.rename, icon: Icons.Edit, onClick: () => startRename(g.id, g.title) },
@@ -297,9 +456,9 @@ export const Sidebar: React.FC = () => {
       { separator: true },
       { label: t.delete, icon: Icons.Trash, onClick: () => store.deleteGroup(g.id), danger: true }
     ]});
-  };
+  }, [t, startRename, store.setEditingProject, store.setActiveModal, store.deleteGroup]);
 
-  const onContextMenuSession = (e: any, s: ChatSession) => {
+  const onContextMenuSession = useCallback((e: any, s: ChatSession) => {
     e.preventDefault();
     const moveSubMenu = [
       { label: t.ungrouped, onClick: () => store.moveSession(s.id, undefined) },
@@ -313,378 +472,327 @@ export const Sidebar: React.FC = () => {
       { separator: true },
       { label: t.delete, icon: Icons.Trash, onClick: () => store.deleteSession(s.id), danger: true }
     ]});
-  };
+  }, [t, activeGroups, startRename, store.moveSession, store.user?.email, store.deleteSession]);
 
-  // Drag and Drop Logic
-  const handleDragStartSession = (e: React.DragEvent, sessionId: string) => {
+  const handleDragStartSession = useCallback((e: React.DragEvent, sessionId: string) => {
       e.dataTransfer.setData('application/json', JSON.stringify({ type: 'session', id: sessionId }));
       e.dataTransfer.effectAllowed = 'move';
-  };
+  }, []);
 
-  const handleDropOnGroup = (e: React.DragEvent, groupId: string) => {
+  const handleDropOnGroup = useCallback((e: React.DragEvent, groupId: string) => {
       try {
           const data = JSON.parse(e.dataTransfer.getData('application/json'));
           if (data.type === 'session' && data.id) {
               store.moveSession(data.id, groupId);
-              // Expand the group dropped into
               store.updateGroup(groupId, { collapsed: false });
           }
       } catch (err) {
           console.error('Failed to parse drag data', err);
       }
-  };
+  }, [store.moveSession, store.updateGroup]);
 
-  // Handle Slim Item Click (Selects first session in group or does nothing)
-  const handleSlimProjectClick = (e: React.MouseEvent, group: Group) => {
+  const handleSlimProjectClick = useCallback((e: React.MouseEvent, group: Group) => {
     e.stopPropagation();
-    // Try to find the first session in this group to select it
     const firstSession = activeSessions.find(s => s.groupId === group.id);
     if (firstSession) {
         store.selectSession(firstSession.id);
     }
-    // Do not toggle sidebar
-  };
+  }, [activeSessions, store.selectSession]);
 
-  // Helper component for Slim Mode Buttons
-  const SlimButton = ({ icon: Icon, label, onClick, children }: any) => (
-    <div className="relative group/slim-item w-full flex justify-center py-2">
-       <button 
-         onClick={onClick}
-         className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-[#1E1F20] hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black text-gray-500 dark:text-[#C4C7C5] transition-all active:scale-95 shadow-sm"
-       >
-          <Icon className="w-5 h-5" />
-       </button>
-       
-       {/* Flyout Menu - Updated to be on the right side and prevent disappearance */}
-       {children && (
-         <div className="absolute left-full top-0 pl-4 hidden group-hover/slim-item:block z-50">
-            <div className="w-64 bg-white dark:bg-[#1E1F20] border border-gray-100 dark:border-[#444746] rounded-2xl shadow-2xl p-2 animate-fadeIn origin-top-left max-h-[80vh] overflow-y-auto custom-scrollbar">
-                <div className="px-3 py-2 text-xs font-black text-gray-400 dark:text-[#C4C7C5] uppercase tracking-widest border-b border-gray-50 dark:border-[#444746] mb-1">
-                    {label}
-                </div>
-                {children}
-            </div>
-         </div>
-       )}
-    </div>
-  );
+  const toggleGroupCollapse = useCallback((id: string, collapsed: boolean) => {
+    store.updateGroup(id, { collapsed: !collapsed });
+  }, [store.updateGroup]);
+
+  const createGroup = useCallback(() => {
+    store.createGroup(uuidv4(), t.untitledGroup);
+  }, [store.createGroup, t.untitledGroup]);
+
+  // Flatten data for react-window
+  const flattenedItems = useMemo(() => {
+    const items: any[] = [];
+    
+    if (!isSlim) {
+      items.push({ type: 'header_groups' });
+      
+      if (!isProjectsCollapsed) {
+        groupedSessions.forEach(({ group, sessions }) => {
+          items.push({ type: 'group', data: group });
+          if (!group.collapsed) {
+            sessions.forEach(s => items.push({ type: 'session', data: s, groupId: group.id }));
+          }
+        });
+      }
+      
+      items.push({ type: 'header_recent' });
+      
+      if (!isRecentCollapsed) {
+        ungrouped.forEach(s => items.push({ type: 'session_recent', data: s }));
+      }
+    }
+    
+    return items;
+  }, [isSlim, isProjectsCollapsed, isRecentCollapsed, groupedSessions, ungrouped]);
+
+  const getItemSize = useCallback((index: number) => {
+    const item = flattenedItems[index];
+    if (item.type === 'header_groups' || item.type === 'header_recent') return 32;
+    if (item.type === 'group') return 42;
+    return 42; // session
+  }, [flattenedItems]);
+
+  const itemData = useMemo(() => ({
+    items: flattenedItems,
+    handlers: {
+      toggleGroupCollapse,
+      selectSession: store.selectSession,
+      onContextMenuGroup,
+      onContextMenuSession,
+      handleDragStartSession,
+      handleDropOnGroup,
+      startRename,
+      handleRenameSubmit,
+      setEditValue,
+      toggleProjectsCollapsed: () => setIsProjectsCollapsed(prev => !prev),
+      toggleRecentCollapsed: () => setIsRecentCollapsed(prev => !prev),
+      createGroup
+    },
+    state: {
+      editingId,
+      editValue,
+      currentSessionId: store.currentSessionId,
+      isProjectsCollapsed,
+      isRecentCollapsed,
+      t
+    }
+  }), [flattenedItems, toggleGroupCollapse, store.selectSession, onContextMenuGroup, onContextMenuSession, handleDragStartSession, handleDropOnGroup, startRename, handleRenameSubmit, editingId, editValue, store.currentSessionId, isProjectsCollapsed, isRecentCollapsed, t, createGroup]);
 
   return (
-    <motion.aside 
-      layout
-      animate={{ width: isSlim ? 72 : sidebarWidth }}
-      transition={{ duration: isResizing ? 0 : 0.35, ease: [0.4, 0, 0.2, 1] }}
-      className="flex flex-col bg-[#F9FAFB] dark:bg-[#1E1F20] border-r border-gray-200 dark:border-[#444746] h-full select-none z-10 relative shrink-0"
-    >
-      {/* Header */}
-      <div className="h-16 flex items-center justify-between px-5 shrink-0 overflow-hidden">
-        {!isSlim && (
-          <motion.div 
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3 flex-1 overflow-hidden"
+    <Profiler id="Sidebar" onRender={onRenderCallback}>
+      <motion.aside 
+        layout
+        animate={{ width: isSlim ? 72 : sidebarWidth }}
+        transition={{ duration: isResizing ? 0 : 0.35, ease: [0.4, 0, 0.2, 1] }}
+        className="flex flex-col bg-[#F9FAFB] dark:bg-[#1E1F20] border-r border-gray-200 dark:border-[#444746] h-full select-none z-10 relative shrink-0"
+      >
+        {/* Header */}
+        <div className="h-16 flex items-center justify-between px-5 shrink-0 overflow-hidden">
+          {!isSlim && (
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center gap-3 flex-1 overflow-hidden"
+            >
+              <div className="w-8 h-8 bg-black dark:bg-white text-white dark:text-black rounded-xl flex items-center justify-center shadow-lg shrink-0">
+                <Icons.Zap className="w-5 h-5" fill="currentColor" />
+              </div>
+              <span className="font-black text-xl tracking-tighter text-black dark:text-white uppercase truncate">Agent</span>
+            </motion.div>
+          )}
+          
+          <button 
+              onClick={(e) => { e.stopPropagation(); store.toggleSidebar(); }}
+              className={clsx(
+                "w-10 h-10 bg-black dark:bg-[#28292A] text-white dark:text-[#E3E3E3] rounded-xl flex items-center justify-center shadow-lg hover:bg-gray-800 dark:hover:bg-[#333537] transition-all hover:scale-105 active:scale-95 shrink-0 border border-transparent dark:border-[#444746]",
+                isSlim ? "mx-auto" : ""
+              )}
           >
-            <div className="w-8 h-8 bg-black dark:bg-white text-white dark:text-black rounded-xl flex items-center justify-center shadow-lg shrink-0">
-              <Icons.Zap className="w-5 h-5" fill="currentColor" />
-            </div>
-            <span className="font-black text-xl tracking-tighter text-black dark:text-white uppercase truncate">Agent</span>
-          </motion.div>
-        )}
-        
-        <button 
-            onClick={(e) => { e.stopPropagation(); store.toggleSidebar(); }}
+              <motion.div
+                animate={{ rotate: isSlim ? 180 : 0 }}
+                transition={{ type: "spring", stiffness: 200 }}
+              >
+                <Icons.ChevronLeft className="w-5 h-5" strokeWidth={3} />
+              </motion.div>
+          </button>
+        </div>
+
+        {/* New Chat Button */}
+        <div className={clsx("mb-2 transition-all shrink-0", isSlim ? "px-2" : "px-5")}>
+          <button 
+            onClick={store.createNewSession} 
             className={clsx(
-              "w-10 h-10 bg-black dark:bg-[#28292A] text-white dark:text-[#E3E3E3] rounded-xl flex items-center justify-center shadow-lg hover:bg-gray-800 dark:hover:bg-[#333537] transition-all hover:scale-105 active:scale-95 shrink-0 border border-transparent dark:border-[#444746]",
-              isSlim ? "mx-auto" : ""
+              "bg-black dark:bg-[#28292A] text-white dark:text-[#E3E3E3] flex items-center justify-center transition-all hover:bg-gray-800 dark:hover:bg-[#333537] rounded-xl shadow-xl active:scale-[0.98] border border-white/5 dark:border-[#444746]",
+              isSlim ? "w-11 h-11 mx-auto" : "w-full h-11 gap-2"
             )}
-        >
-            <motion.div
-              animate={{ rotate: isSlim ? 180 : 0 }}
-              transition={{ type: "spring", stiffness: 200 }}
-            >
-              <Icons.ChevronLeft className="w-5 h-5" strokeWidth={3} />
-            </motion.div>
-        </button>
-      </div>
+            title={isSlim ? t.newChat : undefined}
+          >
+            <Icons.Plus className="w-5 h-5" strokeWidth={3} />
+            {!isSlim && <span className="text-[11px] font-black tracking-[0.1em] uppercase">{t.newChat}</span>}
+          </button>
+        </div>
 
-      {/* New Chat Button */}
-      <div className={clsx("mb-2 transition-all shrink-0", isSlim ? "px-2" : "px-5")}>
-        <button 
-          onClick={store.createNewSession} 
-          className={clsx(
-            "bg-black dark:bg-[#28292A] text-white dark:text-[#E3E3E3] flex items-center justify-center transition-all hover:bg-gray-800 dark:hover:bg-[#333537] rounded-xl shadow-xl active:scale-[0.98] border border-white/5 dark:border-[#444746]",
-            isSlim ? "w-11 h-11 mx-auto" : "w-full h-11 gap-2"
-          )}
-          title={isSlim ? t.newChat : undefined}
-        >
-          <Icons.Plus className="w-5 h-5" strokeWidth={3} />
-          {!isSlim && <span className="text-[11px] font-black tracking-[0.1em] uppercase">{t.newChat}</span>}
-        </button>
-      </div>
+        {/* Search Button */}
+        <div className={clsx("mb-4 transition-all shrink-0", isSlim ? "px-2" : "px-5")}>
+           <button 
+              onClick={store.toggleSearch}
+              className={clsx(
+                  "flex items-center justify-center transition-all active:scale-[0.98] border border-transparent",
+                   isSlim 
+                     ? "w-11 h-11 mx-auto rounded-xl hover:bg-gray-200/50 dark:hover:bg-[#333537] text-gray-500 dark:text-[#C4C7C5] bg-white dark:bg-[#1E1F20] shadow-sm" 
+                     : "w-full h-10 gap-3 px-4 text-left rounded-xl hover:bg-gray-200/50 dark:hover:bg-[#333537] text-gray-500 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white font-bold"
+              )}
+              title={isSlim ? t.search : undefined}
+           >
+               <Icons.Search className={clsx("w-5 h-5", !isSlim && "text-gray-400 dark:text-[#C4C7C5]")} />
+               {!isSlim && <span>{t.search}</span>}
+           </button>
+        </div>
 
-      {/* Search Button - Replaced below New Chat */}
-      <div className={clsx("mb-4 transition-all shrink-0", isSlim ? "px-2" : "px-5")}>
-         <button 
-            onClick={store.toggleSearch}
-            className={clsx(
-                "flex items-center justify-center transition-all active:scale-[0.98] border border-transparent",
-                 isSlim 
-                   ? "w-11 h-11 mx-auto rounded-xl hover:bg-gray-200/50 dark:hover:bg-[#333537] text-gray-500 dark:text-[#C4C7C5] bg-white dark:bg-[#1E1F20] shadow-sm" 
-                   : "w-full h-10 gap-3 px-4 text-left rounded-xl hover:bg-gray-200/50 dark:hover:bg-[#333537] text-gray-500 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white font-bold"
-            )}
-            title={isSlim ? t.search : undefined}
-         >
-             <Icons.Search className={clsx("w-5 h-5", !isSlim && "text-gray-400 dark:text-[#C4C7C5]")} />
-             {!isSlim && <span>{t.search}</span>}
-         </button>
-      </div>
-
-      {/* Navigation Content */}
-      <div className={clsx("flex-1 relative", isSlim ? "overflow-visible" : "overflow-hidden")}>
-        <AnimatePresence mode="popLayout">
-          {!isSlim ? (
-            <motion.div 
-              key="full-rail"
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="h-full overflow-y-auto custom-scrollbar space-y-4 pt-2"
-            >
-                {/* Expanded Projects */}
-                <div>
-                   <div 
-                      onClick={() => setIsProjectsCollapsed(!isProjectsCollapsed)}
-                      className="text-[10px] font-black text-gray-400 dark:text-[#C4C7C5] uppercase tracking-[0.2em] px-4 mb-2 flex justify-between items-center opacity-60 hover:opacity-100 transition-opacity cursor-pointer group/header"
-                   >
-                      <div className="flex items-center gap-2">
-                         <Icons.ChevronDown className={clsx("w-3.5 h-3.5 transition-transform", isProjectsCollapsed ? "-rotate-90" : "rotate-0")} />
-                         <span>{t.groups}</span> 
-                      </div>
-                      <button 
-                         onClick={(e) => { e.stopPropagation(); store.createGroup(uuidv4(), t.untitledGroup); }} 
-                         className="hover:text-black dark:hover:text-white transition-all p-1 hover:bg-gray-200 dark:hover:bg-[#333537] rounded-md"
-                      >
-                          <Icons.Plus className="w-3.5 h-3.5" />
-                      </button>
-                   </div>
-                   <motion.div 
-                      initial={false}
-                      animate={{ height: isProjectsCollapsed ? 0 : 'auto', opacity: isProjectsCollapsed ? 0 : 1 }}
-                      className="overflow-hidden space-y-0.5"
-                   >
-                      {groupedSessions.map(({ group, sessions }) => (
-                        <div key={group.id}>
-                            <NavItem 
-                              group={group}
-                              isEditing={editingId === group.id}
-                              editValue={editValue}
-                              onEditChange={setEditValue}
-                              onEditSubmit={handleRenameSubmit}
-                              onContextMenu={(e: any) => onContextMenuGroup(e, group)}
-                              onActionClick={(e: any) => onContextMenuGroup(e, group)}
-                              onClick={() => store.updateGroup(group.id, { collapsed: !group.collapsed })}
-                              onDrop={(e) => handleDropOnGroup(e, group.id)}
-                            >
-                              {group.title || t.untitledGroup}
-                            </NavItem>
-                            {!group.collapsed && (
-                               <div className="ml-[20px] border-l-2 border-gray-200 dark:border-[#444746] mt-1 pl-3 space-y-0.5 mb-5 pr-1 relative">
-                                  {sessions.map(s => (
-                                    <NavItem 
-                                      key={s.id} 
-                                      isSubItem
-                                      isActive={s.id === store.currentSessionId} 
-                                      isEditing={editingId === s.id}
-                                      editValue={editValue}
-                                      onEditChange={setEditValue}
-                                      onEditSubmit={handleRenameSubmit}
-                                      onClick={() => store.selectSession(s.id)} 
-                                      onContextMenu={(e: any) => onContextMenuSession(e, s)}
-                                      onActionClick={(e: any) => onContextMenuSession(e, s)}
-                                      draggable={true}
-                                      onDragStart={(e) => handleDragStartSession(e, s.id)}
-                                    >
-                                       {s.title || "Untitled Chat"}
-                                    </NavItem>
-                                  ))}
-                               </div>
-                            )}
+        {/* Navigation Content */}
+        <div className={clsx("flex-1 relative", isSlim ? "overflow-visible" : "overflow-hidden")}>
+          <AnimatePresence mode="popLayout">
+            {!isSlim ? (
+              <motion.div 
+                key="full-rail"
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="h-full pt-2"
+              >
+                <AutoSizer>
+                  {({ height, width }: any) => (
+                    <List
+                      style={{ width, height }}
+                      rowCount={flattenedItems.length}
+                      rowHeight={getItemSize}
+                      rowComponent={Row as any}
+                      rowProps={itemData}
+                    />
+                  )}
+                </AutoSizer>
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="slim-rail"
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="h-full flex flex-col items-center gap-4 pt-4 overflow-visible"
+              >
+                 {/* 1. Projects Button with Flyout */}
+                 <SlimButton icon={Icons.Layers} label={t.groups} onClick={() => store.toggleSidebar()}>
+                    {activeGroups.length > 0 ? (
+                        <div className="space-y-1">
+                            {activeGroups.map(g => (
+                                <button
+                                  key={g.id}
+                                  onClick={(e) => handleSlimProjectClick(e, g)}
+                                  className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-[#333537] transition-colors text-left group/item"
+                                >
+                                    <ProjectMarker group={g} />
+                                    <span className="text-sm font-bold text-gray-700 dark:text-[#E3E3E3] truncate flex-1">{g.title || t.untitledGroup}</span>
+                                </button>
+                            ))}
                         </div>
-                      ))}
-                   </motion.div>
-                </div>
-
-                {/* Expanded Recent */}
-                <div>
-                   <div 
-                      onClick={() => setIsRecentCollapsed(!isRecentCollapsed)}
-                      className="text-[10px] font-black text-gray-400 dark:text-[#C4C7C5] uppercase tracking-[0.2em] px-4 mb-2 flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
-                   >
-                      <Icons.ChevronDown className={clsx("w-3.5 h-3.5 transition-transform", isRecentCollapsed ? "-rotate-90" : "rotate-0")} />
-                      <span>{t.recent}</span>
-                   </div>
-                   <motion.div 
-                      initial={false}
-                      animate={{ height: isRecentCollapsed ? 0 : 'auto', opacity: isRecentCollapsed ? 0 : 1 }}
-                      className="overflow-hidden space-y-0.5 relative"
-                   >
-                      <div className="ml-[20px] border-l-2 border-gray-200 dark:border-[#444746] mt-1 pl-3 space-y-0.5 mb-5 pr-1 relative">
-                        {ungrouped.map(s => (
-                          <NavItem 
-                            key={s.id} 
-                            isSubItem
-                            isActive={s.id === store.currentSessionId} 
-                            isEditing={editingId === s.id}
-                            editValue={editValue}
-                            onEditChange={setEditValue}
-                            onEditSubmit={handleRenameSubmit}
-                            onClick={() => store.selectSession(s.id)} 
-                            onContextMenu={(e: any) => onContextMenuSession(e, s)}
-                            onActionClick={(e: any) => onContextMenuSession(e, s)}
-                            draggable={true}
-                            onDragStart={(e) => handleDragStartSession(e, s.id)}
-                          >
-                             {s.title || "Untitled Chat"}
-                          </NavItem>
-                        ))}
-                      </div>
-                   </motion.div>
-                </div>
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="slim-rail"
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="h-full flex flex-col items-center gap-4 pt-4 overflow-visible"
-            >
-               {/* 1. Projects Button with Flyout */}
-               <SlimButton icon={Icons.Layers} label={t.groups} onClick={() => store.toggleSidebar()}>
-                  {activeGroups.length > 0 ? (
-                      <div className="space-y-1">
-                          {activeGroups.map(g => (
+                    ) : (
+                        <div className="p-2 text-xs text-gray-400 text-center italic">No projects</div>
+                    )}
+                 </SlimButton>
+  
+                 {/* 2. Chats Button with Flyout */}
+                 <SlimButton icon={Icons.History} label={t.chats} onClick={() => store.toggleSidebar()}>
+                    {ungrouped.length > 0 ? (
+                        <div className="space-y-1">
+                           {ungrouped.slice(0, 10).map(s => (
                               <button
-                                key={g.id}
-                                onClick={(e) => handleSlimProjectClick(e, g)}
-                                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-[#333537] transition-colors text-left group/item"
+                                  key={s.id}
+                                  onClick={(e) => { e.stopPropagation(); store.selectSession(s.id); }}
+                                  className={clsx(
+                                      "w-full text-left p-2 rounded-lg text-xs font-bold truncate transition-colors",
+                                      s.id === store.currentSessionId ? "bg-black dark:bg-[#004A77] text-white dark:text-[#E3E3E3]" : "text-gray-600 dark:text-[#C4C7C5] hover:bg-gray-100 dark:hover:bg-[#333537]"
+                                  )}
                               >
-                                  <ProjectMarker group={g} />
-                                  <span className="text-sm font-bold text-gray-700 dark:text-[#E3E3E3] truncate flex-1">{g.title || t.untitledGroup}</span>
+                                  {s.title || "Untitled Chat"}
                               </button>
-                          ))}
-                      </div>
-                  ) : (
-                      <div className="p-2 text-xs text-gray-400 text-center italic">No projects</div>
-                  )}
-               </SlimButton>
+                           ))}
+                        </div>
+                    ) : (
+                        <div className="p-2 text-xs text-gray-400 text-center italic">No chats</div>
+                    )}
+                 </SlimButton>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-               {/* 2. Chats Button with Flyout */}
-               <SlimButton icon={Icons.History} label={t.chats} onClick={() => store.toggleSidebar()}>
-                  {ungrouped.length > 0 ? (
-                      <div className="space-y-1">
-                         {ungrouped.slice(0, 10).map(s => (
-                            <button
-                                key={s.id}
-                                onClick={(e) => { e.stopPropagation(); store.selectSession(s.id); }}
-                                className={clsx(
-                                    "w-full text-left p-2 rounded-lg text-xs font-bold truncate transition-colors",
-                                    s.id === store.currentSessionId ? "bg-black dark:bg-[#004A77] text-white dark:text-[#E3E3E3]" : "text-gray-600 dark:text-[#C4C7C5] hover:bg-gray-100 dark:hover:bg-[#333537]"
-                                )}
-                            >
-                                {s.title || "Untitled Chat"}
-                            </button>
-                         ))}
-                      </div>
-                  ) : (
-                      <div className="p-2 text-xs text-gray-400 text-center italic">No chats</div>
-                  )}
-               </SlimButton>
-
-               {/* Removed Search from bottom, added to top */}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* User Section */}
-      <div className="p-2 border-t border-gray-200 dark:border-[#444746] bg-[#F9FAFB] dark:bg-[#1E1F20] shrink-0 relative" ref={userMenuRef}>
-         <AnimatePresence>
-         {showUserMenu && (
-           <motion.div 
-             initial={{ opacity: 0, x: isSlim ? 10 : 0, y: 10, scale: 0.95 }} 
-             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }} 
-             exit={{ opacity: 0, x: isSlim ? 10 : 0, y: 10, scale: 0.95 }}
+        {/* User Section */}
+        <div className="p-2 border-t border-gray-200 dark:border-[#444746] bg-[#F9FAFB] dark:bg-[#1E1F20] shrink-0 relative" ref={userMenuRef}>
+           <AnimatePresence>
+           {showUserMenu && (
+             <motion.div 
+               initial={{ opacity: 0, x: isSlim ? 10 : 0, y: 10, scale: 0.95 }} 
+               animate={{ opacity: 1, x: 0, y: 0, scale: 1 }} 
+               exit={{ opacity: 0, x: isSlim ? 10 : 0, y: 10, scale: 0.95 }}
+               className={clsx(
+                  "absolute bottom-full bg-white dark:bg-[#1E1F20] rounded-[22px] shadow-[0_15px_45px_-12px_rgba(0,0,0,0.15)] border border-gray-200 dark:border-[#444746] py-1.5 mb-3 z-[100] text-[13px] overflow-hidden whitespace-nowrap",
+                  isSlim ? "left-14 w-52" : "left-2.5 right-2.5"
+               )}
+             >
+                <div className="px-4 py-2 mb-1 border-b border-gray-50 dark:border-[#444746] bg-gray-50/50 dark:bg-[#1E1F20]/50">
+                    <div className="font-black text-black dark:text-white text-xs truncate">{store.user?.name}</div>
+                    <div className="text-[10px] text-gray-400 dark:text-gray-400 font-bold truncate mt-0.5">{store.user?.email}</div>
+                </div>
+                <button onClick={() => { setShowUserMenu(false); store.setActiveModal('account'); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-[#333537] flex items-center gap-2.5 font-bold text-gray-700 dark:text-gray-200 transition-colors">
+                  <Icons.User className="w-3.5 h-3.5 text-gray-400 dark:text-gray-400" /> 
+                  <span>{t.account}</span>
+                </button>
+                <button onClick={() => { setShowUserMenu(false); store.setActiveModal('settings'); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-[#333537] flex items-center gap-2.5 font-bold text-gray-700 dark:text-gray-200 transition-colors">
+                  <Icons.Settings className="w-3.5 h-3.5 text-gray-400 dark:text-gray-400" /> 
+                  <span>{t.settings}</span>
+                </button>
+                <button onClick={() => { setShowUserMenu(false); store.setActiveModal('help'); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-[#333537] flex items-center gap-2.5 font-bold text-gray-700 dark:text-gray-200 transition-colors">
+                  <Icons.Help className="w-3.5 h-3.5 text-gray-400 dark:text-gray-400" /> 
+                  <span>{t.getHelp}</span>
+                </button>
+                <div className="h-px bg-gray-100 dark:bg-[#444746] my-1 mx-4" />
+                <button onClick={() => { setShowUserMenu(false); store.setActiveModal('upgrade'); }} className="w-full px-4 py-2 text-left hover:bg-yellow-50 dark:hover:bg-yellow-900/20 flex items-center gap-2.5 font-bold text-yellow-700 dark:text-yellow-500 transition-colors">
+                  <Icons.CreditCard className="w-3.5 h-3.5 text-yellow-500" /> 
+                  <span>{t.upgradeSubscription}</span>
+                </button>
+                <div className="h-px bg-gray-100 dark:bg-[#444746] my-1 mx-4" />
+                <button onClick={() => { setShowUserMenu(false); store.logout(); }} className="w-full px-4 py-2 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center gap-2.5 font-bold transition-colors">
+                  <Icons.LogOut className="w-3.5 h-3.5" /> 
+                  <span>{t.signOut}</span>
+                </button>
+             </motion.div>
+           )}
+           </AnimatePresence>
+           
+           <button 
+             onClick={(e) => {
+                e.stopPropagation();
+                setShowUserMenu(!showUserMenu);
+             }} 
              className={clsx(
-                "absolute bottom-full bg-white dark:bg-[#1E1F20] rounded-[22px] shadow-[0_15px_45px_-12px_rgba(0,0,0,0.15)] border border-gray-200 dark:border-[#444746] py-1.5 mb-3 z-[100] text-[13px] overflow-hidden whitespace-nowrap",
-                isSlim ? "left-14 w-52" : "left-2.5 right-2.5"
+               "flex items-center gap-2.5 p-1.5 rounded-xl transition-all hover:bg-gray-200/50 dark:hover:bg-[#333537] w-full active:scale-[0.98]",
+               isSlim ? "justify-center" : ""
              )}
            >
-              <div className="px-4 py-2 mb-1 border-b border-gray-50 dark:border-[#444746] bg-gray-50/50 dark:bg-[#1E1F20]/50">
-                  <div className="font-black text-black dark:text-white text-xs truncate">{store.user?.name}</div>
-                  <div className="text-[10px] text-gray-400 dark:text-[#C4C7C5] font-bold truncate mt-0.5">{store.user?.email}</div>
+              <div className="w-11 h-11 md:w-8 md:h-8 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center text-gray-600 dark:text-[#C4C7C5] shadow-sm border-2 border-white dark:border-[#444746] shrink-0 relative overflow-hidden transition-all">
+                {store.user?.avatar ? (
+                    <img src={store.user.avatar} className="w-full h-full object-cover" />
+                ) : (
+                    <Icons.User className="w-4.5 h-4.5" />
+                )}
               </div>
-              <button onClick={() => { setShowUserMenu(false); store.setActiveModal('account'); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-[#333537] flex items-center gap-2.5 font-bold text-gray-700 dark:text-[#E3E3E3] transition-colors">
-                <Icons.User className="w-3.5 h-3.5 text-gray-400 dark:text-[#C4C7C5]" /> 
-                <span>{t.account}</span>
-              </button>
-              <button onClick={() => { setShowUserMenu(false); store.setActiveModal('settings'); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-[#333537] flex items-center gap-2.5 font-bold text-gray-700 dark:text-[#E3E3E3] transition-colors">
-                <Icons.Settings className="w-3.5 h-3.5 text-gray-400 dark:text-[#C4C7C5]" /> 
-                <span>{t.settings}</span>
-              </button>
-              <button onClick={() => { setShowUserMenu(false); store.setActiveModal('help'); }} className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-[#333537] flex items-center gap-2.5 font-bold text-gray-700 dark:text-[#E3E3E3] transition-colors">
-                <Icons.Help className="w-3.5 h-3.5 text-gray-400 dark:text-[#C4C7C5]" /> 
-                <span>{t.getHelp}</span>
-              </button>
-              <div className="h-px bg-gray-100 dark:bg-[#444746] my-1 mx-4" />
-              <button onClick={() => { setShowUserMenu(false); store.setActiveModal('upgrade'); }} className="w-full px-4 py-2 text-left hover:bg-yellow-50 dark:hover:bg-yellow-900/20 flex items-center gap-2.5 font-bold text-yellow-700 dark:text-yellow-500 transition-colors">
-                <Icons.CreditCard className="w-3.5 h-3.5 text-yellow-500" /> 
-                <span>{t.upgradeSubscription}</span>
-              </button>
-              <div className="h-px bg-gray-100 dark:bg-[#444746] my-1 mx-4" />
-              <button onClick={() => { setShowUserMenu(false); store.logout(); }} className="w-full px-4 py-2 text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center gap-2.5 font-bold transition-colors">
-                <Icons.LogOut className="w-3.5 h-3.5" /> 
-                <span>{t.signOut}</span>
-              </button>
-           </motion.div>
-         )}
-         </AnimatePresence>
-         
-         <button 
-           onClick={(e) => {
-              e.stopPropagation();
-              setShowUserMenu(!showUserMenu);
-           }} 
-           className={clsx(
-             "flex items-center gap-2.5 p-1.5 rounded-xl transition-all hover:bg-gray-200/50 dark:hover:bg-[#333537] w-full active:scale-[0.98]",
-             isSlim ? "justify-center" : ""
-           )}
-         >
-            <div className="w-11 h-11 md:w-8 md:h-8 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center text-gray-600 dark:text-[#C4C7C5] shadow-sm border-2 border-white dark:border-[#444746] shrink-0 relative overflow-hidden transition-all">
-              {store.user?.avatar ? (
-                  <img src={store.user.avatar} className="w-full h-full object-cover filter grayscale" />
-              ) : (
-                  <Icons.User className="w-4.5 h-4.5" />
+              {!isSlim && (
+                <div className="flex-1 text-left overflow-hidden">
+                  <div className="text-[12px] font-bold text-black dark:text-[#E3E3E3] truncate leading-tight">{store.user?.name || "Agent 用户"}</div>
+                  <div className="text-[9px] text-gray-400 dark:text-[#C4C7C5] font-bold truncate leading-none mt-0.5">{store.user?.email}</div>
+                </div>
               )}
-            </div>
-            {!isSlim && (
-              <div className="flex-1 text-left overflow-hidden">
-                <div className="text-[12px] font-bold text-black dark:text-[#E3E3E3] truncate leading-tight">{store.user?.name || "Agent 用户"}</div>
-                <div className="text-[9px] text-gray-400 dark:text-[#C4C7C5] font-bold truncate leading-none mt-0.5">{store.user?.email}</div>
-              </div>
-            )}
-         </button>
-      </div>
+           </button>
+        </div>
 
-      {/* Resizing Handle */}
-      {!isSlim && (
-        <div 
-          onMouseDown={() => setIsResizing(true)}
-          className="absolute right-0 top-0 bottom-0 w-1 hover:w-1.5 bg-transparent hover:bg-black/10 transition-all cursor-col-resize z-20"
-        />
-      )}
+        {/* Resizing Handle */}
+        {!isSlim && (
+          <div 
+            onMouseDown={() => setIsResizing(true)}
+            className="absolute right-0 top-0 bottom-0 w-1 hover:w-1.5 bg-transparent hover:bg-black/10 transition-all cursor-col-resize z-20"
+          />
+        )}
 
-      {contextMenu && <ContextMenu {...contextMenu} onClose={() => setContextMenu(null)} />}
-    </motion.aside>
+        {contextMenu && <ContextMenu {...contextMenu} onClose={() => setContextMenu(null)} />}
+      </motion.aside>
+    </Profiler>
   );
 };

@@ -195,13 +195,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast })
         {/* Avatar */}
         <div className={clsx(
           "flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center mt-1 shadow-sm overflow-hidden",
-          isUser ? "bg-gray-200 ml-3" : "bg-black text-white mr-3"
+          isUser ? "bg-gray-200 dark:bg-[#333537] ml-3" : "bg-black dark:bg-white dark:text-black mr-3"
         )}>
           {isUser ? (
              userAvatar ? (
-               <img src={userAvatar} className="w-full h-full object-cover filter grayscale" />
+               <img src={userAvatar} className="w-full h-full object-cover" />
              ) : (
-               <div className="w-full h-full rounded-full bg-gradient-to-br from-gray-100 to-gray-300" />
+               <div className="w-full h-full rounded-full bg-gradient-to-br from-gray-100 to-gray-300 dark:from-[#333537] dark:to-[#444746]" />
              )
           ) : (
              <Icons.Zap className="w-5 h-5" fill="currentColor" />
@@ -218,9 +218,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast })
           {message.attachments && message.attachments.length > 0 && (
              <div className={clsx("flex flex-wrap gap-2 mb-2", isUser ? "justify-end" : "justify-start")}>
                  {message.attachments.map((att, idx) => (
-                     <div key={idx} className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm text-sm">
-                        <Icons.Attach className="w-4 h-4 text-gray-500" />
-                        <span className="text-gray-700 max-w-[200px] truncate">{att.name}</span>
+                     <div key={idx} className="flex items-center gap-2 bg-white dark:bg-[#1E1F20] px-3 py-2 rounded-lg border border-gray-200 dark:border-[#444746] shadow-sm text-sm">
+                        <Icons.Attach className="w-4 h-4 text-gray-500 dark:text-[#C4C7C5]" />
+                        <span className="text-gray-700 dark:text-[#E3E3E3] max-w-[200px] truncate">{att.name}</span>
                      </div>
                  ))}
              </div>
@@ -249,7 +249,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast })
              "flex items-center gap-3 mt-1 px-1",
              isUser ? "flex-row-reverse" : "flex-row"
           )}>
-             <span className="text-[11px] text-gray-400 font-medium">
+             <span className="text-[11px] text-gray-400 dark:text-[#C4C7C5] font-medium">
                 {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
              </span>
 

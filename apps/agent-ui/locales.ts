@@ -22,6 +22,7 @@ export const translations = {
     modelKimi: "MoonShot",
     modelDeepseek: "HangZhou DeepSeek",
     modelGptOss: "OpenAI",
+    modelMiniMax: "MiniMax",
     languageName: "English",
     systemInstruction: "You are Agent, a highly advanced AI assistant. You are helpful, precise, and can see the user's terminal environment. When showing code, use markdown code blocks. Keep responses concise but informative.",
     
@@ -235,6 +236,7 @@ Type "help" for available commands.
     modelKimi: "MoonShot (月之暗面)",
     modelDeepseek: "HangZhou DeepSeek (深度求索)",
     modelGptOss: "OpenAI",
+    modelMiniMax: "MiniMax (海螺)",
     languageName: "中文",
     systemInstruction: "你是 Agent，一个高度先进的人工智能助手。你乐于助人、精准，并且可以看到用户的终端环境。在显示代码时，使用 markdown 代码块。保持回答简洁但信息丰富。",
 

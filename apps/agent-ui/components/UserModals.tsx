@@ -220,28 +220,28 @@ export const UserModals: React.FC = () => {
               <p className="text-xs text-gray-500 mb-8 font-medium px-4">{t.getAccessPro}</p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-2 text-left">
-                <div className="p-6 rounded-[24px] border border-gray-100 bg-gray-50/30 flex flex-col items-center text-center">
-                  <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t.freePlan}</div>
-                  <div className="text-3xl font-black mb-6 text-gray-900">$0</div>
-                  <ul className="text-xs space-y-3 text-gray-600 mb-8 w-full font-bold">
-                    <li className="flex items-center gap-2.5"><Icons.Check className="w-3.5 h-3.5 text-gray-300" /> {t.standardSpeed}</li>
-                    <li className="flex items-center gap-2.5"><Icons.Check className="w-3.5 h-3.5 text-gray-300" /> {t.dailyLimits}</li>
-                    <li className="flex items-center gap-2.5"><Icons.Check className="w-3.5 h-3.5 text-gray-300" /> {t.accessKimi}</li>
+                <div className="p-6 rounded-[24px] border border-gray-100 dark:border-[#444746] bg-gray-50/30 dark:bg-[#333537]/30 flex flex-col items-center text-center">
+                  <div className="text-[10px] font-black text-gray-400 dark:text-[#9aa0a6] uppercase tracking-widest mb-1">{t.freePlan}</div>
+                  <div className="text-3xl font-black mb-6 text-gray-900 dark:text-[#E3E3E3]">$0</div>
+                  <ul className="text-xs space-y-3 text-gray-600 dark:text-[#C4C7C5] mb-8 w-full font-bold">
+                    <li className="flex items-center gap-2.5"><Icons.Check className="w-3.5 h-3.5 text-gray-300 dark:text-gray-600" /> {t.standardSpeed}</li>
+                    <li className="flex items-center gap-2.5"><Icons.Check className="w-3.5 h-3.5 text-gray-300 dark:text-gray-600" /> {t.dailyLimits}</li>
+                    <li className="flex items-center gap-2.5"><Icons.Check className="w-3.5 h-3.5 text-gray-300 dark:text-gray-600" /> {t.accessKimi}</li>
                   </ul>
-                  <button className="w-full py-3 bg-gray-200 text-gray-500 rounded-xl font-black text-xs uppercase cursor-default">Current Plan</button>
+                  <button className="w-full py-3 bg-gray-200 dark:bg-[#444746] text-gray-500 dark:text-[#C4C7C5] rounded-xl font-black text-xs uppercase cursor-default">Current Plan</button>
                 </div>
 
-                <div className="p-6 rounded-[32px] border-4 border-black relative bg-white shadow-2xl shadow-black/10 flex flex-col items-center text-center scale-105 transform">
-                  <div className="absolute top-0 right-8 -translate-y-1/2 bg-black text-white text-[9px] font-black px-3 py-1 rounded-full tracking-widest">{t.recommended}</div>
-                  <div className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-1">{t.proPlanCard}</div>
-                  <div className="text-3xl font-black mb-6 text-gray-900">$20<span className="text-xs text-gray-400 font-bold">{t.perMonth}</span></div>
-                  <ul className="text-xs space-y-3 text-gray-800 mb-8 w-full font-bold">
-                    <li className="flex items-center gap-2.5 text-yellow-600"><Icons.Zap className="w-3.5 h-3.5 fill-yellow-400" /> {t.fastSpeed}</li>
+                <div className="p-6 rounded-[32px] border-4 border-black dark:border-[#A8C7FA] relative bg-white dark:bg-[#1E1F20] shadow-2xl shadow-black/10 dark:shadow-[#A8C7FA]/10 flex flex-col items-center text-center scale-105 transform">
+                  <div className="absolute top-0 right-8 -translate-y-1/2 bg-black dark:bg-[#A8C7FA] text-white dark:text-black text-[9px] font-black px-3 py-1 rounded-full tracking-widest">{t.recommended}</div>
+                  <div className="text-[10px] font-black text-gray-900 dark:text-[#E3E3E3] uppercase tracking-widest mb-1">{t.proPlanCard}</div>
+                  <div className="text-3xl font-black mb-6 text-gray-900 dark:text-[#E3E3E3]">$20<span className="text-xs text-gray-400 dark:text-[#9aa0a6] font-bold">{t.perMonth}</span></div>
+                  <ul className="text-xs space-y-3 text-gray-800 dark:text-[#E3E3E3] mb-8 w-full font-bold">
+                    <li className="flex items-center gap-2.5 text-yellow-600 dark:text-yellow-400"><Icons.Zap className="w-3.5 h-3.5 fill-yellow-400" /> {t.fastSpeed}</li>
                     <li className="flex items-center gap-2.5"><Icons.Check className="w-3.5 h-3.5 text-green-500" /> {t.unlimitedChats}</li>
                     <li className="flex items-center gap-2.5"><Icons.Check className="w-3.5 h-3.5 text-green-500" /> {t.accessDeepseek}</li>
                     <li className="flex items-center gap-2.5"><Icons.Check className="w-3.5 h-3.5 text-green-500" /> {t.prioritySupport}</li>
                   </ul>
-                  <button className="w-full py-3 bg-black text-white rounded-xl font-black text-xs hover:bg-gray-800 transition-all shadow-xl active:scale-95 tracking-widest uppercase">{t.upgradeBtn}</button>
+                  <button className="w-full py-3 bg-black dark:bg-[#A8C7FA] text-white dark:text-black rounded-xl font-black text-xs hover:bg-gray-800 dark:hover:bg-[#8AB4F8] transition-all shadow-xl active:scale-95 tracking-widest uppercase">{t.upgradeBtn}</button>
                 </div>
               </div>
               <p className="text-[9px] text-gray-400 mt-10 flex items-center justify-center gap-2 font-bold opacity-60 uppercase tracking-wide">
@@ -365,13 +365,13 @@ export const UserModals: React.FC = () => {
                     {settingsTab === 'general' && (
                         <div className="space-y-8 animate-fadeIn">
                              <section className="space-y-4">
-                                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t.languageName}</h3>
+                                <h3 className="text-[10px] font-black text-gray-400 dark:text-[#C4C7C5] uppercase tracking-widest">{t.languageName}</h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <button 
                                         onClick={() => setLanguage('en')}
                                         className={clsx(
                                             "flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all font-bold text-sm",
-                                            language === 'en' ? "border-black bg-black text-white" : "border-gray-100 text-gray-600 hover:border-gray-300"
+                                            language === 'en' ? "border-black bg-black text-white dark:border-[#A8C7FA] dark:bg-[#A8C7FA] dark:text-black" : "border-gray-100 text-gray-600 hover:border-gray-300 dark:border-[#444746] dark:text-[#C4C7C5] dark:hover:border-[#8AB4F8]"
                                         )}
                                     >
                                         <span className="text-lg">🇺🇸</span> English
@@ -380,7 +380,7 @@ export const UserModals: React.FC = () => {
                                         onClick={() => setLanguage('zh')}
                                         className={clsx(
                                             "flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all font-bold text-sm",
-                                            language === 'zh' ? "border-black bg-black text-white" : "border-gray-100 text-gray-600 hover:border-gray-300"
+                                            language === 'zh' ? "border-black bg-black text-white dark:border-[#A8C7FA] dark:bg-[#A8C7FA] dark:text-black" : "border-gray-100 text-gray-600 hover:border-gray-300 dark:border-[#444746] dark:text-[#C4C7C5] dark:hover:border-[#8AB4F8]"
                                         )}
                                     >
                                         <span className="text-lg">🇨🇳</span> 简体中文
@@ -388,10 +388,10 @@ export const UserModals: React.FC = () => {
                                 </div>
                             </section>
                             
-                            <hr className="border-gray-100" />
+                            <hr className="border-gray-100 dark:border-[#444746]" />
 
                             <section className="space-y-4">
-                                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Preferences</h3>
+                                <h3 className="text-[10px] font-black text-gray-400 dark:text-[#C4C7C5] uppercase tracking-widest">Preferences</h3>
                                 <div className="space-y-3">
                                     <label className="flex items-center justify-between p-4 bg-white dark:bg-[#1E1F20] border border-gray-100 dark:border-[#444746] rounded-2xl hover:border-gray-300 dark:hover:border-[#A8C7FA] transition-all cursor-pointer">
                                         <div className="flex items-center gap-4">
@@ -414,45 +414,45 @@ export const UserModals: React.FC = () => {
                                         </div>
                                     </label>
 
-                                    <label className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl hover:border-gray-300 transition-all cursor-pointer">
+                                    <label className="flex items-center justify-between p-4 bg-white dark:bg-[#1E1F20] border border-gray-100 dark:border-[#444746] rounded-2xl hover:border-gray-300 dark:hover:border-[#A8C7FA] transition-all cursor-pointer">
                                         <div className="flex items-center gap-4">
-                                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                                            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg">
                                                 <Icons.Zap className="w-5 h-5" />
                                             </div>
                                             <div>
-                                                <div className="font-bold text-gray-900">{t.streamResponses}</div>
-                                                <div className="text-xs text-gray-500 font-medium">{t.streamDesc}</div>
+                                                <div className="font-bold text-gray-900 dark:text-[#E3E3E3]">{t.streamResponses}</div>
+                                                <div className="text-xs text-gray-500 dark:text-[#C4C7C5] font-medium">{t.streamDesc}</div>
                                             </div>
                                         </div>
-                                        <div className={clsx("w-12 h-6 rounded-full relative transition-all duration-300", settings.streamResponses ? "bg-black" : "bg-gray-200")}>
+                                        <div className={clsx("w-12 h-6 rounded-full relative transition-all duration-300", settings.streamResponses ? "bg-black dark:bg-[#A8C7FA]" : "bg-gray-200 dark:bg-[#444746]")}>
                                             <input 
                                                 type="checkbox" 
                                                 className="hidden" 
                                                 checked={settings.streamResponses} 
                                                 onChange={(e) => updateSettings({ streamResponses: e.target.checked })}
                                             />
-                                            <motion.div animate={{ x: settings.streamResponses ? 24 : 4 }} className="w-4 h-4 bg-white rounded-full shadow-md absolute top-1" />
+                                            <motion.div animate={{ x: settings.streamResponses ? 24 : 4 }} className="w-4 h-4 bg-white dark:bg-black rounded-full shadow-md absolute top-1" />
                                         </div>
                                     </label>
 
-                                    <label className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl hover:border-gray-300 transition-all cursor-pointer">
+                                    <label className="flex items-center justify-between p-4 bg-white dark:bg-[#1E1F20] border border-gray-100 dark:border-[#444746] rounded-2xl hover:border-gray-300 dark:hover:border-[#A8C7FA] transition-all cursor-pointer">
                                         <div className="flex items-center gap-4">
-                                            <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
+                                            <div className="p-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg">
                                                 <Volume2 className="w-5 h-5" />
                                             </div>
                                             <div>
-                                                <div className="font-bold text-gray-900">{t.soundEffects}</div>
-                                                <div className="text-xs text-gray-500 font-medium">{t.soundDesc}</div>
+                                                <div className="font-bold text-gray-900 dark:text-[#E3E3E3]">{t.soundEffects}</div>
+                                                <div className="text-xs text-gray-500 dark:text-[#C4C7C5] font-medium">{t.soundDesc}</div>
                                             </div>
                                         </div>
-                                        <div className={clsx("w-12 h-6 rounded-full relative transition-all duration-300", settings.soundEffects ? "bg-black" : "bg-gray-200")}>
+                                        <div className={clsx("w-12 h-6 rounded-full relative transition-all duration-300", settings.soundEffects ? "bg-black dark:bg-[#A8C7FA]" : "bg-gray-200 dark:bg-[#444746]")}>
                                             <input 
                                                 type="checkbox" 
                                                 className="hidden" 
                                                 checked={settings.soundEffects} 
                                                 onChange={(e) => updateSettings({ soundEffects: e.target.checked })}
                                             />
-                                            <motion.div animate={{ x: settings.soundEffects ? 24 : 4 }} className="w-4 h-4 bg-white rounded-full shadow-md absolute top-1" />
+                                            <motion.div animate={{ x: settings.soundEffects ? 24 : 4 }} className="w-4 h-4 bg-white dark:bg-black rounded-full shadow-md absolute top-1" />
                                         </div>
                                     </label>
                                 </div>
@@ -480,10 +480,10 @@ export const UserModals: React.FC = () => {
                         <div className="space-y-6 animate-fadeIn">
                              <div className="flex items-center justify-between mb-2">
                                  <div>
-                                    <h3 className="text-lg font-black text-gray-900">{t.agentCapabilities}</h3>
-                                    <p className="text-xs text-gray-500 font-medium">{t.agentCapabilitiesDesc}</p>
+                                    <h3 className="text-lg font-black text-gray-900 dark:text-[#E3E3E3]">{t.agentCapabilities}</h3>
+                                    <p className="text-xs text-gray-500 dark:text-[#C4C7C5] font-medium">{t.agentCapabilitiesDesc}</p>
                                  </div>
-                                 <div className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                 <div className="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-black uppercase tracking-wider">
                                      Beta
                                  </div>
                              </div>
@@ -535,8 +535,8 @@ export const UserModals: React.FC = () => {
                          <div className="space-y-8 animate-fadeIn">
                             <section className="space-y-4">
                                 <div>
-                                    <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t.systemInstructions}</h3>
-                                    <p className="text-xs text-gray-500 font-medium mb-3">{t.systemInstructionsDesc}</p>
+                                    <h3 className="text-[10px] font-black text-gray-400 dark:text-[#C4C7C5] uppercase tracking-widest mb-1">{t.systemInstructions}</h3>
+                                    <p className="text-xs text-gray-500 dark:text-[#C4C7C5] font-medium mb-3">{t.systemInstructionsDesc}</p>
                                 </div>
                                 <textarea 
                                     value={systemPrompt}
@@ -548,8 +548,8 @@ export const UserModals: React.FC = () => {
                             <section className="space-y-6">
                                 <div>
                                     <div className="flex items-center justify-between mb-2">
-                                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t.creativity}</h3>
-                                        <span className="text-xs font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded-md">{temperature}</span>
+                                        <h3 className="text-[10px] font-black text-gray-400 dark:text-[#C4C7C5] uppercase tracking-widest">{t.creativity}</h3>
+                                        <span className="text-xs font-bold text-gray-900 dark:text-[#E3E3E3] bg-gray-100 dark:bg-[#333537] px-2 py-0.5 rounded-md">{temperature}</span>
                                     </div>
                                     <input 
                                         type="range" 
@@ -560,7 +560,7 @@ export const UserModals: React.FC = () => {
                                         onChange={(e) => setTemperature(parseFloat(e.target.value))}
                                         className="w-full h-2 bg-gray-200 dark:bg-[#444746] rounded-lg appearance-none cursor-pointer accent-black dark:accent-[#A8C7FA]"
                                     />
-                                    <div className="flex justify-between text-[10px] font-bold text-gray-400 mt-2">
+                                    <div className="flex justify-between text-[10px] font-bold text-gray-400 dark:text-[#C4C7C5] mt-2">
                                         <span>{t.precise}</span>
                                         <span>{t.balanced}</span>
                                         <span>{t.creative}</span>
@@ -568,11 +568,11 @@ export const UserModals: React.FC = () => {
                                 </div>
                             </section>
 
-                            <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex gap-3">
-                                <Icons.Zap className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-900/30 flex gap-3">
+                                <Icons.Zap className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                                 <div>
-                                    <h4 className="text-xs font-bold text-blue-800 mb-1">{t.modelAvailability}</h4>
-                                    <p className="text-[11px] text-blue-600 leading-relaxed">
+                                    <h4 className="text-xs font-bold text-blue-800 dark:text-blue-200 mb-1">{t.modelAvailability}</h4>
+                                    <p className="text-[11px] text-blue-600 dark:text-blue-300 leading-relaxed">
                                         {t.modelAvailabilityDesc}
                                     </p>
                                 </div>
@@ -582,16 +582,16 @@ export const UserModals: React.FC = () => {
 
                     {settingsTab === 'about' && (
                          <div className="flex flex-col items-center justify-center h-full animate-fadeIn text-center space-y-6">
-                            <div className="w-20 h-20 bg-black text-white rounded-3xl flex items-center justify-center shadow-2xl">
+                            <div className="w-20 h-20 bg-black dark:bg-white text-white dark:text-black rounded-3xl flex items-center justify-center shadow-2xl">
                                 <Icons.Zap className="w-10 h-10" fill="currentColor" />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-black text-gray-900 tracking-tighter">Agent UI</h2>
-                                <p className="text-sm text-gray-500 font-medium">{t.version} 1.2.0 (Build 2025.05.15)</p>
+                                <h2 className="text-2xl font-black text-gray-900 dark:text-[#E3E3E3] tracking-tighter">Agent UI</h2>
+                                <p className="text-sm text-gray-500 dark:text-[#C4C7C5] font-medium">{t.version} 1.2.0 (Build 2025.05.15)</p>
                             </div>
                             <div className="flex gap-4">
-                                <a href="#" className="px-4 py-2 bg-gray-100 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-200 hover:text-black transition-colors">{t.changelog}</a>
-                                <a href="#" className="px-4 py-2 bg-gray-100 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-200 hover:text-black transition-colors">{t.privacyPolicy}</a>
+                                <a href="#" className="px-4 py-2 bg-gray-100 dark:bg-[#333537] rounded-lg text-xs font-bold text-gray-600 dark:text-[#C4C7C5] hover:bg-gray-200 dark:hover:bg-[#444746] hover:text-black dark:hover:text-white transition-colors">{t.changelog}</a>
+                                <a href="#" className="px-4 py-2 bg-gray-100 dark:bg-[#333537] rounded-lg text-xs font-bold text-gray-600 dark:text-[#C4C7C5] hover:bg-gray-200 dark:hover:bg-[#444746] hover:text-black dark:hover:text-white transition-colors">{t.privacyPolicy}</a>
                             </div>
                             <p className="text-[10px] text-gray-400 max-w-xs leading-relaxed">
                                 {t.aboutDesc}
@@ -606,38 +606,38 @@ export const UserModals: React.FC = () => {
         {activeModal === 'help' && (
           <ModalContent title={t.getHelp} icon={Icons.Help}>
             <div className="p-6 overflow-y-auto custom-scrollbar h-full space-y-8">
-              <div className="p-6 bg-blue-50 rounded-3xl border border-blue-100 relative overflow-hidden group">
+              <div className="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-3xl border border-blue-100 dark:border-blue-900/30 relative overflow-hidden group">
                 <div className="relative z-10">
-                    <h3 className="text-lg font-black text-blue-900 mb-1">{t.needHelpTitle}</h3>
-                    <p className="text-xs text-blue-700 mb-5 font-medium leading-relaxed">{t.needHelpDesc}</p>
-                    <button className="flex items-center gap-2.5 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-[11px] font-black hover:bg-blue-700 transition-all shadow-md uppercase tracking-widest">
+                    <h3 className="text-lg font-black text-blue-900 dark:text-blue-100 mb-1">{t.needHelpTitle}</h3>
+                    <p className="text-xs text-blue-700 dark:text-blue-300 mb-5 font-medium leading-relaxed">{t.needHelpDesc}</p>
+                    <button className="flex items-center gap-2.5 px-5 py-2.5 bg-blue-600 dark:bg-blue-500 text-white rounded-xl text-[11px] font-black hover:bg-blue-700 dark:hover:bg-blue-600 transition-all shadow-md uppercase tracking-widest">
                         <Icons.Mail className="w-3.5 h-3.5" />
                         {t.contactSupport}
                     </button>
                 </div>
-                <Icons.Sparkles className="absolute -bottom-4 -right-4 w-24 h-24 text-blue-100 opacity-40 group-hover:scale-110 transition-transform duration-700" />
+                <Icons.Sparkles className="absolute -bottom-4 -right-4 w-24 h-24 text-blue-100 dark:text-blue-900/40 opacity-40 group-hover:scale-110 transition-transform duration-700" />
               </div>
 
               <div className="space-y-6">
-                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t.recent} FAQ</h3>
+                <h3 className="text-[10px] font-black text-gray-400 dark:text-[#C4C7C5] uppercase tracking-widest">{t.recent} FAQ</h3>
                 <div className="space-y-5">
                   <div className="space-y-1">
-                    <h4 className="font-black text-gray-900 text-base">{t.faq1Title}</h4>
-                    <p className="text-xs text-gray-500 leading-relaxed font-medium">{t.faq1Desc}</p>
+                    <h4 className="font-black text-gray-900 dark:text-[#E3E3E3] text-base">{t.faq1Title}</h4>
+                    <p className="text-xs text-gray-500 dark:text-[#C4C7C5] leading-relaxed font-medium">{t.faq1Desc}</p>
                   </div>
                   <div className="space-y-1">
-                    <h4 className="font-black text-gray-900 text-base">{t.faq2Title}</h4>
-                    <p className="text-xs text-gray-500 leading-relaxed font-medium">{t.faq2Desc}</p>
+                    <h4 className="font-black text-gray-900 dark:text-[#E3E3E3] text-base">{t.faq2Title}</h4>
+                    <p className="text-xs text-gray-500 dark:text-[#C4C7C5] leading-relaxed font-medium">{t.faq2Desc}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-gray-100">
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">{t.describeIssue}</label>
+              <div className="pt-6 border-t border-gray-100 dark:border-[#444746]">
+                <label className="block text-[10px] font-black text-gray-400 dark:text-[#C4C7C5] uppercase tracking-widest mb-3">{t.describeIssue}</label>
                 <textarea 
                     value={helpMessage}
                     onChange={(e) => setHelpMessage(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:border-black transition-all font-bold text-sm text-gray-900 h-24 resize-none mb-5" 
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-[#333537] border border-gray-100 dark:border-[#444746] rounded-2xl outline-none focus:border-black dark:focus:border-[#A8C7FA] transition-all font-bold text-sm text-gray-900 dark:text-[#E3E3E3] h-24 resize-none mb-5" 
                 />
                 <button 
                     onClick={handleSendHelp}
@@ -670,7 +670,7 @@ export const UserModals: React.FC = () => {
                            type="text" 
                            value={projectTitle}
                            onChange={(e) => setProjectTitle(e.target.value)}
-                           className="w-full px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-black transition-all font-bold text-sm text-gray-900" 
+                           className="w-full px-4 py-3.5 bg-gray-50 dark:bg-[#333537] border border-gray-100 dark:border-[#444746] rounded-xl outline-none focus:border-black dark:focus:border-[#A8C7FA] transition-all font-bold text-sm text-gray-900 dark:text-[#E3E3E3]" 
                            placeholder="My Awesome Project" 
                        />
                    </div>
@@ -684,7 +684,7 @@ export const UserModals: React.FC = () => {
                                    maxLength={1}
                                    value={projectMarker}
                                    onChange={(e) => setProjectMarker(e.target.value)}
-                                   className="w-14 h-14 text-center text-lg bg-gray-50 border border-gray-100 rounded-xl outline-none focus:border-black transition-all font-black text-gray-900 uppercase" 
+                                   className="w-14 h-14 text-center text-lg bg-gray-50 dark:bg-[#333537] border border-gray-100 dark:border-[#444746] rounded-xl outline-none focus:border-black dark:focus:border-[#A8C7FA] transition-all font-black text-gray-900 dark:text-[#E3E3E3] uppercase" 
                                />
                                <p className="text-[10px] text-gray-400 font-medium leading-relaxed">Appears in sidebar icon.</p>
                            </div>
@@ -710,16 +710,16 @@ export const UserModals: React.FC = () => {
                        </div>
                    </div>
 
-                   <div className="pt-6 border-t border-gray-100 flex gap-3">
+                   <div className="pt-6 border-t border-gray-100 dark:border-[#444746] flex gap-3">
                        <button 
                          onClick={() => setActiveModal(null)}
-                         className="flex-1 py-3.5 bg-gray-100 text-gray-500 rounded-xl font-black uppercase tracking-widest text-[11px] transition-all hover:bg-gray-200"
+                         className="flex-1 py-3.5 bg-gray-100 dark:bg-[#333537] text-gray-500 dark:text-[#C4C7C5] rounded-xl font-black uppercase tracking-widest text-[11px] transition-all hover:bg-gray-200 dark:hover:bg-[#444746]"
                        >
                          {t.cancel}
                        </button>
                        <button 
                          onClick={handleSaveProject}
-                         className="flex-1 py-3.5 bg-black text-white rounded-xl font-black uppercase tracking-widest text-[11px] shadow-lg hover:bg-gray-800 transition-all active:scale-95"
+                         className="flex-1 py-3.5 bg-black dark:bg-[#A8C7FA] text-white dark:text-black rounded-xl font-black uppercase tracking-widest text-[11px] shadow-lg hover:bg-gray-800 dark:hover:bg-[#8AB4F8] transition-all active:scale-95"
                        >
                          {t.saveChanges}
                        </button>
@@ -731,22 +731,22 @@ export const UserModals: React.FC = () => {
           {activeModal === 'quota_limit' && (
               <ModalContent title={t.quotaTitle} icon={Icons.Close}>
                  <div className="text-center py-6 px-4">
-                    <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-red-50">
+                    <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-red-50 dark:border-red-900/30">
                        <Icons.Trash className="w-8 h-8" />
                     </div>
-                    <p className="text-gray-600 text-sm font-medium leading-relaxed mb-10">
+                    <p className="text-gray-600 dark:text-[#C4C7C5] text-sm font-medium leading-relaxed mb-10">
                        {t.quotaDesc}
                     </p>
                     <div className="flex gap-4">
                         <button 
                             onClick={() => setActiveModal(null)}
-                            className="flex-1 py-3.5 bg-gray-100 text-gray-900 rounded-xl font-black uppercase tracking-widest text-[11px] hover:bg-gray-200 transition-all"
+                            className="flex-1 py-3.5 bg-gray-100 dark:bg-[#333537] text-gray-900 dark:text-[#E3E3E3] rounded-xl font-black uppercase tracking-widest text-[11px] hover:bg-gray-200 dark:hover:bg-[#444746] transition-all"
                         >
                             {t.understood}
                         </button>
                         <button 
                             onClick={() => setActiveModal('upgrade')}
-                            className="flex-1 py-3.5 bg-black text-white rounded-xl font-black uppercase tracking-widest text-[11px] hover:bg-gray-800 transition-all shadow-md active:scale-95"
+                            className="flex-1 py-3.5 bg-black dark:bg-[#A8C7FA] text-white dark:text-black rounded-xl font-black uppercase tracking-widest text-[11px] hover:bg-gray-800 dark:hover:bg-[#8AB4F8] transition-all shadow-md active:scale-95"
                         >
                             {t.upgradeSubscription}
                         </button>

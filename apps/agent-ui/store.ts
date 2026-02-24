@@ -57,7 +57,7 @@ export const useStore = create<ExtendedAppState>((set, get) => {
     selectedModel: 'kimi',
     isSidebarOpen: true,
     sidebarWidth: 280,
-    isTerminalOpen: true,
+    isTerminalOpen: false,
     terminalWidth: 380,
     language: 'zh', 
     activeModal: null,
