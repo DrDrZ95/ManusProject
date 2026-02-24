@@ -5,12 +5,6 @@ public static class SwaggerExtensions
     public static IServiceCollection AddSwaggerDocumentation(this IServiceCollection services)
     {
         services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
-        services.AddSwaggerGen(c =>
-        {
-            // Add a custom document filter to fix the issue with the default Swagger generation
-            c.OperationFilter<SwaggerDefaultValues>();
-        });
-
         return services;
     }
 
@@ -178,6 +172,9 @@ public static class SwaggerExtensions
 
             // Enable Swagger Annotations
             options.EnableAnnotations();
+
+            // Add a custom document filter to fix the issue with the default Swagger generation
+            options.OperationFilter<SwaggerDefaultValues>();
         }
     }
 

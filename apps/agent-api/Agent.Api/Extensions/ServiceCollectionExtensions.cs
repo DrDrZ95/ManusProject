@@ -7,10 +7,15 @@ public static class ServiceCollectionExtensions
         services.AddHttpContextAccessor();
         services.AddControllers()
                 .AddApplicationPart(typeof(Program).Assembly);
+        
+        // Add API documentation services (Swagger/OpenAPI)
+        // 添加API文档服务 (Swagger/OpenAPI)
         services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen();
+        services.AddSwaggerDocumentation();
+
         services.AddAgentTelemetry("AI-Agent.WebApi");
         services.AddApiVersioningServices();
-        services.AddSwaggerDocumentation();
         services.AddMcpClients();
         services.AddIdentityServices(configuration);
         services.AddUserInputServices();
