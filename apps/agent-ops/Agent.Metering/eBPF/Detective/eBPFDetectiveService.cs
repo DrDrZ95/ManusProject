@@ -1,6 +1,3 @@
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-
 namespace Agent.Metering.eBPF.Detective;
 
 public class eBPFDetectiveService : IeBPFDetectiveService

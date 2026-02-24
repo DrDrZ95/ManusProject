@@ -1,6 +1,3 @@
-using Agent.Application.Services.RAG;
-using Hangfire;
-
 namespace Agent.Api.Extensions;
 
 /// <summary>

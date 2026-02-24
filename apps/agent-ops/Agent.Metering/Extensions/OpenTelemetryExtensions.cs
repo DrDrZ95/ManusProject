@@ -1,9 +1,3 @@
-using OpenTelemetry;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Instrumentation.AspNetCore;
-using OpenTelemetry.Instrumentation.Http;
-
 namespace Agent.Metering.Extensions;
 
 public static class OpenTelemetryExtensions

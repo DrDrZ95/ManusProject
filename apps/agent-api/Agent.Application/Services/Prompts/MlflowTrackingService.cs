@@ -1,6 +1,3 @@
-using System.Net.Http.Json;
-using Microsoft.Extensions.Options;
-
 namespace Agent.Application.Services.Prompts;
 
 public interface IMlflowTrackingService

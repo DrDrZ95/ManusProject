@@ -1,12 +1,3 @@
-using Agent.Core.Cache;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Moq;
-using StackExchange.Redis;
-using Xunit;
-
 namespace Agent.Core.Tests.Cache;
 
 public class AgentCacheServiceAvalancheTests

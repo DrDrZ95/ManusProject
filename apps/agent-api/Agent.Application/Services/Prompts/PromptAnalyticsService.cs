@@ -1,6 +1,3 @@
-using Agent.Core.Data.Entities;
-using Agent.Core.Data.Repositories;
-
 namespace Agent.Application.Services.Prompts;
 
 public class PromptAnalyticsService : IPromptAnalyticsService
