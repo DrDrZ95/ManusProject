@@ -8,6 +8,9 @@ public static class ServiceCollectionExtensions
         services.AddControllers()
                 .AddApplicationPart(typeof(Program).Assembly);
         
+        // Add API Versioning - 优先注册版本控制
+        services.AddApiVersioningServices();
+
         // Add API documentation services (Swagger/OpenAPI)
         // 添加API文档服务 (Swagger/OpenAPI)
         services.AddEndpointsApiExplorer();
@@ -16,7 +19,6 @@ public static class ServiceCollectionExtensions
         services.AddOpenApiDocumentation();
 
         services.AddAgentTelemetry("AI-Agent.WebApi");
-        services.AddApiVersioningServices();
         services.AddIdentityServices(configuration);
         services.AddFileUploadServices();
         services.AddPrometheusMetrics();
@@ -62,7 +64,8 @@ public static class ServiceCollectionExtensions
             .Where(t => t.IsClass && !t.IsAbstract && t.GetInterfaces().Length > 0 && 
                         t.Name != "AgentTelemetryProvider" && 
                         t.Name != "PostgreSqlService" &&
-                        t.Name != "ChromaClient")
+                        t.Name != "ChromaClient" &&
+                        t.Name != "ConfigureSwaggerOptions")
             .AsImplementedInterfaces()
             .InstancePerLifetimeScope();
 
