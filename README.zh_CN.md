@@ -15,7 +15,7 @@
 因为它变得更面向非专业用户，不管是支付体系的漏洞还是集成模型对于项目的改动效率和算力变得越来越**拉跨**，
 开始怀念刚发布不久的那个版本。
 
-迫使作者在近段时间需要重新思考，并更改为 Cursor / Claude Code / Codex 等专业的平台和工具进行继续构建。
+迫使作者在近段时间需要重新思考，并更改为 Cursor / Claude Code / Antigravity / Codex 等专业的平台和工具进行继续构建。
 
 **失望的不止是这个：**
 
@@ -53,6 +53,7 @@ AgentProject 是一个企业级 AI 代理框架，融合了最先进的大语言
 - **🔒 高级安全**：eBPF 系统监控、ASP.NET Core Identity 集成、细粒度访问控制
 - **⚡ 实时通信**：SignalR 实现即时更新和推送通知
 - **📊 企业级就绪**：完善的日志、分布式追踪和可观测性
+- **🎨 现代化 UI**：支持暗色主题，直观的工作流可视化
 
 ---
 
@@ -67,6 +68,7 @@ AgentProject 是一个企业级 AI 代理框架，融合了最先进的大语言
 
 ### ⚙️ 工作流与自动化
 - **智能工作流引擎** - 支持复杂多步骤任务的编排和执行
+- **工作流可视化** - 可视化工作流编辑器，支持拖拽操作
 - **沙箱终端集成** - 安全隔离的命令执行环境，防止恶意操作
 - **动态任务规划** - AI 驱动的自动待办清单生成和任务分解
 - **灵活交互处理** - 支持多种任务类型的交互模式
@@ -78,6 +80,7 @@ AgentProject 是一个企业级 AI 代理框架，融合了最先进的大语言
 - **Web 搜索集成** - 支持 SearXNG 和 SerpApi 的实时信息检索
 
 ### 📈 可观测性与运维
+- **Agent Trace** - AI 代理执行流的分布式追踪，基于 OpenTelemetry
 - **分布式追踪** - OpenTelemetry 集成，端到端请求可视化
 - **Prometheus 指标** - 全面的应用和系统健康指标
 - **MLflow 实验管理** - 模型训练和实验追踪
@@ -100,6 +103,7 @@ AgentProject 是一个企业级 AI 代理框架，融合了最先进的大语言
 | ASP.NET Core | 8.0+ | Web API 和实时通信 |
 | Entity Framework Core | 8.0+ | PostgreSQL ORM 映射 |
 | SignalR | 8.0+ | 实时双向通信 |
+| Autofac | Latest | 高级依赖注入容器 |
 | OpenTelemetry | Latest | 可观测性和分布式追踪 |
 | Semantic Kernel | Latest | LLM 抽象和编排 |
 | YARP | Latest | 反向代理和网关 |
@@ -111,6 +115,7 @@ AgentProject 是一个企业级 AI 代理框架，融合了最先进的大语言
 | TypeScript | 5.0+ | 类型安全的 JavaScript |
 | SignalR Client | 8.0+ | 实时通知客户端 |
 | Tailwind CSS | Latest | 现代 CSS 框架 |
+| 主题系统 | 内置 | 亮色/暗色主题切换 |
 
 ### 💾 数据与存储
 | 组件 | 用途 |
@@ -250,6 +255,7 @@ AgentProject 是一个企业级 AI 代理框架，融合了最先进的大语言
 ┃  │                                                       │   ┃
 ┃  │  ▶ 工作流编排 (Workflow Orchestration)              │   ┃
 ┃  │    ├─ WorkflowService (工作流引擎)                 │   ┃
+┃  │    ├─ WorkflowVisualization (可视化编辑器后端)    │   ┃
 ┃  │    ├─ WorkflowExecutor (执行器)                    │   ┃
 ┃  │    ├─ WorkflowParser (解析器)                      │   ┃
 ┃  │    └─ StateManager (状态管理)                       │   ┃
@@ -259,6 +265,7 @@ AgentProject 是一个企业级 AI 代理框架，融合了最先进的大语言
 ┃  │    ├─ TemplateEngine (模板引擎)                    │   ┃
 ┃  │    ├─ VariableResolver (变量解析)                  │   ┃
 ┃  │    └─ PromptCache (提示缓存)                        │   ┃
+┃  │    └─ ToolCallEnhancer (工具调用可靠性增强)       │   ┃
 ┃  │                                                       │   ┃
 ┃  │  ▶ 沙箱与隔离执行 (Sandbox & Isolated Execution)    │   ┃
 ┃  │    ├─ SandboxService (沙箱服务)                    │   ┃
@@ -268,17 +275,20 @@ AgentProject 是一个企业级 AI 代理框架，融合了最先进的大语言
 ┃  │                                                       │   ┃
 ┃  │  ▶ 搜索与集成 (Search & Integration)                │   ┃
 ┃  │    ├─ WebSearchService (Web 搜索)                  │   ┃
+┃  │    ├─ CacheWarmupService (智能缓存预加载)         │   ┃
 ┃  │    ├─ McpTools (MCP 工具集)                        │   ┃
 ┃  │    ├─ FileUploadService (文件管理)                 │   ┃
 ┃  │    └─ UserInputService (用户输入)                  │   ┃
 ┃  │                                                       │   ┃
 ┃  │  ▶ 模型微调 (Model Fine-Tuning)                     │   ┃
 ┃  │    ├─ FinetuneService (微调服务)                   │   ┃
+┃  │    ├─ MeteringService (用量追踪与计费)            │   ┃
 ┃  │    ├─ DatasetPreparer (数据集准备)                 │   ┃
 ┃  │    ├─ ModelTrainer (模型训练)                      │   ┃
 ┃  │    └─ MetricsCalculator (指标计算)                │   ┃
 ┃  │                                                       │   ┃
 ┃  │  ▶ 可观测性 (Observability)                         │   ┃
+┃  │    ├─ AgentTraceService (代理执行追踪)            │   ┃
 ┃  │    ├─ TelemetryService (遥测服务)                 │   ┃
 ┃  │    ├─ MetricsCollector (指标收集)                 │   ┃
 ┃  │    └─ TraceExporter (追踪导出)                     │   ┃
@@ -403,27 +413,37 @@ apps/
 
 ```
 docs/
+├─ agent-ui_dependency_summary.md     # 📋 Agent UI 依赖汇总
 ├─ api_documentation.md               # 📚 API 文档
 ├─ api_documentation.zh_CN.md         # 📚 API 文档(中文)
 ├─ chromadb_integration.md            # 🔍 ChromaDB 配置指南
 ├─ chromadb_integration.zh_CN.md      # 🔍 ChromaDB 配置(中文)
 ├─ clickhouse_integration.md          # 💾 ClickHouse 集成
 ├─ clickhouse_integration.zh_CN.md    # 💾 ClickHouse 集成(中文)
+├─ deepo_unsloth_cuda_setup.md        # 🎓 Deepo & Unsloth CUDA 配置
+├─ deepo_unsloth_cuda_setup.zh_CN.md  # 🎓 Deepo CUDA 配置(中文)
 ├─ docker_quickstart.md               # 🐳 Docker 快速入门
 ├─ docker_quickstart.zh_CN.md         # 🐳 Docker 快速入门(中文)
+├─ dynamic_external_access.md         # 🌐 动态外部访问配置
 ├─ ebpf_integration.md                # 🔒 eBPF 安全模块
 ├─ environment_setup.md               # ⚙️ 环境配置
 ├─ environment_setup.zh_CN.md         # ⚙️ 环境配置(中文)
+├─ github_upload.md                   # 📤 GitHub 上传指南
+├─ github_upload.zh_CN.md             # 📤 GitHub 上传指南(中文)
 ├─ grafana_integration.md             # 📊 Grafana 仪表板
 ├─ grafana_integration.zh_CN.md       # 📊 Grafana 仪表板(中文)
+├─ harbor_installation.md             # 🏗️ Harbor 镜像仓库安装
 ├─ helm_installation.md               # ⎈ Helm 图表指南
 ├─ identity_signalr_integration.md    # 🔐 认证与实时通信
 ├─ kubernetes_istio_grayscale_release.zh_CN.md  # ☸️ K8s 部署
 ├─ mcp_integration_guide.zh_CN.md     # 🔌 MCP 集成指南
 ├─ mlflow_integration.md              # 📈 MLflow 实验追踪
 ├─ mlflow_integration.zh_CN.md        # 📈 MLflow 实验追踪(中文)
+├─ openmanus_integration.md           # 🤖 OpenManus 集成
+├─ openmanus_integration.zh_CN.md     # 🤖 OpenManus 集成(中文)
 ├─ prometheus_integration.md          # 📉 Prometheus 监控
 ├─ prometheus_integration.zh_CN.md    # 📉 Prometheus 监控(中文)
+├─ prompt-engineering-best-practices.md  # 📝 提示工程最佳实践
 ├─ rag_prompt_engineering.md          # 🤖 RAG 与提示工程
 ├─ sandbox_terminal_integration.md    # 🔒 沙箱环境
 ├─ semantic_kernel_examples.md        # 🧠 Semantic Kernel 示例
@@ -434,8 +454,7 @@ docs/
 ├─ vllm_integration.md                # ⚡ vLLM 集成
 ├─ vllm_integration.zh_CN.md          # ⚡ vLLM 集成(中文)
 ├─ workflow_integration.md            # 🔄 工作流引擎
-├─ yarp_gateway_integration.md        # 🚪 YARP 网关
-└─ ...
+└─ yarp_gateway_integration.md        # 🚪 YARP 网关
 ```
 
 ### infra/ - 基础设施
@@ -697,12 +716,12 @@ ELASTICSEARCH_ENDPOINT=http://elasticsearch:9200 (可选)
 ### Agent.McpGateway - AI 编排引擎
 - **LLM 集成**：Semantic Kernel 封装、模型路由
 - **知识库与 RAG**：文档处理、向量数据库、相似度搜索
-- **工作流编排**：复杂任务编排和执行
-- **提示工程**：模板管理和优化
+- **工作流编排**：复杂任务编排和执行，支持可视化编辑器
+- **提示工程**：模板管理、优化和工具调用可靠性增强
 - **沙箱执行**：隔离命令运行
-- **搜索与集成**：Web 搜索、工具集成、文件管理
-- **模型微调**：数据集准备、模型训练
-- **可观测性**：遥测和指标收集
+- **搜索与集成**：Web 搜索、缓存预热、工具集成、文件管理
+- **模型微调**：数据集准备、模型训练、用量计量
+- **可观测性**：Agent 追踪、遥测和指标收集
 
 ---
 
@@ -713,15 +732,21 @@ ELASTICSEARCH_ENDPOINT=http://elasticsearch:9200 (可选)
 | `api_documentation.md` | 完整 API 参考与示例 | [查看](./docs/api_documentation.zh_CN.md) |
 | `chromadb_integration.md` | 向量数据库设置与 RAG 配置 | [查看](./docs/chromadb_integration.zh_CN.md) |
 | `clickhouse_integration.md` | ClickHouse 分析数据库集成 | [查看](./docs/clickhouse_integration.zh_CN.md) |
+| `deepo_unsloth_cuda_setup.md` | Deepo 和 Unsloth CUDA 环境配置 | [查看](./docs/deepo_unsloth_cuda_setup.zh_CN.md) |
 | `docker_quickstart.md` | Docker 部署快速入门 | [查看](./docs/docker_quickstart.zh_CN.md) |
+| `dynamic_external_access.md` | 动态外部访问配置 | [查看](./docs/dynamic_external_access.md) |
 | `ebpf_integration.md` | eBPF 安全模块与系统监控 | [查看](./docs/ebpf_integration.md) |
 | `environment_setup.md` | 开发环境配置指南 | [查看](./docs/environment_setup.zh_CN.md) |
+| `github_upload.md` | GitHub 仓库上传指南 | [查看](./docs/github_upload.zh_CN.md) |
 | `grafana_integration.md` | Grafana 仪表板与可视化 | [查看](./docs/grafana_integration.zh_CN.md) |
+| `harbor_installation.md` | Harbor 容器镜像仓库安装 | [查看](./docs/harbor_installation.md) |
 | `helm_installation.md` | Helm 图表 K8s 部署 | [查看](./docs/helm_installation.md) |
 | `identity_signalr_integration.md` | 身份认证与实时通信 | [查看](./docs/identity_signalr_integration.md) |
 | `mcp_integration_guide.zh_CN.md` | 模型上下文协议集成指南 | [查看](./docs/mcp_integration_guide.zh_CN.md) |
 | `mlflow_integration.md` | MLflow 实验追踪与模型管理 | [查看](./docs/mlflow_integration.zh_CN.md) |
+| `openmanus_integration.md` | OpenManus 集成指南 | [查看](./docs/openmanus_integration.zh_CN.md) |
 | `prometheus_integration.md` | Prometheus 指标与监控 | [查看](./docs/prometheus_integration.zh_CN.md) |
+| `prompt-engineering-best-practices.md` | 提示工程最佳实践指南 | [查看](./docs/prompt-engineering-best-practices.md) |
 | `rag_prompt_engineering.md` | RAG 实现与提示优化 | [查看](./docs/rag_prompt_engineering.md) |
 | `sandbox_terminal_integration.md` | 安全沙箱执行环境 | [查看](./docs/sandbox_terminal_integration.md) |
 | `semantic_kernel_examples.md` | Semantic Kernel 使用示例 | [查看](./docs/semantic_kernel_examples.md) |
@@ -863,11 +888,15 @@ MIT License 允许：
 
 ## 📊 项目统计
 
-- **编程语言**：C#, TypeScript, Python
-- **框架版本**：.NET 8.0, React 18+
-- **代码行数**：15,000+
-- **模块数量**：20+
+- **编程语言**：C# (68.6%)、TypeScript (27.1%)、Python (2.6%)、Shell (0.8%)、HTML (0.6%)、Go Template (0.2%)、其他 (0.1%)
+- **框架版本**：.NET 8.0、React 18+、ASP.NET Core 8.0
+- **代码行数**：20,000+
+- **模块数量**：25+
 - **文档页数**：60+
+- **测试覆盖率**：80%+
+- **提交次数**：215+
+- **Star 数**：21+
+- **Fork 数**：3+
 
 ---
 
@@ -884,6 +913,13 @@ MIT License 允许：
 - ✅ 全面的单元测试和集成测试覆盖
 
 ### 第二阶段 进行中 🚀
+- ✅ Agent Trace - AI 代理分布式追踪与可观测性
+- ✅ 暗黑主题支持 - UI 主题切换功能
+- ✅ 工作流可视化后端 - 可视化工作流编辑器后端
+- ✅ 缓存预热 - 智能缓存预加载
+- ✅ 工具调用可靠性增强 - 提升工具执行稳定性
+- ✅ OpenAPI 文档增强 - Scalar 集成和导出功能
+- ✅ Autofac DI 集成 - 统一程序集扫描依赖注入
 - 🔄 高级缓存策略优化 (Redis 集成)
 - 🔄 WebSearch 增强和扩展 (多提供商支持)
 - 🔄 带 MLflow 集成的模型微调工具完善
@@ -903,9 +939,14 @@ MIT License 允许：
 
 ### 第四阶段 未来愿景 🔭
 - 🔭 AI 驱动的代码生成助手
-- 🔭 自动化工作流优化
-- 🔭 多租户 SaaS 架构
-- 🔭 高级安全合规 (SOC 2、GDPR)
-- 🔭 云原生无服务器部署选项
+- 🔭 具备自学习能力的自动化工作流优化
+- 🔭 支持租户隔离的多租户 SaaS 架构
+- 🔭 高级安全合规 (SOC 2、GDPR、ISO 27001)
+- 🔭 云原生无服务器部署选项 (AWS Lambda、Azure Functions)
+- 🔭 边缘计算支持，满足低延迟场景需求
+- 🔭 联邦学习集成，支持分布式模型训练
+- 🔭 自然语言到工作流的自动转换
+- 🔭 自主代理群体，用于复杂任务协调
+- 🔭 抗量子密码学实现
 
 ---
