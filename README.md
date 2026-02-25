@@ -12,9 +12,10 @@ This project is continuously being optimized, and the author strives for 3+ upda
 ## 2026-02-01 Reminder
 Due to Manus' recent reduction of key functions and the increasingly serious problems exposed in its Reddit community, the author's expectations for Manus have been declining. 
 
-Because it has become more user-friendly for non-professionals, whether it is the loopholes in the subscription payment system or the fact that the existing integration model has become increasingly difficult to use for project modification efficiency and context management, there are more and more strict policies after its acquisition by Meta.
+Because it has become more oriented towards non-professional users, both the loopholes in the payment system and the efficiency of integrating the model for project modifications have become increasingly poor.
+I began to miss the version that was released not long ago.
 
-This has forced the author to rethink and switch to more professional platforms and tools such as Cursor / Claude Code / Codex in order to continue the project. 
+This has forced the author to rethink and switch to more professional platforms and tools such as Cursor / Claude Code / Antigravity / Codex in order to continue the project. 
 
 **Not only this was disappointing:**
 
@@ -52,6 +53,7 @@ AgentProject is an enterprise-grade AI agent framework that combines cutting-edg
 - **🔒 Advanced Security**: eBPF system monitoring, ASP.NET Core Identity integration, fine-grained access control
 - **⚡ Real-time Communication**: SignalR enables instant updates and push notifications
 - **📊 Enterprise-Ready**: Comprehensive logging, distributed tracing, and observability
+- **🎨 Modern UI**: Dark theme support with intuitive workflow visualization
 
 ---
 
@@ -66,6 +68,7 @@ AgentProject is an enterprise-grade AI agent framework that combines cutting-edg
 
 ### ⚙️ Workflow & Automation
 - **Intelligent Workflow Engine** - Orchestration and execution of complex multi-step tasks
+- **Workflow Visualization** - Visual workflow editor with drag-and-drop interface
 - **Sandbox Terminal Integration** - Secure isolated command execution environment preventing malicious operations
 - **Dynamic Task Planning** - AI-driven automatic to-do list generation and task decomposition
 - **Flexible Interaction Handling** - Support for interaction patterns across diverse task types
@@ -77,6 +80,7 @@ AgentProject is an enterprise-grade AI agent framework that combines cutting-edg
 - **Web Search Integration** - Real-time information retrieval via SearXNG and SerpApi
 
 ### 📈 Observability & Operations
+- **Agent Trace** - Distributed tracing for AI agent execution flows with OpenTelemetry
 - **Distributed Tracing** - OpenTelemetry integration for end-to-end request visualization
 - **Prometheus Metrics** - Comprehensive application and system health metrics
 - **MLflow Experiment Management** - Model training and experiment tracking
@@ -99,6 +103,7 @@ AgentProject is an enterprise-grade AI agent framework that combines cutting-edg
 | ASP.NET Core | 8.0+ | Web API and real-time communication |
 | Entity Framework Core | 8.0+ | PostgreSQL ORM mapping |
 | SignalR | 8.0+ | Real-time bidirectional communication |
+| Autofac | Latest | Advanced dependency injection container |
 | OpenTelemetry | Latest | Observability and distributed tracing |
 | Semantic Kernel | Latest | LLM abstraction and orchestration |
 | YARP | Latest | Reverse proxy and gateway |
@@ -110,6 +115,7 @@ AgentProject is an enterprise-grade AI agent framework that combines cutting-edg
 | TypeScript | 5.0+ | Type-safe JavaScript development |
 | SignalR Client | 8.0+ | Real-time notification client |
 | Tailwind CSS | Latest | Modern CSS framework |
+| Theme System | Built-in | Light/Dark theme switching |
 
 ### 💾 Data & Storage
 | Component | Purpose |
@@ -249,6 +255,7 @@ AgentProject is an enterprise-grade AI agent framework that combines cutting-edg
 ┃  │                                                       │   ┃
 ┃  │  ▶ Workflow Orchestration                            │   ┃
 ┃  │    ├─ WorkflowService (Workflow Engine)              │   ┃
+┃  │    ├─ WorkflowVisualization (Visual Editor Backend)  │   ┃
 ┃  │    ├─ WorkflowExecutor (Executor)                    │   ┃
 ┃  │    ├─ WorkflowParser (Parser)                        │   ┃
 ┃  │    └─ StateManager (State Management)                │   ┃
@@ -258,6 +265,7 @@ AgentProject is an enterprise-grade AI agent framework that combines cutting-edg
 ┃  │    ├─ TemplateEngine (Template Engine)               │   ┃
 ┃  │    ├─ VariableResolver (Variable Resolution)         │   ┃
 ┃  │    └─ PromptCache (Prompt Caching)                   │   ┃
+┃  │    └─ ToolCallEnhancer (Tool Call Reliability)       │   ┃
 ┃  │                                                       │   ┃
 ┃  │  ▶ Sandbox & Isolated Execution                      │   ┃
 ┃  │    ├─ SandboxService (Sandbox Service)               │   ┃
@@ -267,17 +275,20 @@ AgentProject is an enterprise-grade AI agent framework that combines cutting-edg
 ┃  │                                                       │   ┃
 ┃  │  ▶ Search & Integration                              │   ┃
 ┃  │    ├─ WebSearchService (Web Search)                  │   ┃
+┃  │    ├─ CacheWarmupService (Intelligent Cache Preload) │   ┃
 ┃  │    ├─ McpTools (MCP Tools)                           │   ┃
 ┃  │    ├─ FileUploadService (File Management)            │   ┃
 ┃  │    └─ UserInputService (User Input)                  │   ┃
 ┃  │                                                       │   ┃
 ┃  │  ▶ Model Fine-Tuning                                 │   ┃
 ┃  │    ├─ FinetuneService (Fine-tuning Service)          │   ┃
+┃  │    ├─ MeteringService (Usage Tracking & Billing)     │   ┃
 ┃  │    ├─ DatasetPreparer (Dataset Preparation)          │   ┃
 ┃  │    ├─ ModelTrainer (Model Training)                  │   ┃
 ┃  │    └─ MetricsCalculator (Metrics Calculation)        │   ┃
 ┃  │                                                       │   ┃
 ┃  │  ▶ Observability                                     │   ┃
+┃  │    ├─ AgentTraceService (Agent Execution Tracing)    │   ┃
 ┃  │    ├─ TelemetryService (Telemetry Service)           │   ┃
 ┃  │    ├─ MetricsCollector (Metrics Collection)          │   ┃
 ┃  │    └─ TraceExporter (Trace Exporting)                │   ┃
@@ -403,18 +414,24 @@ apps/
 
 ```
 docs/
+├─ agent-ui_dependency_summary.md     # 📋 Agent UI Dependencies
 ├─ api_documentation.md               # 📚 API Documentation
 ├─ chromadb_integration.md            # 🔍 ChromaDB Setup Guide
 ├─ clickhouse_integration.md          # 💾 ClickHouse Integration
+├─ deepo_unsloth_cuda_setup.md        # 🎓 Deepo & Unsloth CUDA Setup
 ├─ docker_quickstart.md               # 🐳 Docker Quick Start
+├─ dynamic_external_access.md         # 🌐 Dynamic External Access
 ├─ ebpf_integration.md                # 🔒 eBPF Security Module
 ├─ environment_setup.md               # ⚙️ Environment Configuration
+├─ github_upload.md                   # 📤 GitHub Upload Guide
 ├─ grafana_integration.md             # 📊 Grafana Dashboard Setup
+├─ harbor_installation.md             # 🏗️ Harbor Registry Installation
 ├─ helm_installation.md               # ⎈ Helm Charts Guide
 ├─ identity_signalr_integration.md    # 🔐 Auth & Real-time Comm
 ├─ kubernetes_istio_grayscale_release.zh_CN.md  # ☸️ K8s Deployment
 ├─ mcp_integration_guide.zh_CN.md     # 🔌 MCP Integration
 ├─ mlflow_integration.md              # 📈 MLflow Experiment Tracking
+├─ openmanus_integration.md           # 🤖 OpenManus Integration
 ├─ prometheus_integration.md          # 📉 Prometheus Monitoring
 ├─ rag_prompt_engineering.md          # 🤖 RAG & Prompt Engineering
 ├─ sandbox_terminal_integration.md    # 🔒 Sandbox Environment
@@ -672,12 +689,12 @@ ENABLE_MLFLOW=true
 ### Agent.McpGateway - AI Orchestration Engine
 - **LLM Integration**: Semantic Kernel wrapper, model routing
 - **Knowledge Base & RAG**: Document processing, vector database, similarity search
-- **Workflow Orchestration**: Complex task orchestration and execution
-- **Prompt Engineering**: Template management and optimization
+- **Workflow Orchestration**: Complex task orchestration and execution with visual editor
+- **Prompt Engineering**: Template management, optimization, and tool call reliability
 - **Sandbox Execution**: Isolated command execution
-- **Search & Integration**: Web search, tool integration, file management
-- **Model Fine-Tuning**: Dataset preparation, model training
-- **Observability**: Telemetry and metrics collection
+- **Search & Integration**: Web search, cache warmup, tool integration, file management
+- **Model Fine-Tuning**: Dataset preparation, model training, usage metering
+- **Observability**: Agent trace, telemetry and metrics collection
 
 ---
 
@@ -688,15 +705,21 @@ ENABLE_MLFLOW=true
 | `api_documentation.md` | Complete API reference with examples | [View](./docs/api_documentation.md) |
 | `chromadb_integration.md` | Vector database setup and RAG configuration | [View](./docs/chromadb_integration.md) |
 | `clickhouse_integration.md` | ClickHouse analytics database integration | [View](./docs/clickhouse_integration.md) |
+| `deepo_unsloth_cuda_setup.md` | Deepo and Unsloth CUDA environment setup | [View](./docs/deepo_unsloth_cuda_setup.md) |
 | `docker_quickstart.md` | Quick start guide for Docker deployment | [View](./docs/docker_quickstart.md) |
+| `dynamic_external_access.md` | Dynamic external access configuration | [View](./docs/dynamic_external_access.md) |
 | `ebpf_integration.md` | eBPF security module and system monitoring | [View](./docs/ebpf_integration.md) |
 | `environment_setup.md` | Development environment configuration | [View](./docs/environment_setup.md) |
+| `github_upload.md` | GitHub repository upload guide | [View](./docs/github_upload.md) |
 | `grafana_integration.md` | Grafana dashboard and visualization setup | [View](./docs/grafana_integration.md) |
+| `harbor_installation.md` | Harbor container registry installation | [View](./docs/harbor_installation.md) |
 | `helm_installation.md` | Helm charts for Kubernetes deployment | [View](./docs/helm_installation.md) |
 | `identity_signalr_integration.md` | Authentication and real-time communication | [View](./docs/identity_signalr_integration.md) |
 | `mcp_integration_guide.zh_CN.md` | Model Context Protocol integration guide | [View](./docs/mcp_integration_guide.zh_CN.md) |
 | `mlflow_integration.md` | MLflow experiment tracking and model management | [View](./docs/mlflow_integration.md) |
+| `openmanus_integration.md` | OpenManus integration guide | [View](./docs/openmanus_integration.md) |
 | `prometheus_integration.md` | Prometheus metrics and monitoring | [View](./docs/prometheus_integration.md) |
+| `prompt-engineering-best-practices.md` | Prompt engineering best practices guide | [View](./docs/prompt-engineering-best-practices.md) |
 | `rag_prompt_engineering.md` | RAG implementation and prompt optimization | [View](./docs/rag_prompt_engineering.md) |
 | `sandbox_terminal_integration.md` | Secure sandbox execution environment | [View](./docs/sandbox_terminal_integration.md) |
 | `semantic_kernel_examples.md` | Semantic Kernel usage examples | [View](./docs/semantic_kernel_examples.md) |
@@ -838,14 +861,15 @@ Conditions:
 
 ## 📊 Project Statistics
 
-- **Programming Languages**: C# (66.8%), TypeScript (28.0%), Python (3.1%)
+- **Programming Languages**: C# (68.6%), TypeScript (27.1%), Python (2.6%), Shell (0.8%), HTML (0.6%), Go Template (0.2%), Other (0.1%)
 - **Framework Versions**: .NET 8.0, React 18+, ASP.NET Core 8.0
 - **Lines of Code**: 20,000+
 - **Module Count**: 25+
 - **Documentation Pages**: 60+
 - **Test Coverage**: 80%+
-- **Commits**: 166+
+- **Commits**: 215+
 - **Stars**: 21+
+- **Forks**: 3+
 
 ---
 
@@ -862,6 +886,13 @@ Conditions:
 - ✅ Comprehensive unit and integration test coverage
 
 ### Phase 2 In Progress 🚀
+- ✅ Agent Trace - Distributed tracing and observability for AI agents
+- ✅ Dark Theme Support - UI theme switching capability
+- ✅ Workflow Visualization Backend - Visual workflow editor backend
+- ✅ Cache Warmup - Intelligent cache preloading
+- ✅ Tool Call Reliability Enhancement - Improved tool execution stability
+- ✅ OpenAPI Documentation Enhancement - Scalar integration and export capabilities
+- ✅ Autofac DI Integration - Unified assembly scanning dependency injection
 - 🔄 Advanced caching strategy optimization (Redis integration)
 - 🔄 WebSearch enhancement and expansion (multi-provider support)
 - 🔄 Model fine-tuning tool refinement with MLflow integration
@@ -881,9 +912,15 @@ Conditions:
 
 ### Phase 4 Future Vision 🔭
 - 🔭 AI-powered code generation assistant
-- 🔭 Automated workflow optimization
-- 🔭 Multi-tenant SaaS architecture
-- 🔭 Advanced security compliance (SOC 2, GDPR)
-- 🔭 Cloud-native serverless deployment options
+- 🔭 Automated workflow optimization with self-learning capabilities
+- 🔭 Multi-tenant SaaS architecture with tenant isolation
+- 🔭 Advanced security compliance (SOC 2, GDPR, ISO 27001)
+- 🔭 Cloud-native serverless deployment options (AWS Lambda, Azure Functions)
+- 🔭 Edge computing support for low-latency scenarios
+- 🔭 Federated learning integration for distributed model training
+- 🔭 Natural language to workflow conversion
+- 🔭 Autonomous agent swarms for complex task coordination
+- 🔭 Quantum-resistant cryptography implementation
 
 ---
+
