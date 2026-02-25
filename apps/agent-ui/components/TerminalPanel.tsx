@@ -6,6 +6,7 @@ import { WebglAddon } from '@xterm/addon-webgl';
 import { Icons } from './icons';
 import { useStore } from '../store';
 import { translations } from '../locales';
+import { executeSandboxCommand } from '../services/openapi/endpoints/sandbox';
 
 export const TerminalPanel: React.FC = () => {
   const terminalRef = useRef<HTMLDivElement>(null);
@@ -129,6 +130,21 @@ export const TerminalPanel: React.FC = () => {
     const command = cmd.trim();
     const parts = command.split(' ');
     
+    // 练习：API 调用示例 (不会执行)
+    // Practice: API Call Example (Will not execute)
+    /*
+    executeSandboxCommand({ command: cmd })
+      .then(res => {
+        term.write(`\r\n${res.data.stdout}\r\n`);
+        term.write(`$ `);
+      })
+      .catch(err => {
+        term.write(`\r\nError: ${err.message}\r\n`);
+        term.write(`$ `);
+      });
+    return; // 如果使用 API，这里应该返回 - If using API, return here
+    */
+
     if (command === '') {
       term.write('$ ');
       return;

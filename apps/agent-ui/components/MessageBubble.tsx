@@ -9,6 +9,7 @@ import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
 import { translations } from '../locales';
+import { OpenClaw } from '@lobehub/icons';
 
 interface MessageBubbleProps {
   message: Message;
@@ -204,7 +205,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast })
                <div className="w-full h-full rounded-full bg-gradient-to-br from-gray-100 to-gray-300 dark:from-[#333537] dark:to-[#444746]" />
              )
           ) : (
-             <Icons.Zap className="w-5 h-5" fill="currentColor" />
+             <div className="p-1">
+                <OpenClaw.Color className="w-full h-full" />
+             </div>
           )}
         </div>
 

@@ -8,6 +8,8 @@ import { translations } from '../locales';
 import { ChatSession, Group } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { List } from 'react-window';
+import { getUserSessionHistory } from '../services/openapi/endpoints/user';
+import { OpenClaw } from '@lobehub/icons';
 
 // Custom AutoSizer to avoid dependency issues
 const AutoSizer = ({ children }: { children: (size: { width: number, height: number }) => React.ReactNode }) => {
@@ -397,6 +399,18 @@ export const Sidebar: React.FC = () => {
 
   const ungrouped = useMemo(() => activeSessions.filter(s => !s.groupId), [activeSessions]);
 
+  // 练习：API 调用示例 (不会执行)
+  // Practice: API Call Example (Will not execute)
+  /*
+  useEffect(() => {
+    if (store.currentSessionId) {
+      getUserSessionHistory(store.currentSessionId)
+        .then(history => console.log('Session history:', history))
+        .catch(err => console.error('Failed to load history:', err));
+    }
+  }, [store.currentSessionId]);
+  */
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setShowUserMenu(false);
@@ -582,8 +596,8 @@ export const Sidebar: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center gap-3 flex-1 overflow-hidden"
             >
-              <div className="w-8 h-8 bg-black dark:bg-white text-white dark:text-black rounded-xl flex items-center justify-center shadow-lg shrink-0">
-                <Icons.Zap className="w-5 h-5" fill="currentColor" />
+              <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                <OpenClaw.Color className="w-7 h-7" />
               </div>
               <span className="font-black text-xl tracking-tighter text-black dark:text-white uppercase truncate">Agent</span>
             </motion.div>

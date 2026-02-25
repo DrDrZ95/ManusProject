@@ -5,6 +5,7 @@ import { Icons } from './icons';
 import { ModelType } from '../types';
 import { translations } from '../locales';
 import clsx from 'clsx';
+import { startFinetuneJob } from '../services/openapi/endpoints/finetune';
 
 export const ModelSelector: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,6 +25,16 @@ export const ModelSelector: React.FC = () => {
   ];
 
   const activeOption = options.find(o => o.id === selectedModel) || options[0];
+
+  // 练习：API 调用示例 (不会执行)
+  // Practice: API Call Example (Will not execute)
+  /*
+  const handleFinetune = (modelId: string) => {
+    startFinetuneJob({ model: modelId, dataset: 'default-dataset' })
+      .then(res => console.log('Finetune started:', res))
+      .catch(err => console.error('Finetune failed:', err));
+  };
+  */
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

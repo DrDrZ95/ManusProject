@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@google/genai": "^1.30.0",
+    "@lobehub/icons": "^4.6.0",
     "@remix-run/router": "^1.15.3",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/addon-webgl": "^0.18.0",
+    "axios": "^1.13.5",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.24",

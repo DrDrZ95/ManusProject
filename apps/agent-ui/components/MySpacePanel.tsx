@@ -5,6 +5,7 @@ import { useStore } from '../store';
 import { translations } from '../locales';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
+import { uploadRagDocument } from '../services/openapi/endpoints/rag';
 
 // Mock Files Data
 const MOCK_FILES = [
@@ -44,6 +45,21 @@ export const MySpacePanel: React.FC = () => {
   const handleRemoteClick = () => {
     alert(t.functionUnderDev);
   };
+
+  // 练习：API 调用示例 (不会执行)
+  // Practice: API Call Example (Will not execute)
+  /*
+  const handleFileUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      uploadRagDocument({ content, metadata: { name: file.name } })
+        .then(res => console.log('Uploaded:', res))
+        .catch(err => console.error('Upload failed:', err));
+    };
+    reader.readAsText(file);
+  };
+  */
 
   const toggleSelection = (id: string) => {
     setSelectedIds(prev => 

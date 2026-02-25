@@ -5,6 +5,7 @@ import { Icons } from './icons';
 import { InputMode } from '../types';
 import { translations } from '../locales';
 import clsx from 'clsx';
+import { getToolsList } from '../services/openapi/endpoints/tools';
 
 interface InputModeSelectorProps {
     onSelectAgentMode?: () => void;
@@ -29,6 +30,16 @@ export const InputModeSelector: React.FC<InputModeSelectorProps> = ({ onSelectAg
   ];
 
   const activeMode = modes.find(m => m.id === inputMode) || modes[0];
+
+  // 练习：API 调用示例 (不会执行)
+  // Practice: API Call Example (Will not execute)
+  /*
+  useEffect(() => {
+    getToolsList()
+      .then(tools => console.log('Available tools:', tools))
+      .catch(err => console.error('Failed to load tools:', err));
+  }, []);
+  */
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

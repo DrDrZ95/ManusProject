@@ -7,6 +7,9 @@ import { InputModeSelector } from './InputModeSelector';
 import { translations } from '../locales';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
+import { sendUserInput } from '../services/openapi/endpoints/user';
+import { createChatCompletion } from '../services/openapi/endpoints/semantic';
+import { getPromptTemplates } from '../services/openapi/endpoints/prompts';
 
 interface InputAreaProps {
   onSend: () => void;
@@ -41,6 +44,16 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const t = translations[language];
+
+  // 练习：API 调用示例 (不会执行)
+  // Practice: API Call Example (Will not execute)
+  /*
+  useEffect(() => {
+    getPromptTemplates()
+      .then(templates => console.log('Prompt templates:', templates))
+      .catch(err => console.error('Failed to load templates:', err));
+  }, []);
+  */
 
   // Determine placeholder based on mode
   const getPlaceholder = () => {
@@ -79,6 +92,18 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
       e.preventDefault();
       if ((input.trim() || attachments.length > 0) && !isLoading) {
         onSend();
+        
+        // 练习：API 调用示例 (不会执行)
+        // Practice: API Call Example (Will not execute)
+        /*
+        sendUserInput({ input, sessionId: 'demo-session' })
+          .then(res => console.log('Input sent:', res))
+          .catch(err => console.error('Input failed:', err));
+          
+        createChatCompletion({ messages: [{ role: 'user', content: input }] })
+          .then(res => console.log('Completion:', res))
+          .catch(err => console.error('Completion failed:', err));
+        */
       }
     }
     // Handle deleting the mode block on backspace if input is empty
@@ -215,7 +240,14 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
                     </button>
 
                     <button
-                      onClick={onSend}
+                      onClick={() => {
+                        onSend();
+                        // 练习：API 调用示例
+                        // Practice: API Call Example
+                        /*
+                        sendUserInput({ input, sessionId: 'demo-session' });
+                        */
+                      }}
                       disabled={(!input.trim() && attachments.length === 0) || isLoading}
                       className={clsx(
                         "w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200",
