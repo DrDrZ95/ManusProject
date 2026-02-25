@@ -16,6 +16,7 @@ import { socketService } from './services/socket';
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
 import { translations } from './locales';
+import { OpenClaw } from '@lobehub/icons';
 
 const Toast: React.FC = () => {
     const toast = useStore(s => s.toast);
@@ -326,6 +327,10 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#F3F4F6] dark:bg-[#131314] text-gray-900 dark:text-[#E3E3E3] font-sans selection:bg-gray-300 selection:text-black">
+      {/* Persistent instance for SVG definitions - using 0 dimensions instead of display:none to ensure defs are rendered */}
+      <div style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none', opacity: 0 }} aria-hidden="true">
+        <OpenClaw.Color />
+      </div>
       <Toast />
       <UserModals />
       <SearchModal />
@@ -338,7 +343,9 @@ const App: React.FC = () => {
              <Icons.Sidebar className="w-6 h-6" />
           </button>
           <div className="flex items-center gap-2">
-            <Icons.Zap className="w-5 h-5 text-black dark:text-white fill-black dark:fill-white" />
+            <div className="w-6 h-6 flex items-center justify-center">
+                <OpenClaw.Color className="w-full h-full" />
+            </div>
             <span className="font-bold text-lg tracking-tight text-black dark:text-white">Agent</span>
           </div>
           <button onClick={toggleTerminal} className={clsx("text-gray-600 dark:text-[#C4C7C5]", isTerminalOpen && "text-black dark:text-white")}>
@@ -351,8 +358,8 @@ const App: React.FC = () => {
            {messages.length === 0 ? (
              <div className="h-full flex flex-col items-center justify-center opacity-0 animate-[fadeIn_0.5s_ease-out_forwards] pb-20 px-4">
                 <div className="flex flex-col items-center text-center max-w-2xl w-full">
-                    <div className="w-16 h-16 mb-6 rounded-2xl bg-white dark:bg-[#1E1F20] text-black dark:text-white flex items-center justify-center shadow-lg border border-gray-100 dark:border-[#444746]">
-                      <Icons.Zap className="w-8 h-8" fill="currentColor" />
+                    <div className="w-20 h-20 mb-6 flex items-center justify-center shrink-0">
+                      <OpenClaw.Color style={{ width: '100%', height: '100%' }} />
                     </div>
                     <h1 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-white">{t.grokIntroTitle}</h1>
                     <p className="text-gray-500 dark:text-[#C4C7C5] mb-8 px-4">

@@ -205,8 +205,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast })
                <div className="w-full h-full rounded-full bg-gradient-to-br from-gray-100 to-gray-300 dark:from-[#333537] dark:to-[#444746]" />
              )
           ) : (
-             <div className="p-1">
-                <OpenClaw.Color className="w-full h-full" />
+             <div className="w-full h-full flex items-center justify-center">
+                <OpenClaw.Color size="100%" className="w-full h-full" />
              </div>
           )}
         </div>

@@ -619,35 +619,32 @@ export const Sidebar: React.FC = () => {
           </button>
         </div>
 
-        {/* New Chat Button */}
-        <div className={clsx("mb-2 transition-all shrink-0", isSlim ? "px-2" : "px-5")}>
-          <button 
-            onClick={store.createNewSession} 
-            className={clsx(
-              "bg-black dark:bg-[#28292A] text-white dark:text-[#E3E3E3] flex items-center justify-center transition-all hover:bg-gray-800 dark:hover:bg-[#333537] rounded-xl shadow-xl active:scale-[0.98] border border-white/5 dark:border-[#444746]",
-              isSlim ? "w-11 h-11 mx-auto" : "w-full h-11 gap-2"
-            )}
-            title={isSlim ? t.newChat : undefined}
-          >
-            <Icons.Plus className="w-5 h-5" strokeWidth={3} />
-            {!isSlim && <span className="text-[11px] font-black tracking-[0.1em] uppercase">{t.newChat}</span>}
-          </button>
-        </div>
+        {/* Actions Section (New Chat & Search) */}
+        <div className={clsx("mb-2 transition-all shrink-0 flex flex-col gap-1", isSlim ? "px-2" : "px-3")}>
+           {/* New Chat */}
+           <button 
+             onClick={store.createNewSession} 
+             className={clsx(
+               "flex items-center rounded-xl transition-all duration-200 hover:bg-gray-200/50 dark:hover:bg-[#333537] text-gray-600 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white",
+               isSlim ? "w-10 h-10 justify-center mx-auto" : "w-full h-10 px-3 gap-3"
+             )}
+             title={t.newChat}
+           >
+             <Icons.NewChat className="w-5 h-5" />
+             {!isSlim && <span className="text-sm font-bold">{t.newChat}</span>}
+           </button>
 
-        {/* Search Button */}
-        <div className={clsx("mb-4 transition-all shrink-0", isSlim ? "px-2" : "px-5")}>
+           {/* Search */}
            <button 
               onClick={store.toggleSearch}
               className={clsx(
-                  "flex items-center justify-center transition-all active:scale-[0.98] border border-transparent",
-                   isSlim 
-                     ? "w-11 h-11 mx-auto rounded-xl hover:bg-gray-200/50 dark:hover:bg-[#333537] text-gray-500 dark:text-[#C4C7C5] bg-white dark:bg-[#1E1F20] shadow-sm" 
-                     : "w-full h-10 gap-3 px-4 text-left rounded-xl hover:bg-gray-200/50 dark:hover:bg-[#333537] text-gray-500 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white font-bold"
+                  "flex items-center rounded-xl transition-all duration-200 hover:bg-gray-200/50 dark:hover:bg-[#333537] text-gray-600 dark:text-[#C4C7C5] hover:text-black dark:hover:text-white",
+                   isSlim ? "w-10 h-10 justify-center mx-auto" : "w-full h-10 px-3 gap-3"
               )}
-              title={isSlim ? t.search : undefined}
+              title={t.search}
            >
-               <Icons.Search className={clsx("w-5 h-5", !isSlim && "text-gray-400 dark:text-[#C4C7C5]")} />
-               {!isSlim && <span>{t.search}</span>}
+               <Icons.Search className="w-5 h-5" />
+               {!isSlim && <span className="text-sm font-bold">{t.search}</span>}
            </button>
         </div>
 
