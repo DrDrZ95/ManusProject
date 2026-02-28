@@ -85,6 +85,14 @@ public static class ServiceCollectionExtensions
 
         // 4. 特殊工具或需要复杂配置的组件
         // Special tools or components requiring complex configuration
+        builder.RegisterType<Agent.Application.Services.Tokens.TokenCounterFactory>()
+            .AsSelf()
+            .SingleInstance();
+
+        builder.RegisterType<Agent.Application.Services.Prompts.PromptComposer>()
+            .AsSelf()
+            .InstancePerLifetimeScope();
+
         // (此处保留扩展空间)
     }
 }

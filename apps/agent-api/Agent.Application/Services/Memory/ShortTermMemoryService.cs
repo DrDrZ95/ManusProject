@@ -1,3 +1,6 @@
+using Agent.Application.Services.Tokens;
+using Agent.Application.Services.SemanticKernel;
+
 namespace Agent.Application.Services.Memory;
 
 /// <summary>
@@ -9,17 +12,23 @@ public class ShortTermMemoryService : IShortTermMemory
     private readonly IRepository<ChatMessageEntity, Guid> _messageRepo;
     private readonly ISemanticKernelService _semanticKernel;
     private readonly ILogger<ShortTermMemoryService> _logger;
+    private readonly TokenCounterFactory _tokenCounterFactory;
+    private readonly SemanticKernelOptions _options;
 
     public ShortTermMemoryService(
         IAgentCacheService cacheService,
         IRepository<ChatMessageEntity, Guid> messageRepo,
         ISemanticKernelService semanticKernel,
-        ILogger<ShortTermMemoryService> logger)
+        ILogger<ShortTermMemoryService> logger,
+        TokenCounterFactory tokenCounterFactory,
+        SemanticKernelOptions options)
     {
         _cacheService = cacheService;
         _messageRepo = messageRepo;
         _semanticKernel = semanticKernel;
         _logger = logger;
+        _tokenCounterFactory = tokenCounterFactory;
+        _options = options;
     }
 
     public async Task<List<ChatMessage>> GetRecentHistoryAsync(string sessionId, int tokenLimit = 4000)
@@ -41,17 +50,18 @@ public class ShortTermMemoryService : IShortTermMemory
                            .ToList();
         }, TimeSpan.FromMinutes(10), TimeSpan.FromHours(1));
 
-        // Sliding window logic based on token limit (approximation)
-        // Assuming 1 token ~= 4 chars for English, maybe 1 char for Chinese. 
-        // A simple heuristic: take last N messages that fit.
-
+        // Sliding window logic based on token limit
         var result = new List<ChatMessage>();
         int currentTokens = 0;
+        var counter = _tokenCounterFactory.GetCounter(_options.ChatModel);
 
         for (int i = history.Count - 1; i >= 0; i--)
         {
             var msg = history[i];
-            int estimatedTokens = (msg.Content.Length / 4) + (msg.Role.Length / 4); // Rough estimate
+            // 使用新 Token 计数器计算消息 Token
+            int estimatedTokens = counter.CountTokens(msg.Content, _options.ChatModel) + 
+                                 counter.CountTokens(msg.Role, _options.ChatModel);
+            
             if (currentTokens + estimatedTokens > tokenLimit)
             {
                 break;

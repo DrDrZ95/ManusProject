@@ -72,6 +72,7 @@
     <!-- State Machine SDK -->
     <PackageReference Include="Stateless" Version="5.17.0" />
     <PackageReference Include="StackExchange.Redis" Version="2.7.4" />
+    <PackageReference Include="Microsoft.ML.Tokenizers" Version="0.22.0-preview.1" />
   </ItemGroup>
 </Project>
 

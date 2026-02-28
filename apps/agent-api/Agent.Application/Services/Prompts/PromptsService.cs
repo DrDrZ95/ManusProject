@@ -10,13 +10,15 @@ namespace Agent.Application.Services.Prompts;
 public class PromptsService : IPromptsService
 {
     private readonly ILogger<PromptsService> _logger;
+    private readonly PromptComposer _promptComposer;
     private readonly Dictionary<string, Dictionary<string, PromptTemplate>> _prompts;
     private readonly Dictionary<string, List<ToolExample>> _toolExamples;
     private readonly Dictionary<string, CompositePromptTemplate> _compositePrompts;
 
-    public PromptsService(ILogger<PromptsService> logger)
+    public PromptsService(ILogger<PromptsService> logger, PromptComposer promptComposer)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _promptComposer = promptComposer ?? throw new ArgumentNullException(nameof(promptComposer));
         _prompts = new Dictionary<string, Dictionary<string, PromptTemplate>>();
         _toolExamples = new Dictionary<string, List<ToolExample>>();
         _compositePrompts = new Dictionary<string, CompositePromptTemplate>(StringComparer.OrdinalIgnoreCase);
@@ -1109,7 +1111,7 @@ public class PromptsService : IPromptsService
             request.Template = existing;
         }
 
-        return PromptComposer.RenderComposite(request, ResolvePrompt);
+        return _promptComposer.RenderComposite(request, ResolvePrompt);
     }
 }
 

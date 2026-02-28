@@ -1,8 +1,20 @@
+using Agent.Application.Services.Tokens;
+using Agent.Application.Services.SemanticKernel;
+
 namespace Agent.Application.Services.Prompts;
 
-public static class PromptComposer
+public class PromptComposer
 {
-    public static string RenderComposite(
+    private readonly TokenCounterFactory _tokenCounterFactory;
+    private readonly SemanticKernelOptions _options;
+
+    public PromptComposer(TokenCounterFactory tokenCounterFactory, SemanticKernelOptions options)
+    {
+        _tokenCounterFactory = tokenCounterFactory;
+        _options = options;
+    }
+
+    public string RenderComposite(
         CompositePromptRequest request,
         Func<string, PromptTemplate?> templateResolver)
     {
@@ -158,17 +170,18 @@ public static class PromptComposer
         return true;
     }
 
-    static int EstimateTokens(string text)
+    private int EstimateTokens(string text)
     {
         if (string.IsNullOrEmpty(text))
         {
             return 0;
         }
 
-        return Math.Max(1, text.Length / 4);
+        var counter = _tokenCounterFactory.GetCounter(_options.ChatModel);
+        return counter.CountTokens(text, _options.ChatModel);
     }
 
-    static string TrimToTokens(string text, int maxTokens)
+    private string TrimToTokens(string text, int maxTokens)
     {
         if (maxTokens <= 0 || string.IsNullOrEmpty(text))
         {

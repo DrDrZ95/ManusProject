@@ -35,6 +35,9 @@ namespace Agent.Core.Tests.Services
             _mockCache = new Mock<IAgentCacheService>();
             _options = new SemanticKernelOptions { MaxTokens = 100, Temperature = 0.7 };
 
+            var factory = new TokenCounterFactory(new ITokenCounter[] { new FallbackTokenCounter() });
+            var mockTokenUsageRepo = new Mock<ITokenUsageRepository>();
+
             _service = new SemanticKernelService(
                 _mockKernel.Object,
                 _mockChatService.Object,
@@ -51,7 +54,9 @@ namespace Agent.Core.Tests.Services
                 new Mock<IHttpContextAccessor>().Object,
                 new Mock<IPrometheusService>().Object,
                 new Mock<IAgentTelemetryProvider>().Object,
-                new Mock<IAgentTraceService>().Object
+                new Mock<IAgentTraceService>().Object,
+                factory,
+                mockTokenUsageRepo.Object
             );
         }
 

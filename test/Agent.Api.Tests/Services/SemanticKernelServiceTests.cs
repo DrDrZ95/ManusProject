@@ -18,6 +18,7 @@ public class SemanticKernelServiceTests
     private readonly Mock<IPrometheusService> _mockPrometheusService;
     private readonly Mock<IAgentTelemetryProvider> _mockTelemetryProvider;
     private readonly Mock<IAgentTraceService> _mockTraceService;
+    private readonly Mock<ITokenUsageRepository> _mockTokenUsageRepo;
     private readonly SemanticKernelService _semanticKernelService;
 
     public SemanticKernelServiceTests()
@@ -38,6 +39,9 @@ public class SemanticKernelServiceTests
         _mockPrometheusService = new Mock<IPrometheusService>();
         _mockTelemetryProvider = new Mock<IAgentTelemetryProvider>();
         _mockTraceService = new Mock<IAgentTraceService>();
+        _mockTokenUsageRepo = new Mock<ITokenUsageRepository>();
+
+        var factory = new TokenCounterFactory(new ITokenCounter[] { new FallbackTokenCounter() });
 
         _semanticKernelService = new SemanticKernelService(
             _mockKernel.Object,
@@ -55,7 +59,9 @@ public class SemanticKernelServiceTests
             _mockHttpContextAccessor.Object,
             _mockPrometheusService.Object,
             _mockTelemetryProvider.Object,
-            _mockTraceService.Object
+            _mockTraceService.Object,
+            factory,
+            _mockTokenUsageRepo.Object
         );
     }
 

@@ -44,6 +44,11 @@ public class AgentDbContext : DbContext
     public DbSet<AuditLogEntity> AuditLogs { get; set; }
 
     /// <summary>
+    /// Token usage records table - Token 使用记录表
+    /// </summary>
+    public DbSet<TokenUsageRecord> TokenUsageRecords { get; set; }
+
+    /// <summary>
     /// Tool metadata table - 工具元数据表
     /// </summary>
     public DbSet<ToolMetadataEntity> ToolMetadata { get; set; }
@@ -204,6 +209,20 @@ public class AgentDbContext : DbContext
             entity.Property(e => e.CostUsd).HasColumnType("numeric(10,4)");
             entity.HasIndex(e => e.SessionId);
             entity.HasIndex(e => e.Timestamp);
+        });
+
+        // 配置 Token 使用记录实体 - Configure Token usage record entity
+        modelBuilder.Entity<TokenUsageRecord>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ModelId).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.UserId).HasMaxLength(100);
+            entity.Property(e => e.SessionId).HasMaxLength(100);
+            entity.Property(e => e.Metadata).HasColumnType("jsonb");
+            entity.HasIndex(e => e.ModelId);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.SessionId);
+            entity.HasIndex(e => e.CreatedAt);
         });
     }
 }

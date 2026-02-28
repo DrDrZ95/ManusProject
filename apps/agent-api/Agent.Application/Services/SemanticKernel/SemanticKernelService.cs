@@ -1,3 +1,6 @@
+using Agent.Application.Services.Tokens;
+using Agent.Core.Data.Repositories;
+
 namespace Agent.Application.Services.SemanticKernel;
 
 /// <summary>
@@ -22,6 +25,8 @@ public class SemanticKernelService : ISemanticKernelService
     private readonly IPrometheusService _prometheusService;
     private readonly IAgentTelemetryProvider _telemetryProvider;
     private readonly IAgentTraceService _agentTraceService;
+    private readonly TokenCounterFactory _tokenCounterFactory;
+    private readonly ITokenUsageRepository _tokenUsageRepo;
 
     private readonly ResiliencePipeline _resiliencePipeline;
     private double _totalCost = 0;
@@ -42,7 +47,9 @@ public class SemanticKernelService : ISemanticKernelService
         IHttpContextAccessor httpContextAccessor,
         IPrometheusService prometheusService,
         IAgentTelemetryProvider telemetryProvider,
-        IAgentTraceService agentTraceService)
+        IAgentTraceService agentTraceService,
+        TokenCounterFactory tokenCounterFactory,
+        ITokenUsageRepository tokenUsageRepo)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         _chatService = chatService ?? throw new ArgumentNullException(nameof(chatService));
@@ -60,6 +67,8 @@ public class SemanticKernelService : ISemanticKernelService
         _prometheusService = prometheusService ?? throw new ArgumentNullException(nameof(prometheusService));
         _telemetryProvider = telemetryProvider ?? throw new ArgumentNullException(nameof(telemetryProvider));
         _agentTraceService = agentTraceService ?? throw new ArgumentNullException(nameof(agentTraceService));
+        _tokenCounterFactory = tokenCounterFactory ?? throw new ArgumentNullException(nameof(tokenCounterFactory));
+        _tokenUsageRepo = tokenUsageRepo ?? throw new ArgumentNullException(nameof(tokenUsageRepo));
 
         // Initialize resilience pipeline - 初始化弹性管道
         _resiliencePipeline = new ResiliencePipelineBuilder()
@@ -712,8 +721,23 @@ public class SemanticKernelService : ISemanticKernelService
             stopwatch.Stop();
 
             var resultText = result.ToString();
-            var tokenCount = EstimateTokenCount(prompt, resultText);
-            var costUsd = EstimateCost(tokenCount);
+            
+            // 使用新 Token 计数器
+            var counter = _tokenCounterFactory.GetCounter(_options.ChatModel);
+            int promptTokens = counter.CountTokens(prompt, _options.ChatModel);
+            int completionTokens = counter.CountTokens(resultText, _options.ChatModel);
+            int totalTokens = promptTokens + completionTokens;
+            
+            // 解析实际使用量（如果提供）
+            var (actualPrompt, actualCompletion) = counter.ParseUsageFromResponse(result);
+            if (actualPrompt > 0) promptTokens = actualPrompt;
+            if (actualCompletion > 0) completionTokens = actualCompletion;
+            totalTokens = promptTokens + completionTokens;
+
+            var costUsd = CalculateCost(promptTokens, completionTokens);
+
+            // 记录到数据库
+            await RecordTokenUsageAsync(promptTokens, completionTokens, costUsd, sessionId);
 
             var resultTrace = new AgentTrace
             {
@@ -728,10 +752,12 @@ public class SemanticKernelService : ISemanticKernelService
                 },
                 Metadata = new Dictionary<string, object>
                 {
-                    ["latency_ms"] = stopwatch.ElapsedMilliseconds
+                    ["latency_ms"] = stopwatch.ElapsedMilliseconds,
+                    ["prompt_tokens"] = promptTokens,
+                    ["completion_tokens"] = completionTokens
                 },
                 CostUsd = costUsd,
-                TokenCount = tokenCount
+                TokenCount = totalTokens
             };
 
             await _agentTraceService.RecordTraceAsync(resultTrace);
@@ -771,25 +797,48 @@ public class SemanticKernelService : ISemanticKernelService
 
     private int EstimateTokenCount(string prompt, string? completion)
     {
-        var promptLength = string.IsNullOrEmpty(prompt) ? 0 : prompt.Length;
-        var completionLength = string.IsNullOrEmpty(completion) ? 0 : completion.Length;
-        var estimated = (promptLength + completionLength) / 4.0;
-        return (int)Math.Ceiling(estimated);
+        var counter = _tokenCounterFactory.GetCounter(_options.ChatModel);
+        int promptTokens = counter.CountTokens(prompt, _options.ChatModel);
+        int completionTokens = string.IsNullOrEmpty(completion) ? 0 : counter.CountTokens(completion, _options.ChatModel);
+        return promptTokens + completionTokens;
     }
 
-    private double EstimateCost(int tokenCount)
+    private double CalculateCost(int promptTokens, int completionTokens)
     {
-        if (tokenCount <= 0)
+        if (!_options.ModelCosts.TryGetValue(_options.ChatModel, out var costInfo))
         {
             return 0;
         }
 
-        if (!_options.ModelCosts.TryGetValue(_options.ChatModel, out var pricePerThousand))
-        {
-            return 0;
-        }
+        double promptCost = (promptTokens / 1000.0) * costInfo.InputCostPer1kTokens;
+        double completionCost = (completionTokens / 1000.0) * costInfo.OutputCostPer1kTokens;
+        
+        return promptCost + completionCost;
+    }
 
-        return pricePerThousand * tokenCount / 1000.0;
+    private async Task RecordTokenUsageAsync(int promptTokens, int completionTokens, double cost, string? sessionId = null)
+    {
+        try
+        {
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            var record = new TokenUsageRecord
+            {
+                ModelId = _options.ChatModel,
+                PromptTokens = promptTokens,
+                CompletionTokens = completionTokens,
+                Cost = cost,
+                UserId = userId,
+                SessionId = sessionId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _tokenUsageRepo.AddRecordAsync(record);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to record token usage to database");
+        }
     }
 
     /// <summary>

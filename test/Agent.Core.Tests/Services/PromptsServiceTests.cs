@@ -12,7 +12,10 @@ namespace Agent.Core.Tests.Services
         public PromptsServiceTests()
         {
             _mockLogger = new Mock<ILogger<PromptsService>>();
-            _promptsService = new PromptsService(_mockLogger.Object);
+            var options = new SemanticKernelOptions();
+            var factory = new TokenCounterFactory(new ITokenCounter[] { new FallbackTokenCounter() });
+            var composer = new PromptComposer(factory, options);
+            _promptsService = new PromptsService(_mockLogger.Object, composer);
         }
 
         /// <summary>

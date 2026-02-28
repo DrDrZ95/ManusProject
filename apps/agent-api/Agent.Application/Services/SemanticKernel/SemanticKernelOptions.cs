@@ -72,13 +72,25 @@ public class SemanticKernelOptions
     public double ToolBudgetLimit { get; set; } = 100.0; // $100.00 default
 
     /// <summary>
-    /// Cost per 1k tokens for the model (simplified) - 每个1k token的成本（简化）
+    /// Detailed cost info per 1k tokens for the model - 每个1k token的详细成本信息
     /// </summary>
-    public Dictionary<string, double> ModelCosts { get; set; } = new Dictionary<string, double>
+    public Dictionary<string, ModelCostInfo> ModelCosts { get; set; } = new Dictionary<string, ModelCostInfo>
     {
-        { "gpt-3.5-turbo", 0.002 },
-        { "gpt-4", 0.03 }
+        { "gpt-3.5-turbo", new ModelCostInfo { InputCostPer1kTokens = 0.0015, OutputCostPer1kTokens = 0.002 } },
+        { "gpt-4", new ModelCostInfo { InputCostPer1kTokens = 0.03, OutputCostPer1kTokens = 0.06 } },
+        { "deepseek-chat", new ModelCostInfo { InputCostPer1kTokens = 0.00014, OutputCostPer1kTokens = 0.00028 } },
+        { "moonshot-v1", new ModelCostInfo { InputCostPer1kTokens = 0.012, OutputCostPer1kTokens = 0.012 } }
     };
+}
+
+/// <summary>
+/// Model cost information
+/// 模型成本信息
+/// </summary>
+public class ModelCostInfo
+{
+    public double InputCostPer1kTokens { get; set; }
+    public double OutputCostPer1kTokens { get; set; }
 }
 
 /// <summary>
