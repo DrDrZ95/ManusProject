@@ -5,15 +5,18 @@ public class PromptAnalyticsService : IPromptAnalyticsService
     private readonly IRepository<PromptExecutionLogEntity, Guid> _executionLogs;
     private readonly IRepository<PromptTemplateEntity, Guid> _templates;
     private readonly ILogger<PromptAnalyticsService> _logger;
+    private readonly ITokenBudgetService _budgetService;
 
     public PromptAnalyticsService(
         IRepository<PromptExecutionLogEntity, Guid> executionLogs,
         IRepository<PromptTemplateEntity, Guid> templates,
-        ILogger<PromptAnalyticsService> logger)
+        ILogger<PromptAnalyticsService> logger,
+        ITokenBudgetService budgetService)
     {
         _executionLogs = executionLogs;
         _templates = templates;
         _logger = logger;
+        _budgetService = budgetService;
     }
 
     public async Task LogExecutionAsync(PromptExecutionMetrics metrics, CancellationToken cancellationToken = default)
@@ -29,6 +32,13 @@ public class PromptAnalyticsService : IPromptAnalyticsService
             CostUsd = metrics.CostUsd,
             ExecutedAt = metrics.ExecutedAt == default ? DateTime.UtcNow : metrics.ExecutedAt
         };
+
+        // Record usage in Redis budget service if cost is available
+        // Note: Using metrics.UserId if available, otherwise falling back to entity recording only
+        if (metrics.CostUsd > 0 && !string.IsNullOrEmpty(metrics.UserId))
+        {
+            await _budgetService.RecordUsageAsync(metrics.UserId, (double)metrics.CostUsd, cancellationToken);
+        }
 
         await _executionLogs.AddAsync(entity, cancellationToken);
     }

@@ -1,11 +1,5 @@
-using Agent.Application.Services.Tokens;
-using Agent.Application.Services.SemanticKernel;
-
 namespace Agent.Application.Services.Memory;
 
-/// <summary>
-/// Short-term memory implementation using Cache and DB
-/// </summary>
 public class ShortTermMemoryService : IShortTermMemory
 {
     private readonly IAgentCacheService _cacheService;

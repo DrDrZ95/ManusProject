@@ -89,6 +89,10 @@ public static class ServiceCollectionExtensions
             .AsSelf()
             .SingleInstance();
 
+        builder.RegisterType<Agent.Application.Services.Tokens.TokenBudgetService>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
         builder.RegisterType<Agent.Application.Services.Prompts.PromptComposer>()
             .AsSelf()
             .InstancePerLifetimeScope();

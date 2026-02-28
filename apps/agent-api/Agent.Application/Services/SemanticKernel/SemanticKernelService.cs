@@ -1,6 +1,3 @@
-using Agent.Application.Services.Tokens;
-using Agent.Core.Data.Repositories;
-
 namespace Agent.Application.Services.SemanticKernel;
 
 /// <summary>
@@ -27,9 +24,9 @@ public class SemanticKernelService : ISemanticKernelService
     private readonly IAgentTraceService _agentTraceService;
     private readonly TokenCounterFactory _tokenCounterFactory;
     private readonly ITokenUsageRepository _tokenUsageRepo;
+    private readonly ITokenBudgetService _budgetService;
 
     private readonly ResiliencePipeline _resiliencePipeline;
-    private double _totalCost = 0;
 
     public SemanticKernelService(
         Kernel kernel,
@@ -49,7 +46,8 @@ public class SemanticKernelService : ISemanticKernelService
         IAgentTelemetryProvider telemetryProvider,
         IAgentTraceService agentTraceService,
         TokenCounterFactory tokenCounterFactory,
-        ITokenUsageRepository tokenUsageRepo)
+        ITokenUsageRepository tokenUsageRepo,
+        ITokenBudgetService budgetService)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         _chatService = chatService ?? throw new ArgumentNullException(nameof(chatService));
@@ -69,6 +67,7 @@ public class SemanticKernelService : ISemanticKernelService
         _agentTraceService = agentTraceService ?? throw new ArgumentNullException(nameof(agentTraceService));
         _tokenCounterFactory = tokenCounterFactory ?? throw new ArgumentNullException(nameof(tokenCounterFactory));
         _tokenUsageRepo = tokenUsageRepo ?? throw new ArgumentNullException(nameof(tokenUsageRepo));
+        _budgetService = budgetService ?? throw new ArgumentNullException(nameof(budgetService));
 
         // Initialize resilience pipeline - 初始化弹性管道
         _resiliencePipeline = new ResiliencePipelineBuilder()
@@ -303,11 +302,14 @@ public class SemanticKernelService : ISemanticKernelService
         {
             _logger.LogInformation("Invoking function: {FunctionName}", functionName);
 
-            // Check budget before invocation
-            if (_totalCost >= _options.ToolBudgetLimit)
+            // Check budget before invocation using persistent Redis storage
+            var userId = GetCurrentSessionId();
+            if (!await _budgetService.IsWithinBudgetAsync(userId, _options.ToolBudgetLimit))
             {
-                _logger.LogWarning("Tool call budget exceeded: {TotalCost} >= {BudgetLimit}. Fallback or stopping.", _totalCost, _options.ToolBudgetLimit);
-                throw new InvalidOperationException($"Tool call budget exceeded: {_totalCost}");
+                var currentMonthCost = await _budgetService.GetCurrentMonthCostAsync(userId);
+                _logger.LogWarning("Tool call budget exceeded for user {UserId}: {CurrentCost} >= {BudgetLimit}. Fallback or stopping.", 
+                    userId, currentMonthCost, _options.ToolBudgetLimit);
+                throw new InvalidOperationException($"Tool call budget exceeded for user {userId}");
             }
 
             // Check permissions before invocation
@@ -345,10 +347,9 @@ public class SemanticKernelService : ISemanticKernelService
             // Record metrics
             _prometheusService.ObserveToolCallDuration(plugName, functionName, stopwatch.Elapsed.TotalSeconds);
 
-            // Simplified cost tracking for demonstration (in real scenario, get from LLM response metadata)
-            var estimatedCost = 0.0001; // $0.0001 per call as placeholder
-            _totalCost += estimatedCost;
-            _prometheusService.RecordToolCost(plugName, functionName, estimatedCost, "USD");
+            // Record usage for tools (simplified cost tracking for tools)
+            var toolCost = 0.0001; // $0.0001 per call as placeholder
+            await _budgetService.RecordUsageAsync(userId, toolCost);
 
             return resultValue;
         }
@@ -383,11 +384,14 @@ public class SemanticKernelService : ISemanticKernelService
             _logger.LogInformation("Invoking function: {FunctionName} with return type: {ReturnType}",
                 functionName, typeof(T).Name);
 
-            // Check budget before invocation
-            if (_totalCost >= _options.ToolBudgetLimit)
+            // Check budget before invocation using persistent Redis storage
+            var userId = GetCurrentSessionId();
+            if (!await _budgetService.IsWithinBudgetAsync(userId, _options.ToolBudgetLimit))
             {
-                _logger.LogWarning("Tool call budget exceeded: {TotalCost} >= {BudgetLimit}. Fallback or stopping.", _totalCost, _options.ToolBudgetLimit);
-                throw new InvalidOperationException($"Tool call budget exceeded: {_totalCost}");
+                var currentMonthCost = await _budgetService.GetCurrentMonthCostAsync(userId);
+                _logger.LogWarning("Tool call budget exceeded for user {UserId}: {CurrentCost} >= {BudgetLimit}. Fallback or stopping.", 
+                    userId, currentMonthCost, _options.ToolBudgetLimit);
+                throw new InvalidOperationException($"Tool call budget exceeded for user {userId}");
             }
 
             // Check permissions before invocation
@@ -424,10 +428,9 @@ public class SemanticKernelService : ISemanticKernelService
             // Record metrics
             _prometheusService.ObserveToolCallDuration(plugName, functionName, stopwatch.Elapsed.TotalSeconds);
 
-            // Simplified cost tracking for demonstration
-            var estimatedCost = 0.0001;
-            _totalCost += estimatedCost;
-            _prometheusService.RecordToolCost(plugName, functionName, estimatedCost, "USD");
+            // Record usage for tools (simplified cost tracking for tools)
+            var toolCost = 0.0001; // $0.0001 per call as placeholder
+            await _budgetService.RecordUsageAsync(userId, toolCost);
 
             if (resultValue is T typedResult)
             {
@@ -734,10 +737,14 @@ public class SemanticKernelService : ISemanticKernelService
             if (actualCompletion > 0) completionTokens = actualCompletion;
             totalTokens = promptTokens + completionTokens;
 
-            var costUsd = CalculateCost(promptTokens, completionTokens);
+            var finalCostUsd = CalculateCost(promptTokens, completionTokens);
+
+            // Record usage in Redis for persistent budget management
+            var userIdForBudget = GetCurrentSessionId();
+            await _budgetService.RecordUsageAsync(userIdForBudget, finalCostUsd);
 
             // 记录到数据库
-            await RecordTokenUsageAsync(promptTokens, completionTokens, costUsd, sessionId);
+            await RecordTokenUsageAsync(promptTokens, completionTokens, finalCostUsd, sessionId);
 
             var resultTrace = new AgentTrace
             {
@@ -754,9 +761,11 @@ public class SemanticKernelService : ISemanticKernelService
                 {
                     ["latency_ms"] = stopwatch.ElapsedMilliseconds,
                     ["prompt_tokens"] = promptTokens,
-                    ["completion_tokens"] = completionTokens
+                    ["completion_tokens"] = completionTokens,
+                    ["total_tokens"] = totalTokens,
+                    ["model"] = _options.ChatModel
                 },
-                CostUsd = costUsd,
+                CostUsd = finalCostUsd,
                 TokenCount = totalTokens
             };
 
@@ -820,7 +829,7 @@ public class SemanticKernelService : ISemanticKernelService
     {
         try
         {
-            var userId = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = GetCurrentSessionId();
             
             var record = new TokenUsageRecord
             {

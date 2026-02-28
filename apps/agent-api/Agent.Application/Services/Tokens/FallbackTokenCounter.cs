@@ -1,8 +1,3 @@
-using Agent.Core.Interfaces;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using System;
-
 namespace Agent.Application.Services.Tokens;
 
 public class FallbackTokenCounter : ITokenCounter

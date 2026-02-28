@@ -10,6 +10,7 @@ public class PromptExecutionMetrics
     public decimal? QualityScore { get; set; }
     public decimal? CostUsd { get; set; }
     public DateTime ExecutedAt { get; set; }
+    public string? UserId { get; set; }
     public string? ExperimentId { get; set; }
     public string? VariantName { get; set; }
 }
