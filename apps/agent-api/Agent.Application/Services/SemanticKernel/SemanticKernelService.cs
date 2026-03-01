@@ -25,6 +25,7 @@ public class SemanticKernelService : ISemanticKernelService
     private readonly TokenCounterFactory _tokenCounterFactory;
     private readonly ITokenUsageRepository _tokenUsageRepo;
     private readonly ITokenBudgetService _budgetService;
+    private readonly Agent.Application.Cache.SemanticCacheLayer _semanticCache;
 
     private readonly ResiliencePipeline _resiliencePipeline;
 
@@ -47,7 +48,8 @@ public class SemanticKernelService : ISemanticKernelService
         IAgentTraceService agentTraceService,
         TokenCounterFactory tokenCounterFactory,
         ITokenUsageRepository tokenUsageRepo,
-        ITokenBudgetService budgetService)
+        ITokenBudgetService budgetService,
+        Agent.Application.Cache.SemanticCacheLayer semanticCache)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         _chatService = chatService ?? throw new ArgumentNullException(nameof(chatService));
@@ -68,6 +70,7 @@ public class SemanticKernelService : ISemanticKernelService
         _tokenCounterFactory = tokenCounterFactory ?? throw new ArgumentNullException(nameof(tokenCounterFactory));
         _tokenUsageRepo = tokenUsageRepo ?? throw new ArgumentNullException(nameof(tokenUsageRepo));
         _budgetService = budgetService ?? throw new ArgumentNullException(nameof(budgetService));
+        _semanticCache = semanticCache ?? throw new ArgumentNullException(nameof(semanticCache));
 
         // Initialize resilience pipeline - 初始化弹性管道
         _resiliencePipeline = new ResiliencePipelineBuilder()
@@ -114,38 +117,44 @@ public class SemanticKernelService : ISemanticKernelService
     /// </summary>
     public async Task<string> GetChatCompletionAsync(string prompt, string? systemMessage = null)
     {
-        try
-        {
-            _logger.LogInformation("Getting chat completion for prompt length: {PromptLength}", prompt.Length);
-
-            var chatHistory = new ChatHistory();
-
-            // Add system message if provided - 如果提供了系统消息，则添加
-            if (!string.IsNullOrEmpty(systemMessage))
+        return await _semanticCache.GetSemanticAsync<string>(
+            prompt,
+            async () =>
             {
-                chatHistory.AddSystemMessage(systemMessage);
+                try
+                {
+                    _logger.LogInformation("Getting chat completion for prompt length: {PromptLength}", prompt.Length);
+
+                    var chatHistory = new ChatHistory();
+
+                    // Add system message if provided - 如果提供了系统消息，则添加
+                    if (!string.IsNullOrEmpty(systemMessage))
+                    {
+                        chatHistory.AddSystemMessage(systemMessage);
+                    }
+
+                    chatHistory.AddUserMessage(prompt);
+
+                    var executionSettings = new OpenAIPromptExecutionSettings
+                    {
+                        MaxTokens = _options.MaxTokens,
+                        Temperature = _options.Temperature
+                    };
+
+                    var result = await _chatService.GetChatMessageContentAsync(chatHistory, executionSettings);
+
+                    _logger.LogInformation("Chat completion successful, response length: {ResponseLength}",
+                        result.Content?.Length ?? 0);
+
+                    return result.Content ?? string.Empty;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to get chat completion");
+                    throw;
+                }
             }
-
-            chatHistory.AddUserMessage(prompt);
-
-            var executionSettings = new OpenAIPromptExecutionSettings
-            {
-                MaxTokens = _options.MaxTokens,
-                Temperature = _options.Temperature
-            };
-
-            var result = await _chatService.GetChatMessageContentAsync(chatHistory, executionSettings);
-
-            _logger.LogInformation("Chat completion successful, response length: {ResponseLength}",
-                result.Content?.Length ?? 0);
-
-            return result.Content ?? string.Empty;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get chat completion");
-            throw;
-        }
+        );
     }
 
     /// <summary>

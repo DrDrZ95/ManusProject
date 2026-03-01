@@ -38,6 +38,15 @@ public static class ServiceCollectionExtensions
         services.AddSandboxTerminal(configuration);
         services.AddWorkflowServices(configuration);
 
+        // Add Cache Registry Cleanup Service
+        services.AddHostedService<Agent.Core.Cache.CacheRegistryCleanupService>();
+
+        // Add Semantic Cache Layer
+        var semanticCacheOptions = new Agent.Core.Cache.SemanticCacheOptions();
+        configuration.GetSection("SemanticCache").Bind(semanticCacheOptions);
+        services.AddSingleton(semanticCacheOptions);
+        services.AddScoped<Agent.Application.Cache.SemanticCacheLayer>();
+
         return services;
     }
 
@@ -64,7 +73,8 @@ public static class ServiceCollectionExtensions
                         t.Name != "AgentTelemetryProvider" && 
                         t.Name != "PostgreSqlService" &&
                         t.Name != "ChromaClient" &&
-                        t.Name != "ConfigureSwaggerOptions")
+                        t.Name != "ConfigureSwaggerOptions" &&
+                        t.Name != "AgentCacheService")
             .AsImplementedInterfaces()
             .InstancePerLifetimeScope();
 
@@ -73,6 +83,10 @@ public static class ServiceCollectionExtensions
         
         // 单例服务注册
         // Singleton service registrations
+        builder.RegisterType<Agent.Core.Cache.AgentCacheService>()
+            .As<Agent.Core.Cache.IAgentCacheService>()
+            .SingleInstance();
+
         builder.RegisterType<Agent.Application.Services.PostgreSQL.PostgreSqlService>()
             .As<Agent.Application.Services.PostgreSQL.IPostgreSqlService>()
             .SingleInstance();

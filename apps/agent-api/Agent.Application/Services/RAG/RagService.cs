@@ -10,6 +10,7 @@ public class RagService : IRagService
     private readonly ISemanticKernelService _semanticKernel;
     private readonly ILogger<RagService> _logger;
     private readonly IAgentCacheService _cacheService; // 新增：缓存服务
+    private readonly Agent.Application.Cache.SemanticCacheLayer _semanticCache;
     private readonly IRagCacheWarmer _cacheWarmer; // 新增：缓存预热服务
     private readonly IBackgroundJobClient _backgroundJobs; // 新增：后台任务客户端
     private readonly IPromptAnalyticsService _promptAnalytics;
@@ -19,6 +20,7 @@ public class RagService : IRagService
         ISemanticKernelService semanticKernel,
         ILogger<RagService> logger,
         IAgentCacheService cacheService,
+        Agent.Application.Cache.SemanticCacheLayer semanticCache,
         IRagCacheWarmer cacheWarmer,
         IBackgroundJobClient backgroundJobs,
         IPromptAnalyticsService promptAnalytics) // 注入后台任务客户端和 Prompt 分析服务
@@ -27,6 +29,7 @@ public class RagService : IRagService
         _semanticKernel = semanticKernel ?? throw new ArgumentNullException(nameof(semanticKernel));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+        _semanticCache = semanticCache ?? throw new ArgumentNullException(nameof(semanticCache));
         _cacheWarmer = cacheWarmer ?? throw new ArgumentNullException(nameof(cacheWarmer));
         _backgroundJobs = backgroundJobs ?? throw new ArgumentNullException(nameof(backgroundJobs));
         _promptAnalytics = promptAnalytics ?? throw new ArgumentNullException(nameof(promptAnalytics));
@@ -581,98 +584,85 @@ public class RagService : IRagService
     /// </summary>
     public async Task<RagResponse> GenerateResponseAsync(string collectionName, RagGenerationRequest request)
     {
-        // Layer 3: Response Cache - 第三层：完整响应缓存
-        var queryHash = SecurityHelper.GetSha256Hash(JsonSerializer.Serialize(request.RetrievalOptions));
-        var systemPromptHash = SecurityHelper.GetSha256Hash(request.SystemPrompt ?? "");
-        var cacheKey = $"rag:response:{collectionName}:{queryHash}:{systemPromptHash}";
-
-        var cachedResponse = await _cacheService.GetAsync<RagResponse>(cacheKey);
-        if (cachedResponse != null)
-        {
-            _logger.LogInformation("Cache Hit (Response): Retrieved full response for query: {Query}", request.Query);
-            return cachedResponse;
-        }
-
-        var stopwatch = Stopwatch.StartNew();
-
-        try
-        {
-            _logger.LogInformation("Generating RAG response for query: {Query}", request.Query);
-
-            // 1. Retrieve relevant context - 检索相关上下文
-            var retrievalQuery = request.RetrievalOptions ?? new RagQuery
+        return await _semanticCache.GetSemanticAsync<RagResponse>(
+            request.Query,
+            async () =>
             {
-                Text = request.Query,
-                Strategy = RetrievalStrategy.Hybrid,
-                TopK = 5
-            };
+                var stopwatch = Stopwatch.StartNew();
 
-            var retrievalResult = await HybridRetrievalAsync(collectionName, retrievalQuery);
-
-            // 2. Build context from retrieved chunks - 从检索到的块构建上下文
-            var context = BuildContextFromChunks(retrievalResult.Chunks);
-
-            // 3. Create system prompt with context - 使用上下文创建系统提示
-            var systemPrompt = BuildSystemPrompt(request.SystemPrompt, context, request.IncludeSources);
-
-            // 4. Generate response using Semantic Kernel - 使用Semantic Kernel生成响应
-            var generationOptions = request.GenerationOptions ?? new RagGenerationOptions();
-
-            string response;
-            if (request.ConversationHistory?.Any() == true)
-            {
-                // Use conversation history - 使用对话历史
-                var chatHistory = request.ConversationHistory.ToList();
-                chatHistory.Insert(0, new ChatMessage { Role = "system", Content = systemPrompt });
-                chatHistory.Add(new ChatMessage { Role = "user", Content = request.Query });
-
-                response = await _semanticKernel.GetChatCompletionWithHistoryAsync(chatHistory);
-            }
-            else
-            {
-                // Single turn conversation - 单轮对话
-                response = await _semanticKernel.GetChatCompletionAsync(request.Query, systemPrompt);
-            }
-
-            // 5. Calculate confidence score - 计算置信度分数
-            var confidenceScore = CalculateConfidenceScore(retrievalResult.Chunks, response);
-
-            stopwatch.Stop();
-
-            var ragResponse = new RagResponse
-            {
-                Response = response,
-                Sources = request.IncludeSources ? retrievalResult.Chunks : new List<RagRetrievedChunk>(),
-                RetrievalResult = retrievalResult,
-                ConfidenceScore = confidenceScore,
-                GenerationTimeMs = stopwatch.ElapsedMilliseconds,
-                Metadata = new Dictionary<string, object>
+                try
                 {
-                    ["context_length"] = context.Length,
-                    ["source_count"] = retrievalResult.Chunks.Count,
-                    ["retrieval_strategy"] = retrievalResult.Strategy.ToString(),
-                    ["generation_model"] = "semantic-kernel"
+                    _logger.LogInformation("Generating RAG response for query: {Query}", request.Query);
+
+                    // 1. Retrieve relevant context - 检索相关上下文
+                    var retrievalQuery = request.RetrievalOptions ?? new RagQuery
+                    {
+                        Text = request.Query,
+                        Strategy = RetrievalStrategy.Hybrid,
+                        TopK = 5
+                    };
+
+                    var retrievalResult = await HybridRetrievalAsync(collectionName, retrievalQuery);
+
+                    // 2. Build context from retrieved chunks - 从检索到的块构建上下文
+                    var context = BuildContextFromChunks(retrievalResult.Chunks);
+
+                    // 3. Create system prompt with context - 使用上下文创建系统提示
+                    var systemPrompt = BuildSystemPrompt(request.SystemPrompt, context, request.IncludeSources);
+
+                    // 4. Generate response using Semantic Kernel - 使用Semantic Kernel生成响应
+                    var generationOptions = request.GenerationOptions ?? new RagGenerationOptions();
+
+                    string response;
+                    if (request.ConversationHistory?.Any() == true)
+                    {
+                        // Use conversation history - 使用对话历史
+                        var chatHistory = request.ConversationHistory.ToList();
+                        chatHistory.Insert(0, new ChatMessage { Role = "system", Content = systemPrompt });
+                        chatHistory.Add(new ChatMessage { Role = "user", Content = request.Query });
+
+                        response = await _semanticKernel.GetChatCompletionWithHistoryAsync(chatHistory);
+                    }
+                    else
+                    {
+                        // Single turn conversation - 单轮对话
+                        response = await _semanticKernel.GetChatCompletionAsync(request.Query, systemPrompt);
+                    }
+
+                    // 5. Calculate confidence score - 计算置信度分数
+                    var confidenceScore = CalculateConfidenceScore(retrievalResult.Chunks, response);
+
+                    stopwatch.Stop();
+
+                    var ragResponse = new RagResponse
+                    {
+                        Response = response,
+                        Sources = request.IncludeSources ? retrievalResult.Chunks : new List<RagRetrievedChunk>(),
+                        RetrievalResult = retrievalResult,
+                        ConfidenceScore = confidenceScore,
+                        GenerationTimeMs = stopwatch.ElapsedMilliseconds,
+                        Metadata = new Dictionary<string, object>
+                        {
+                            ["context_length"] = context.Length,
+                            ["source_count"] = retrievalResult.Chunks.Count,
+                            ["retrieval_strategy"] = retrievalResult.Strategy.ToString(),
+                            ["generation_model"] = "semantic-kernel"
+                        }
+                    };
+
+                    _logger.LogInformation("RAG response generated in {ElapsedMs}ms with confidence {Confidence}",
+                        stopwatch.ElapsedMilliseconds, confidenceScore);
+
+                    return ragResponse;
                 }
-            };
-
-            // 将生成的响应存入缓存 (Cache the generated response)
-            await _cacheService.SetAsync(
-                cacheKey,
-                ragResponse,
-                memoryTtl: TimeSpan.FromMinutes(new Random().Next(15, 61)), // 15-60分钟动态 TTL
-                distributedTtl: TimeSpan.FromMinutes(new Random().Next(15, 61)));
-
-            _logger.LogInformation("RAG response generated in {ElapsedMs}ms with confidence {Confidence}",
-                stopwatch.ElapsedMilliseconds, confidenceScore);
-
-            return ragResponse;
-        }
-        catch (Exception ex)
-        {
-            stopwatch.Stop();
-            _logger.LogError(ex, "Failed to generate RAG response");
-            throw;
-        }
+                catch (Exception ex)
+                {
+                    stopwatch.Stop();
+                    _logger.LogError(ex, "Failed to generate RAG response");
+                    throw;
+                }
+            }
+        );
     }
 
     /// <summary>

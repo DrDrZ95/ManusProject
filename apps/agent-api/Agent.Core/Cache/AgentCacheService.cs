@@ -12,6 +12,7 @@ public class AgentCacheService : IAgentCacheService
     private readonly IConnectionMultiplexer _redisConnection;
     private readonly ILogger<AgentCacheService> _logger;
     private readonly CacheOptions _options;
+    private readonly ConcurrentDictionary<string, DateTime> _keyRegistry = new();
 
     public AgentCacheService(
         IMemoryCache memoryCache,
@@ -206,6 +207,7 @@ public class AgentCacheService : IAgentCacheService
     {
         // 1. 移除 L1 内存缓存 (Remove from L1 Memory Cache)
         _memoryCache.Remove(key);
+        _keyRegistry.TryRemove(key, out _);
 
         // 2. 移除 L2 分布式缓存 (Remove from L2 Distributed Cache)
         await _distributedCache.RemoveAsync(key, cancellationToken);
@@ -217,9 +219,6 @@ public class AgentCacheService : IAgentCacheService
     public async Task RemoveByPrefixAsync(string prefix, CancellationToken cancellationToken = default)
     {
         // 1. 移除 L1 内存缓存
-        // 注意：IMemoryCache 不直接支持按前缀删除。
-        // 这里采用的方法是：在分布式缓存中删除，并通过后续的机制或 TTL 自然失效。
-        // 进阶做法：可以遍历内存缓存的 Key (如果使用了自定义的 Key 跟踪)
         RemoveL1ByPrefix(prefix);
 
         // 2. 移除 L2 分布式缓存 (Redis)
@@ -228,37 +227,12 @@ public class AgentCacheService : IAgentCacheService
 
     private void RemoveL1ByPrefix(string prefix)
     {
-        // 由于 IMemoryCache 没有公开获取所有 Key 的 API，
-        // 且反射性能较差且不稳定，建议在生产环境中使用统一的过期策略或 Key 追踪。
-        // 此处通过反射尝试清理（仅限演示/小型应用，高性能场景需优化）
-        try
+        // 使用 ConcurrentDictionary 维护的 Key 注册表进行清理，替代不稳定的反射方案
+        var keysToRemove = _keyRegistry.Keys.Where(k => k.StartsWith(prefix)).ToList();
+        foreach (var key in keysToRemove)
         {
-            var field = typeof(MemoryCache).GetField("_entries", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (field != null)
-            {
-                var entries = field.GetValue(_memoryCache) as dynamic;
-                if (entries != null)
-                {
-                    var keysToRemove = new List<object>();
-                    foreach (var entry in entries)
-                    {
-                        var key = entry.Key.ToString();
-                        if (key.StartsWith(prefix))
-                        {
-                            keysToRemove.Add(entry.Key);
-                        }
-                    }
-
-                    foreach (var key in keysToRemove)
-                    {
-                        _memoryCache.Remove(key);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to remove L1 cache by prefix using reflection. This is expected if IMemoryCache implementation changed.");
+            _memoryCache.Remove(key);
+            _keyRegistry.TryRemove(key, out _);
         }
     }
 
@@ -291,15 +265,35 @@ public class AgentCacheService : IAgentCacheService
         }
     }
 
+    /// <summary>
+    /// 获取所有注册的 Key（仅供内部使用）
+    /// </summary>
+    internal IEnumerable<string> GetRegisteredKeys() => _keyRegistry.Keys;
+
+    /// <summary>
+    /// 清理过期的注册 Key（仅供内部使用）
+    /// </summary>
+    internal void CleanupExpiredKeys()
+    { 
+        var now = DateTime.UtcNow;
+        var expiredKeys = _keyRegistry.Where(x => x.Value < now).Select(x => x.Key).ToList();
+        foreach (var key in expiredKeys)
+        {
+            _keyRegistry.TryRemove(key, out _);
+        }
+    }
+
     // --- Private Helpers ---
 
     private void SetMemoryCache<T>(string key, T value, TimeSpan? ttl) where T : class
-    {
+    { 
+        var relativeTtl = ttl ?? _options.DefaultMemoryTtl;
         var options = new MemoryCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = ttl ?? _options.DefaultMemoryTtl
+        { 
+            AbsoluteExpirationRelativeToNow = relativeTtl
         };
         _memoryCache.Set(key, value, options);
+        _keyRegistry[key] = DateTime.UtcNow.Add(relativeTtl);
     }
 
     private async Task SetDistributedCache<T>(string key, T value, TimeSpan? ttl, CancellationToken cancellationToken) where T : class
