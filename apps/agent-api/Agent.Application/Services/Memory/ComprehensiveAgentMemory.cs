@@ -11,6 +11,8 @@ public class ComprehensiveAgentMemory : IAdvancedAgentMemory
     public ILongTermMemory LongTerm { get; }
     public ITaskMemory Task { get; }
 
+    private long _conversationId;
+
     public ComprehensiveAgentMemory(
         IShortTermMemory shortTerm,
         ILongTermMemory longTerm,
@@ -23,23 +25,51 @@ public class ComprehensiveAgentMemory : IAdvancedAgentMemory
 
     public async System.Threading.Tasks.Task InitializeAsync(long conversationId)
     {
-        // Init logic if needed
+        _conversationId = conversationId;
         await System.Threading.Tasks.Task.CompletedTask;
     }
 
     public async System.Threading.Tasks.Task<MemoryContext> LoadContextAsync()
     {
-        // Aggregate context from sub-memories
-        // This requires knowing the current session/context ID, which usually comes from InitializeAsync.
-        // But IAgentMemory.InitializeAsync takes long conversationId.
-        // My ShortTermMemory uses string sessionId.
-        // I'll need to store conversationId.
+        var sessionId = _conversationId.ToString();
 
-        // Placeholder return
+        // a. ShortTerm.GetRecentHistoryAsync(sessionId, tokenLimit: 2000)
+        var history = await ShortTerm.GetRecentHistoryAsync(sessionId, tokenLimit: 2000);
+        var historyMessages = history.Select(m => $"{m.Role}: {m.Content}").ToList();
+
+        // b. LongTerm.RetrieveRelevantKnowledgeAsync (as summary/context)
+        var summary = string.Empty;
+        try
+        {
+            var relevantKnowledge = await LongTerm.RetrieveRelevantKnowledgeAsync(sessionId, limit: 1);
+            summary = relevantKnowledge.FirstOrDefault() ?? string.Empty;
+        }
+        catch
+        {
+            // Fallback if LongTerm fails
+            summary = "Summary not available.";
+        }
+
+        // c. Task.GetCurrentTaskContextAsync
+        var knowledgeSnippets = new List<string>();
+        try
+        {
+            var taskContext = await Task.GetContextAsync(sessionId);
+            if (taskContext != null)
+            {
+                knowledgeSnippets.Add($"Workflow: {taskContext.WorkflowId}, Step: {taskContext.StepId ?? "Initial"}");
+            }
+        }
+        catch
+        {
+            // Ignore task memory errors
+        }
+
         return new MemoryContext
         {
-            HistoryMessages = new List<string>(),
-            Summary = "Comprehensive Memory Loaded"
+            HistoryMessages = historyMessages,
+            Summary = summary,
+            KnowledgeSnippets = knowledgeSnippets
         };
     }
 

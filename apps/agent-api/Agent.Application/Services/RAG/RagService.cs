@@ -10,7 +10,7 @@ public class RagService : IRagService
     private readonly ISemanticKernelService _semanticKernel;
     private readonly ILogger<RagService> _logger;
     private readonly IAgentCacheService _cacheService; // 新增：缓存服务
-    private readonly Agent.Application.Cache.SemanticCacheLayer _semanticCache;
+    private readonly SemanticCacheLayer _semanticCache;
     private readonly IRagCacheWarmer _cacheWarmer; // 新增：缓存预热服务
     private readonly IBackgroundJobClient _backgroundJobs; // 新增：后台任务客户端
     private readonly IPromptAnalyticsService _promptAnalytics;
@@ -20,7 +20,7 @@ public class RagService : IRagService
         ISemanticKernelService semanticKernel,
         ILogger<RagService> logger,
         IAgentCacheService cacheService,
-        Agent.Application.Cache.SemanticCacheLayer semanticCache,
+        SemanticCacheLayer semanticCache,
         IRagCacheWarmer cacheWarmer,
         IBackgroundJobClient backgroundJobs,
         IPromptAnalyticsService promptAnalytics) // 注入后台任务客户端和 Prompt 分析服务

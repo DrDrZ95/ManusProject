@@ -25,7 +25,7 @@ public class SemanticKernelService : ISemanticKernelService
     private readonly TokenCounterFactory _tokenCounterFactory;
     private readonly ITokenUsageRepository _tokenUsageRepo;
     private readonly ITokenBudgetService _budgetService;
-    private readonly Agent.Application.Cache.SemanticCacheLayer _semanticCache;
+    private readonly SemanticCacheLayer _semanticCache;
 
     private readonly ResiliencePipeline _resiliencePipeline;
 
@@ -49,7 +49,7 @@ public class SemanticKernelService : ISemanticKernelService
         TokenCounterFactory tokenCounterFactory,
         ITokenUsageRepository tokenUsageRepo,
         ITokenBudgetService budgetService,
-        Agent.Application.Cache.SemanticCacheLayer semanticCache)
+        SemanticCacheLayer semanticCache)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         _chatService = chatService ?? throw new ArgumentNullException(nameof(chatService));

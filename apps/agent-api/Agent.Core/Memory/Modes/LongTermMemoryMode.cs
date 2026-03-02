@@ -1,3 +1,5 @@
+using Agent.Core.Memory.Interfaces;
+
 namespace Agent.Core.Memory.Modes;
 
 /// <summary>
@@ -7,7 +9,13 @@ namespace Agent.Core.Memory.Modes;
 /// </summary>
 public class LongTermMemoryMode : BaseAgentMemory
 {
+    private readonly dynamic? _semanticKernel;
     public override string Name => "LongTermMemory";
+
+    public LongTermMemoryMode(object? semanticKernel = null)
+    {
+        _semanticKernel = semanticKernel;
+    }
 
     // 模拟数据库中的长期记忆数据 (Simulate long-term memory data in the database)
     private string _currentSummary = "会话开始，用户和AI正在讨论项目需求。 (Conversation started, user and AI are discussing project requirements.)";
@@ -34,21 +42,11 @@ public class LongTermMemoryMode : BaseAgentMemory
             _recentMessages.Add(update.NewMessage);
         }
 
-        // 模拟工具调用日志的保存 (Simulate saving of ability log)
-        if (!string.IsNullOrEmpty(update.AbilityLog))
-        {
-            // 实际应用中，这里会保存到 conversation_ability_log 表 (In a real app, this saves to conversation_ability_log table)
-            Console.WriteLine($"[LongTermMemory] Saving Ability Log: {update.AbilityLog}");
-        }
-
         // 达到阈值或明确要求时，触发摘要更新 (Trigger summary update when threshold is reached or explicitly requested)
         if (_recentMessages.Count >= SummaryUpdateThreshold || update.ShouldUpdateSummary)
         {
             // 模拟调用 LLM 服务生成新摘要 (Simulate calling LLM service to generate new summary)
             _currentSummary = await GenerateNewSummaryAsync(_currentSummary, _recentMessages);
-
-            // 模拟保存快照到 conversation_snapshot 表 (Simulate saving snapshot to conversation_snapshot table)
-            Console.WriteLine($"[LongTermMemory] Snapshot saved for Conversation {ConversationId}. New Summary: {_currentSummary}");
 
             // 清空最近消息，等待下一轮摘要 (Clear recent messages for the next summary cycle)
             _recentMessages.Clear();
@@ -58,20 +56,34 @@ public class LongTermMemoryMode : BaseAgentMemory
     /// <summary>
     /// 模拟生成新摘要的逻辑 (Simulates the logic for generating a new summary)
     /// </summary>
-    private Task<string> GenerateNewSummaryAsync(string oldSummary, List<string> newMessages)
+    private async Task<string> GenerateNewSummaryAsync(string oldSummary, List<string> newMessages)
     {
-        // 实际应用中，这里会调用 LLM API (In a real application, this calls the LLM API)
-        var newContent = string.Join(" ", newMessages.TakeLast(3));
-        return Task.FromResult($"[Updated Summary] Based on: {oldSummary}. Latest discussion: {newContent.Substring(0, Math.Min(newContent.Length, 50))}...");
+        if (_semanticKernel == null)
+        {
+            var newContent = string.Join(" ", newMessages.TakeLast(3));
+            return $"[Mock Summary] Based on: {oldSummary}. Latest discussion: {newContent.Substring(0, Math.Min(newContent.Length, 50))}...";
+        }
+
+        var messages = string.Join("\n", newMessages);
+        var systemPrompt = "你是一个专业的对话摘要助手，请将以下对话历史压缩为简洁的摘要，保留关键信息和决策。";
+        var userPrompt = $"旧摘要：{oldSummary}\n\n新增对话：\n{messages}";
+
+        try
+        {
+            return await _semanticKernel.GetChatCompletionAsync(userPrompt, systemPrompt);
+        }
+        catch (Exception ex)
+        {
+            // Fallback if LLM fails
+            return $"[Error generating summary: {ex.Message}] Previous summary: {oldSummary}";
+        }
     }
 
     /// <inheritdoc />
     public override Task ClearAsync()
     {
-        _currentSummary = string.Empty;
         _recentMessages.Clear();
-        // 实际应用中，这里会删除数据库中的所有相关记录 (In a real app, this deletes all related records in the database)
+        _currentSummary = string.Empty;
         return Task.CompletedTask;
     }
 }
-

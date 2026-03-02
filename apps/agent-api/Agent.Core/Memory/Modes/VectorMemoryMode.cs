@@ -1,3 +1,5 @@
+using Agent.Core.Memory.Interfaces;
+
 namespace Agent.Core.Memory.Modes;
 
 /// <summary>
@@ -7,53 +9,116 @@ namespace Agent.Core.Memory.Modes;
 /// </summary>
 public class VectorMemoryMode : BaseAgentMemory
 {
+    private readonly dynamic? _vectorDb;
+    private readonly dynamic? _semanticKernel;
+    private readonly bool _enabled;
+
     public override string Name => "VectorMemory";
 
-    // 模拟 ChromaDB 客户端 (Simulate ChromaDB client)
-    // 实际应用中，这里会注入 IVectorDatabaseService (In a real app, IVectorDatabaseService would be injected here)
-    private readonly List<(string text, float[] vector)> _vectorStore = new();
-
-    /// <inheritdoc />
-    public override Task<MemoryContext> LoadContextAsync()
+    public VectorMemoryMode(
+        object? vectorDb = null,
+        object? semanticKernel = null,
+        bool enabled = false)
     {
-        // 模拟用户输入 (Simulate user input for retrieval)
-        var userInput = "用户最近问了关于项目截止日期的问题 (User recently asked about the project deadline)";
-
-        // 模拟向量检索 (Simulate vector retrieval)
-        var relevantSnippets = _vectorStore
-            .Where(item => item.text.Contains("截止日期") || item.text.Contains("deadline")) // 简单模拟语义搜索 (Simple simulation of semantic search)
-            .Select(item => item.text)
-            .ToList();
-
-        var context = new MemoryContext
-        {
-            // 向量记忆主要提供知识片段，历史消息可能由短期记忆补充 (Vector memory mainly provides knowledge snippets, history may be supplemented by short-term memory)
-            KnowledgeSnippets = relevantSnippets,
-            Summary = $"检索到 {relevantSnippets.Count} 条相关知识片段 (Retrieved {relevantSnippets.Count} relevant knowledge snippets)."
-        };
-        return Task.FromResult(context);
+        _vectorDb = vectorDb;
+        _semanticKernel = semanticKernel;
+        _enabled = enabled;
     }
 
     /// <inheritdoc />
-    public override Task SaveUpdateAsync(MemoryUpdate update)
+    public override async Task<MemoryContext> LoadContextAsync()
     {
-        if (!string.IsNullOrEmpty(update.NewMessage))
+        if (!_enabled || _vectorDb == null)
         {
-            // 模拟将新消息转换为向量并存储 (Simulate converting new message to vector and storing)
-            // 实际应用中，这里会调用 IEmbeddingService (In a real app, IEmbeddingService would be called here)
-            var mockVector = new float[] { 0.1f, 0.2f, 0.3f }; // 模拟向量 (Mock vector)
-            _vectorStore.Add((update.NewMessage, mockVector));
-            Console.WriteLine($"[VectorMemory] Stored new message as vector for Conversation {ConversationId}.");
+            return new MemoryContext
+            {
+                Summary = "Vector Memory is disabled or service is missing."
+            };
         }
-        // 向量记忆模式通常不直接处理 Summary 和 AbilityLog，而是将它们也向量化存储 (Vector memory mode usually vectorizes Summary and AbilityLog for storage)
-        return Task.CompletedTask;
+
+        try
+        {
+            // 以当前会话 ID 作为默认检索线索 (Use conversationId as search context)
+            var collectionName = $"agent_memory_{ConversationId}";
+            
+            // 这里简单模拟一个检索查询，实际应根据当前上下文构建 (Simulate a search query)
+            // Use dynamic to avoid lambda dispatch error
+            var searchOptions = new { TopK = 5 };
+            var searchResult = await _vectorDb.SearchByTextAsync(collectionName, "recent history", null);
+            var relevantSnippets = new List<string>();
+            
+            if (searchResult != null && searchResult.Matches != null)
+            {
+                foreach (dynamic match in searchResult.Matches)
+                {
+                    if (match.Content != null)
+                    {
+                        relevantSnippets.Add(match.Content);
+                    }
+                }
+            }
+
+            return new MemoryContext
+            {
+                KnowledgeSnippets = relevantSnippets,
+                Summary = $"检索到 {relevantSnippets.Count} 条相关向量知识片段。"
+            };
+        }
+        catch (Exception ex)
+        {
+            return new MemoryContext { Summary = $"Vector search error: {ex.Message}" };
+        }
     }
 
     /// <inheritdoc />
-    public override Task ClearAsync()
+    public override async Task SaveUpdateAsync(MemoryUpdate update)
     {
-        _vectorStore.Clear();
-        return Task.CompletedTask;
+        if (!_enabled || _vectorDb == null || _semanticKernel == null || string.IsNullOrEmpty(update.NewMessage))
+        {
+            return;
+        }
+
+        try
+        {
+            var collectionName = $"agent_memory_{ConversationId}";
+            var embedding = await _semanticKernel.GenerateEmbeddingAsync(update.NewMessage);
+
+            // Use dynamic object to represent VectorDocument to bypass type check issues
+            // but ensure we match the property names of VectorDocument
+            var doc = new
+            {
+                Id = Guid.NewGuid().ToString(),
+                Content = update.NewMessage,
+                Embedding = (float[])embedding,
+                Metadata = new Dictionary<string, object>
+                {
+                    { "ConversationId", ConversationId },
+                    { "Timestamp", DateTime.UtcNow }
+                },
+                Modality = 0 // Modality.Text is usually 0
+            };
+
+            var documents = new List<object> { doc };
+            await _vectorDb.AddDocumentsAsync(collectionName, documents);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[VectorMemory] Error saving update: {ex.Message}");
+        }
+    }
+
+    /// <inheritdoc />
+    public override async Task ClearAsync()
+    {
+        if (_enabled && _vectorDb != null)
+        {
+            var collectionName = $"agent_memory_{ConversationId}";
+            try
+            {
+                await _vectorDb.DeleteCollectionAsync(collectionName);
+            }
+            catch { /* Ignore if collection doesn't exist */ }
+        }
     }
 }
 

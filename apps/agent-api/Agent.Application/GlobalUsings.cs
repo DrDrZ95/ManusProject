@@ -1,3 +1,4 @@
+global using Agent.Application.Cache;
 global using Agent.Application.Hubs;
 global using Agent.Application.Services.Finetune;
 global using Agent.Application.Services.Memory;
