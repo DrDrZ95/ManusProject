@@ -1,55 +1,94 @@
 
+using Microsoft.Extensions.Options;
+using StackExchange.Redis;
+using System.Security.Claims;
+
 namespace Agent.Metering.Middleware
 {
-    /// <summary>
-    /// API请求限流中间件
-    /// </summary>
     public class RateLimitingMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<RateLimitingMiddleware> _logger;
-        private static readonly ConcurrentDictionary<string, (DateTime FirstRequest, int RequestCount)> _clientRequestCounts = new ConcurrentDictionary<string, (DateTime, int)>();
-        private readonly int _maxRequests;
-        private readonly TimeSpan _timeWindow;
+        private readonly IConnectionMultiplexer _redis;
+        private readonly RateLimitOptions _options;
 
-        public RateLimitingMiddleware(RequestDelegate next, ILogger<RateLimitingMiddleware> logger)
+        private const string Script = @"
+local key = KEYS[1]
+local capacity = tonumber(ARGV[1])
+local rate = tonumber(ARGV[2])
+local now = tonumber(ARGV[3])
+local ttl = tonumber(ARGV[4])
+
+local tokens = tonumber(redis.call('HGET', key, 'tokens')) or capacity
+local ts = tonumber(redis.call('HGET', key, 'ts')) or now
+
+local delta = math.max(0, now - ts)
+tokens = math.min(capacity, tokens + delta * rate)
+
+local allowed = 0
+if tokens >= 1 then
+  tokens = tokens - 1
+  allowed = 1
+end
+
+redis.call('HSET', key, 'tokens', tokens, 'ts', now)
+redis.call('EXPIRE', key, ttl)
+
+local remaining = math.floor(tokens)
+local reset = 0
+if tokens < 1 then
+  reset = math.ceil((1 - tokens) / rate)
+end
+
+return {allowed, remaining, reset}
+";
+
+        public RateLimitingMiddleware(
+            RequestDelegate next,
+            ILogger<RateLimitingMiddleware> logger,
+            IConnectionMultiplexer redis,
+            IOptions<RateLimitOptions> options)
         {
             _next = next;
             _logger = logger;
-            _maxRequests = 5; // 示例：每5秒最多5个请求
-            _timeWindow = TimeSpan.FromSeconds(5);
+            _redis = redis;
+            _options = options.Value;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {
-            var clientIp = context.Connection.RemoteIpAddress?.ToString();
-            if (string.IsNullOrEmpty(clientIp))
-            {
-                await _next(context);
-                return;
-            }
+            var userId = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var isAdmin = context.User?.IsInRole("admin") == true || context.User?.IsInRole("Administrator") == true;
+            var identity = !string.IsNullOrEmpty(userId) ? userId : (context.Connection.RemoteIpAddress?.ToString() ?? "unknown");
 
-            // 1. 获取或创建客户端请求计数
-            var clientEntry = _clientRequestCounts.GetOrAdd(clientIp, _ => (DateTime.UtcNow, 0));
+            var rpm = !string.IsNullOrEmpty(userId)
+                ? (isAdmin ? _options.AdminRpm : _options.AuthenticatedRpm)
+                : _options.AnonymousRpm;
 
-            // 2. 检查时间窗口
-            if ((DateTime.UtcNow - clientEntry.FirstRequest) > _timeWindow)
-            {
-                // 超过时间窗口，重置计数
-                _clientRequestCounts.TryUpdate(clientIp, (DateTime.UtcNow, 1), clientEntry);
-            }
-            else
-            {
-                // 仍在时间窗口内，增加计数
-                _clientRequestCounts.TryUpdate(clientIp, (clientEntry.FirstRequest, clientEntry.RequestCount + 1), clientEntry);
-            }
+            var capacity = rpm;
+            var ratePerSecond = rpm / 60.0;
+            var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var ttlSeconds = 60;
 
-            // 3. 检查请求是否超过限制
-            if (_clientRequestCounts[clientIp].RequestCount > _maxRequests)
+            var key = $"ratelimit:{identity}";
+
+            var db = _redis.GetDatabase();
+            var result = (RedisResult[])(await db.ScriptEvaluateAsync(
+                Script,
+                new RedisKey[] { key },
+                new RedisValue[] { capacity, ratePerSecond, now, ttlSeconds }));
+
+            var allowed = (int)result[0] == 1;
+            var remaining = (int)result[1];
+            var reset = (int)result[2];
+
+            context.Response.Headers["X-RateLimit-Remaining"] = remaining.ToString();
+            context.Response.Headers["X-RateLimit-Reset"] = reset.ToString();
+
+            if (!allowed)
             {
-                _logger.LogWarning("Rate limit exceeded for IP: {ClientIp}", clientIp);
-                context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests; // 429 Too Many Requests
-                await context.Response.WriteAsync("Too many requests. Please try again later.");
+                context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                await context.Response.WriteAsync("Too many requests");
                 return;
             }
 
@@ -57,9 +96,13 @@ namespace Agent.Metering.Middleware
         }
     }
 
-    /// <summary>
-    /// RateLimitingMiddleware的扩展方法
-    /// </summary>
+    public sealed class RateLimitOptions
+    {
+        public int AnonymousRpm { get; set; } = 30;
+        public int AuthenticatedRpm { get; set; } = 200;
+        public int AdminRpm { get; set; } = 1000;
+    }
+
     public static class RateLimitingMiddlewareExtensions
     {
         public static IApplicationBuilder UseRateLimiting(this IApplicationBuilder builder)

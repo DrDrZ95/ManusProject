@@ -7,6 +7,7 @@ builder.Services.Configure<MeteringOptions>(builder.Configuration.GetSection("Me
 builder.Services.AddEbpfMetering();
 builder.Services.AddOpenTelemetryServices("Agent.Metering", "1.0.0");
 builder.Services.AddCoreServices();
+builder.Services.Configure<Agent.Metering.Middleware.RateLimitOptions>(builder.Configuration.GetSection("RateLimiting"));
 
 var app = builder.Build();
 
