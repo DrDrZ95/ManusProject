@@ -321,20 +321,27 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend }) => {
                </button>
 
                <div className="text-center w-full flex flex-col items-center">
-                  <div className="mb-4 relative">
+                  <div className="mb-4 relative flex items-center justify-center">
+                     {/* Outer Glow Ring for Dark Mode */}
+                     {isRecording && (
+                        <div className="absolute inset-0 rounded-full bg-red-500/20 dark:bg-red-500/10 blur-xl scale-150 animate-pulse pointer-events-none" />
+                     )}
+
                      <button 
                         onClick={handleVoiceInteraction}
                         className={clsx(
-                           "w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl border-4",
+                           "w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl border-4 relative z-10",
                            isRecording 
-                            ? "bg-red-500 border-red-100 scale-110 shadow-red-200" 
-                            : "bg-black border-gray-100 hover:bg-gray-800 hover:scale-105"
+                            ? "bg-red-500 dark:bg-red-600 border-red-100 dark:border-red-500/30 scale-110 shadow-red-200 dark:shadow-none" 
+                            : "bg-black dark:bg-[#1E1F20] border-gray-100 dark:border-[#333537] hover:bg-gray-800 dark:hover:bg-[#2D2E2F] hover:scale-105 dark:shadow-black/50"
                         )}
                      >
                         <Icons.Mic className="w-8 h-8 text-white" />
                      </button>
+                     
+                     {/* Ping Animation Ring */}
                      {isRecording && (
-                        <div className="absolute inset-0 rounded-full border-4 border-red-200 animate-ping opacity-75"></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-red-200 dark:border-red-500/30 animate-ping opacity-75 pointer-events-none"></div>
                      )}
                   </div>
                   <p className="text-sm font-medium text-gray-600 dark:text-[#C4C7C5] text-center">
