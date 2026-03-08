@@ -6,6 +6,7 @@ import { Icons } from './icons';
 import clsx from 'clsx';
 import { translations } from '../locales';
 import { Globe, Code2, Image as ImageIcon, Database, ShieldAlert, Cpu, Volume2, Sparkles, MessageSquare, Upload } from 'lucide-react';
+import { OpenClaw } from '@lobehub/icons';
 
 const ModalBackdrop: React.FC<{ children: React.ReactNode; onClose: () => void }> = ({ children, onClose }) => (
   <motion.div 
@@ -582,8 +583,8 @@ export const UserModals: React.FC = () => {
 
                     {settingsTab === 'about' && (
                          <div className="flex flex-col items-center justify-center h-full animate-fadeIn text-center space-y-6">
-                            <div className="w-20 h-20 bg-black dark:bg-white text-white dark:text-black rounded-3xl flex items-center justify-center shadow-2xl">
-                                <Icons.Zap className="w-10 h-10" fill="currentColor" />
+                            <div className="w-24 h-24 flex items-center justify-center">
+                                <OpenClaw.Color style={{ width: '100%', height: '100%' }} />
                             </div>
                             <div>
                                 <h2 className="text-2xl font-black text-gray-900 dark:text-[#E3E3E3] tracking-tighter">Agent UI</h2>
