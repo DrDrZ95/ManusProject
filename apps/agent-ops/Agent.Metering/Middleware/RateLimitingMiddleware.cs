@@ -1,8 +1,3 @@
-
-using Microsoft.Extensions.Options;
-using StackExchange.Redis;
-using System.Security.Claims;
-
 namespace Agent.Metering.Middleware
 {
     public class RateLimitingMiddleware
