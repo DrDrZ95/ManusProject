@@ -95,7 +95,7 @@ public static class SemanticKernelExtensions
         services.AddScoped<IPluginOrchestrationService, PluginOrchestrationService>();
 
         // Register Semantic Kernel facade service - 注册语义内核门面服务
-        services.AddScoped<ISemanticKernelService, SemanticKernelServiceFacade>();
+        services.AddScoped<ISemanticKernelService, SemanticKernelService>();
 
         return services;
     }
@@ -187,7 +187,7 @@ public static class SemanticKernelExtensions
         services.AddScoped<IPluginOrchestrationService, PluginOrchestrationService>();
 
         // Register Semantic Kernel facade service - 注册语义内核门面服务
-        services.AddScoped<ISemanticKernelService, SemanticKernelServiceFacade>();
+        services.AddScoped<ISemanticKernelService, SemanticKernelService>();
 
         return services;
     }

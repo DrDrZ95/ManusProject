@@ -1,12 +1,12 @@
 namespace Agent.Application.Services.SemanticKernel;
 
-public class SemanticKernelServiceFacade : ISemanticKernelService
+public class SemanticKernelService : ISemanticKernelService
 {
     private readonly ILlmChatService _chatService;
     private readonly IEmbeddingAndMemoryService _memoryService;
     private readonly IPluginOrchestrationService _pluginService;
 
-    public SemanticKernelServiceFacade(
+    public SemanticKernelService(
         ILlmChatService chatService,
         IEmbeddingAndMemoryService memoryService,
         IPluginOrchestrationService pluginService)
