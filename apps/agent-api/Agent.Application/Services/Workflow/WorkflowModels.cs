@@ -1,5 +1,43 @@
 namespace Agent.Application.Services.Workflow;
 
+public class WorkflowStepDto
+{
+    public string Text { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public List<int> DependsOn { get; set; } = new();
+    public string? Condition { get; set; }
+}
+
+public class CreatePlanRequest
+{
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public List<WorkflowStepDto> Steps { get; set; } = new();
+    public List<string> ExecutorKeys { get; set; } = new();
+    public Dictionary<string, object> Metadata { get; set; } = new();
+    public string? UserGoal { get; set; }
+}
+
+public class GeneratePlanFromGoalRequest
+{
+    public string Goal { get; set; } = string.Empty;
+}
+
+public class SyncToDoListRequest
+{
+    public string FilePath { get; set; } = string.Empty;
+}
+
+public class LoadToDoListRequest
+{
+    public string FilePath { get; set; } = string.Empty;
+}
+
+public class SaveToDoListRequest
+{
+    public string FilePath { get; set; } = string.Empty;
+}
+
 public class WorkflowProgress { 
     public int CompletedSteps { get; set; }
     public int TotalSteps { get; set; }

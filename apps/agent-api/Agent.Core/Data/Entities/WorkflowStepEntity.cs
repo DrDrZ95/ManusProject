@@ -84,6 +84,17 @@ public class WorkflowStepEntity
     /// </summary>
     public bool IsBreakpoint { get; set; } = false;
 
+    /// <summary>
+    /// 前置依赖步骤索引列表 (JSON stored list of prerequisite step indices)
+    /// </summary>
+    [Column(TypeName = "jsonb")]
+    public string? DependsOnJson { get; set; }
+
+    /// <summary>
+    /// 执行该步骤的条件表达式 (Conditional expression for executing this step)
+    /// </summary>
+    public string? Condition { get; set; }
+
     // 导航属性 (Navigation Property)
     /// <summary>
     /// 所属的工作流计划 (The parent workflow plan)

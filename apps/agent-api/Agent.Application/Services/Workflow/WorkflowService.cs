@@ -85,6 +85,70 @@ public class WorkflowService : IWorkflowService
         return newEngine;
     }
 
+    /// <inheritdoc />
+    public async Task<WorkflowPlan> GeneratePlanFromGoalAsync(string goal, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Generating plan from goal: {Goal}", goal);
+
+        var prompt = $@"基于以下目标生成一个结构化的工作流计划：
+目标：{goal}
+
+请返回一个 JSON 对象，包含以下结构：
+{{
+  ""title"": ""计划标题"",
+  ""description"": ""计划描述"",
+  ""steps"": [
+    {{
+      ""text"": ""步骤描述"",
+      ""type"": ""task/tool"",
+      ""dependsOn"": [],
+      ""condition"": null
+    }}
+  ]
+}}
+请确保 JSON 格式正确且易于解析。";
+
+        var response = await _serviceProvider.GetRequiredService<ISemanticKernelService>().ExecutePromptAsync(prompt);
+        
+        // 解析生成的 JSON 计划 (Parsing generated JSON plan)
+        try 
+        {
+            var jsonStart = response.IndexOf('{');
+            var jsonEnd = response.LastIndexOf('}');
+            if (jsonStart >= 0 && jsonEnd > jsonStart)
+            {
+                response = response.Substring(jsonStart, jsonEnd - jsonStart + 1);
+            }
+
+            var generatedRequest = JsonSerializer.Deserialize<CreatePlanRequest>(response, new JsonSerializerOptions 
+            { 
+                PropertyNameCaseInsensitive = true 
+            });
+
+            if (generatedRequest != null)
+            {
+                generatedRequest.UserGoal = goal;
+                return await CreatePlanAsync(generatedRequest, cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to parse LLM generated plan: {Response}", response);
+        }
+
+        // 回退逻辑 (Fallback logic)
+        return await CreatePlanAsync(new CreatePlanRequest
+        {
+            Title = $"Auto Plan: {goal}",
+            Description = $"Automatically generated plan for: {goal}",
+            UserGoal = goal,
+            Steps = new List<WorkflowStepDto>
+            {
+                new WorkflowStepDto { Text = goal, Type = "task" }
+            }
+        }, cancellationToken);
+    }
+
     /// <summary>
     /// Create a new workflow plan
     /// 创建新的工作流计划
@@ -112,13 +176,15 @@ public class WorkflowService : IWorkflowService
             {
                 for (int i = 0; i < request.Steps.Count; i++)
                 {
-                    var stepText = request.Steps[i];
+                    var stepDto = request.Steps[i];
                     plan.Steps.Add(new WorkflowStep
                     {
                         Index = i,
-                        Text = stepText,
-                        Type = ExtractStepType(stepText),
-                        Status = PlanStepStatus.NotStarted
+                        Text = stepDto.Text,
+                        Type = string.IsNullOrEmpty(stepDto.Type) ? ExtractStepType(stepDto.Text) : stepDto.Type,
+                        Status = PlanStepStatus.NotStarted,
+                        DependsOn = stepDto.DependsOn,
+                        Condition = stepDto.Condition
                     });
                 }
             }
@@ -138,7 +204,6 @@ public class WorkflowService : IWorkflowService
                 resultPlan.CurrentState,
                 _notificationService,
                 _repository,
-                // These will be resolved by DI in a real scenario
                 _serviceProvider.GetRequiredService<ISemanticKernelService>(),
                 _serviceProvider.GetRequiredService<ISmartToolSelector>(),
                 _loggerFactory.CreateLogger<WorkflowExecutionEngine>(),
@@ -564,10 +629,86 @@ public class WorkflowService : IWorkflowService
         }
     }
 
+    /// <inheritdoc />
+    public async Task<bool> SyncPlanFromToDoListAsync(string planId, string filePath, CancellationToken cancellationToken = default)
+    {
+        if (!Guid.TryParse(planId, out var id)) return false;
+
+        try 
+        {
+            if (!File.Exists(filePath))
+            {
+                _logger.LogWarning("Todo list file not found for sync: {FilePath}", filePath);
+                return false;
+            }
+
+            var content = await File.ReadAllTextAsync(filePath, cancellationToken);
+            var updatedSteps = ParseToDoList(content);
+
+            var planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
+            if (planEntity == null) return false;
+
+            var plan = WorkflowPlanMappingExtensions.ToModel(planEntity);
+
+            // 同步步骤状态 (Sync step statuses)
+            foreach (var updatedStep in updatedSteps)
+            {
+                var existingStep = plan.Steps.FirstOrDefault(s => s.Index == updatedStep.Index);
+                if (existingStep != null)
+                {
+                    existingStep.Status = updatedStep.Status;
+                    existingStep.Text = updatedStep.Text;
+                }
+                else 
+                {
+                    plan.Steps.Add(updatedStep);
+                }
+            }
+
+            await _repository.UpdatePlanStepsAsync(id, plan.Steps);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error syncing plan from todo list file: {PlanId}", planId);
+            return false;
+        }
+    }
+
+    private List<WorkflowStep> ParseToDoList(string content)
+    {
+        var steps = new List<WorkflowStep>();
+        var lines = content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        int currentIndex = 0;
+
+        foreach (var line in lines)
+        {
+            // 匹配 Markdown 任务列表格式 (Match Markdown task list format)
+            // - [x] Task description
+            // - [ ] Task description
+            var match = Regex.Match(line, @"^\s*-\s*\[(x| )\]\s*(.*)$", RegexOptions.IgnoreCase);
+            if (match.Success)
+            {
+                bool isCompleted = match.Groups[1].Value.ToLower() == "x";
+                string taskText = match.Groups[2].Value.Trim();
+
+                steps.Add(new WorkflowStep
+                {
+                    Index = currentIndex++,
+                    Text = taskText,
+                    Status = isCompleted ? PlanStepStatus.Completed : PlanStepStatus.NotStarted,
+                    Type = ExtractStepType(taskText)
+                });
+            }
+        }
+
+        return steps;
+    }
+
     /// <summary>
     /// Generate todo list file content for a plan
-    /// 为计划生成待办事项列表文件内容
-    /// 
+    /// 为计划生成待办事项列表内容
+    /// </summary>
     /// 这是AI-Agent中的核心功能，生成markdown格式的任务列表
     /// This is a core feature from AI-Agent, generating markdown format task lists
     /// </summary>
@@ -651,7 +792,7 @@ public class WorkflowService : IWorkflowService
             {
                 var match = System.Text.RegularExpressions.Regex.Match(l, @"- \[.\] (.*?)( \(结果: .*\))?$");
                 return match.Success ? match.Groups[1].Value.Trim() : string.Empty;
-            }).Where(s => !string.IsNullOrEmpty(s)).ToList();
+            }).Where(s => !string.IsNullOrEmpty(s)).Select(s => new WorkflowStepDto { Text = s, Type = "task" }).ToList();
 
             var createRequest = new CreatePlanRequest
             {
@@ -850,7 +991,7 @@ public class WorkflowService : IWorkflowService
         {
             Title = plan.Title,
             Description = plan.Description,
-            Steps = plan.Steps.Select(s => s.Text).ToList(),
+            Steps = plan.Steps.Select(s => new WorkflowStepDto { Text = s.Text, Type = s.Type, DependsOn = s.DependsOn, Condition = s.Condition }).ToList(),
             ExecutorKeys = plan.ExecutorKeys,
             Metadata = plan.Metadata
         };

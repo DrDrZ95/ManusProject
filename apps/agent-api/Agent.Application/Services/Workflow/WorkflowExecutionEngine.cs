@@ -237,8 +237,15 @@ public class WorkflowExecutionEngine : IWorkflowEngine
 
         try
         {
-            var plan = await _workflowRepository.GetPlanByIdAsync(_planId, default);
-            if (plan == null || _context.CurrentStepIndex >= plan.Steps.Count)
+            var planEntity = await _workflowRepository.GetPlanByIdAsync(_planId, default);
+            if (planEntity == null)
+            {
+                await TriggerEventAsync(WorkflowEvent.ExecutionComplete);
+                return;
+            }
+
+            var plan = WorkflowPlanMappingExtensions.ToModel(planEntity);
+            if (_context.CurrentStepIndex >= plan.Steps.Count)
             {
                 await TriggerEventAsync(WorkflowEvent.ExecutionComplete);
                 return;
@@ -246,9 +253,49 @@ public class WorkflowExecutionEngine : IWorkflowEngine
 
             var currentStep = plan.Steps.First(s => s.Index == _context.CurrentStepIndex);
 
+            // 检查前置依赖 (Check prerequisites)
+            if (currentStep.DependsOn != null && currentStep.DependsOn.Any())
+            {
+                foreach (var depIndex in currentStep.DependsOn)
+                {
+                    var depStep = plan.Steps.FirstOrDefault(s => s.Index == depIndex);
+                    if (depStep != null && depStep.Status != PlanStepStatus.Completed)
+                    {
+                        _logger.LogInformation("Step {StepIndex} waiting for prerequisite {PrereqIndex}", currentStep.Index, depIndex);
+                        // 如果前置未完成，且不是正在运行，则可能需要干预或跳过 (Wait or handle appropriately)
+                    }
+                }
+            }
+
+            // 检查执行条件 (Check execution condition)
+            if (!string.IsNullOrEmpty(currentStep.Condition))
+            {
+                bool shouldExecute = await EvaluateConditionAsync(currentStep.Condition);
+                if (!shouldExecute)
+                {
+                    _logger.LogInformation("Step {StepIndex} condition not met, skipping: {Condition}", currentStep.Index, currentStep.Condition);
+                    await _workflowRepository.UpdateStepStatusAndResultAsync(_planId, currentStep.Index, PlanStepStatus.Skipped, "Condition not met", null, _stepStartTime, DateTime.UtcNow);
+                    await TriggerEventAsync(WorkflowEvent.StepComplete);
+                    return;
+                }
+            }
+
             await _workflowRepository.UpdateStepStatusAndResultAsync(_planId, currentStep.Index, PlanStepStatus.InProgress, null, null, _stepStartTime, default);
 
             var recommendedTools = await _smartToolSelector.RecommendToolsAsync(currentStep.Text, 3);
+            
+            // 基于 ExecutorKeys 进行过滤 (Filter based on ExecutorKeys if specified)
+            if (plan.ExecutorKeys != null && plan.ExecutorKeys.Any())
+            {
+                recommendedTools = recommendedTools.Where(t => 
+                    plan.ExecutorKeys.Contains(t.PluginName) || 
+                    plan.ExecutorKeys.Contains(t.FunctionName) ||
+                    plan.ExecutorKeys.Contains($"{t.PluginName}.{t.FunctionName}"));
+                
+                _logger.LogInformation("Filtered tools for step {StepIndex} based on ExecutorKeys. Remaining: {Count}", 
+                    currentStep.Index, recommendedTools.Count());
+            }
+
             var bestTool = await _smartToolSelector.SelectBestToolAsync(currentStep.Text, recommendedTools);
 
             if (bestTool == null)
@@ -256,17 +303,23 @@ public class WorkflowExecutionEngine : IWorkflowEngine
                 throw new InvalidOperationException($"No suitable tool found for step: {currentStep.Text}");
             }
 
-            // TODO: Extract arguments from step text
+            // 记录思考过程 (Record thinking process)
+            var thinkingPrompt = $@"You are an AI Agent. You are about to execute the following step: '{currentStep.Text}' 
+using tool: {bestTool.PluginName}.{bestTool.FunctionName}.
+Explain your reasoning for this action within <thinking> tags.";
+            
+            var thinkingResult = await _semanticKernelService.ExecutePromptAsync(thinkingPrompt);
+            ExtractAndRecordThinking(thinkingResult);
+
             var arguments = new Dictionary<string, object>(); 
             var result = await _semanticKernelService.InvokeFunctionAsync<string>(bestTool.PluginName, bestTool.FunctionName, arguments);
 
             _context.IntermediateResults[currentStep.Index.ToString()] = result;
 
-            // Check for dynamic task injection
-            if (result.Contains("inject_tasks"))
+            // 动态任务注入 (Dynamic task injection)
+            if (result.Contains("inject_tasks") || result.Contains("new_steps"))
             {
-                // Placeholder for parsing and injecting tasks
-                // await InjectDynamicTasksAsync(...);
+                await InjectDynamicTasksAsync(result);
             }
 
             await _workflowRepository.UpdateStepStatusAndResultAsync(_planId, currentStep.Index, PlanStepStatus.Completed, result, null, _stepStartTime, DateTime.UtcNow);
@@ -275,6 +328,73 @@ public class WorkflowExecutionEngine : IWorkflowEngine
         catch (Exception ex)
         {
             await HandleExecutionErrorAsync(ex, "Failed to execute step");
+        }
+    }
+
+    private async Task<bool> EvaluateConditionAsync(string condition)
+    {
+        // 简化的条件评估逻辑 (Simplified condition evaluation)
+        // 在生产环境中应使用表达式解析器 (Use expression parser in production)
+        try 
+        {
+            if (condition.ToLower().Contains("success")) return true;
+            // 检查中间结果 (Check intermediate results)
+            foreach (var res in _context.IntermediateResults)
+            {
+                if (condition.Contains($"step[{res.Key}].result"))
+                {
+                    var val = res.Value?.ToString() ?? "";
+                    if (condition.Contains("=="))
+                    {
+                        var expected = condition.Split("==")[1].Trim(' ', '\'', '\"');
+                        return val == expected;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error evaluating condition: {Condition}", condition);
+        }
+        return true; // 默认执行 (Execute by default)
+    }
+
+    private void ExtractAndRecordThinking(string content)
+    {
+        var match = Regex.Match(content, @"<thinking>(.*?)</thinking>", RegexOptions.Singleline);
+        if (match.Success)
+        {
+            var thinking = match.Groups[1].Value.Trim();
+            _context.ThinkingHistory.Add(thinking);
+            _logger.LogInformation("[Thinking] {Thinking}", thinking);
+        }
+    }
+
+    private async Task InjectDynamicTasksAsync(string executionResult)
+    {
+        _logger.LogInformation("Injecting dynamic tasks based on result: {Result}", executionResult);
+        try 
+        {
+            var planEntity = await _workflowRepository.GetPlanByIdAsync(_planId, default);
+            if (planEntity == null) return;
+
+            var plan = WorkflowPlanMappingExtensions.ToModel(planEntity);
+
+            // 简单模拟注入 (Simple mock injection)
+            var newStep = new WorkflowStep 
+            { 
+                Index = plan.Steps.Count,
+                Text = "Dynamic Follow-up Task",
+                Type = "task",
+                Status = PlanStepStatus.NotStarted
+            };
+
+            plan.Steps.Add(newStep);
+            await _workflowRepository.UpdatePlanStepsAsync(_planId, plan.Steps);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to inject dynamic tasks");
         }
     }
 

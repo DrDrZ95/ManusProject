@@ -30,6 +30,12 @@ public class WorkflowContext : IWorkflowContext
     /// <inheritdoc />
     public List<ToolCallRecord> ToolCallHistory { get; } = new();
 
+    /// <summary>
+    /// LLM 的思维链记录 (ReAct Chain of Thought history)
+    /// 记录 LLM 在每一步的思考过程。
+    /// </summary>
+    public List<string> ThinkingHistory { get; } = new();
+
     /// <inheritdoc />
     public List<WorkflowError> Errors { get; } = new();
 

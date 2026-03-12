@@ -19,6 +19,15 @@ public interface IWorkflowService
     Task<WorkflowPlan> CreatePlanAsync(CreatePlanRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Create a new workflow plan from a goal using LLM
+    /// 基于目标自动生成工作流计划
+    /// </summary>
+    /// <param name="goal">The goal to achieve - 要实现的目标</param>
+    /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
+    /// <returns>Generated workflow plan - 生成的工作流计划</returns>
+    Task<WorkflowPlan> GeneratePlanFromGoalAsync(string goal, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Get workflow plan by ID
     /// 根据ID获取工作流计划
     /// </summary>
@@ -90,6 +99,12 @@ public interface IWorkflowService
     /// 标记步骤为失败
     /// </summary>
     Task<bool> FailStepAsync(string planId, int stepIndex, string? reason = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sync plan state from a todo list file
+    /// 从待办事项列表文件同步计划状态
+    /// </summary>
+    Task<bool> SyncPlanFromToDoListAsync(string planId, string filePath, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Generate todo list file content for a plan

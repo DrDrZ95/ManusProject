@@ -75,6 +75,44 @@ public class WorkflowController : ControllerBase
         }
     }
 
+    [HttpPost("generate-plan-from-goal")]
+    [SwaggerOperation(
+        Summary = "Generate a new workflow plan from a goal",
+        Description = "Generates a new workflow plan based on the provided goal using LLM.",
+        OperationId = "GenerateWorkflowPlanFromGoal",
+        Tags = new[] { "Workflow" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<WorkflowPlan>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<WorkflowPlan>>> GeneratePlanFromGoal(
+        [FromBody] GeneratePlanFromGoalRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Goal))
+            {
+                return BadRequest(ApiResponse<object>.Fail("Goal is required - 目标是必需的"));
+            }
+
+            var plan = await _workflowService.GeneratePlanFromGoalAsync(request.Goal, cancellationToken);
+
+            _logger.LogInformation("Generated workflow plan from goal: {PlanId}", plan.Id);
+
+            return CreatedAtAction(
+                nameof(GetPlan),
+                new { version = "1.0", planId = plan.Id },
+                ApiResponse<WorkflowPlan>.Ok(plan, "Plan generated successfully from goal"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating workflow plan from goal");
+            return StatusCode(500, ApiResponse<object>.Fail("Internal server error - 内部服务器错误"));
+        }
+    }
+
     /// <summary>
     /// Get workflow plan by ID
     /// 根据ID获取工作流计划
@@ -417,6 +455,54 @@ public class WorkflowController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error loading todo list from file: {FilePath}", request.FilePath);
+            return StatusCode(500, ApiResponse<object>.Fail("Internal server error - 内部服务器错误"));
+        }
+    }
+
+    /// <summary>
+    /// Sync plan from todo list file
+    /// 从待办事项列表文件同步计划
+    /// </summary>
+    /// <param name="planId">Plan ID - 计划ID</param>
+    /// <param name="request">Sync request - 同步请求</param>
+    /// <param name="cancellationToken">Cancellation token - 取消令牌</param>
+    /// <returns>Success status - 成功状态</returns>
+    [HttpPost("{planId}/todo/sync")]
+    [SwaggerOperation(
+        Summary = "Sync plan from todo list file",
+        Description = "Syncs the plan state back from a modified todo list file.",
+        OperationId = "SyncWorkflowPlanFromTodoList",
+        Tags = new[] { "Workflow" }
+    )]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ValidationErrorResponse>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<ErrorResponse>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<object>>> SyncPlanFromToDoList(
+        string planId,
+        [FromBody] SyncToDoListRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.FilePath))
+            {
+                return BadRequest(ApiResponse<object>.Fail("File path is required - 文件路径是必需的"));
+            }
+
+            var success = await _workflowService.SyncPlanFromToDoListAsync(
+                planId, request.FilePath, cancellationToken);
+
+            if (!success)
+            {
+                return NotFound(ApiResponse<object>.Fail($"Plan not found or sync failed - 计划未找到或同步失败"));
+            }
+
+            return Ok(ApiResponse<object>.Ok(null, "Plan synced from todo list file - 计划已从待办事项列表文件同步"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error syncing plan from todo list: {PlanId}, {FilePath}", planId, request.FilePath);
             return StatusCode(500, ApiResponse<object>.Fail("Internal server error - 内部服务器错误"));
         }
     }
