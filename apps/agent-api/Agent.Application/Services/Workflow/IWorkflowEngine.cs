@@ -25,5 +25,10 @@ public interface IWorkflowEngine
     /// </summary>
     /// <returns>工作流上下文模型 (Workflow context model).</returns>
     WorkflowContext GetContext();
+
+    /// <summary>
+    /// 动态注入新任务 (Inject new tasks dynamically).
+    /// </summary>
+    Task InjectDynamicTasksAsync(IEnumerable<string> taskDescriptions);
 }
 

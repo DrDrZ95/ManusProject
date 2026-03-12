@@ -101,12 +101,22 @@ public interface IWorkflowRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Adds a list of steps to a plan.
+    /// </summary>
+    Task AddStepsToPlanAsync(Guid planId, List<WorkflowStep> steps, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates all steps for a plan.
+    /// </summary>
+    Task UpdatePlanStepsAsync(Guid planId, List<WorkflowStep> steps, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// 更新步骤的断点设置 (Update the breakpoint setting for a step)
     /// </summary>
     Task<bool> UpdateStepBreakpointAsync(
         Guid planId,
         int stepIndex,
-        bool isBreakpoint,
+        bool hasBreakpoint,
         CancellationToken cancellationToken = default);
 }
 

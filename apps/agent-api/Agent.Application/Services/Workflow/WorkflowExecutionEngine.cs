@@ -11,6 +11,8 @@ public class WorkflowExecutionEngine : IWorkflowEngine
     private readonly Guid _planId;
     private readonly IWorkflowNotificationService _notificationService;
     private readonly IWorkflowRepository _workflowRepository;
+    private readonly ISemanticKernelService _semanticKernelService;
+    private readonly ISmartToolSelector _smartToolSelector;
     private readonly WorkflowContext _context;
     private readonly ILogger<WorkflowExecutionEngine> _logger;
     private readonly IAgentTraceService? _agentTraceService;
@@ -24,6 +26,8 @@ public class WorkflowExecutionEngine : IWorkflowEngine
         WorkflowState initialState,
         IWorkflowNotificationService notificationService,
         IWorkflowRepository workflowRepository,
+        ISemanticKernelService semanticKernelService, // 注入
+        ISmartToolSelector smartToolSelector, // 注入
         ILogger<WorkflowExecutionEngine> logger,
         IAgentTraceService? agentTraceService = null,
         WorkflowContext? existingContext = null)
@@ -31,6 +35,8 @@ public class WorkflowExecutionEngine : IWorkflowEngine
         _planId = planId;
         _notificationService = notificationService;
         _workflowRepository = workflowRepository;
+        _semanticKernelService = semanticKernelService;
+        _smartToolSelector = smartToolSelector;
         _logger = logger;
         _agentTraceService = agentTraceService;
         _context = existingContext ?? new WorkflowContext(planId.GetHashCode());
@@ -179,7 +185,49 @@ public class WorkflowExecutionEngine : IWorkflowEngine
     private async Task OnPlanningEntry()
     {
         _logger.LogInformation("Workflow {PlanId} planning...", _planId);
-        // Planning logic would go here
+
+        try
+        {
+            // 如果已有步骤，则直接进入执行
+            var plan = await _workflowRepository.GetPlanByIdAsync(_planId, default);
+            if (plan?.Steps.Any() == true)
+            {
+                await TriggerEventAsync(WorkflowEvent.PlanReady);
+                return;
+            }
+
+            if (!_context.InputParameters.TryGetValue("userGoal", out var userGoalObj) || userGoalObj is not string userGoal)
+            {
+                throw new InvalidOperationException("User goal is missing in workflow context.");
+            }
+
+            var planningPrompt = $"Based on the goal: '{userGoal}', generate a JSON array of workflow steps. Each step should be a string. Example: [\"Step 1: Do this\", \"Step 2: Do that\"]";
+            var planJson = await _semanticKernelService.GetChatCompletionAsync(planningPrompt, "You are a planning assistant.");
+
+            var steps = JsonSerializer.Deserialize<List<string>>(planJson);
+            if (steps == null || !steps.Any())
+            {
+                throw new InvalidOperationException("LLM failed to generate a valid plan.");
+            }
+
+            var workflowSteps = steps.Select((s, i) => new WorkflowStep { Index = i, Text = s, Status = PlanStepStatus.NotStarted }).ToList();
+
+            await _workflowRepository.UpdatePlanStepsAsync(_planId, workflowSteps);
+
+            if (workflowSteps.All(s => s.Status == PlanStepStatus.Completed || s.Status == PlanStepStatus.Skipped))
+            {
+                await TriggerEventAsync(WorkflowEvent.ExecutionComplete);
+            }
+            else
+            {
+                await TriggerEventAsync(WorkflowEvent.PlanReady);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Planning failed for workflow {PlanId}", _planId);
+            await TriggerEventAsync(WorkflowEvent.PlanningFailed, new WorkflowError { Message = ex.Message });
+        }
     }
 
     private async Task OnExecutingEntry()
@@ -189,22 +237,44 @@ public class WorkflowExecutionEngine : IWorkflowEngine
 
         try
         {
-            // Update step status to InProgress and set StartedAt
-            await _workflowRepository.UpdateStepStatusAndResultAsync(
-                _planId,
-                _context.CurrentStepIndex,
-                PlanStepStatus.InProgress,
-                null,
-                null,
-                _stepStartTime,
-                default);
+            var plan = await _workflowRepository.GetPlanByIdAsync(_planId, default);
+            if (plan == null || _context.CurrentStepIndex >= plan.Steps.Count)
+            {
+                await TriggerEventAsync(WorkflowEvent.ExecutionComplete);
+                return;
+            }
 
-            // In a real implementation, the actual execution logic would be triggered here.
-            // For now, we assume the step is executed by an external service which will trigger StepComplete/StepFailed.
+            var currentStep = plan.Steps.First(s => s.Index == _context.CurrentStepIndex);
+
+            await _workflowRepository.UpdateStepStatusAndResultAsync(_planId, currentStep.Index, PlanStepStatus.InProgress, null, null, _stepStartTime, default);
+
+            var recommendedTools = await _smartToolSelector.RecommendToolsAsync(currentStep.Text, 3);
+            var bestTool = await _smartToolSelector.SelectBestToolAsync(currentStep.Text, recommendedTools);
+
+            if (bestTool == null)
+            {
+                throw new InvalidOperationException($"No suitable tool found for step: {currentStep.Text}");
+            }
+
+            // TODO: Extract arguments from step text
+            var arguments = new Dictionary<string, object>(); 
+            var result = await _semanticKernelService.InvokeFunctionAsync<string>(bestTool.PluginName, bestTool.FunctionName, arguments);
+
+            _context.IntermediateResults.Add(new WorkflowResult { StepIndex = currentStep.Index, Result = result });
+
+            // Check for dynamic task injection
+            if (result.Contains("inject_tasks"))
+            {
+                // Placeholder for parsing and injecting tasks
+                // await InjectDynamicTasksAsync(...);
+            }
+
+            await _workflowRepository.UpdateStepStatusAndResultAsync(_planId, currentStep.Index, PlanStepStatus.Completed, result, null, _stepStartTime, DateTime.UtcNow);
+            await TriggerEventAsync(WorkflowEvent.StepComplete);
         }
         catch (Exception ex)
         {
-            await HandleExecutionErrorAsync(ex, "Failed to start step execution");
+            await HandleExecutionErrorAsync(ex, "Failed to execute step");
         }
     }
 
@@ -364,5 +434,23 @@ public class WorkflowExecutionEngine : IWorkflowEngine
 
     /// <inheritdoc />
     public WorkflowContext GetContext() => _context;
+
+    public async Task InjectDynamicTasksAsync(IEnumerable<string> taskDescriptions)
+    {
+        var plan = await _workflowRepository.GetPlanByIdAsync(_planId, default);
+        if (plan == null) return;
+
+        var newSteps = taskDescriptions.Select(desc => new WorkflowStep
+        {
+            Text = desc,
+            Status = PlanStepStatus.NotStarted,
+            // Index will be set by the repository
+        }).ToList();
+
+        await _workflowRepository.AddStepsToPlanAsync(_planId, newSteps);
+
+        // Notify UI about the plan update
+        await _notificationService.BroadcastPlanUpdate(_planId.ToString(), plan.ToModel());
+    }
 }
 

@@ -182,6 +182,29 @@ public class WorkflowRepository : IWorkflowRepository
         return Task.FromResult(steps);
     }
 
+    public Task AddStepsToPlanAsync(Guid planId, List<WorkflowStep> steps, CancellationToken cancellationToken = default)
+    {
+        if (_plans.TryGetValue(planId, out var plan))
+        {
+            var maxIndex = plan.Steps.Any() ? plan.Steps.Max(s => s.Index) : -1;
+            foreach (var step in steps)
+            {
+                step.Index = ++maxIndex;
+                plan.Steps.Add(step.ToEntity());
+            }
+        }
+        return Task.CompletedTask;
+    }
+
+    public Task UpdatePlanStepsAsync(Guid planId, List<WorkflowStep> steps, CancellationToken cancellationToken = default)
+    {
+        if (_plans.TryGetValue(planId, out var plan))
+        {
+            plan.Steps = steps.Select(s => s.ToEntity()).ToList();
+        }
+        return Task.CompletedTask;
+    }
+
     /// <summary>
     /// 根据计划ID和步骤索引获取特定步骤 (Get a specific step by plan ID and step index)
     /// </summary>
