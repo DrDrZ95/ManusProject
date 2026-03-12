@@ -260,7 +260,7 @@ public class WorkflowExecutionEngine : IWorkflowEngine
             var arguments = new Dictionary<string, object>(); 
             var result = await _semanticKernelService.InvokeFunctionAsync<string>(bestTool.PluginName, bestTool.FunctionName, arguments);
 
-            _context.IntermediateResults.Add(new WorkflowResult { StepIndex = currentStep.Index, Result = result });
+            _context.IntermediateResults[currentStep.Index.ToString()] = result;
 
             // Check for dynamic task injection
             if (result.Contains("inject_tasks"))
@@ -276,6 +276,62 @@ public class WorkflowExecutionEngine : IWorkflowEngine
         {
             await HandleExecutionErrorAsync(ex, "Failed to execute step");
         }
+    }
+
+    private async Task HandleExecutionErrorAsync(Exception ex, string message)
+    {
+        var error = new WorkflowError
+        {
+            Code = "EXECUTION_ERROR",
+            Message = $"{message}: {ex.Message}",
+            StackTrace = ex.StackTrace,
+            Timestamp = DateTime.UtcNow,
+            Suggestion = GetDiagnosticSuggestion(ex)
+        };
+
+        _context.Errors.Add(error);
+        _logger.LogError(ex, "[WorkflowEngine] {Message} for Plan {PlanId}", message, _planId);
+
+        // Check for automatic recovery (e.g., retry)
+        if (ShouldRetry(error))
+        {
+            _logger.LogInformation("[WorkflowEngine] Attempting automatic retry for Plan {PlanId}", _planId);
+            // In a real implementation, we might decrement a retry counter and stay in Executing or move back to Planning
+            // For now, let's trigger StepFailed if retries are exhausted
+        }
+
+        // If failure count is too high, move to ManualIntervention instead of Failed
+        // This allows for "Rollback" or "Skip" recovery strategies via user action
+        if (_context.Errors.Count >= 3)
+        {
+            await TriggerEventAsync(WorkflowEvent.NeedIntervention, new ManualInterventionInfo
+            {
+                Reason = "Multiple consecutive errors detected. Manual intervention required for recovery."
+            });
+        }
+        else
+        {
+            await TriggerEventAsync(WorkflowEvent.StepFailed);
+        }
+    }
+
+    public async Task InjectDynamicTasksAsync(IEnumerable<string> taskDescriptions)
+    {
+        var plan = await _workflowRepository.GetPlanByIdAsync(_planId, default);
+        if (plan == null) return;
+
+        var newSteps = taskDescriptions.Select(desc => new WorkflowStep
+        {
+            Text = desc,
+            Status = PlanStepStatus.NotStarted,
+            // Index will be set by the repository
+        }).ToList();
+
+        await _workflowRepository.AddStepsToPlanAsync(_planId, newSteps);
+
+        // Notify UI about the plan update
+        var updatedPlan = await _workflowRepository.GetPlanByIdAsync(_planId, default);
+        await _notificationService.BroadcastPlanUpdate(_planId.ToString(), updatedPlan.Adapt<WorkflowPlan>());
     }
 
     private async Task RecordStepPerformanceAsync(bool success)
@@ -315,43 +371,6 @@ public class WorkflowExecutionEngine : IWorkflowEngine
         finally
         {
             _stepStartTime = null;
-        }
-    }
-
-    private async Task HandleExecutionErrorAsync(Exception ex, string message)
-    {
-        var error = new WorkflowError
-        {
-            Code = "EXECUTION_ERROR",
-            Message = $"{message}: {ex.Message}",
-            StackTrace = ex.StackTrace,
-            Timestamp = DateTime.UtcNow,
-            Suggestion = GetDiagnosticSuggestion(ex)
-        };
-
-        _context.Errors.Add(error);
-        _logger.LogError(ex, "[WorkflowEngine] {Message} for Plan {PlanId}", message, _planId);
-
-        // Check for automatic recovery (e.g., retry)
-        if (ShouldRetry(error))
-        {
-            _logger.LogInformation("[WorkflowEngine] Attempting automatic retry for Plan {PlanId}", _planId);
-            // In a real implementation, we might decrement a retry counter and stay in Executing or move back to Planning
-            // For now, let's trigger StepFailed if retries are exhausted
-        }
-
-        // If failure count is too high, move to ManualIntervention instead of Failed
-        // This allows for "Rollback" or "Skip" recovery strategies via user action
-        if (_context.Errors.Count >= 3)
-        {
-            await TriggerEventAsync(WorkflowEvent.NeedIntervention, new ManualInterventionInfo
-            {
-                Reason = "Multiple consecutive errors detected. Manual intervention required for recovery."
-            });
-        }
-        else
-        {
-            await TriggerEventAsync(WorkflowEvent.StepFailed);
         }
     }
 
@@ -434,23 +453,5 @@ public class WorkflowExecutionEngine : IWorkflowEngine
 
     /// <inheritdoc />
     public WorkflowContext GetContext() => _context;
-
-    public async Task InjectDynamicTasksAsync(IEnumerable<string> taskDescriptions)
-    {
-        var plan = await _workflowRepository.GetPlanByIdAsync(_planId, default);
-        if (plan == null) return;
-
-        var newSteps = taskDescriptions.Select(desc => new WorkflowStep
-        {
-            Text = desc,
-            Status = PlanStepStatus.NotStarted,
-            // Index will be set by the repository
-        }).ToList();
-
-        await _workflowRepository.AddStepsToPlanAsync(_planId, newSteps);
-
-        // Notify UI about the plan update
-        await _notificationService.BroadcastPlanUpdate(_planId.ToString(), plan.ToModel());
-    }
 }
 

@@ -81,6 +81,14 @@ public class SemanticKernelOptions
         { "deepseek-chat", new ModelCostInfo { InputCostPer1kTokens = 0.00014, OutputCostPer1kTokens = 0.00028 } },
         { "moonshot-v1", new ModelCostInfo { InputCostPer1kTokens = 0.012, OutputCostPer1kTokens = 0.012 } }
     };
+
+    /// <summary>
+    /// Costs for specific tool calls - 特定工具调用的成本
+    /// </summary>
+    public Dictionary<string, double> ToolCosts { get; set; } = new Dictionary<string, double>
+    {
+        { "default", 0.0001 }
+    };
 }
 
 /// <summary>

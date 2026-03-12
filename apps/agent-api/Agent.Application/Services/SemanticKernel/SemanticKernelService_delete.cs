@@ -4,14 +4,14 @@ namespace Agent.Application.Services.SemanticKernel;
 /// Semantic Kernel service implementation
 /// 语义内核服务实现
 /// </summary>
-public class SemanticKernelService : ISemanticKernelService
+public class SemanticKernelService_delete : ISemanticKernelService
 {
     private readonly Kernel _kernel;
     private readonly IChatCompletionService _chatService;
     private readonly ITextEmbeddingGenerationService _embeddingService;
     private readonly IVectorDatabaseService _vectorDatabase;
     private readonly SemanticKernelOptions _options;
-    private readonly ILogger<SemanticKernelService> _logger;
+    private readonly ILogger<SemanticKernelService_delete> _logger;
     private readonly IKubernetesPlanner _kubernetesPlanner;
     private readonly IIstioPlanner _istioPlanner;
     private readonly IPostgreSQLPlanner _postgreSqlPlanner;
@@ -29,13 +29,13 @@ public class SemanticKernelService : ISemanticKernelService
 
     private readonly ResiliencePipeline _resiliencePipeline;
 
-    public SemanticKernelService(
+    public SemanticKernelService_delete(
         Kernel kernel,
         IChatCompletionService chatService,
         ITextEmbeddingGenerationService embeddingService,
         IVectorDatabaseService vectorDatabase,
         SemanticKernelOptions options,
-        ILogger<SemanticKernelService> logger,
+        ILogger<SemanticKernelService_delete> logger,
         IAgentCacheService cacheService,
         IKubernetesPlanner kubernetesPlanner,
         IIstioPlanner istioPlanner,

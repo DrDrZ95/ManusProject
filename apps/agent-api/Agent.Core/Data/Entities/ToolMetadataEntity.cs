@@ -19,6 +19,18 @@ public class ToolMetadataEntity
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
+    /// 插件名称 (Plugin Name)
+    /// </summary>
+    [MaxLength(100)]
+    public string PluginName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 函数名称 (Function Name)
+    /// </summary>
+    [MaxLength(100)]
+    public string FunctionName { get; set; } = string.Empty;
+
+    /// <summary>
     /// 工具描述 (Description)
     /// </summary>
     [Required]

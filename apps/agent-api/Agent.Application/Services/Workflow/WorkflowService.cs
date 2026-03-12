@@ -75,6 +75,8 @@ public class WorkflowService : IWorkflowService
             planEntity.CurrentState,
             _notificationService,
             _repository,
+            _serviceProvider.GetRequiredService<ISemanticKernelService>(),
+            _serviceProvider.GetRequiredService<ISmartToolSelector>(),
             _loggerFactory.CreateLogger<WorkflowExecutionEngine>(),
             _agentTraceService,
             existingContext);
@@ -121,9 +123,9 @@ public class WorkflowService : IWorkflowService
                 }
             }
 
-            var planEntity = plan.ToEntity();
+            var planEntity = WorkflowPlanMappingExtensions.ToEntity(plan);
             var addedEntity = await _repository.AddPlanAsync(planEntity, cancellationToken);
-            var resultPlan = addedEntity.ToModel();
+            var resultPlan = WorkflowPlanMappingExtensions.ToModel(addedEntity);
 
             var context = new WorkflowContext(resultPlan.Id.GetHashCode());
             if (!string.IsNullOrEmpty(request.UserGoal))
@@ -171,7 +173,7 @@ public class WorkflowService : IWorkflowService
 
         var entity = await _repository.GetPlanByIdAsync(id, cancellationToken);
 
-        var model = entity?.ToModel();
+        var model = WorkflowPlanMappingExtensions.ToModel(entity);
 
         // 如果存在，确保引擎已加载 (If exists, ensure engine is loaded)
         if (model != null && !_engines.ContainsKey(model.Id))
@@ -190,7 +192,7 @@ public class WorkflowService : IWorkflowService
     {
         var entities = await _repository.GetAllPlansAsync(cancellationToken);
 
-        var models = entities.Select(e => e.ToModel()).ToList();
+        var models = entities.Select(e => WorkflowPlanMappingExtensions.ToModel(e)).ToList();
 
         // 确保所有计划的引擎都已加载 (Ensure all plan engines are loaded)
         foreach (var model in models)
@@ -401,25 +403,25 @@ public class WorkflowService : IWorkflowService
 
         // 查找第一个活动步骤 - Find first active step
         var activeStepEntity = planEntity.Steps
-            .OrderBy(s => s.Index)
-            .FirstOrDefault(s => s.Status.IsActive());
+                .OrderBy(s => s.Index)
+                .FirstOrDefault(s => (s.Status == PlanStepStatus.NotStarted || s.Status == PlanStepStatus.InProgress));
 
         if (activeStepEntity != null)
-        {
-            // 如果步骤未开始，标记为进行中 - If step not started, mark as in progress
-            if (activeStepEntity.Status == PlanStepStatus.NotStarted)
             {
-                // 自动将状态更新为 InProgress
-                await UpdateStepStatusAsync(planId, activeStepEntity.Index, PlanStepStatus.InProgress, cancellationToken);
-                // 触发状态机转换 (Trigger state machine transition)
-                await TriggerStateTransitionAsync(planId, WorkflowEvent.StartTask, null, cancellationToken);
-                // 重新获取更新后的实体 (Re-fetch the updated entity)
-                planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
-                activeStepEntity = planEntity?.Steps.FirstOrDefault(s => s.Index == activeStepEntity.Index);
-            }
+                // 如果步骤未开始，标记为进行中 - If step not started, mark as in progress
+                if (activeStepEntity.Status == PlanStepStatus.NotStarted)
+                {
+                    // 自动将状态更新为 InProgress
+                    await UpdateStepStatusAsync(planId, activeStepEntity.Index, PlanStepStatus.InProgress, cancellationToken);
+                    // 触发状态机转换 (Trigger state machine transition)
+                    await TriggerStateTransitionAsync(planId, WorkflowEvent.StartTask, null, cancellationToken);
+                    // 重新获取更新后的实体 (Re-fetch the updated entity)
+                    planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
+                    activeStepEntity = planEntity?.Steps.FirstOrDefault(s => s.Index == activeStepEntity.Index);
+                }
 
-            return activeStepEntity?.ToModel();
-        }
+                return activeStepEntity.Adapt<WorkflowStep>();
+            }
 
         // 没有找到活动步骤 - No active step found
         return null;
@@ -797,33 +799,32 @@ public class WorkflowService : IWorkflowService
 
         var report = new WorkflowPerformanceReport
         {
-            PlanId = plan.Id.ToString(),
+            PlanId = plan.Id,
             Title = plan.Title,
-            StepMetrics = plan.Steps.Select(s => new StepPerformanceMetric
+            StepMetrics = plan.Steps.ToDictionary(s => s.Index, s => new StepPerformanceMetric
             {
-                Index = s.Index,
                 Text = s.Text,
-                Type = s.Type,
-                Status = s.Status,
                 Duration = (s.CompletedAt ?? DateTime.UtcNow) - (s.StartedAt ?? DateTime.UtcNow),
+                IsSuccess = s.Status == PlanStepStatus.Completed,
                 Cost = 0, // Placeholder
                 IsBottleneck = false
-            }).ToList()
+            })
         };
 
-        report.TotalDuration = report.StepMetrics.Aggregate(TimeSpan.Zero, (sum, m) => sum + m.Duration);
+        report.TotalDuration = report.StepMetrics.Values.Aggregate(TimeSpan.Zero, (sum, m) => sum + m.Duration);
         var completedCount = plan.Steps.Count(s => s.Status == PlanStepStatus.Completed);
         report.SuccessRate = plan.Steps.Count > 0 ? (double)completedCount / plan.Steps.Count : 0;
 
         // Simple bottleneck identification: steps taking > 20% of total time
         if (report.TotalDuration.TotalSeconds > 0)
         {
-            foreach (var metric in report.StepMetrics)
+            foreach (var kvp in report.StepMetrics)
             {
+                var metric = kvp.Value;
                 if (metric.Duration.TotalSeconds / report.TotalDuration.TotalSeconds > 0.2)
                 {
                     metric.IsBottleneck = true;
-                    report.OptimizationSuggestions.Add($"Step {metric.Index} ({metric.Text}) is a bottleneck. Consider parallelization or optimization.");
+                    report.OptimizationSuggestions.Add($"Step {kvp.Key} ({metric.Text}) is a bottleneck. Consider parallelization or optimization.");
                 }
             }
         }

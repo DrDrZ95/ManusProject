@@ -1,3 +1,4 @@
+global using Mapster;
 global using Agent.Application.Cache;
 global using Agent.Application.Hubs;
 global using Agent.Application.Services.Finetune;
@@ -6,7 +7,11 @@ global using Agent.Application.Services.Multimodal;
 global using Agent.Application.Services.PostgreSQL;
 global using Agent.Application.Services.Prometheus;
 global using Agent.Application.Services.Prompts;
+global using Agent.Core.Data;
 global using Agent.Application.Services.RAG;
+global using StackExchange.Redis;
+global using System.Text.Json;
+
 global using Agent.Application.Services.Sandbox;
 global using Agent.Application.Services.SemanticKernel;
 global using Agent.Application.Services.SemanticKernel.Planner;

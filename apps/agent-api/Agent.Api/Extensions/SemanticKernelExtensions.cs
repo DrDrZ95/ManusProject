@@ -89,8 +89,13 @@ public static class SemanticKernelExtensions
             return kernel.GetRequiredService<ITextEmbeddingGenerationService>();
         });
 
-        // Register Semantic Kernel service - 注册语义内核服务
-        services.AddScoped<ISemanticKernelService, SemanticKernelService>();
+        // Register sub-services for Semantic Kernel - 注册语义内核子服务
+        services.AddScoped<ILlmChatService, LlmChatService>();
+        services.AddScoped<IEmbeddingAndMemoryService, EmbeddingAndMemoryService>();
+        services.AddScoped<IPluginOrchestrationService, PluginOrchestrationService>();
+
+        // Register Semantic Kernel facade service - 注册语义内核门面服务
+        services.AddScoped<ISemanticKernelService, SemanticKernelServiceFacade>();
 
         return services;
     }
@@ -176,8 +181,13 @@ public static class SemanticKernelExtensions
             return kernel.GetRequiredService<ITextEmbeddingGenerationService>();
         });
 
-        // Register Semantic Kernel service - 注册语义内核服务
-        services.AddScoped<ISemanticKernelService, SemanticKernelService>();
+        // Register sub-services for Semantic Kernel - 注册语义内核子服务
+        services.AddScoped<ILlmChatService, LlmChatService>();
+        services.AddScoped<IEmbeddingAndMemoryService, EmbeddingAndMemoryService>();
+        services.AddScoped<IPluginOrchestrationService, PluginOrchestrationService>();
+
+        // Register Semantic Kernel facade service - 注册语义内核门面服务
+        services.AddScoped<ISemanticKernelService, SemanticKernelServiceFacade>();
 
         return services;
     }

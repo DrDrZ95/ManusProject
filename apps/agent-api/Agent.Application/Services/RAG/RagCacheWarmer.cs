@@ -1,8 +1,3 @@
-namespace Agent.Application.Services.RAG;
-
-/// <summary>
-/// RAG 缓存预热服务实现
-/// </summary>
 public class RagCacheWarmer : IRagCacheWarmer
 {
     private readonly IRagService _ragService;
