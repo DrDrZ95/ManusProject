@@ -889,7 +889,87 @@ public class WorkflowService : IWorkflowService
 
     public Task<string> CreateWorkflowAsync(string llmResponse)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var json = llmResponse;
+            var fenceStart = json.IndexOf("```json", StringComparison.OrdinalIgnoreCase);
+            if (fenceStart >= 0)
+            {
+                var afterFence = fenceStart + "```json".Length;
+                var fenceEnd = json.IndexOf("```", afterFence, StringComparison.OrdinalIgnoreCase);
+                if (fenceEnd > afterFence) json = json.Substring(afterFence, fenceEnd - afterFence);
+            }
+            else
+            {
+                var braceStart = json.IndexOf('{');
+                var braceEnd = json.LastIndexOf('}');
+                if (braceStart >= 0 && braceEnd > braceStart)
+                {
+                    json = json.Substring(braceStart, braceEnd - braceStart + 1);
+                }
+            }
+
+            json = json.Trim();
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            var title = root.TryGetProperty("title", out var t) ? t.GetString() ?? "Auto Plan" : "Auto Plan";
+            var description = root.TryGetProperty("description", out var d) ? d.GetString() ?? "" : "";
+
+            var steps = new List<WorkflowStepDto>();
+            if (root.TryGetProperty("steps", out var stepsEl) && stepsEl.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var s in stepsEl.EnumerateArray())
+                {
+                    var text = s.TryGetProperty("text", out var te) ? te.GetString() ?? "" : "";
+                    var type = s.TryGetProperty("type", out var ty) ? ty.GetString() ?? "" : "";
+                    var dependsOn = new List<int>();
+                    if (s.TryGetProperty("depends_on", out var dep) && dep.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var di in dep.EnumerateArray())
+                        {
+                            if (di.TryGetInt32(out var idx)) dependsOn.Add(idx);
+                        }
+                    }
+                    steps.Add(new WorkflowStepDto
+                    {
+                        Text = text,
+                        Type = string.IsNullOrWhiteSpace(type) ? "task" : type,
+                        DependsOn = dependsOn
+                    });
+                }
+            }
+
+            var req = new CreatePlanRequest
+            {
+                Title = title,
+                Description = description,
+                Steps = steps
+            };
+
+            return CreateAndRenderTodoAsync(req);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to parse LLM response as structured plan, falling back to simple plan");
+            var req = new CreatePlanRequest
+            {
+                Title = "Auto Plan",
+                Description = "Plan derived from LLM response",
+                Steps = new List<WorkflowStepDto>
+                {
+                    new WorkflowStepDto { Text = llmResponse, Type = "task" }
+                }
+            };
+            return CreateAndRenderTodoAsync(req);
+        }
+
+        async Task<string> CreateAndRenderTodoAsync(CreatePlanRequest request, CancellationToken cancellationToken = default)
+        {
+            var plan = await CreatePlanAsync(request, cancellationToken);
+            var todo = await GenerateToDoListAsync(plan.Id.ToString(), cancellationToken);
+            return todo;
+        }
     }
 
     // --- Visualization & Debugging (可视化与调试) ---

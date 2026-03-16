@@ -7,6 +7,9 @@ namespace Agent.Application.Services.Workflow;
 /// </summary>
 public class WorkflowExecutionEngine : IWorkflowEngine
 {
+    private const string SkillsFolderName = "skills";
+    private const string PlanPromptFile = "PLAN_GENERATION_PROMPT.md";
+    private const string StepPromptFile = "STEP_EXECUTOR_PROMPT.md";
     private readonly StateMachine<WorkflowState, WorkflowEvent> _stateMachine;
     private readonly Guid _planId;
     private readonly IWorkflowNotificationService _notificationService;
@@ -196,21 +199,72 @@ public class WorkflowExecutionEngine : IWorkflowEngine
                 return;
             }
 
-            if (!_context.InputParameters.TryGetValue("userGoal", out var userGoalObj) || userGoalObj is not string userGoal)
+            string? userGoal = null;
+            if (_context.InputParameters.TryGetValue("user_objective", out var uo) && uo is string uoStr && !string.IsNullOrWhiteSpace(uoStr))
+            {
+                userGoal = uoStr;
+            }
+            else if (_context.InputParameters.TryGetValue("userGoal", out var ug) && ug is string ugStr && !string.IsNullOrWhiteSpace(ugStr))
+            {
+                userGoal = ugStr;
+            }
+
+            if (string.IsNullOrWhiteSpace(userGoal))
             {
                 throw new InvalidOperationException("User goal is missing in workflow context.");
             }
 
-            var planningPrompt = $"Based on the goal: '{userGoal}', generate a JSON array of workflow steps. Each step should be a string. Example: [\"Step 1: Do this\", \"Step 2: Do that\"]";
-            var planJson = await _semanticKernelService.GetChatCompletionAsync(planningPrompt, "You are a planning assistant.");
+            var template = ReadSkillTemplate(PlanPromptFile);
+            var sessionId = _context.InputParameters.TryGetValue("sessionId", out var sidObj) && sidObj is string sidStr && !string.IsNullOrWhiteSpace(sidStr)
+                ? sidStr
+                : _planId.ToString();
+            var contextSummary = BuildContextSummary();
+            var timestamp = DateTime.UtcNow.ToString("O");
 
-            var steps = JsonSerializer.Deserialize<List<string>>(planJson);
-            if (steps == null || !steps.Any())
+            var planningPrompt = template
+                .Replace("{{user_objective}}", userGoal)
+                .Replace("{{context}}", contextSummary)
+                .Replace("{{session_id}}", sessionId)
+                .Replace("{{timestamp}}", timestamp);
+
+            var planResponse = await _semanticKernelService.GetChatCompletionAsync(planningPrompt);
+
+            var json = ExtractJson(planResponse);
+            var root = JsonDocument.Parse(json).RootElement;
+
+            if (!root.TryGetProperty("steps", out var stepsEl) || stepsEl.ValueKind != JsonValueKind.Array || stepsEl.GetArrayLength() == 0)
             {
                 throw new InvalidOperationException("LLM failed to generate a valid plan.");
             }
 
-            var workflowSteps = steps.Select((s, i) => new WorkflowStep { Index = i, Text = s, Status = PlanStepStatus.NotStarted }).ToList();
+            var steps = new List<WorkflowStep>();
+            foreach (var s in stepsEl.EnumerateArray())
+            {
+                var text = s.TryGetProperty("text", out var te) ? te.GetString() ?? "" : "";
+                var type = s.TryGetProperty("type", out var ty) ? ty.GetString() ?? "" : "";
+                var dependsOn = new List<int>();
+                if (s.TryGetProperty("depends_on", out var dep) && dep.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var di in dep.EnumerateArray())
+                    {
+                        if (di.TryGetInt32(out var idx)) dependsOn.Add(idx);
+                    }
+                }
+                steps.Add(new WorkflowStep
+                {
+                    Index = s.TryGetProperty("index", out var ix) && ix.TryGetInt32(out var vi) ? vi : steps.Count,
+                    Text = text,
+                    Type = string.IsNullOrWhiteSpace(type) ? "task" : type,
+                    DependsOn = dependsOn,
+                    Status = PlanStepStatus.NotStarted
+                });
+            }
+
+            var workflowSteps = steps.OrderBy(s => s.Index).Select((s, i) =>
+            {
+                s.Index = i;
+                return s;
+            }).ToList();
 
             await _workflowRepository.UpdatePlanStepsAsync(_planId, workflowSteps);
 
@@ -282,48 +336,111 @@ public class WorkflowExecutionEngine : IWorkflowEngine
 
             await _workflowRepository.UpdateStepStatusAndResultAsync(_planId, currentStep.Index, PlanStepStatus.InProgress, null, null, _stepStartTime, default);
 
-            var recommendedTools = await _smartToolSelector.RecommendToolsAsync(currentStep.Text, 3);
-            
-            // 基于 ExecutorKeys 进行过滤 (Filter based on ExecutorKeys if specified)
+            var execTemplate = ReadSkillTemplate(StepPromptFile);
+            var completedSummary = BuildCompletedSummary(plan);
+            var recommendedTools = await _smartToolSelector.RecommendToolsAsync(currentStep.Text, 5);
             if (plan.ExecutorKeys != null && plan.ExecutorKeys.Any())
             {
-                recommendedTools = recommendedTools.Where(t => 
-                    plan.ExecutorKeys.Contains(t.PluginName) || 
+                recommendedTools = recommendedTools.Where(t =>
+                    plan.ExecutorKeys.Contains(t.PluginName) ||
                     plan.ExecutorKeys.Contains(t.FunctionName) ||
                     plan.ExecutorKeys.Contains($"{t.PluginName}.{t.FunctionName}"));
-                
-                _logger.LogInformation("Filtered tools for step {StepIndex} based on ExecutorKeys. Remaining: {Count}", 
-                    currentStep.Index, recommendedTools.Count());
             }
+            var toolManifest = string.Join("\n", recommendedTools.Select(t => $"- {t.PluginName}.{t.FunctionName}: {t.Description}"));
 
-            var bestTool = await _smartToolSelector.SelectBestToolAsync(currentStep.Text, recommendedTools);
+            var execPrompt = execTemplate
+                .Replace("{{task_id}}", currentStep.Index.ToString())
+                .Replace("{{task_text}}", currentStep.Text)
+                .Replace("{{task_type}}", string.IsNullOrWhiteSpace(currentStep.Type) ? "task" : currentStep.Type)
+                .Replace("{{expected_output}}", "")
+                .Replace("{{phase_name}}", "Main")
+                .Replace("{{completed_tasks_summary}}", completedSummary)
+                .Replace("{{tool_manifest}}", toolManifest);
 
-            if (bestTool == null)
+            var execResponse = await _semanticKernelService.GetChatCompletionAsync(execPrompt);
+            var execJson = ExtractJson(execResponse);
+            using var doc = JsonDocument.Parse(execJson);
+            var root = doc.RootElement;
+
+            var status = root.TryGetProperty("status", out var st) ? st.GetString() ?? "FAILED" : "FAILED";
+            var toolUsed = root.TryGetProperty("tool_used", out var tu) ? tu.GetString() : null;
+            var args = new Dictionary<string, object>();
+            if (root.TryGetProperty("tool_arguments", out var ta) && ta.ValueKind == JsonValueKind.Object)
             {
-                throw new InvalidOperationException($"No suitable tool found for step: {currentStep.Text}");
+                foreach (var p in ta.EnumerateObject())
+                {
+                    args[p.Name] = p.Value.ValueKind switch
+                    {
+                        JsonValueKind.String => p.Value.GetString()!,
+                        JsonValueKind.Number => p.Value.ToString(),
+                        JsonValueKind.True => true,
+                        JsonValueKind.False => false,
+                        _ => p.Value.ToString()
+                    };
+                }
             }
+            var resultSummary = root.TryGetProperty("result_summary", out var rs) ? rs.GetString() ?? "" : "";
+            var outputArtifact = root.TryGetProperty("output_artifact", out var oa) ? oa.GetString() : null;
+            var inject = root.TryGetProperty("should_inject_tasks", out var si) && si.ValueKind == JsonValueKind.True;
+            var injectReason = root.TryGetProperty("injection_reason", out var ir) ? ir.GetString() : null;
 
-            // 记录思考过程 (Record thinking process)
-            var thinkingPrompt = $@"You are an AI Agent. You are about to execute the following step: '{currentStep.Text}' 
-using tool: {bestTool.PluginName}.{bestTool.FunctionName}.
-Explain your reasoning for this action within <thinking> tags.";
-            
-            var thinkingResult = await _semanticKernelService.ExecutePromptAsync(thinkingPrompt);
-            ExtractAndRecordThinking(thinkingResult);
+            string finalResult = outputArtifact ?? resultSummary;
 
-            var arguments = new Dictionary<string, object>(); 
-            var result = await _semanticKernelService.InvokeFunctionAsync<string>(bestTool.PluginName, bestTool.FunctionName, arguments);
-
-            _context.IntermediateResults[currentStep.Index.ToString()] = result;
-
-            // 动态任务注入 (Dynamic task injection)
-            if (result.Contains("inject_tasks") || result.Contains("new_steps"))
+            if (!string.IsNullOrWhiteSpace(toolUsed))
             {
-                await InjectDynamicTasksAsync(result);
+                var parts = toolUsed.Split('.', 2, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 2)
+                {
+                    var plugin = parts[0];
+                    var func = parts[1];
+                    var selected = recommendedTools.FirstOrDefault(t =>
+                        string.Equals(t.PluginName, plugin, StringComparison.OrdinalIgnoreCase) &&
+                        string.Equals(t.FunctionName, func, StringComparison.OrdinalIgnoreCase));
+                    if (selected != null)
+                    {
+                        try
+                        {
+                            var toolResult = await _semanticKernelService.InvokeFunctionAsync<string>(selected.PluginName, selected.FunctionName, args);
+                            if (!string.IsNullOrWhiteSpace(toolResult))
+                            {
+                                finalResult = string.IsNullOrWhiteSpace(finalResult) ? toolResult : $"{finalResult}\n{toolResult}";
+                            }
+                        }
+                        catch (Exception tex)
+                        {
+                            _logger.LogWarning(tex, "Tool invocation failed for {Tool}", toolUsed);
+                        }
+                    }
+                }
             }
 
-            await _workflowRepository.UpdateStepStatusAndResultAsync(_planId, currentStep.Index, PlanStepStatus.Completed, result, null, _stepStartTime, DateTime.UtcNow);
-            await TriggerEventAsync(WorkflowEvent.StepComplete);
+            _context.IntermediateResults[currentStep.Index.ToString()] = finalResult;
+
+            if (inject && !string.IsNullOrWhiteSpace(injectReason))
+            {
+                await InjectDynamicTasksAsync(new[] { $"Follow-up ({injectReason}): {resultSummary}" });
+            }
+
+            if (string.Equals(status, "COMPLETED", StringComparison.OrdinalIgnoreCase))
+            {
+                await _workflowRepository.UpdateStepStatusAndResultAsync(_planId, currentStep.Index, PlanStepStatus.Completed, finalResult, null, _stepStartTime, DateTime.UtcNow);
+                await TriggerEventAsync(WorkflowEvent.StepComplete);
+            }
+            else if (string.Equals(status, "NEEDS_RETRY", StringComparison.OrdinalIgnoreCase))
+            {
+                await _workflowRepository.UpdateStepStatusAndResultAsync(_planId, currentStep.Index, PlanStepStatus.InProgress, finalResult, null, _stepStartTime, default);
+                await TriggerEventAsync(WorkflowEvent.NeedIntervention, new ManualInterventionInfo
+                {
+                    Reason = "Step requires retry based on executor output",
+                    ProposedAction = currentStep.Text,
+                    AgentThoughts = resultSummary
+                });
+            }
+            else
+            {
+                await _workflowRepository.UpdateStepStatusAndResultAsync(_planId, currentStep.Index, PlanStepStatus.Failed, null, resultSummary, _stepStartTime, DateTime.UtcNow);
+                await TriggerEventAsync(WorkflowEvent.StepFailed);
+            }
         }
         catch (Exception ex)
         {
@@ -573,5 +690,74 @@ Explain your reasoning for this action within <thinking> tags.";
 
     /// <inheritdoc />
     public WorkflowContext GetContext() => _context;
+
+    private static string ReadSkillTemplate(string fileName)
+    {
+        var baseDir = AppContext.BaseDirectory;
+        var current = new DirectoryInfo(baseDir);
+        while (current != null)
+        {
+            var skillsPath = Path.Combine(current.FullName, SkillsFolderName, fileName);
+            if (File.Exists(skillsPath))
+            {
+                return File.ReadAllText(skillsPath);
+            }
+            current = current.Parent;
+        }
+        return "";
+    }
+
+    private string BuildContextSummary()
+    {
+        var sb = new StringBuilder();
+        if (_context.IntermediateResults.Count > 0)
+        {
+            sb.AppendLine("Recent intermediate results:");
+            foreach (var kv in _context.IntermediateResults.TakeLast(5))
+            {
+                sb.AppendLine($"- Step[{kv.Key}]: {kv.Value}");
+            }
+        }
+        if (_context.ToolCallHistory.Count > 0)
+        {
+            sb.AppendLine("Recent tool calls:");
+            foreach (var rec in _context.ToolCallHistory.TakeLast(5))
+            {
+                var tool = $"{rec.PluginName}.{rec.FunctionName}";
+                var args = rec.Arguments != null ? JsonSerializer.Serialize(rec.Arguments) : "{}";
+                var res = string.IsNullOrWhiteSpace(rec.Result) ? (rec.Success ? "OK" : rec.ErrorMessage ?? "Error") : rec.Result;
+                sb.AppendLine($"- {tool} {args} => {res}");
+            }
+        }
+        return sb.ToString();
+    }
+
+    private static string ExtractJson(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content)) throw new InvalidOperationException("Empty LLM response");
+        var startFence = content.IndexOf("```json", StringComparison.OrdinalIgnoreCase);
+        if (startFence >= 0)
+        {
+            var after = startFence + "```json".Length;
+            var endFence = content.IndexOf("```", after, StringComparison.OrdinalIgnoreCase);
+            if (endFence > after) return content.Substring(after, endFence - after).Trim();
+        }
+        var bs = content.IndexOf('{');
+        var be = content.LastIndexOf('}');
+        if (bs >= 0 && be > bs) return content.Substring(bs, be - bs + 1).Trim();
+        throw new InvalidOperationException("No JSON block found in LLM response");
+    }
+
+    private static string BuildCompletedSummary(WorkflowPlan plan)
+    {
+        var sb = new StringBuilder();
+        var completed = plan.Steps.Where(s => s.Status == PlanStepStatus.Completed).OrderBy(s => s.Index).TakeLast(5);
+        foreach (var s in completed)
+        {
+            var res = string.IsNullOrWhiteSpace(s.Result) ? "OK" : s.Result;
+            sb.AppendLine($"- [{s.Index}] {s.Text} -> {res}");
+        }
+        return sb.ToString();
+    }
 }
 
