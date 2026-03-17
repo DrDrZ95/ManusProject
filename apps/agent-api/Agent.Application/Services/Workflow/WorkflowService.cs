@@ -79,10 +79,16 @@ public class WorkflowService : IWorkflowService
             _serviceProvider.GetRequiredService<ISmartToolSelector>(),
             _loggerFactory.CreateLogger<WorkflowExecutionEngine>(),
             _agentTraceService,
-            existingContext);
+            existingContext,
+            OnEngineFinalized);
 
         _engines[planId] = newEngine;
         return newEngine;
+    }
+
+    private void OnEngineFinalized(Guid planId)
+    {
+        _engines.TryRemove(planId, out _);
     }
 
     /// <inheritdoc />
@@ -208,7 +214,8 @@ public class WorkflowService : IWorkflowService
                 _serviceProvider.GetRequiredService<ISmartToolSelector>(),
                 _loggerFactory.CreateLogger<WorkflowExecutionEngine>(),
                 _agentTraceService,
-                context);
+                context,
+                OnEngineFinalized);
 
             _engines[resultPlan.Id] = engine;
             await engine.TriggerEventAsync(WorkflowEvent.StartTask);
@@ -969,6 +976,63 @@ public class WorkflowService : IWorkflowService
             var plan = await CreatePlanAsync(request, cancellationToken);
             var todo = await GenerateToDoListAsync(plan.Id.ToString(), cancellationToken);
             return todo;
+        }
+    }
+
+    public async Task<bool> InjectStepsAsync(string planId, int afterIndex, List<CreateStepRequest> steps, string injectionReason, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (!Guid.TryParse(planId, out var id))
+            {
+                _logger.LogWarning("Invalid Plan ID format: {PlanId}", planId);
+                return false;
+            }
+
+            var planEntity = await _repository.GetPlanByIdAsync(id, cancellationToken);
+            if (planEntity == null) return false;
+
+            var plan = WorkflowPlanMappingExtensions.ToModel(planEntity);
+            var insertionIndex = Math.Clamp(afterIndex + 1, 0, plan.Steps.Count);
+
+            var injected = steps.Select(s => new WorkflowStep
+            {
+                Text = s.Text,
+                Type = string.IsNullOrWhiteSpace(s.Type) ? "task" : s.Type,
+                DependsOn = s.DependsOn ?? new List<int>(),
+                Condition = s.Condition,
+                Status = PlanStepStatus.NotStarted
+            }).ToList();
+
+            plan.Steps.InsertRange(insertionIndex, injected);
+            for (var i = 0; i < plan.Steps.Count; i++)
+            {
+                plan.Steps[i].Index = i;
+            }
+
+            await _repository.UpdatePlanStepsAsync(id, plan.Steps, cancellationToken);
+
+            if (_engines.TryGetValue(id, out var engine))
+            {
+                var ctx = engine.GetContext();
+                if (ctx.CurrentStepIndex > afterIndex)
+                {
+                    ctx.CurrentStepIndex += injected.Count;
+                }
+            }
+
+            var updatedPlan = await _repository.GetPlanByIdAsync(id, cancellationToken);
+            if (updatedPlan != null)
+            {
+                await _notificationService.BroadcastPlanUpdate(planId, updatedPlan.Adapt<WorkflowPlan>());
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to inject steps for plan {PlanId}", planId);
+            return false;
         }
     }
 

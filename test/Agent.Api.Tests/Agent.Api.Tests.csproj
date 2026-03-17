@@ -38,6 +38,7 @@
   <ItemGroup>
     <ProjectReference Include="../../apps/agent-api/Agent.Api/Agent.Api.csproj" />
     <ProjectReference Include="../../apps/agent-api/Agent.Core/Agent.Core.csproj" />
+    <ProjectReference Include="../../apps/agent-ops/Agent.Metering/Agent.Metering.csproj" />
   </ItemGroup>
 
 </Project>

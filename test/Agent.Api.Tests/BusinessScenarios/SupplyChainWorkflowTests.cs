@@ -25,6 +25,8 @@ public class SupplyChainWorkflowTests
             WorkflowState.Idle,
             _notificationServiceMock.Object,
             _workflowRepositoryMock.Object,
+            new Mock<ISemanticKernelService>().Object,
+            new Mock<ISmartToolSelector>().Object,
             _loggerMock.Object,
             _agentTraceServiceMock.Object);
 

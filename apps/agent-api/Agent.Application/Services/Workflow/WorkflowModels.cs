@@ -38,6 +38,14 @@ public class SaveToDoListRequest
     public string FilePath { get; set; } = string.Empty;
 }
 
+public class CreateStepRequest
+{
+    public string Text { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public List<int> DependsOn { get; set; } = new();
+    public string? Condition { get; set; }
+}
+
 public class WorkflowProgress { 
     public int CompletedSteps { get; set; }
     public int TotalSteps { get; set; }

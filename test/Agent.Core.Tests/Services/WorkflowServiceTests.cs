@@ -1,5 +1,4 @@
-namespace Agent.Core.Tests.Services
-{
+namespace Agent.Core.Tests.Services;
     /// <summary>
     /// WorkflowService 扩展单元测试 - 包含并发、状态机路径、人工干预和性能测试
     /// Extended unit tests for WorkflowService - including concurrency, state machine paths, manual intervention, and performance tests
@@ -30,7 +29,8 @@ namespace Agent.Core.Tests.Services
                 _mockOptions.Object,
                 _mockRepository.Object,
                 _mockNotificationService.Object,
-                _mockAgentTraceService.Object);
+                _mockAgentTraceService.Object,
+                new Mock<IServiceProvider>().Object);
         }
 
         /// <summary>
@@ -41,7 +41,11 @@ namespace Agent.Core.Tests.Services
         public async Task CreatePlanAsync_ConcurrentRequests_ShouldHandleCorrectly()
         {
             // Arrange
-            var request = new CreatePlanRequest { Title = "Concurrent Plan", Steps = new List<string> { "Step 1" } };
+            var request = new CreatePlanRequest
+            {
+                Title = "Concurrent Plan",
+                Steps = new List<WorkflowStepDto> { new WorkflowStepDto { Text = "Step 1", Type = "task" } }
+            };
             _mockRepository.Setup(r => r.AddPlanAsync(It.IsAny<WorkflowPlanEntity>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((WorkflowPlanEntity e, CancellationToken ct) =>
                 {
@@ -73,6 +77,8 @@ namespace Agent.Core.Tests.Services
                 WorkflowState.Idle,
                 _mockNotificationService.Object,
                 _mockRepository.Object,
+                new Mock<ISemanticKernelService>().Object,
+                new Mock<ISmartToolSelector>().Object,
                 new Mock<ILogger<WorkflowExecutionEngine>>().Object,
                 _mockAgentTraceService.Object);
 
@@ -106,6 +112,8 @@ namespace Agent.Core.Tests.Services
                 WorkflowState.Idle,
                 _mockNotificationService.Object,
                 _mockRepository.Object,
+                new Mock<ISemanticKernelService>().Object,
+                new Mock<ISmartToolSelector>().Object,
                 new Mock<ILogger<WorkflowExecutionEngine>>().Object,
                 _mockAgentTraceService.Object);
 
@@ -140,6 +148,8 @@ namespace Agent.Core.Tests.Services
                 WorkflowState.Idle,
                 _mockNotificationService.Object,
                 _mockRepository.Object,
+                new Mock<ISemanticKernelService>().Object,
+                new Mock<ISmartToolSelector>().Object,
                 new Mock<ILogger<WorkflowExecutionEngine>>().Object,
                 _mockAgentTraceService.Object);
 
@@ -168,6 +178,8 @@ namespace Agent.Core.Tests.Services
                     WorkflowState.Idle,
                     _mockNotificationService.Object,
                     _mockRepository.Object,
+                    new Mock<ISemanticKernelService>().Object,
+                    new Mock<ISmartToolSelector>().Object,
                     new Mock<ILogger<WorkflowExecutionEngine>>().Object,
                     _mockAgentTraceService.Object)).ToList();
             var startTime = DateTime.UtcNow;
@@ -189,5 +201,4 @@ namespace Agent.Core.Tests.Services
             _mockLogger.Object.LogInformation("Executed 1000 workflow transitions in {Duration}ms", duration.TotalMilliseconds);
         }
     }
-}
 

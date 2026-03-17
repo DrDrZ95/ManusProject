@@ -1,13 +1,4 @@
-namespace Agent.Core.Tests.Services
-{
-    using Agent.Application.Services.RAG;
-    using Agent.Application.Services.VectorDatabase;
-    using Agent.Application.Services.SemanticKernel;
-    using Agent.Core.Cache;
-    using Hangfire;
-    using Microsoft.Extensions.Logging;
-    using Moq;
-    using Xunit;
+namespace Agent.Core.Tests.Services;
 
     /// <summary>
     /// RagService 核心逻辑单元测试
@@ -36,11 +27,20 @@ namespace Agent.Core.Tests.Services
             _mockBackgroundJobs = new Mock<IBackgroundJobClient>();
             _mockPromptAnalytics = new Mock<IPromptAnalyticsService>();
 
+            var semanticCache = new SemanticCacheLayer(
+                _mockCacheService.Object,
+                new Mock<ITextEmbeddingGenerationService>().Object,
+                new Mock<IConnectionMultiplexer>().Object,
+                new Mock<ILogger<SemanticCacheLayer>>().Object,
+                Options.Create(new SemanticCacheOptions { Enabled = false }),
+                new SemanticKernelOptions());
+
             _ragService = new RagService(
                 _mockVectorDb.Object,
                 _mockSemanticKernel.Object,
                 _mockLogger.Object,
                 _mockCacheService.Object,
+                semanticCache,
                 _mockCacheWarmer.Object,
                 _mockBackgroundJobs.Object,
                 _mockPromptAnalytics.Object);
@@ -345,5 +345,4 @@ namespace Agent.Core.Tests.Services
             };
         }
     }
-}
 

@@ -190,8 +190,13 @@ public class WorkflowRepository : IWorkflowRepository
             foreach (var step in steps)
             {
                 step.Index = ++maxIndex;
-                plan.Steps.Add(step.ToEntity());
+                var entity = step.ToEntity();
+                entity.Id = Guid.NewGuid();
+                entity.PlanId = planId;
+                _steps[entity.Id] = entity;
+                plan.Steps.Add(entity);
             }
+            plan.UpdatedAt = DateTime.UtcNow;
         }
         return Task.CompletedTask;
     }
@@ -200,7 +205,24 @@ public class WorkflowRepository : IWorkflowRepository
     {
         if (_plans.TryGetValue(planId, out var plan))
         {
-            plan.Steps = steps.Select(s => s.ToEntity()).ToList();
+            var existingStepIds = _steps.Where(kvp => kvp.Value.PlanId == planId).Select(kvp => kvp.Key).ToList();
+            foreach (var id in existingStepIds)
+            {
+                _steps.TryRemove(id, out _);
+            }
+
+            var newEntities = new List<WorkflowStepEntity>();
+            foreach (var step in steps)
+            {
+                var entity = step.ToEntity();
+                entity.Id = Guid.NewGuid();
+                entity.PlanId = planId;
+                _steps[entity.Id] = entity;
+                newEntities.Add(entity);
+            }
+
+            plan.Steps = newEntities;
+            plan.UpdatedAt = DateTime.UtcNow;
         }
         return Task.CompletedTask;
     }

@@ -10,6 +10,7 @@ public class WorkflowExecutionEngine : IWorkflowEngine
     private const string SkillsFolderName = "skills";
     private const string PlanPromptFile = "PLAN_GENERATION_PROMPT.md";
     private const string StepPromptFile = "STEP_EXECUTOR_PROMPT.md";
+    private const string DynamicInjectionPromptFile = "DYNAMIC_INJECTION_PROMPT.md";
     private readonly StateMachine<WorkflowState, WorkflowEvent> _stateMachine;
     private readonly Guid _planId;
     private readonly IWorkflowNotificationService _notificationService;
@@ -19,6 +20,7 @@ public class WorkflowExecutionEngine : IWorkflowEngine
     private readonly WorkflowContext _context;
     private readonly ILogger<WorkflowExecutionEngine> _logger;
     private readonly IAgentTraceService? _agentTraceService;
+    private readonly Action<Guid>? _onFinalized;
     private DateTime? _stepStartTime;
 
     /// <inheritdoc />
@@ -33,7 +35,8 @@ public class WorkflowExecutionEngine : IWorkflowEngine
         ISmartToolSelector smartToolSelector, // 注入
         ILogger<WorkflowExecutionEngine> logger,
         IAgentTraceService? agentTraceService = null,
-        WorkflowContext? existingContext = null)
+        WorkflowContext? existingContext = null,
+        Action<Guid>? onFinalized = null)
     {
         _planId = planId;
         _notificationService = notificationService;
@@ -43,6 +46,7 @@ public class WorkflowExecutionEngine : IWorkflowEngine
         _logger = logger;
         _agentTraceService = agentTraceService;
         _context = existingContext ?? new WorkflowContext(planId.GetHashCode());
+        _onFinalized = onFinalized;
 
         _stateMachine = new StateMachine<WorkflowState, WorkflowEvent>(
             () => _context.TaskId == 0 ? initialState : (WorkflowState)initialState,
@@ -418,7 +422,7 @@ public class WorkflowExecutionEngine : IWorkflowEngine
 
             if (inject && !string.IsNullOrWhiteSpace(injectReason))
             {
-                await InjectDynamicTasksAsync(new[] { $"Follow-up ({injectReason}): {resultSummary}" });
+                await TryDynamicInjectionAsync(plan, currentStep.Index, finalResult, injectReason);
             }
 
             if (string.Equals(status, "COMPLETED", StringComparison.OrdinalIgnoreCase))
@@ -664,6 +668,7 @@ public class WorkflowExecutionEngine : IWorkflowEngine
             _ => PlanStatus.InProgress
         };
         await _workflowRepository.UpdatePlanStatusAsync(_planId, planStatus);
+        _onFinalized?.Invoke(_planId);
     }
 
     /// <inheritdoc />
@@ -758,6 +763,95 @@ public class WorkflowExecutionEngine : IWorkflowEngine
             sb.AppendLine($"- [{s.Index}] {s.Text} -> {res}");
         }
         return sb.ToString();
+    }
+
+    private async Task TryDynamicInjectionAsync(WorkflowPlan plan, int completedStepIndex, string completedResult, string injectionReason)
+    {
+        var template = ReadSkillTemplate(DynamicInjectionPromptFile);
+        if (string.IsNullOrWhiteSpace(template)) return;
+
+        var remaining = string.Join("\n",
+            plan.Steps
+                .Where(s => s.Status == PlanStepStatus.NotStarted || s.Status == PlanStepStatus.InProgress)
+                .OrderBy(s => s.Index)
+                .Select(s => $"- [{s.Index}] {s.Text}"));
+
+        var prompt = template
+            .Replace("{{completed_task_id}}", completedStepIndex.ToString())
+            .Replace("{{completed_task_result_summary}}", completedResult)
+            .Replace("{{injection_reason}}", injectionReason)
+            .Replace("{{remaining_tasks_list}}", remaining)
+            .Replace("{{current_task_index}}", completedStepIndex.ToString());
+
+        var response = await _semanticKernelService.GetChatCompletionAsync(prompt);
+        var json = ExtractJson(response);
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        var shouldInject = root.TryGetProperty("inject", out var inj) && inj.ValueKind == JsonValueKind.True;
+        if (!shouldInject) return;
+
+        var totalInjected = plan.Steps.Count(s => s.Text.Contains("[INJECTED]", StringComparison.OrdinalIgnoreCase));
+        if (totalInjected >= 5) return;
+
+        var afterIndex = completedStepIndex;
+        if (root.TryGetProperty("inject_after_index", out var ia) && ia.TryGetInt32(out var parsedAfter))
+        {
+            afterIndex = parsedAfter;
+        }
+
+        if (!root.TryGetProperty("injected_tasks", out var tasksEl) || tasksEl.ValueKind != JsonValueKind.Array) return;
+
+        var injectedSteps = new List<WorkflowStep>();
+        foreach (var t in tasksEl.EnumerateArray().Take(3))
+        {
+            if (totalInjected + injectedSteps.Count >= 5) break;
+
+            var text = t.TryGetProperty("text", out var te) ? te.GetString() ?? "" : "";
+            var type = t.TryGetProperty("type", out var ty) ? ty.GetString() ?? "" : "";
+            var condition = t.TryGetProperty("condition", out var ce) ? ce.GetString() : null;
+
+            var dependsOn = new List<int>();
+            if (t.TryGetProperty("depends_on", out var dep) && dep.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var di in dep.EnumerateArray())
+                {
+                    if (di.ValueKind == JsonValueKind.Number && di.TryGetInt32(out var idx)) dependsOn.Add(idx);
+                    else if (di.ValueKind == JsonValueKind.String && int.TryParse(di.GetString(), out var sidx)) dependsOn.Add(sidx);
+                }
+            }
+
+            injectedSteps.Add(new WorkflowStep
+            {
+                Text = text,
+                Type = string.IsNullOrWhiteSpace(type) ? "task" : type,
+                Condition = condition,
+                DependsOn = dependsOn,
+                Status = PlanStepStatus.NotStarted
+            });
+        }
+
+        if (injectedSteps.Count == 0) return;
+
+        var insertionIndex = Math.Clamp(afterIndex + 1, 0, plan.Steps.Count);
+        plan.Steps.InsertRange(insertionIndex, injectedSteps);
+        for (var i = 0; i < plan.Steps.Count; i++)
+        {
+            plan.Steps[i].Index = i;
+        }
+
+        await _workflowRepository.UpdatePlanStepsAsync(_planId, plan.Steps);
+
+        if (_context.CurrentStepIndex > afterIndex)
+        {
+            _context.CurrentStepIndex += injectedSteps.Count;
+        }
+
+        var updatedPlan = await _workflowRepository.GetPlanByIdAsync(_planId, default);
+        if (updatedPlan != null)
+        {
+            await _notificationService.BroadcastPlanUpdate(_planId.ToString(), updatedPlan.Adapt<WorkflowPlan>());
+        }
     }
 }
 

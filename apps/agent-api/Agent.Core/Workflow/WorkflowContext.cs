@@ -42,6 +42,7 @@ public class WorkflowContext : IWorkflowContext
     /// <inheritdoc />
     public int Version { get; set; } = 1;
 
+    [System.Text.Json.Serialization.JsonConstructor]
     public WorkflowContext(long taskId)
     {
         TaskId = taskId;

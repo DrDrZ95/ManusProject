@@ -39,7 +39,11 @@ public class FullApiCallChainTests : IClassFixture<ApiTestFixture>
         {
             Title = "Integration Test Workflow",
             Description = "Test workflow for full API call chain validation.",
-            Steps = new List<string> { "[SEARCH] Find latest .NET version", "[CODE] Write a simple console app" },
+            Steps = new List<WorkflowStepDto>
+            {
+                new WorkflowStepDto { Text = "[SEARCH] Find latest .NET version", Type = "task" },
+                new WorkflowStepDto { Text = "[CODE] Write a simple console app", Type = "task" }
+            },
             ExecutorKeys = new List<string> { "TestAgent" }
         };
 

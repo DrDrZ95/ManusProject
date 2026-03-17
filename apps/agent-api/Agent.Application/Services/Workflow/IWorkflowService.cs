@@ -157,6 +157,8 @@ public interface IWorkflowService
 
     Task<string> CreateWorkflowAsync(string llmResponse);
 
+    Task<bool> InjectStepsAsync(string planId, int afterIndex, List<CreateStepRequest> steps, string injectionReason, CancellationToken cancellationToken = default);
+
     // --- Workflow Execution Engine Control (工作流执行引擎控制) ---
 
     /// <summary>

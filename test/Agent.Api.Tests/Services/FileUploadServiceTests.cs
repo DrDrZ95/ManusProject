@@ -1,6 +1,5 @@
 
-namespace Agent.Api.Tests.Services
-{
+namespace Agent.Api.Tests.Services;
     public class FileUploadServiceTests
     {
         private readonly Mock<IFileUploadService> _mockFileUploadService;
@@ -29,5 +28,4 @@ namespace Agent.Api.Tests.Services
                 invalidFile.Object), Times.Once);
         }
     }
-}
 

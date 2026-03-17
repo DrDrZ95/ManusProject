@@ -1,6 +1,5 @@
 
-namespace Agent.Api.Tests.Controllers
-{
+namespace Agent.Api.Tests.Controllers;
     /// <summary>
     /// FinetuneController的单元测试 - 包含边界条件、并发和恢复测试
     /// Unit tests for FinetuneController - including boundary conditions, concurrency, and recovery tests
@@ -162,5 +161,4 @@ namespace Agent.Api.Tests.Controllers
                 Times.Once);
         }
     }
-}
 

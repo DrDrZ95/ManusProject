@@ -1,5 +1,4 @@
-namespace Agent.Core.Tests.Services
-{
+namespace Agent.Core.Tests.Services;
     /// <summary>
     /// Unit tests for UserInputService
     /// UserInputService 单元测试
@@ -157,5 +156,4 @@ namespace Agent.Core.Tests.Services
             Assert.Equal(finalResponse, result);
         }
     }
-}
 

@@ -1,6 +1,5 @@
 
-namespace Agent.Api.Tests.Controllers
-{
+namespace Agent.Api.Tests.Controllers;
     /// <summary>
     /// SandboxTerminalController的单元测试 - 包含安全隔离和恶意命令检测测试
     /// Unit tests for SandboxTerminalController - including security isolation and malicious command detection tests
@@ -112,5 +111,4 @@ namespace Agent.Api.Tests.Controllers
             Assert.True(response.IsSafe);
         }
     }
-}
 

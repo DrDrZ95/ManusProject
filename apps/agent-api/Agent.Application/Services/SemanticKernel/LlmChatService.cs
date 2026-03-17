@@ -1,7 +1,3 @@
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
-using System.Runtime.CompilerServices;
-
 namespace Agent.Application.Services.SemanticKernel;
 
 public class LlmChatService : ILlmChatService

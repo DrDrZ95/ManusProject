@@ -1,5 +1,3 @@
-using Microsoft.ML.Tokenizers;
-
 namespace Agent.Application.Services.Tokens;
 
 public class GptTokenCounter : ITokenCounter

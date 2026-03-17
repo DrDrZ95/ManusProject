@@ -1,6 +1,5 @@
 
-namespace Agent.Api.Tests.Services
-{
+namespace Agent.Api.Tests.Services;
     /// <summary>
     /// RagService的单元测试 - 包含搜索准确性和向量更新一致性测试
     /// Unit tests for RagService - including search accuracy and vector update consistency tests
@@ -107,5 +106,4 @@ namespace Agent.Api.Tests.Services
             Assert.Equal(expectedResponse, result.Response);
         }
     }
-}
 
